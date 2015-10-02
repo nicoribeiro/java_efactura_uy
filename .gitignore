@@ -6,3 +6,7 @@
 bin/
 build/
 src/main/resources/security/
+
+*.pkcs12
+
+resources/security/security.properties

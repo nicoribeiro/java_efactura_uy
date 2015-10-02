@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DGICFE:EnvioCFE version="1.0"
+	xsi:schemaLocation="http://cfe.dgi.gub.uy EnvioCFE_v1.11.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:DGICFE="http://cfe.dgi.gub.uy">
+
+	<DGICFE:Caratula version="1.0">
+		<DGICFE:RutReceptor>214844360018</DGICFE:RutReceptor>
+		<DGICFE:RUCEmisor>219999830019</DGICFE:RUCEmisor>
+		<DGICFE:Idemisor>3009</DGICFE:Idemisor>
+		<DGICFE:CantCFE>1</DGICFE:CantCFE>
+		<DGICFE:Fecha>2014-03-19T13:10:00-03:00</DGICFE:Fecha>
+	</DGICFE:Caratula>
+	
+	<ns0:CFE xmlns:ns0="http://cfe.dgi.gub.uy" version="1.0">
+		<ns0:eFact>
+			<ns0:TmstFirma>2014-07-21T12:49:44-03:00</ns0:TmstFirma>
+			<ns0:Encabezado>
+				<ns0:IdDoc>
+					<ns0:TipoCFE>141</ns0:TipoCFE>
+					<ns0:Serie>A</ns0:Serie>
+					<ns0:Nro>1</ns0:Nro>
+					<ns0:FchEmis>2011-11-08</ns0:FchEmis>
+					<ns0:FmaPago>1</ns0:FmaPago>
+				</ns0:IdDoc>
+				<ns0:Emisor>
+					<ns0:RUCEmisor>219999830019</ns0:RUCEmisor>
+					<ns0:RznSoc>DGI RUC PRUEBA CEDE</ns0:RznSoc>
+					<ns0:CdgDGISucur>1</ns0:CdgDGISucur>
+					<ns0:DomFiscal>FERNANDEZ CRESPO AVDA. DANIEL 1534</ns0:DomFiscal>
+					<ns0:Ciudad>MONTEVIDEO</ns0:Ciudad>
+					<ns0:Departamento>MONTEVIDEO</ns0:Departamento>
+				</ns0:Emisor>
+				<ns0:Receptor>
+					<ns0:TipoDocRecep>2</ns0:TipoDocRecep>
+					<ns0:CodPaisRecep>UY</ns0:CodPaisRecep>
+					<ns0:DocRecep>214844360018</ns0:DocRecep>
+					<ns0:RznSocRecep>DGI</ns0:RznSocRecep>
+					<ns0:DirRecep>Fernandez Crespo 1534</ns0:DirRecep>
+					<ns0:CiudadRecep>Montevideo</ns0:CiudadRecep>
+				</ns0:Receptor>
+				<ns0:Totales>
+					<ns0:TpoMoneda>UYU</ns0:TpoMoneda>
+					<ns0:MntNoGrv>5280</ns0:MntNoGrv>
+					<ns0:MntTotal>5280</ns0:MntTotal>
+					<ns0:CantLinDet>3</ns0:CantLinDet>
+					<ns0:MntPagar>5280</ns0:MntPagar>
+				</ns0:Totales>
+			</ns0:Encabezado>
+			<ns0:Detalle>
+				<ns0:Item>
+					<ns0:NroLinDet>1</ns0:NroLinDet>
+					<ns0:IndFact>3</ns0:IndFact>
+					<ns0:NomItem>MASAS</ns0:NomItem>
+					<ns0:Cantidad>20</ns0:Cantidad>
+					<ns0:UniMed>KG</ns0:UniMed>
+					<ns0:PrecioUnitario>230</ns0:PrecioUnitario>
+					<ns0:MontoItem>4600</ns0:MontoItem>
+				</ns0:Item>
+				<ns0:Item>
+					<ns0:NroLinDet>2</ns0:NroLinDet>
+					<ns0:IndFact>3</ns0:IndFact>
+					<ns0:NomItem>MANTEL</ns0:NomItem>
+					<ns0:Cantidad>15</ns0:Cantidad>
+					<ns0:UniMed>Un</ns0:UniMed>
+					<ns0:PrecioUnitario>12</ns0:PrecioUnitario>
+					<ns0:MontoItem>180</ns0:MontoItem>
+				</ns0:Item>
+				<ns0:Item>
+					<ns0:NroLinDet>3</ns0:NroLinDet>
+					<ns0:IndFact>1</ns0:IndFact>
+					<ns0:NomItem>VASOS</ns0:NomItem>
+					<ns0:Cantidad>20</ns0:Cantidad>
+					<ns0:UniMed>Un</ns0:UniMed>
+					<ns0:PrecioUnitario>25</ns0:PrecioUnitario>
+					<ns0:MontoItem>500</ns0:MontoItem>
+				</ns0:Item>
+			</ns0:Detalle>
+			<ns0:CAEData>
+				<ns0:CAE_ID>90122223768</ns0:CAE_ID>
+				<ns0:DNro>1</ns0:DNro>
+				<ns0:HNro>9999999</ns0:HNro>
+				<ns0:FecVenc>2014-05-11</ns0:FecVenc>
+			</ns0:CAEData>
+			<ns0:Compl_Fiscal>
+				<ns0:Compl_Fiscal_Data>
+					<ns0:RUCEmisor>219999830019</ns0:RUCEmisor>
+					<ns0:TipoDocMdte>2</ns0:TipoDocMdte>
+					<ns0:Pais>UY</ns0:Pais>
+					<ns0:DocMdte>219000090011</ns0:DocMdte>
+					<ns0:NombreMdte>DGI PRUEBA</ns0:NombreMdte>
+				</ns0:Compl_Fiscal_Data>
+			</ns0:Compl_Fiscal>
+		</ns0:eFact>
+	</ns0:CFE>
+</DGICFE:EnvioCFE>

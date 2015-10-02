@@ -82,7 +82,7 @@ public final class C14nHelper {
         }
 
         // Note: this is the dirty hack
-        if ("DGI_Modernizacion_Consolidado".equals(namespaceValue)) {
+        if ("DGI_Modernizacion_Consolidado".equals(namespaceValue) || "http://dgi.gub.uy".equals(namespaceValue)) {
             return true;
         }
 

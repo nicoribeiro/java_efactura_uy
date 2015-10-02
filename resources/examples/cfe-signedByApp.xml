@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><DGICFE:EnvioCFE xmlns:DGICFE="http://cfe.dgi.gub.uy" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0" xsi:schemaLocation="http://cfe.dgi.gub.uy EnvioCFE_v1.11.xsd">
+
+	<DGICFE:Caratula version="1.0">
+		<DGICFE:RutReceptor>214844360018</DGICFE:RutReceptor>
+		<DGICFE:RUCEmisor>219999830019</DGICFE:RUCEmisor>
+		<DGICFE:Idemisor>3009</DGICFE:Idemisor>
+		<DGICFE:CantCFE>1</DGICFE:CantCFE>
+		<DGICFE:Fecha>2014-03-19T13:10:00-03:00</DGICFE:Fecha>
+	</DGICFE:Caratula>
+	
+	<ns0:CFE xmlns:ns0="http://cfe.dgi.gub.uy" version="1.0">
+		<ns0:eFact>
+			<ns0:TmstFirma>2014-07-21T12:49:44-03:00</ns0:TmstFirma>
+			<ns0:Encabezado>
+				<ns0:IdDoc>
+					<ns0:TipoCFE>141</ns0:TipoCFE>
+					<ns0:Serie>A</ns0:Serie>
+					<ns0:Nro>1</ns0:Nro>
+					<ns0:FchEmis>2011-11-08</ns0:FchEmis>
+					<ns0:FmaPago>1</ns0:FmaPago>
+				</ns0:IdDoc>
+				<ns0:Emisor>
+					<ns0:RUCEmisor>219999830019</ns0:RUCEmisor>
+					<ns0:RznSoc>DGI RUC PRUEBA CEDE</ns0:RznSoc>
+					<ns0:CdgDGISucur>1</ns0:CdgDGISucur>
+					<ns0:DomFiscal>FERNANDEZ CRESPO AVDA. DANIEL 1534</ns0:DomFiscal>
+					<ns0:Ciudad>MONTEVIDEO</ns0:Ciudad>
+					<ns0:Departamento>MONTEVIDEO</ns0:Departamento>
+				</ns0:Emisor>
+				<ns0:Receptor>
+					<ns0:TipoDocRecep>2</ns0:TipoDocRecep>
+					<ns0:CodPaisRecep>UY</ns0:CodPaisRecep>
+					<ns0:DocRecep>214844360018</ns0:DocRecep>
+					<ns0:RznSocRecep>DGI</ns0:RznSocRecep>
+					<ns0:DirRecep>Fernandez Crespo 1534</ns0:DirRecep>
+					<ns0:CiudadRecep>Montevideo</ns0:CiudadRecep>
+				</ns0:Receptor>
+				<ns0:Totales>
+					<ns0:TpoMoneda>UYU</ns0:TpoMoneda>
+					<ns0:MntNoGrv>5280</ns0:MntNoGrv>
+					<ns0:MntTotal>5280</ns0:MntTotal>
+					<ns0:CantLinDet>3</ns0:CantLinDet>
+					<ns0:MntPagar>5280</ns0:MntPagar>
+				</ns0:Totales>
+			</ns0:Encabezado>
+			<ns0:Detalle>
+				<ns0:Item>
+					<ns0:NroLinDet>1</ns0:NroLinDet>
+					<ns0:IndFact>3</ns0:IndFact>
+					<ns0:NomItem>MASAS</ns0:NomItem>
+					<ns0:Cantidad>20</ns0:Cantidad>
+					<ns0:UniMed>KG</ns0:UniMed>
+					<ns0:PrecioUnitario>230</ns0:PrecioUnitario>
+					<ns0:MontoItem>4600</ns0:MontoItem>
+				</ns0:Item>
+				<ns0:Item>
+					<ns0:NroLinDet>2</ns0:NroLinDet>
+					<ns0:IndFact>3</ns0:IndFact>
+					<ns0:NomItem>MANTEL</ns0:NomItem>
+					<ns0:Cantidad>15</ns0:Cantidad>
+					<ns0:UniMed>Un</ns0:UniMed>
+					<ns0:PrecioUnitario>12</ns0:PrecioUnitario>
+					<ns0:MontoItem>180</ns0:MontoItem>
+				</ns0:Item>
+				<ns0:Item>
+					<ns0:NroLinDet>3</ns0:NroLinDet>
+					<ns0:IndFact>1</ns0:IndFact>
+					<ns0:NomItem>VASOS</ns0:NomItem>
+					<ns0:Cantidad>20</ns0:Cantidad>
+					<ns0:UniMed>Un</ns0:UniMed>
+					<ns0:PrecioUnitario>25</ns0:PrecioUnitario>
+					<ns0:MontoItem>500</ns0:MontoItem>
+				</ns0:Item>
+			</ns0:Detalle>
+			<ns0:CAEData>
+				<ns0:CAE_ID>90122223768</ns0:CAE_ID>
+				<ns0:DNro>1</ns0:DNro>
+				<ns0:HNro>9999999</ns0:HNro>
+				<ns0:FecVenc>2014-05-11</ns0:FecVenc>
+			</ns0:CAEData>
+			<ns0:Compl_Fiscal>
+				<ns0:Compl_Fiscal_Data>
+					<ns0:RUCEmisor>219999830019</ns0:RUCEmisor>
+					<ns0:TipoDocMdte>2</ns0:TipoDocMdte>
+					<ns0:Pais>UY</ns0:Pais>
+					<ns0:DocMdte>219000090011</ns0:DocMdte>
+					<ns0:NombreMdte>DGI PRUEBA</ns0:NombreMdte>
+				</ns0:Compl_Fiscal_Data>
+			</ns0:Compl_Fiscal>
+		</ns0:eFact>
+	<Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><DigestValue>fVBIjZwW+VBEu+znAg/0yloocJU=</DigestValue></Reference></SignedInfo><SignatureValue>UEv3i8Lv2xCoe7OldpqURXDeuYFMX5GDgrHPS2B0bLWdAiBX+9VnMBdvIO5jmXxPK7eXACOgpKdG
+bHcsGyNBJZ2n+ggrUTOMHg6WyUuyHd5dVRsin9dor/Z5LLhcmZzecZtGUSAiXLdGsQfLX4Gq/ITn
++FdBsUh/Y4q2jQjjxqFDAPWxz797KGokF/VKoN0gWTDKsFDdHwm8oxIE7ZYpqU7m29sQiL0QwOKa
+ojzNpCYsKoPgeDAzkjBYEfQmmL9gT2WltHxYcDr22hD5nEU3XvK8FsQdUpYCy43IIWoCCxPr0Zux
+0DCvCDTXy1UsCg9PeDNnGiVMT2Q3ONIMqf6qHQ==</SignatureValue><KeyInfo><X509Data><X509SubjectName>C=UY,ST=Montevideo,2.5.4.5=#130f525543323135303731363630303132,O=BINALOR S.A.,CN=LERAND GROUP</X509SubjectName><X509Certificate>MIIGdDCCBFygAwIBAgITJVPLMWMK4huTO2V69K23JsasKDANBgkqhkiG9w0BAQsFADBeMQswCQYD
+VQQGEwJVWTETMBEGA1UEBxMKTW9udGV2aWRlbzEUMBIGA1UEChMLQWJpdGFiIFMuQS4xEzARBgNV
+BAsTCklEIGRpZ2l0YWwxDzANBgNVBAMTBkFiaXRhYjAeFw0xNTA2MTUyMTI3NDdaFw0xNzA2MTQy
+MTI3NDdaMGoxFTATBgNVBAMTDExFUkFORCBHUk9VUDEVMBMGA1UEChMMQklOQUxPUiBTLkEuMRgw
+FgYDVQQFEw9SVUMyMTUwNzE2NjAwMTIxEzARBgNVBAgTCk1vbnRldmlkZW8xCzAJBgNVBAYTAlVZ
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2SZRIh5Dat75VjUydi6aW86TTIjJ7Die
+7UQvQwfYPiTXTWHOz5LIIVV1+7SULAjJkGfzIVXtuht50JURRso7Zwb4h46+AxVgWnnzfowCmCf/
+ZbUQMBcnm9kefgDaLlDxDdWr4Qh/WtV4+oCNh6b2VE0frwMnYkmShNmSrGkDX2zWVl6lkBdfoqfM
+xp45C8G70AOFB9CDbKNXZ//QPm9CMk0181Wm2ewJZRC2kvaP2ZulHy9OQliQe1l/voaw+WI8DuU5
+GpmWrZXRw4OQc1CxQx6EH2zOcPFB4POZ8iIirXlAoG76JyqtWBUE/uakfvoXa0O3F24oLnubQ3bC
+ZHTnFwIDAQABo4ICHTCCAhkwfwYIKwYBBQUHAQEEczBxMDUGCCsGAQUFBzAChilodHRwOi8vd3d3
+LmlkLmNvbS51eS9yZXNvdXJjZXMvQWJpdGFiLmNydDA4BggrBgEFBQcwAYYsaHR0cDovL3d3dy5p
+ZC5jb20udXkvYXNmL3NlcnZsZXQvT0NTUFNlcnZsZXQwDgYDVR0PAQH/BAQDAgTwMAwGA1UdEwEB
+/wQCMAAwTgYDVR0fBEcwRTBDoEGgP4Y9aHR0cDovL3d3dy5pZC5jb20udXkvcmVzb3VyY2VzL2Ny
+bF9pZF9kaWdpdGFsX3BraV91cnVndWF5LmNybDCB0gYDVR0gBIHKMIHHMGQGC2CGWoTirh2EiAUC
+MFUwUwYIKwYBBQUHAgEWR2h0dHA6Ly91Y2UuZ3ViLnV5L2luZm9ybWFjaW9uLXRlY25pY2EvcG9s
+aXRpY2FzL2NwX3BlcnNvbmFfanVyaWRpY2EucGRmMF8GC2CGWoTirh2EiAUHMFAwTgYIKwYBBQUH
+AgEWQmh0dHA6Ly93d3cuaWQuY29tLnV5L3Jlc291cmNlcy9jcHNfaWRfZmlybWFFbGVjdHJvbmlj
+YUF2YW56YWRhLnBkZjATBgNVHSUEDDAKBggrBgEFBQcDAjAdBgNVHQ4EFgQUUMf+6wtB3DwM2vat
+R9uYlQ8tfaAwHwYDVR0jBBgwFoAUDRPW9sYopufFt4fRJJyfk/DoHTswDQYJKoZIhvcNAQELBQAD
+ggIBACBjuaQMzTJVP0FyCbk8qMkXAu4t//PuJYt2n3OLwI9zPDDMie4I3VMYpP1oY0/Pne0Z0z9z
+kXF6oO6dxV9BcU9tt03Dofsb8hfSefT9kILYPI/sttHlS+XfABUnWT3c22le6CT846aQp6udodHE
+lp9F1AhZiLaYyZtPLuCYhLgE8//PYVUNU3AHljFmz9T7HQAfORw+HrBriq8RzHKJf5BGg+K0ESiD
+/+Rhvvq90oUoKijjQpg/+XqRuVJDgHi9Qp9fU65xzTfchEDPxc1vrJxarJ6ER3EOkIV+DG4JxbTB
+Xi5BixlbrbiDGPCY9KaYGhNoWDFb3QXEIxQP1WUvEBxKguNi2gXJHn1seO0YB81B82PP3sPVRzpt
+aTe6LB2coIodEy7Sas8RTyOMEhXQNyebUt2/clCMSnw9LSjFQpnw74n21it1AZEG3ew31utb6vmy
+OVhB9h3lAh51chg6JHGxcSmWfdmdsCfX603zfSvv0PpWE++zHfgbPLEnkOkLMnqOmzSlGoYL+9Ud
+Qhj2os/jH9XIFLxhvWHJa5eff2EK2Ax+yLw1sG/n/7BdZ3BbTS9cR5SPZKZ86d9TecH/jR7sOY2f
+sT5as08tVVtV5GFHgP90VJO3fLpFKyK3jTBuvdysMpahjosp+RtwB3kSBfbZzRvHsQPrkgODMphp
+KZUd</X509Certificate></X509Data></KeyInfo></Signature></ns0:CFE>
+</DGICFE:EnvioCFE>

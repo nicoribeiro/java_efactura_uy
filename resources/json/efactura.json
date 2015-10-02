@@ -1,0 +1,58 @@
+{
+	"eFact":{
+		"Encabezado":{
+			"Emisor":{
+				"RUCEmisor":"219999830019",
+				"RznSoc":"DGI RUC PRUEBA CEDE",
+				"CdgDGISucur":"1",
+				"DomFiscal":"FERNANDEZ CRESPO AVDA. DANIEL 1534",
+				"Ciudad":"MONTEVIDEO",
+				"Departamento":"MONTEVIDEO"
+			},
+			"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernandez Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},
+			"Totales":{
+				"TpoMoneda":"UYU",
+				"MntNoGrv":"5280",
+				"MntTotal":"5280",
+				"CantLinDet":"3",
+				"MntPagar":"5280"
+			}
+		},
+		"Detalle":[
+			{
+				"NroLinDet":"1",
+				"IndFact":"3",
+				"NomItem":"MASAS",
+				"Cantidad":"20",
+				"UniMed":"KG",
+				"PrecioUnitario":"230",
+				"MontoItem":"4600"
+			},
+			{
+				"NroLinDet":"2",
+				"IndFact":"3",
+				"NomItem":"MANTEL",
+				"Cantidad":"15",
+				"UniMed":"Un",
+				"PrecioUnitario":"12",
+				"MontoItem":"180"
+			},
+			{
+				"NroLinDet":"3",
+				"IndFact":"1",
+				"NomItem":"VASOS",
+				"Cantidad":"20",
+				"UniMed":"Un",
+				"PrecioUnitario":"25",
+				"MontoItem":"500"
+			}
+		]
+	}
+}

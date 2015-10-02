@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Comprobante Fiscal Electrónico (CFE) - DGI
+El presente documento define la constancia de autorización para emitir (CAE) CFEs.
+FUA:  10/07/14 
+  -->
+<xs:schema xmlns:ns0="http://cfe.dgi.gub.uy" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="CAEType_v1.19.xsd"/>
+	<xs:element name="CAE" type="ns0:CAEdefType"/>
+</xs:schema>

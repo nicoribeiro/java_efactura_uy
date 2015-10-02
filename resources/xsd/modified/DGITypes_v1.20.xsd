@@ -1,0 +1,1432 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Comprobante Fiscal Electrónico - DGI
+Esquema para tipos de datos generales.
+FUA:  10/07/14 
+-->
+<xs:schema xmlns:ns1="http://cfe.dgi.gub.uy" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:simpleType name="CFEType">
+		<xs:annotation>
+			<xs:documentation>
+				Tipos de Comprobantes Fiscales Electronicos Codigo CFE
+				101 e-Ticket 102 Nota de Crédito de e-Ticket 103 Nota de
+				Débito de e-Ticket 111 e-Factura 112 Nota de Crédito de
+				e-Factura 113 Nota de Débito de e-Factura 121 e-Factura
+				Exportación 122 Nota de Crédito de e-Factura Exportación
+				123 Nota de Débito de e-Factura Exportación 124 e-Remito
+				de Exportación 131 e-Ticket Venta por Cuenta Ajena 132
+				Nota de Crédito de e-Ticket Venta por Cuenta Ajena 133
+				Nota de Débito de e-Ticket Venta por Cuenta Ajena 141
+				e-Factura Venta por Cuenta Ajena 142 Nota de Crédito de
+				e-Factura Venta por Cuenta Ajena 143 Nota de Débito de
+				e-Factura Venta por Cuenta Ajena 181 e-Remito 182
+				e-Resguardo CÓDIGO CFC 201 e-Ticket Contingencia 202
+				Nota de Crédito de e-Ticket Contingencia 203 Nota de
+				Débito de e-Ticket Contingencia 211 e-Factura
+				Contingencia 212 Nota de Crédito de e-Factura
+				Contingencia 213 Nota de Débito de e-Factura 221
+				e-Factura Exportación Contingencia 222 Nota de Crédito
+				de e-Factura Exportación Contingencia 223 Nota de Débito
+				de e-Factura Exportación Contingencia 224 e-Remito de
+				Exportación Contingencia Contingencia 231 e-Ticket Venta
+				por Cuenta Ajena Contingencia 232 Nota de Crédito de
+				e-Ticket Venta por Cuenta Ajena Contingencia 233 Nota de
+				Débito de e-Ticket Venta por Cuenta Ajena Contingencia
+				241 e-Factura Venta por Cuenta Ajena Contingencia 242
+				Nota de Crédito de e-Factura Venta por Cuenta Ajena
+				Contingencia 243 Nota de Débito de e-Factura Venta por
+				Cuenta Ajena Contingencia 281 e-Remito Contingencia 282
+				e-Resguardo Contingencia
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:enumeration value="101" />
+			<xs:enumeration value="102" />
+			<xs:enumeration value="103" />
+			<xs:enumeration value="111" />
+			<xs:enumeration value="112" />
+			<xs:enumeration value="113" />
+			<xs:enumeration value="121" />
+			<xs:enumeration value="122" />
+			<xs:enumeration value="123" />
+			<xs:enumeration value="124" />
+			<xs:enumeration value="131" />
+			<xs:enumeration value="132" />
+			<xs:enumeration value="133" />
+			<xs:enumeration value="141" />
+			<xs:enumeration value="142" />
+			<xs:enumeration value="143" />
+			<xs:enumeration value="181" />
+			<xs:enumeration value="182" />
+			<xs:enumeration value="201" />
+			<xs:enumeration value="202" />
+			<xs:enumeration value="203" />
+			<xs:enumeration value="211" />
+			<xs:enumeration value="212" />
+			<xs:enumeration value="213" />
+			<xs:enumeration value="221" />
+			<xs:enumeration value="222" />
+			<xs:enumeration value="223" />
+			<xs:enumeration value="224" />
+			<xs:enumeration value="231" />
+			<xs:enumeration value="232" />
+			<xs:enumeration value="233" />
+			<xs:enumeration value="241" />
+			<xs:enumeration value="242" />
+			<xs:enumeration value="243" />
+			<xs:enumeration value="281" />
+			<xs:enumeration value="282" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="SerieType">
+		<xs:annotation>
+			<xs:documentation>Serie</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="2"/>
+			<xs:pattern value="[A-Z]"/>
+			<xs:pattern value="[A-Z][A-Z]"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NroCFEType">
+		<xs:annotation>
+			<xs:documentation>Nro de CFE - 7 digitos</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="7"/>
+			<xs:minInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TipoTrasladoType">
+		<xs:annotation>
+			<xs:documentation>Identificador de tipo de traslado ( 1- venta, 2- traslado interno )</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="2"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PeriodoType">
+		<xs:annotation>
+			<xs:documentation> Una fecha en formato: AAAAMMDD</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="8"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IndMontoBrutoType">
+		<xs:annotation>
+			<xs:documentation> 1: si lineas de detalle se expresan con IVA inc.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="1"/>
+			<xs:enumeration value="0"/>
+			<xs:enumeration value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FormaDePagoType">
+		<xs:annotation>
+			<xs:documentation> Forma de Pago ( 1: contado, 2: credito )</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="1"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NomItemType">
+		<xs:annotation>
+			<xs:documentation>Nombre del item</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="80"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NomComercialType">
+		<xs:annotation>
+			<xs:documentation>Nombre comercial</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="30"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RznSocType">
+		<xs:annotation>
+			<xs:documentation>Razón Social (max 150)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="150"/>
+			<xs:minLength value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="GiroType">
+		<xs:annotation>
+			<xs:documentation>Giro</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="60"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RUCType">
+		<xs:annotation>
+			<xs:documentation>RUC (RUT de persona jurídica / empresa)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="12"/>
+			<xs:maxLength value="12"/>
+			<xs:pattern value="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IndicadorAgResp">
+		<xs:annotation>
+			<xs:documentation>Indicador Agente/Responsable</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="1"/>
+			<xs:enumeration value="R"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IndicadorFactType">
+		<xs:annotation>
+			<xs:documentation>
+				Indicador de Facturación 1: Exento de IVA 2: Gravado a
+				Tasa Mínima 3: Gravado a Tasa Basica 4: Gravado a "Otra
+				Tasa" 5: Entrega Gratuita. Por ejemplo docenas de trece
+				6: Producto o servicio no facturable 7: Producto o
+				servicio no facturable negativo 8: Sólo para remitos:
+				Ítem a rebajar en remitos. En area de referencia se debe
+				indicar el Nro de remito que ajusta 9: Sólo para
+				resguardos: Ítem a ajustar en resguardos. En area de
+				referencia se debe indicar el Nro de remito que ajusta
+				10: Exportación y asimiladas 11: Impuesto percibido 12:
+				IVA en suspenso
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1" />
+			<xs:maxInclusive value="12" />
+			<xs:totalDigits value="2" />		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="SubDescRecType">
+		<xs:annotation>
+			<xs:documentation> Tipo de Subdescuento o subrecargo (1-$, 2-%) </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="1"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PctType">
+		<xs:annotation>
+			<xs:documentation>
+				Valor de Porcentaje ( 3 y 3)
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="6" />
+			<xs:fractionDigits value="3" />
+			<xs:minInclusive value="-999.999" />
+			<xs:maxInclusive value="999.999" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TipoCodType">
+		<xs:annotation>
+			<xs:documentation>Tipo de codificación utilizada para el item </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="10"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MontoType">
+		<xs:annotation>
+			<xs:documentation>
+				Monto de 17 digitos (15,2) >= 0
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="17" />
+			<xs:fractionDigits value="2" />
+			<xs:minInclusive value="0.00" />
+			<xs:maxInclusive value="999999999999999.99" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DocType">
+		<xs:annotation>
+			<xs:documentation>
+				Tipos de Documento ( 2: ruc, 3: ci, 4:otro, 5 pasaporte,
+				6 dni)
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:positiveInteger">
+			<xs:maxInclusive value="6" />
+			<xs:minInclusive value="2" />
+			<xs:enumeration value="2" />
+			<xs:enumeration value="3" />
+			<xs:enumeration value="4" />
+			<xs:enumeration value="5" />
+			<xs:enumeration value="6" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NroDocType">
+		<xs:annotation>
+			<xs:documentation>Es el nro de documento (ruc, ci, etc) </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="12"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MailType">
+		<xs:annotation>
+			<xs:documentation>Dirección email </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="80"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DeptoType">
+		<xs:annotation>
+			<xs:documentation>Departamento</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="30"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CodPostalType">
+		<xs:annotation>
+			<xs:documentation>Código Postal</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="5" />
+			<xs:minInclusive value="0" />
+			<xs:maxInclusive value="99999"></xs:maxInclusive>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CodRetType">
+		<xs:annotation>
+			<xs:documentation>Código de retención / percepción (nro form + nro lin)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="8"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CodItemType">
+		<xs:annotation>
+			<xs:documentation> Código del producto (según tipo de codif.)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="35"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CodSucType">
+		<xs:annotation>
+			<xs:documentation>Código del local principal / sucursal</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="4"/>
+			<xs:minInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CiudadType">
+		<xs:annotation>
+			<xs:documentation>Ciudad </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="30"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FonoType">
+		<xs:annotation>
+			<xs:documentation>Teléfono</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="20"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NombreSucType">
+		<xs:annotation>
+			<xs:documentation>Nombre de sucursal</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="20"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:attribute name="version" fixed="1.0">
+		<xs:simpleType>
+			<xs:restriction base="xs:string"/>
+		</xs:simpleType>
+	</xs:attribute>
+	<xs:simpleType name="TipCambioType">
+		<xs:annotation>
+			<xs:documentation>Tipo de Cambio</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="7" />
+			<xs:fractionDigits value="3" />
+			<xs:minInclusive value="0.001" />
+			<xs:maxInclusive value="9999.999" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TipMonType">
+		<xs:annotation>
+			<xs:documentation>
+				Tipos de Moneda ( ISO 4217)
+
+				Al que se agrega además: UYI - Unidad Indexada uruguaya
+				UYR - Unidad Reajustable uruguaya
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="AED" />
+			<xs:enumeration value="AFN" />
+			<xs:enumeration value="ALL" />
+			<xs:enumeration value="AMD" />
+			<xs:enumeration value="ANG" />
+			<xs:enumeration value="AOA" />
+			<xs:enumeration value="ARS" />
+			<xs:enumeration value="AUD" />
+			<xs:enumeration value="AWG" />
+			<xs:enumeration value="AZM" />
+			<xs:enumeration value="BAM" />
+			<xs:enumeration value="BBD" />
+			<xs:enumeration value="BDT" />
+			<xs:enumeration value="BGN" />
+			<xs:enumeration value="BHD" />
+			<xs:enumeration value="BIF" />
+			<xs:enumeration value="BMD" />
+			<xs:enumeration value="BND" />
+			<xs:enumeration value="BOB" />
+			<xs:enumeration value="BOV" />
+			<xs:enumeration value="BRL" />
+			<xs:enumeration value="BSD" />
+			<xs:enumeration value="BTN" />
+			<xs:enumeration value="BWP" />
+			<xs:enumeration value="BYR" />
+			<xs:enumeration value="BZD" />
+			<xs:enumeration value="CAD" />
+			<xs:enumeration value="CDF" />
+			<xs:enumeration value="CHF" />
+			<xs:enumeration value="CLF" />
+			<xs:enumeration value="CLP" />
+			<xs:enumeration value="CNY" />
+			<xs:enumeration value="COP" />
+			<xs:enumeration value="COU" />
+			<xs:enumeration value="CRC" />
+			<xs:enumeration value="CSD" />
+			<xs:enumeration value="CUP" />
+			<xs:enumeration value="CUC" />
+			<xs:enumeration value="CVE" />
+			<xs:enumeration value="CYP" />
+			<xs:enumeration value="CZK" />
+			<xs:enumeration value="DJF" />
+			<xs:enumeration value="DKK" />
+			<xs:enumeration value="DOP" />
+			<xs:enumeration value="DZD" />
+			<xs:enumeration value="EEK" />
+			<xs:enumeration value="EGP" />
+			<xs:enumeration value="ERN" />
+			<xs:enumeration value="ETB" />
+			<xs:enumeration value="EUR" />
+			<xs:enumeration value="FJD" />
+			<xs:enumeration value="FKP" />
+			<xs:enumeration value="GBP" />
+			<xs:enumeration value="GEL" />
+			<xs:enumeration value="GHS" />
+			<xs:enumeration value="GIP" />
+			<xs:enumeration value="GMD" />
+			<xs:enumeration value="GNF" />
+			<xs:enumeration value="GTQ" />
+			<xs:enumeration value="GYD" />
+			<xs:enumeration value="HKD" />
+			<xs:enumeration value="HNL" />
+			<xs:enumeration value="HRK" />
+			<xs:enumeration value="HTG" />
+			<xs:enumeration value="HUF" />
+			<xs:enumeration value="IDR" />
+			<xs:enumeration value="ILS" />
+			<xs:enumeration value="INR" />
+			<xs:enumeration value="IQD" />
+			<xs:enumeration value="IRR" />
+			<xs:enumeration value="ISK" />
+			<xs:enumeration value="JMD" />
+			<xs:enumeration value="JOD" />
+			<xs:enumeration value="JPY" />
+			<xs:enumeration value="KES" />
+			<xs:enumeration value="KGS" />
+			<xs:enumeration value="KHR" />
+			<xs:enumeration value="KMF" />
+			<xs:enumeration value="KPW" />
+			<xs:enumeration value="KRW" />
+			<xs:enumeration value="KWD" />
+			<xs:enumeration value="KYD" />
+			<xs:enumeration value="KZT" />
+			<xs:enumeration value="LAK" />
+			<xs:enumeration value="LBP" />
+			<xs:enumeration value="LKR" />
+			<xs:enumeration value="LRD" />
+			<xs:enumeration value="LSL" />
+			<xs:enumeration value="LTL" />
+			<xs:enumeration value="LVL" />
+			<xs:enumeration value="LYD" />
+			<xs:enumeration value="MAD" />
+			<xs:enumeration value="MDL" />
+			<xs:enumeration value="MGA" />
+			<xs:enumeration value="MKD" />
+			<xs:enumeration value="MMK" />
+			<xs:enumeration value="MNT" />
+			<xs:enumeration value="MOP" />
+			<xs:enumeration value="MRO" />
+			<xs:enumeration value="MTL" />
+			<xs:enumeration value="MUR" />
+			<xs:enumeration value="MVR" />
+			<xs:enumeration value="MWK" />
+			<xs:enumeration value="MXN" />
+			<xs:enumeration value="MXV" />
+			<xs:enumeration value="MYR" />
+			<xs:enumeration value="MZN" />
+			<xs:enumeration value="NAD" />
+			<xs:enumeration value="NGN" />
+			<xs:enumeration value="NIO" />
+			<xs:enumeration value="NOK" />
+			<xs:enumeration value="NPR" />
+			<xs:enumeration value="NZD" />
+			<xs:enumeration value="OMR" />
+			<xs:enumeration value="PAB" />
+			<xs:enumeration value="PEN" />
+			<xs:enumeration value="PGK" />
+			<xs:enumeration value="PHP" />
+			<xs:enumeration value="PKR" />
+			<xs:enumeration value="PLN" />
+			<xs:enumeration value="PYG" />
+			<xs:enumeration value="QAR" />
+			<xs:enumeration value="RON" />
+			<xs:enumeration value="RUB" />
+			<xs:enumeration value="RWF" />
+			<xs:enumeration value="SAR" />
+			<xs:enumeration value="SBD" />
+			<xs:enumeration value="SCR" />
+			<xs:enumeration value="SDG" />
+			<xs:enumeration value="SEK" />
+			<xs:enumeration value="SGD" />
+			<xs:enumeration value="SHP" />
+			<xs:enumeration value="SKK" />
+			<xs:enumeration value="SLL" />
+			<xs:enumeration value="SOS" />
+			<xs:enumeration value="SRD" />
+			<xs:enumeration value="STD" />
+			<xs:enumeration value="SYP" />
+			<xs:enumeration value="SZL" />
+			<xs:enumeration value="THB" />
+			<xs:enumeration value="TJS" />
+			<xs:enumeration value="TMT" />
+			<xs:enumeration value="TND" />
+			<xs:enumeration value="TOP" />
+			<xs:enumeration value="TRY" />
+			<xs:enumeration value="TTD" />
+			<xs:enumeration value="TWD" />
+			<xs:enumeration value="TZS" />
+			<xs:enumeration value="UAH" />
+			<xs:enumeration value="UGX" />
+			<xs:enumeration value="USD" />
+			<xs:enumeration value="USN" />
+			<xs:enumeration value="USS" />
+			<xs:enumeration value="UYU" />
+			<xs:enumeration value="UZS" />
+			<xs:enumeration value="VEF" />
+			<xs:enumeration value="VND" />
+			<xs:enumeration value="VUV" />
+			<xs:enumeration value="WST" />
+			<xs:enumeration value="XAF" />
+			<xs:enumeration value="XAG" />
+			<xs:enumeration value="XAU" />
+			<xs:enumeration value="XBA" />
+			<xs:enumeration value="XBB" />
+			<xs:enumeration value="XBC" />
+			<xs:enumeration value="XBD" />
+			<xs:enumeration value="XCD" />
+			<xs:enumeration value="XDR" />
+			<xs:enumeration value="XFO" />
+			<xs:enumeration value="XFU" />
+			<xs:enumeration value="XOF" />
+			<xs:enumeration value="XPD" />
+			<xs:enumeration value="XPF" />
+			<xs:enumeration value="XPT" />
+			<xs:enumeration value="XTS" />
+			<xs:enumeration value="XXX" />
+			<xs:enumeration value="YER" />
+			<xs:enumeration value="ZAR" />
+			<xs:enumeration value="ZMK" />
+			<xs:enumeration value="ZWL" />
+			<xs:maxLength value="3"></xs:maxLength>
+			<xs:enumeration value="UYI"></xs:enumeration>
+			<xs:enumeration value="UYR"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TasaIVAType">
+		<xs:annotation>
+			<xs:documentation>
+				Tasa de IVA ( Min 10%, Basica 22% )
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="6" />
+			<xs:fractionDigits value="3" />			<xs:minInclusive value="-999.999" />			<xs:maxInclusive value="999.999" />
+			<xs:enumeration value="10.000" />
+			<xs:enumeration value="22.000" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FechaType">
+		<xs:annotation>
+			<xs:documentation>
+				Fecha entre 2011-10-01 y 2050-12-31
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:date">
+			<xs:minInclusive value="2011-10-01" fixed="false" />
+			<xs:maxInclusive value="2050-12-31" fixed="false" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LineasDetType">
+		<xs:annotation>
+			<xs:documentation>Número de Lineas de detalle </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="3"/>
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="700"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LineasMP">
+		<xs:annotation>
+			<xs:documentation>Lineas del Medio de Pago</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LineasInfoRef">
+		<xs:annotation>
+			<xs:documentation>Lineas de Info. de Referencia</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="40"/>
+			<xs:totalDigits value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="UniMedType">
+		<xs:annotation>
+			<xs:documentation> Unidad de medida </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="4"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FechaHoraType" final="restriction">
+		<xs:annotation>
+			<xs:documentation> FechaType + hora entre 00:00 y 23:59;  </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:dateTime">
+			<xs:maxInclusive value="2050-12-31T23:59:59-03:00"/>
+			<xs:minInclusive value="2011-10-01T00:00:00-03:00"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CantType">
+		<xs:annotation>
+			<xs:documentation>Cantidad del item</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="17" />
+			<xs:fractionDigits value="3" />
+			<xs:minInclusive value="0" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CodPaisType">
+		<xs:annotation>
+			<xs:documentation>Código de Pais ( ISO 3166-1 )  </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="2"/>
+			<xs:enumeration value="AD"/>
+			<xs:enumeration value="AE"/>
+			<xs:enumeration value="AF"/>
+			<xs:enumeration value="AG"/>
+			<xs:enumeration value="AI"/>
+			<xs:enumeration value="AL"/>
+			<xs:enumeration value="AM"/>
+			<xs:enumeration value="AN"/>
+			<xs:enumeration value="AO"/>
+			<xs:enumeration value="AQ"/>
+			<xs:enumeration value="AR"/>
+			<xs:enumeration value="AS"/>
+			<xs:enumeration value="AT"/>
+			<xs:enumeration value="AU"/>
+			<xs:enumeration value="AW"/>
+			<xs:enumeration value="AX"/>
+			<xs:enumeration value="AZ"/>
+			<xs:enumeration value="BA"/>
+			<xs:enumeration value="BB"/>
+			<xs:enumeration value="BD"/>
+			<xs:enumeration value="BE"/>
+			<xs:enumeration value="BF"/>
+			<xs:enumeration value="BG"/>
+			<xs:enumeration value="BH"/>
+			<xs:enumeration value="BI"/>
+			<xs:enumeration value="BJ"/>
+			<xs:enumeration value="BM"/>
+			<xs:enumeration value="BN"/>
+			<xs:enumeration value="BO"/>
+			<xs:enumeration value="BR"/>
+			<xs:enumeration value="BS"/>
+			<xs:enumeration value="BT"/>
+			<xs:enumeration value="BU"/>
+			<xs:enumeration value="BV"/>
+			<xs:enumeration value="BW"/>
+			<xs:enumeration value="BY"/>
+			<xs:enumeration value="BZ"/>
+			<xs:enumeration value="CA"/>
+			<xs:enumeration value="CC"/>
+			<xs:enumeration value="CD"/>
+			<xs:enumeration value="CF"/>
+			<xs:enumeration value="CG"/>
+			<xs:enumeration value="CH"/>
+			<xs:enumeration value="CI"/>
+			<xs:enumeration value="CK"/>
+			<xs:enumeration value="CL"/>
+			<xs:enumeration value="CM"/>
+			<xs:enumeration value="CN"/>
+			<xs:enumeration value="CO"/>
+			<xs:enumeration value="CR"/>
+			<xs:enumeration value="CS"/>
+			<xs:enumeration value="CU"/>
+			<xs:enumeration value="CV"/>
+			<xs:enumeration value="CX"/>
+			<xs:enumeration value="CY"/>
+			<xs:enumeration value="CZ"/>
+			<xs:enumeration value="DE"/>
+			<xs:enumeration value="DJ"/>
+			<xs:enumeration value="DK"/>
+			<xs:enumeration value="DM"/>
+			<xs:enumeration value="DO"/>
+			<xs:enumeration value="DZ"/>
+			<xs:enumeration value="EA"/>
+			<xs:enumeration value="EC"/>
+			<xs:enumeration value="EE"/>
+			<xs:enumeration value="EG"/>
+			<xs:enumeration value="EH"/>
+			<xs:enumeration value="ER"/>
+			<xs:enumeration value="ES"/>
+			<xs:enumeration value="ET"/>
+			<xs:enumeration value="FI"/>
+			<xs:enumeration value="FJ"/>
+			<xs:enumeration value="FK"/>
+			<xs:enumeration value="FM"/>
+			<xs:enumeration value="FO"/>
+			<xs:enumeration value="FR"/>
+			<xs:enumeration value="GA"/>
+			<xs:enumeration value="GB"/>
+			<xs:enumeration value="GD"/>
+			<xs:enumeration value="GE"/>
+			<xs:enumeration value="GF"/>
+			<xs:enumeration value="GG"/>
+			<xs:enumeration value="GH"/>
+			<xs:enumeration value="GI"/>
+			<xs:enumeration value="GL"/>
+			<xs:enumeration value="GM"/>
+			<xs:enumeration value="GN"/>
+			<xs:enumeration value="GP"/>
+			<xs:enumeration value="GQ"/>
+			<xs:enumeration value="GR"/>
+			<xs:enumeration value="GS"/>
+			<xs:enumeration value="GT"/>
+			<xs:enumeration value="GU"/>
+			<xs:enumeration value="GW"/>
+			<xs:enumeration value="GY"/>
+			<xs:enumeration value="HK"/>
+			<xs:enumeration value="HM"/>
+			<xs:enumeration value="HN"/>
+			<xs:enumeration value="HR"/>
+			<xs:enumeration value="HT"/>
+			<xs:enumeration value="HU"/>
+			<xs:enumeration value="ID"/>
+			<xs:enumeration value="IE"/>
+			<xs:enumeration value="IL"/>
+			<xs:enumeration value="IM"/>
+			<xs:enumeration value="IN"/>
+			<xs:enumeration value="IO"/>
+			<xs:enumeration value="IQ"/>
+			<xs:enumeration value="IR"/>
+			<xs:enumeration value="IS"/>
+			<xs:enumeration value="IT"/>
+			<xs:enumeration value="JE"/>
+			<xs:enumeration value="JM"/>
+			<xs:enumeration value="JO"/>
+			<xs:enumeration value="JP"/>
+			<xs:enumeration value="KA"/>
+			<xs:enumeration value="KE"/>
+			<xs:enumeration value="KG"/>
+			<xs:enumeration value="KH"/>
+			<xs:enumeration value="KI"/>
+			<xs:enumeration value="KM"/>
+			<xs:enumeration value="KN"/>
+			<xs:enumeration value="KP"/>
+			<xs:enumeration value="KR"/>
+			<xs:enumeration value="KW"/>
+			<xs:enumeration value="KY"/>
+			<xs:enumeration value="KZ"/>
+			<xs:enumeration value="LA"/>
+			<xs:enumeration value="LB"/>
+			<xs:enumeration value="LC"/>
+			<xs:enumeration value="LI"/>
+			<xs:enumeration value="LK"/>
+			<xs:enumeration value="LR"/>
+			<xs:enumeration value="LS"/>
+			<xs:enumeration value="LT"/>
+			<xs:enumeration value="LU"/>
+			<xs:enumeration value="LV"/>
+			<xs:enumeration value="LY"/>
+			<xs:enumeration value="MA"/>
+			<xs:enumeration value="MC"/>
+			<xs:enumeration value="MD"/>
+			<xs:enumeration value="ME"/>
+			<xs:enumeration value="MG"/>
+			<xs:enumeration value="MH"/>
+			<xs:enumeration value="MK"/>
+			<xs:enumeration value="ML"/>
+			<xs:enumeration value="MM"/>
+			<xs:enumeration value="MN"/>
+			<xs:enumeration value="MO"/>
+			<xs:enumeration value="MP"/>
+			<xs:enumeration value="MQ"/>
+			<xs:enumeration value="MR"/>
+			<xs:enumeration value="MS"/>
+			<xs:enumeration value="MT"/>
+			<xs:enumeration value="MU"/>
+			<xs:enumeration value="MV"/>
+			<xs:enumeration value="MW"/>
+			<xs:enumeration value="MX"/>
+			<xs:enumeration value="MY"/>
+			<xs:enumeration value="MZ"/>
+			<xs:enumeration value="NA"/>
+			<xs:enumeration value="NC"/>
+			<xs:enumeration value="NE"/>
+			<xs:enumeration value="NF"/>
+			<xs:enumeration value="NG"/>
+			<xs:enumeration value="NI"/>
+			<xs:enumeration value="NL"/>
+			<xs:enumeration value="NO"/>
+			<xs:enumeration value="NP"/>
+			<xs:enumeration value="NR"/>
+			<xs:enumeration value="NU"/>
+			<xs:enumeration value="NZ"/>
+			<xs:enumeration value="OM"/>
+			<xs:enumeration value="PA"/>
+			<xs:enumeration value="PE"/>
+			<xs:enumeration value="PF"/>
+			<xs:enumeration value="PG"/>
+			<xs:enumeration value="PH"/>
+			<xs:enumeration value="PK"/>
+			<xs:enumeration value="PL"/>
+			<xs:enumeration value="PM"/>
+			<xs:enumeration value="PN"/>
+			<xs:enumeration value="PR"/>
+			<xs:enumeration value="PS"/>
+			<xs:enumeration value="PT"/>
+			<xs:enumeration value="PW"/>
+			<xs:enumeration value="PY"/>
+			<xs:enumeration value="QA"/>
+			<xs:enumeration value="RE"/>
+			<xs:enumeration value="RO"/>
+			<xs:enumeration value="RS"/>
+			<xs:enumeration value="RU"/>
+			<xs:enumeration value="RW"/>
+			<xs:enumeration value="SA"/>
+			<xs:enumeration value="SB"/>
+			<xs:enumeration value="SC"/>
+			<xs:enumeration value="SD"/>
+			<xs:enumeration value="SE"/>
+			<xs:enumeration value="SG"/>
+			<xs:enumeration value="SH"/>
+			<xs:enumeration value="SI"/>
+			<xs:enumeration value="SJ"/>
+			<xs:enumeration value="SK"/>
+			<xs:enumeration value="SL"/>
+			<xs:enumeration value="SM"/>
+			<xs:enumeration value="SN"/>
+			<xs:enumeration value="SO"/>
+			<xs:enumeration value="SR"/>
+			<xs:enumeration value="ST"/>
+			<xs:enumeration value="SU"/>
+			<xs:enumeration value="SV"/>
+			<xs:enumeration value="SY"/>
+			<xs:enumeration value="SZ"/>
+			<xs:enumeration value="TC"/>
+			<xs:enumeration value="TD"/>
+			<xs:enumeration value="TF"/>
+			<xs:enumeration value="TG"/>
+			<xs:enumeration value="TH"/>
+			<xs:enumeration value="TJ"/>
+			<xs:enumeration value="TK"/>
+			<xs:enumeration value="TL"/>
+			<xs:enumeration value="TM"/>
+			<xs:enumeration value="TN"/>
+			<xs:enumeration value="TO"/>
+			<xs:enumeration value="TP"/>
+			<xs:enumeration value="TR"/>
+			<xs:enumeration value="TT"/>
+			<xs:enumeration value="TV"/>
+			<xs:enumeration value="TW"/>
+			<xs:enumeration value="TZ"/>
+			<xs:enumeration value="UA"/>
+			<xs:enumeration value="UE"/>
+			<xs:enumeration value="UG"/>
+			<xs:enumeration value="UM"/>
+			<xs:enumeration value="US"/>
+			<xs:enumeration value="UY"/>
+			<xs:enumeration value="UZ"/>
+			<xs:enumeration value="VA"/>
+			<xs:enumeration value="VC"/>
+			<xs:enumeration value="VE"/>
+			<xs:enumeration value="VG"/>
+			<xs:enumeration value="VI"/>
+			<xs:enumeration value="VN"/>
+			<xs:enumeration value="VU"/>
+			<xs:enumeration value="WF"/>
+			<xs:enumeration value="WS"/>
+			<xs:enumeration value="YD"/>
+			<xs:enumeration value="YE"/>
+			<xs:enumeration value="YT"/>
+			<xs:enumeration value="YU"/>
+			<xs:enumeration value="ZA"/>
+			<xs:enumeration value="ZM"/>
+			<xs:enumeration value="ZR"/>
+			<xs:enumeration value="ZW"/>
+			<xs:enumeration value="99"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CodDescRecType">
+		<xs:annotation>
+			<xs:documentation>Código de Descuento / Recargo </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Glosa40Type">
+		<xs:annotation>
+			<xs:documentation>Glosa (40)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="40"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Glosa50Type">
+		<xs:annotation>
+			<xs:documentation>Glosa(50)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="50"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CodMedioPagoType">
+		<xs:annotation>
+			<xs:documentation>Medio de Pago</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="3" />
+			<xs:minInclusive value="-999"></xs:minInclusive>
+			<xs:maxInclusive value="999"></xs:maxInclusive>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TipoDRType">
+		<xs:annotation>
+			<xs:documentation>Tipo D/R:  
+1 - %
+2 - $</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:positiveInteger">
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MedioPagoType">
+		<xs:annotation>
+			<xs:documentation>Medio de Pago</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IDRecEmiType">
+		<xs:annotation>
+			<xs:documentation>ID Emisor, e ID Receptor para los acuses de recibo</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:totalDigits value="10"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="EstadoACKRepType">
+		<xs:annotation>
+			<xs:documentation>Envío Recibido:
+AR - Reporte Recibido
+Envío Rechazado:
+BA - Archivo Rechazado
+BR - Reporte Rechazado
+</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="2"/>
+			<xs:enumeration value="AR"/>
+			<xs:enumeration value="BA"/>
+			<xs:enumeration value="BR"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="EstadoACKSobreType">
+		<xs:annotation>
+			<xs:documentation>Envío Recibido:
+AS - Sobre Recibido
+Envío Rechazado:
+BA - Archivo Rechazado   
+BS - Sobre Rechazado
+</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="2"/>
+			<xs:enumeration value="AS"/>
+			<xs:enumeration value="BA"/>
+			<xs:enumeration value="BS"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="EstadoACKCFEType">
+		<xs:annotation>
+			<xs:documentation>AE - Comprobante Recibido
+BE - Comprobante Rechazado (CFE)
+CE - Comprobante Observado (CFC)
+</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="2"/>
+			<xs:enumeration value="AE"/>
+			<xs:enumeration value="BE"/>
+			<xs:enumeration value="CE"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="RechazoRepType">
+		<xs:sequence>
+			<xs:element name="Motivo" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						R01 Tamaño del archivo excede el máximo
+						establecido R02 Formato del archivo no es el
+						indicado R03 No coincide nombre del archivo con
+						carátula R04 No coincide RUC en Reporte,
+						Certificado o envío R05 Firma o Certificado
+						electrónicos no son válidos R06 No cumple
+						validaciones según Formato de Reporte R07 La
+						secuencia indicada en el reporte no es correcta
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="3" />
+						<xs:enumeration value="R01" />
+						<xs:enumeration value="R02" />
+						<xs:enumeration value="R03" />
+						<xs:enumeration value="R04" />
+						<xs:enumeration value="R05" />					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Glosa" minOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="ns1:Glosa50Type">						<xs:enumeration
+							value="Formato del archivo no es el indicado" />						<xs:enumeration
+							value="No coincide RUC en Reporte, Certificado o envío" />
+						<xs:enumeration
+							value="Firma o Certificado electrónicos no son válidos" />
+						<xs:enumeration
+							value="No cumple validaciones según Formato de Reporte" />
+						<xs:enumeration
+							value="La secuencia indicada en el reporte no es correcta" />
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Detalle" maxOccurs="1" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"></xs:maxLength>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RechazoSobreType">
+		<xs:sequence minOccurs="1">
+			<xs:element name="Motivo" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation></xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="3" />
+						<xs:enumeration value="S01" />
+						<xs:enumeration value="S02" />
+						<xs:enumeration value="S03" />
+						<xs:enumeration value="S04" />
+						<xs:enumeration value="S05" />
+						<xs:enumeration value="S06" />						<xs:enumeration value="S07"></xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Glosa" minOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="ns1:Glosa50Type">						<xs:enumeration
+							value="Formato del archivo no es el indicado" />						<xs:enumeration
+							value="No coincide RUC de Sobre, Certificado, envío o CFE" />
+						<xs:enumeration
+							value="Certificado electrónico no es válido" />
+						<xs:enumeration
+							value="No cumple validaciones según Formato de sobre" />
+						<xs:enumeration
+							value="No coinciden cantidad CFE de carátula y contenido" />						<xs:enumeration
+							value="No coinciden certificado de sobre y comprobantes" />
+						<xs:enumeration
+							value="Sobre enviado supera el tamaño máximo admitido">
+						</xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Detalle" maxOccurs="1" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"></xs:maxLength>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RechazoCFE_DGIType">
+		<xs:sequence minOccurs="1">
+			<xs:element name="Motivo" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						E01 Tipo y Nº de CFE ya fue reportado como anulado
+						E02 CFE no tiene al menos una línea de detalle
+						E03 Tipo y Nº de CFE ya existe en los registros
+						E04 Tipo y Nº de CFE no se corresponden con el
+						CAE E05 Firma electrónica no es válida E07 Fecha
+						y hora de firma no es válida 
+					</xs:documentation>
+				</xs:annotation>				<xs:simpleType>					<xs:restriction base="xs:string">						<xs:maxLength value="3"></xs:maxLength>						<xs:enumeration value="E01"></xs:enumeration>						<xs:enumeration value="E02"></xs:enumeration>						<xs:enumeration value="E03"></xs:enumeration>						<xs:enumeration value="E04"></xs:enumeration>						<xs:enumeration value="E05"></xs:enumeration>						<xs:enumeration value="E07"></xs:enumeration>						<xs:enumeration value="E08"></xs:enumeration>					</xs:restriction>				</xs:simpleType>			</xs:element>
+			<xs:element name="Glosa" minOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="ns1:Glosa50Type">
+
+						<xs:enumeration
+							value="Tipo y Nº de CFE ya fue reportado como anulado" />
+						<xs:enumeration
+							value="Tipo y Nº de CFE ya existe en los registros" />
+						<xs:enumeration
+							value="Tipo y Nº de CFE no se corresponden con el CAE" />
+						<xs:enumeration
+							value="Firma electrónica no es válida" />
+						<xs:enumeration
+							value="No cumple validaciones de Formato comprobantes" />
+
+						<xs:enumeration
+							value="Fecha Firma de CFE no se corresponde con fecha CAE" />
+
+
+
+
+
+
+
+
+						<xs:enumeration value="No coincide RUC de CFE y Complemento Fiscal"></xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Detalle" maxOccurs="1" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"></xs:maxLength>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ObsCFCType">
+		<xs:sequence>
+			<xs:element name="Motivo" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						C01 No coincide RUC en CFC y Sobre C02 CFC no
+						tiene al menos una línea de detalle C03 Tipo y
+						Nº de CFC ya existe en los registros C04 Nº de
+						CFC no fue autorizado según registros C05 Firma
+						electrónica no es válida C06 No cumple
+						validaciones(*) de Formato comprobantes C07
+						Fecha y hora de firma no es válida
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="3" />
+
+						<xs:enumeration value="C02" />
+						<xs:enumeration value="C03" />
+						<xs:enumeration value="C04" />
+						<xs:enumeration value="C05" />
+
+
+						<xs:enumeration value="C08"></xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Glosa" minOccurs="1" maxOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="ns1:Glosa50Type">
+
+
+						<xs:enumeration
+							value="Tipo y Nº de CFC ya existe en los registros" />
+						<xs:enumeration
+							value="Constancia no autorizada según registros" />
+						<xs:enumeration
+							value="Firma electrónica no es válida" />
+						<xs:enumeration
+							value="No cumple validaciones de Formato comprobantes" />
+
+						<xs:enumeration value="No coincide RUC de CFE y Complemento Fiscal"></xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Detalle" maxOccurs="1" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="200"></xs:maxLength>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RechazoCFE_PartesType">
+		<xs:sequence minOccurs="1" maxOccurs="1">
+			<xs:element name="Motivo" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						E02 CFE no tiene al menos una línea de detalle
+						E03 Tipo y Nº de CFE ya existe en los registros
+						de DGI E04 Tipo y Nº de CFE no se corresponden
+						con el CAE E05 Firma o Certificado electrónicos
+						no son válidos E06 No cumple validaciones con
+						(*) de Formato de CFE E08 Fecha Firma de CFE no
+						se corresponde con fecha CAE E20 Diferencia de
+						precios y/o condiciones E21 Diferencias en
+						plazos E22 Proveedor inhabilitado por organismo
+						de contralor E23 Contraprestación no recibida
+						E24 Diferencia precios y/o descuentos E25
+						Factura con error cálculos E26 Diferencia con
+						plazos E27..E60 (def. entre partes)
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="3" />						<xs:enumeration value="E02" />
+						<xs:enumeration value="E03" />
+						<xs:enumeration value="E04" />
+						<xs:enumeration value="E05" />						<xs:enumeration value="E07" />
+						<xs:enumeration value="E20" />
+						<xs:enumeration value="E21" />
+						<xs:enumeration value="E22"></xs:enumeration>
+						<xs:enumeration value="E23"></xs:enumeration>
+						<xs:enumeration value="E24"></xs:enumeration>
+						<xs:enumeration value="E25"></xs:enumeration>
+						<xs:enumeration value="E26"></xs:enumeration>
+						<xs:enumeration value="E27"></xs:enumeration>
+						<xs:enumeration value="E28"></xs:enumeration>
+						<xs:enumeration value="E29"></xs:enumeration>
+						<xs:enumeration value="E30"></xs:enumeration>
+						<xs:enumeration value="E31"></xs:enumeration>
+						<xs:enumeration value="E32"></xs:enumeration>
+						<xs:enumeration value="E33"></xs:enumeration>
+						<xs:enumeration value="E34"></xs:enumeration>
+						<xs:enumeration value="E35"></xs:enumeration>
+						<xs:enumeration value="E36"></xs:enumeration>
+						<xs:enumeration value="E37"></xs:enumeration>
+						<xs:enumeration value="E38"></xs:enumeration>
+						<xs:enumeration value="E39"></xs:enumeration>
+						<xs:enumeration value="E40"></xs:enumeration>
+						<xs:enumeration value="E41"></xs:enumeration>
+						<xs:enumeration value="E42"></xs:enumeration>
+						<xs:enumeration value="E43"></xs:enumeration>
+						<xs:enumeration value="E44"></xs:enumeration>
+						<xs:enumeration value="E45"></xs:enumeration>
+						<xs:enumeration value="E46"></xs:enumeration>
+						<xs:enumeration value="E47"></xs:enumeration>
+						<xs:enumeration value="E48"></xs:enumeration>
+						<xs:enumeration value="E49"></xs:enumeration>
+						<xs:enumeration value="E50"></xs:enumeration>
+						<xs:enumeration value="E51"></xs:enumeration>
+						<xs:enumeration value="E52"></xs:enumeration>
+						<xs:enumeration value="E53"></xs:enumeration>
+						<xs:enumeration value="E54"></xs:enumeration>
+						<xs:enumeration value="E55"></xs:enumeration>
+						<xs:enumeration value="E56"></xs:enumeration>
+						<xs:enumeration value="E57"></xs:enumeration>
+						<xs:enumeration value="E58"></xs:enumeration>
+						<xs:enumeration value="E59"></xs:enumeration>
+						<xs:enumeration value="E60"></xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Glosa" minOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="ns1:Glosa50Type">					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Detalle" maxOccurs="1" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"></xs:maxLength>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:simpleType name="NomArchType">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="40"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+
+
+
+
+	<xs:simpleType name="Monto_admite_negType">
+		<xs:annotation>
+			<xs:documentation>
+				Monto de 17 digitos (15,2), admite negativos
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="17" />
+			<xs:fractionDigits value="2" />
+			<xs:minInclusive value="-999999999999999.99" />
+			<xs:maxInclusive value="999999999999999.99" />
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="Cant_admite_negType">
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="17"/>
+			<xs:fractionDigits value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="PaisDscType">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="30"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="DireccionType">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="70"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:complexType name="InfoRespOriType">
+		<xs:sequence>
+			<xs:element name="IDRespSobre" type="xs:integer"></xs:element>
+			<xs:element name="IDEmisorSobre" type="ns1:IDRecEmiType"></xs:element>
+			<xs:element name="IDReceptorSobre" type="ns1:IDRecEmiType"></xs:element>
+			<xs:element name="IDTokenSobre" type="xs:base64Binary"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:simpleType name="Fecha_d2000_Type">
+		<xs:restriction base="xs:date">
+			<xs:minInclusive value="2000-01-01" fixed="false" />
+			<xs:maxInclusive value="2050-12-31" fixed="false" />
+		</xs:restriction>
+	</xs:simpleType>
+
+
+	<xs:simpleType name="ModVentaType">
+		<xs:annotation>
+			<xs:documentation>
+				1 - Régimen General 2 - Consignación 3 - Precio
+				Revisable 4 - Bienes propios a exclaves aduaneros 90
+				–Régimen general-exportación de servicios 99- Otras
+				transacciones
+
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:int">
+			<xs:enumeration value="1"></xs:enumeration>
+			<xs:enumeration value="2"></xs:enumeration>
+			<xs:enumeration value="3"></xs:enumeration>
+			<xs:enumeration value="4"></xs:enumeration>
+			<xs:enumeration value="90"></xs:enumeration>
+			<xs:enumeration value="99"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="ViaTranspType">
+		<xs:annotation>
+			<xs:documentation>
+				1 - Marítimo 2 - Aéreo 3 -Terrestre  8 - No Aplica  9 – Otro
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:int">
+			<xs:enumeration value="1"></xs:enumeration>
+			<xs:enumeration value="2"></xs:enumeration>
+			<xs:enumeration value="3"></xs:enumeration>
+			<xs:enumeration value="8"></xs:enumeration>
+			<xs:enumeration value="9"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="CompraIDType">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="50"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="PrecioUnitarioType">
+		<xs:annotation>
+			<xs:documentation>
+				Monto de 17 digitos (11,6) >= 0
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="17" />
+			<xs:fractionDigits value="6" />
+			<xs:minInclusive value="0.000000" />
+			<xs:maxInclusive value="99999999999.999999" />
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="DocTypemasNIE">
+		<xs:annotation>
+			<xs:documentation>
+				1: NIE 2: RUC (Uruguay) 3: C.I. (Uruguay) 4: Otros 5:
+				Pasaporte (todos los países) 6: DNI (documento de
+				identidad de Argentina, Brasil, Chile o Paraguay)
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:positiveInteger">
+			<xs:minInclusive value="1" />
+			<xs:maxInclusive value="6" />
+			<xs:enumeration value="1" />
+			<xs:enumeration value="2" />
+			<xs:enumeration value="3" />
+			<xs:enumeration value="4"></xs:enumeration>
+			<xs:enumeration value="5"></xs:enumeration>
+			<xs:enumeration value="6"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
