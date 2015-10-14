@@ -40,7 +40,7 @@ public class CreateEfacturaTest
 			/*
 			 * Create Efact object from json description
 			 */
-			EFact efactura = factory.getEFAController().createEfactura(json.getJSONObject("eFact"));
+			EFact efactura = factory.getCFEController().createEfactura(json.getJSONObject("eFact"));
 
 			RecepcionService service = new RecepcionServiceImpl();
 

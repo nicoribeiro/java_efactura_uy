@@ -6,6 +6,7 @@ import com.bluedot.efactura.CAEManager;
 import com.bluedot.efactura.CFEController;
 import com.bluedot.efactura.EFacturaException;
 import com.bluedot.efactura.EFacturaFactory;
+import com.bluedot.efactura.ServiceController;
 
 public class EFacturaFactoryImpl implements EFacturaFactory
 {
@@ -25,10 +26,15 @@ public class EFacturaFactoryImpl implements EFacturaFactory
 	}
 
 	@Override
-	public CFEController getEFAController() throws EFacturaException
+	public CFEController getCFEController() throws EFacturaException
 	{
 		return new CFEControllerImpl();
 
+	}
+
+	@Override
+	public ServiceController getServiceController() throws EFacturaException {
+		return new ServiceControllerImpl();
 	}
 
 }
