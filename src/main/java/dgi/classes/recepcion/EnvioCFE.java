@@ -94,7 +94,7 @@ public class EnvioCFE {
 
     @XmlElement(name = "Caratula", required = true)
     protected EnvioCFE.Caratula caratula;
-    @XmlElement(name = "CFE", required = true, namespace="http://nico")
+    @XmlElement(name = "CFE", required = true, namespace="http://cfe.dgi.gub.uy")
     protected List<CFEDefType> cfe;
     @XmlAttribute(name = "version", required = true)
     protected String version;

@@ -5,13 +5,20 @@
 // Generated on: 2015.08.13 at 01:48:11 AM UYT 
 //
 //
+
+//@javax.xml.bind.annotation.XmlSchema(namespace = "http://dgi.gub.uy", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
+
+
+
 @javax.xml.bind.annotation.XmlSchema(
 		namespace = "http://cfe.dgi.gub.uy", 
 		elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED,
 		
 		
-					    xmlns={@XmlNs(prefix="DGICFE", 
-					                  namespaceURI="http://cfe.dgi.gub.uy"),@XmlNs(prefix="cfe", namespaceURI="http://nico")}
+					    xmlns={@XmlNs(prefix="DGICFE", namespaceURI="http://cfe.dgi.gub.uy")
+					    ,@XmlNs(prefix="firma", namespaceURI="http://www.w3.org/2000/09/xmldsig#")
+					    
+		}
 					
 		
 		)  

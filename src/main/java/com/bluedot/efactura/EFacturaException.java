@@ -52,7 +52,8 @@ public class EFacturaException extends Throwable
 		 CAE_DATA_NOT_FOUND(4, "No existe un CAE valido para ese tipo de CFE"),
 		 WRAPPED_EXCEPTION(5, "Wrapper for Exception"), 
 		 CAE_NOT_AVAILABLE_ID(6,"No hay mas identificadores electronicos disponibles en el CAE para este tipo de CFE"), 
-		 MALFORMED_CFE(7,"CFE malformado");
+		 MALFORMED_CFE(7,"CFE malformado"), 
+		 NOT_SUPPORTED(8,"No soportado");
 
 
 		int code;

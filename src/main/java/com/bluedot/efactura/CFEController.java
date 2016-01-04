@@ -7,23 +7,27 @@ import dgi.classes.recepcion.CFEDefType;
 public interface CFEController
 {
 	/**
-	 * Crea una nueva factura electronica a partir de un objeto JSON.  
+	 * Crea una nueva efactura/NC-efactura/ND-efactura a partir de un objeto JSON.  
 	 * @param factura
 	 * @return
 	 * @throws EFacturaException 
 	 */
 	public CFEDefType.EFact createEfactura(JSONObject factura) throws EFacturaException;
+	public CFEDefType.EFact createNotaCreditoEfactura(JSONObject notaCredito, JSONObject referencia) throws EFacturaException;
+	public CFEDefType.EFact createNotaDebitoEfactura(JSONObject notaDebito, JSONObject referencia) throws EFacturaException;
 
 	/**
-	 * Crea una nueva ticket electronico a partir de un objeto JSON.  
+	 * Crea un nuevo eticket/NC-eticket/ND-eticket a partir de un objeto JSON.  
 	 * @param ticket
 	 * @return
 	 * @throws EFacturaException 
 	 */
 	public CFEDefType.ETck createETicket(JSONObject ticket)throws EFacturaException;
+	public CFEDefType.ETck createNotaCreditoETicket(JSONObject notaCredito, JSONObject referencia)throws EFacturaException;
+	public CFEDefType.ETck createNotaDebitoETicket(JSONObject notoDebito, JSONObject referencia)throws EFacturaException;
 	
 	/**
-	 * Crea una nueva remito electronico a partir de un objeto JSON.  
+	 * Crea un nuevo eremito a partir de un objeto JSON.  
 	 * @param remito
 	 * @return
 	 * @throws EFacturaException 
@@ -31,7 +35,7 @@ public interface CFEController
 	public CFEDefType.ERem createERemito(JSONObject remito)throws EFacturaException;
 	
 	/**
-	 * Crea una nueva resguardo electronica a partir de un objeto JSON.  
+	 * Crea un nuevo eresguardo a partir de un objeto JSON.  
 	 * @param resguardo
 	 * @return
 	 * @throws EFacturaException 
@@ -39,7 +43,7 @@ public interface CFEController
 	public CFEDefType.EResg createEResguardo(JSONObject resguardo)throws EFacturaException;
 	
 	/**
-	 * Crea una nuevo remito electronico a partir de un objeto JSON.  
+	 * Crea un nuevo eremito de exportacion a partir de un objeto JSON.  
 	 * @param remito
 	 * @return
 	 * @throws EFacturaException 
@@ -47,7 +51,7 @@ public interface CFEController
 	public CFEDefType.ERemExp createERemitoExportacion(JSONObject remito)throws EFacturaException;
 	
 	/**
-	 * Crea una nueva factura electronica de exportacion a partir de un objeto JSON.  
+	 * Crea una nueva efactura de exportacion a partir de un objeto JSON.  
 	 * @param factura
 	 * @return
 	 * @throws EFacturaException 

@@ -308,7 +308,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "CFEDefType", namespace="http://nico", propOrder = {
+@XmlType(name = "CFEDefType", namespace="http://cfe.dgi.gub.uy", propOrder = {
     "eTck",
     "eFact",
     "eFactExp",
@@ -318,9 +318,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "signature"
 })
 public class CFEDefType {
-    @XmlElement(namespace="http://nico")
     protected CFEDefType.ETck eTck;
-    @XmlElement(namespace="http://nico")
     protected CFEDefType.EFact eFact;
     @XmlElement(name = "eFact_Exp")
     protected CFEDefType.EFactExp eFactExp;

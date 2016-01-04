@@ -1,10 +1,8 @@
 package com.bluedot.efactura.main;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 
 import com.bluedot.commons.IO;
-import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.services.impl.RecepcionServiceImpl;
 
@@ -22,7 +20,7 @@ public class EnvioDeCFETest {
 		try
 		{
 			
-			response = service.send(IO.readFile("resources/examples/cfe-signed.xml", Charset.forName("UTF-8")));
+			response = service.sendCFE(IO.readFile("resources/examples/cfe-signed.xml", Charset.forName("UTF-8")));
 			
 			 System.out.println("Output data:\n" + response.getXmlData());
 		} catch (Throwable e)

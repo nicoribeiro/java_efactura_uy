@@ -6,7 +6,10 @@
 bin/
 build/
 src/main/resources/security/
-
+resources/cfe/
+resources/images/qr/
 *.pkcs12
 
 resources/security/security.properties
+
+hs_err_pid43043.log

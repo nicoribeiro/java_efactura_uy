@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns1:Reporte xsi:schemaLocation="http://cfe.dgi.gub.uy ReporteDiarioCFE_v1.3.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+	xmlns:ns1="http://cfe.dgi.gub.uy">
+
+	<ns1:Caratula version="1.0">
+		<ns1:RUCEmisor>219999820013</ns1:RUCEmisor>
+		<ns1:FechaResumen>2012-01-19</ns1:FechaResumen>
+		<ns1:SecEnvio>1</ns1:SecEnvio>
+		<ns1:TmstFirmaEnv>2012-02-09T14:08:54Z</ns1:TmstFirmaEnv>
+		<ns1:CantComprobantes>7</ns1:CantComprobantes>
+	</ns1:Caratula>
+	<ns1:Rsmn_Resg>
+		<ns1:TipoComp>182</ns1:TipoComp>
+		<ns1:RsmnData>
+			<ns1:Montos>
+				<ns1:Mnts_Res_Item>
+					<ns1:Fecha>2012-01-19</ns1:Fecha>
+					<ns1:CodSuc>1</ns1:CodSuc>
+					<ns1:TotMntRetenido>140050</ns1:TotMntRetenido>
+				</ns1:Mnts_Res_Item>
+			</ns1:Montos>
+			<ns1:CantDocsUtil>5</ns1:CantDocsUtil>
+			<ns1:CantDocsAnulados>1</ns1:CantDocsAnulados>
+			<ns1:CantDocsEmi>4</ns1:CantDocsEmi>
+			<ns1:RngDocsUtil>
+				<ns1:RDU_Item>
+					<ns1:Serie>A</ns1:Serie>
+					<ns1:NroDesde>1</ns1:NroDesde>
+					<ns1:NroHasta>5</ns1:NroHasta>
+				</ns1:RDU_Item>
+			</ns1:RngDocsUtil>
+			<ns1:RngDocsAnulados>
+				<ns1:RDA_Item>
+					<ns1:Serie>A</ns1:Serie>
+					<ns1:NroDesde>5</ns1:NroDesde>
+					<ns1:NroHasta>5</ns1:NroHasta>
+				</ns1:RDA_Item>
+			</ns1:RngDocsAnulados>
+		</ns1:RsmnData>
+	</ns1:Rsmn_Resg>
+	<ns1:Rsmn_Resg_Cont>
+		<ns1:TipoComp>282</ns1:TipoComp>
+		<ns1:RsmnData>
+			<ns1:Montos>
+				<ns1:Mnts_Res_Item>
+					<ns1:Fecha>2012-01-19</ns1:Fecha>
+					<ns1:CodSuc>1</ns1:CodSuc>
+					<ns1:TotMntRetenido>0</ns1:TotMntRetenido>
+				</ns1:Mnts_Res_Item>
+			</ns1:Montos>
+			<ns1:CantDocsUtil>2</ns1:CantDocsUtil>
+			<ns1:CantDocsAnulados>1</ns1:CantDocsAnulados>
+			<ns1:CantDocsEmi>1</ns1:CantDocsEmi>
+		</ns1:RsmnData>
+	</ns1:Rsmn_Resg_Cont>
+</ns1:Reporte>

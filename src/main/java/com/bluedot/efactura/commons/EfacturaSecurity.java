@@ -1,6 +1,5 @@
 package com.bluedot.efactura.commons;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -31,19 +30,15 @@ import org.xml.sax.SAXException;
 
 import com.bluedot.commons.IO;
 import com.bluedot.commons.PrettyPrint;
-import com.bluedot.commons.Settings;
 import com.bluedot.commons.XmlSignature;
-import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.EFacturaException;
-import com.bluedot.efactura.EFacturaException.EFacturaErrors;
-import com.bluedot.efactura.MyNamespacePrefixMapper;
 
 import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.recepcion.EnvioCFE;
 
 public class EfacturaSecurity
 {
-
+//TODO no se usa este metodo
 	public static EnvioCFE addInternalSignature(EnvioCFE envioCFE) throws EFacturaException
 	{
 
@@ -51,7 +46,7 @@ public class EfacturaSecurity
 		{
 			CFEDefType cfe = envioCFE.getCFE().get(0);
 
-			String filenamePrefix = getFilenamePrefix(cfe);
+			String filenamePrefix = Commons.getFilenamePrefix(cfe);
 
 			StringWriter unsignedWriter = new StringWriter();
 			StringWriter signedWriter = new StringWriter();
@@ -83,7 +78,8 @@ public class EfacturaSecurity
 
 			String certPass = Commons.getCertificatePassword();
 
-			XmlSignature.sign(certName, certPass, keystore, document, "cfe:CFE");
+			XmlSignature xmlSignature = new XmlSignature(certName, certPass, keystore);
+			xmlSignature.sign(document);
 
 			// Create the Unmarshaller
 			Unmarshaller unmarshaller = context.createUnmarshaller();
@@ -159,37 +155,15 @@ public class EfacturaSecurity
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return null;
 
 	}
 
-	private static String getFilenamePrefix(CFEDefType cfe) throws EFacturaException, FileNotFoundException, IOException
-	{
-		String folder = Settings.getInstance().getString(Constants.GENERATED_CFE_FOLDER, "resources" + File.separator + "cfe");
-
-		if (cfe.getEFact() != null)
-			return folder + File.separator + "efactura" + File.separator + cfe.getEFact().getEncabezado().getIdDoc().getSerie() + "_" + cfe.getEFact().getEncabezado().getIdDoc().getNro().toString();
-
-		if (cfe.getERem() != null)
-			return folder + File.separator + "eRemito" + File.separator + cfe.getERem().getEncabezado().getIdDoc().getSerie() + "_" + cfe.getERem().getEncabezado().getIdDoc().getNro().toString();
-
-		if (cfe.getETck() != null)
-			return folder + File.separator + "eTicket" + File.separator + cfe.getETck().getEncabezado().getIdDoc().getSerie() + "_" + cfe.getETck().getEncabezado().getIdDoc().getNro().toString();
-
-		if (cfe.getEFactExp() != null)
-			return folder + File.separator + "eFacturaExp" + File.separator + cfe.getEFactExp().getEncabezado().getIdDoc().getSerie() + "_"
-					+ cfe.getEFactExp().getEncabezado().getIdDoc().getNro().toString();
-
-		if (cfe.getERemExp() != null)
-			return folder + File.separator + "eRemitoExp" + File.separator + cfe.getERemExp().getEncabezado().getIdDoc().getSerie() + "_"
-					+ cfe.getERemExp().getEncabezado().getIdDoc().getNro().toString();
-
-		if (cfe.getEResg() != null)
-			return folder + File.separator + "eResguardo" + File.separator + cfe.getEResg().getEncabezado().getIdDoc().getSerie() + "_" + cfe.getEResg().getEncabezado().getIdDoc().getNro().toString();
-
-		throw EFacturaException.raise(EFacturaErrors.MALFORMED_CFE).setDetailMessage("No se encontro un cfe dentro del CFEDefType");
-	}
+	
 
 	public static byte[] getCertificate(String certName, String certificatePassword, KeyStore keystore) throws NoSuchAlgorithmException, UnrecoverableEntryException, KeyStoreException,
 			CertificateEncodingException

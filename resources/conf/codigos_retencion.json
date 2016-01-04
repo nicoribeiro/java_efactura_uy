@@ -1,0 +1,231 @@
+[
+ {"form":"1144",	"linea":"131", 	"descripcion":"RETENCION MENSUAL PF"}
+,{"form":"1144",	"linea":"132", 	"descripcion":"AJUSTE ANUAL PF"}
+,{"form":"1144",	"linea":"133", 	"descripcion":"RETENCION COMPLEMENTARIA"}
+,{"form":"1144",	"linea":"134", 	"descripcion":"AFAP- RETENCION MENSUAL"}
+,{"form":"1144",	"linea":"135", 	"descripcion":"RETENCION CORRESP. A EJERCICIOS ANTERIORES"}
+,{"form":"1144",	"linea":"137", 	"descripcion":"RETENCION MENSUAL NF"}
+,{"form":"1144",	"linea":"138", 	"descripcion":"AJUSTE ANUAL NF"}
+,{"form":"1144",	"linea":"139", 	"descripcion":"FONASA - RETENCION MENSUAL"}
+,{"form":"1145",	"linea":"141", 	"descripcion":"RETENCION MENSUAL"}
+,{"form":"1145",	"linea":"142", 	"descripcion":"AJUSTE ANUAL"}
+,{"form":"1145",	"linea":"143", 	"descripcion":"RETENCION COMPLEMENTARIA"}
+,{"form":"1145",	"linea":"145", 	"descripcion":"RETENCION CORRESP. A EJERCICIOS ANTERIORES"}
+,{"form":"1146",	"linea":"051", 	"descripcion":"RET. S/INT. DE DEPOSITOS M/N Y UI A MAS DE 1 AÑO"}
+,{"form":"1146",	"linea":"052", 	"descripcion":"RET. S/INT. DE DEPOSITOS M/N A 1 AÑO O MENOS"}
+,{"form":"1146",	"linea":"053", 	"descripcion":"RET. S/INT. DE OBL Y OTROS TITULOS A MAS DE 3 AÑOS"}
+,{"form":"1146",	"linea":"054", 	"descripcion":"RET. S/RESTANTES RENTAS FINANCIERAS"}
+,{"form":"1146",	"linea":"061", 	"descripcion":"RET. S/RENTAS VITALICIAS, SEGUROS Y SIMILAR"}
+,{"form":"1146",	"linea":"062", 	"descripcion":"RET. S/RESTANTES RENTAS DE CAPITAL MOBILIARIO"}
+,{"form":"1146",	"linea":"063", 	"descripcion":"RET. S/DIVIDENDOS Y UTILIDADES PAGADAS"}
+,{"form":"1146",	"linea":"064", 	"descripcion":"RET. S/DER. FEDERATIVOS, DE IMAGEN Y SIM DEP. "}
+,{"form":"1146",	"linea":"065", 	"descripcion":"RET. S/DERECHOS DE AUTOR DE OBRAS LIT, ART O CIENTIFICAS"}
+,{"form":"1146",	"linea":"066", 	"descripcion":"RET. S/DIVID. Y UTIL. ORIGEN - NUM. 2, ART.3, T.7"}
+,{"form":"1146",	"linea":"067", 	"descripcion":"RET. S/REND. CAP. MOB. PROV. DE ENTIDAD. NO RESIDEN."}
+,{"form":"1146",	"linea":"081", 	"descripcion":"RET. POR INC. PATRIMONIALES S/BS. MUEBLES ADQ. REMATE "}
+,{"form":"1146",	"linea":"136", 	"descripcion":"RET. S/RENTAS DE TRABAJADORES INDEPENDIENTE"}
+,{"form":"1146",	"linea":"153", 	"descripcion":"RET. S/REND DE OBL Y OTROS TITULOS A MAS DE 3 AÑOS"}
+,{"form":"1146",	"linea":"154", 	"descripcion":"RET. S/RESTANTES RENTAS FINANCIERAS"}
+,{"form":"1146",	"linea":"161", 	"descripcion":"RET. S/RENTAS VITALICIAS, SEGUROS Y SIMILARES"}
+,{"form":"1146",	"linea":"162", 	"descripcion":"RET. S/RESTANTES RENTAS DE CAPITAL MOBILIARIO"}
+,{"form":"1146",	"linea":"163", 	"descripcion":"RET. S/DIVIDENDOS Y UTILIDADES PAGADAS"}
+,{"form":"1146",	"linea":"164", 	"descripcion":"RET. S/DER. FEDERATIVOS, DE IMAGEN Y SIM DEP. "}
+,{"form":"1146",	"linea":"165", 	"descripcion":"RET. S/DERECHOS DE AUTOR DE OBRAS LIT, ART O CIENTIFICAS"}
+,{"form":"1146",	"linea":"166", 	"descripcion":"RET. S/DIVID. Y UTIL. ORIGEN - NUM. 2, ART.3, T.7"}
+,{"form":"1146",	"linea":"167", 	"descripcion":"RET. S/REND. CAP. MOB. PROV. DE ENTIDAD. NO RESIDEN."}
+,{"form":"1146",	"linea":"171", 	"descripcion":"RET. S/ARREND Y OTRAS RENTAS DE CAPITAL INMOBILIARIO"}
+,{"form":"1146",	"linea":"172", 	"descripcion":"RET. S/ARREND REALIZADA POR OTRO AGENTE"}
+,{"form":"1146",	"linea":"175", 	"descripcion":"RET. S/ARREND. REALIZ. A LA ENTIDAD ADMINSTRADORA"}
+,{"form":"1146",	"linea":"176", 	"descripcion":"RET. S/ARRENDAMIENTOS A TURISTAS"}
+,{"form":"1146",	"linea":"181", 	"descripcion":"RET. POR INC. PATRIMONIALES S/BS. MUEBLES ADQ. REM"}
+,{"form":"1246",	"linea":"031", 	"descripcion":"RET. S/RENTAS DE TRABAJADORES DEPENDIENTES"}
+,{"form":"1246",	"linea":"036", 	"descripcion":"RET. S/RENTAS DE TRABAJADORES INDEPENDIENTES"}
+,{"form":"1246",	"linea":"037", 	"descripcion":"RET. S/RENTAS TRABAJ. INDEPEND.–CONV. DOBLE IMPOS"}
+,{"form":"1246",	"linea":"041", 	"descripcion":"RET. S/PASIVIDADES"}
+,{"form":"1246",	"linea":"051", 	"descripcion":"RET. S/INT. DE DEPOSITOS M/N Y UI A MAS DE UN AÑO"}
+,{"form":"1246",	"linea":"052", 	"descripcion":"RET. S/INT. DE DEPOSITOS M/N A 1 AÑO O MENOS"}
+,{"form":"1246",	"linea":"053", 	"descripcion":"RET. S/INT. DE OBL Y OTROS TITULOS A MAS DE 3 AÑOS"}
+,{"form":"1246",	"linea":"054", 	"descripcion":"RET. S/RESTANTES RENTAS FINANCIERAS"}
+,{"form":"1246",	"linea":"055", 	"descripcion":"RET. S/ INTERESES – CONV. DOBLE IMPOS"}
+,{"form":"1246",	"linea":"061", 	"descripcion":"RET. S/RENTAS VITALICIAS. SEGUROS Y SIMILARES"}
+,{"form":"1246",	"linea":"062", 	"descripcion":"RET. S/RESTANTES RENTAS DE CAPITAL MOBILIARIO"}
+,{"form":"1246",	"linea":"063", 	"descripcion":"RET. S/DIVIDENDOS Y UTILIDADES PAGADAS"}
+,{"form":"1246",	"linea":"064", 	"descripcion":"RET. S/DER FEDERATIVOS Y SIM DE DEP. "}
+,{"form":"1246",	"linea":"065", 	"descripcion":"RET. S/DIVID. Y UTILID. PAGADAS–CONV. DOBLE IMPOS"}
+,{"form":"1246",	"linea":"066", 	"descripcion":"RET. S/DER FEDE, IMAG, SIM DE DEP.–CONV DOBLE IMPOS"}
+,{"form":"1246",	"linea":"067", 	"descripcion":"RET. S/GANAN. DE CAPITAL MOBILIA.–CONV DOBLE IMPOS"}
+,{"form":"1246",	"linea":"071", 	"descripcion":"RET. S/ARREND Y OTRAS RENTAS DE CAPITAL INMOBILIARIO"}
+,{"form":"1246",	"linea":"072", 	"descripcion":"RET. S/ARREND REALIZADA POR OTRO AGENTE"}
+,{"form":"1246",	"linea":"076", 	"descripcion":"RET. SOBRE ARRENDAMIENTOS A TURISTAS"}
+,{"form":"1246",	"linea":"081", 	"descripcion":"RET. POR INC. PATRIMONIALES S/BS. MUEBLES ADQ. REMATE "}
+,{"form":"1246",	"linea":"082", 	"descripcion":"RET. POR OTROS INC. PATRIMONIALES SEGUN DTO. 155/008 "}
+,{"form":"1246",	"linea":"091", 	"descripcion":"RET. S/RENTAS DE ACT. EMPRESARIALES Y ASIMILADAS"}
+,{"form":"1246",	"linea":"092", 	"descripcion":"RET. S/RENTAS DE ACT. EMPRESARIALES INTERNACIONAL"}
+,{"form":"1246",	"linea":"093", 	"descripcion":"RET. S/ RENTAS DE ACT. EMPRESAR.–CONV DOBLE IMPOS"}
+,{"form":"1246",	"linea":"131", 	"descripcion":"RET. S/RENTAS DE TRABAJADORES DEPENDIENTES"}
+,{"form":"1246",	"linea":"136", 	"descripcion":"RET. S/RENTAS DE TRABAJADORES INDEPENDIENTES"}
+,{"form":"1246",	"linea":"137", 	"descripcion":"RET. S/RENTAS TRABAJ. INDEPEND.–CONV. DOBLE IMPOS"}
+,{"form":"1246",	"linea":"141", 	"descripcion":"RET. S/PASIVIDADES"}
+,{"form":"1246",	"linea":"153", 	"descripcion":"RET. S/INT. DE OBL Y OTROS TITULOS A MAS DE 3 AÑOS"}
+,{"form":"1246",	"linea":"154", 	"descripcion":"RET. S/RESTANTES RENTAS FINANCIERAS"}
+,{"form":"1246",	"linea":"155", 	"descripcion":"RET. S/ INTERESES – CONV. DOBLE IMPOS."}
+,{"form":"1246",	"linea":"161", 	"descripcion":"RET. S/RENTAS VITALICIAS. SEGUROS Y SIMILARES"}
+,{"form":"1246",	"linea":"162", 	"descripcion":"RET. S/RESTANTES RENTAS DE CAPITAL MOBILIARIO"}
+,{"form":"1246",	"linea":"163", 	"descripcion":"RET. S/DIVIDENDOS Y UTILIDADES PAGADAS"}
+,{"form":"1246",	"linea":"164", 	"descripcion":"RET. S/DER FEDERATIVOS Y SIM DE DEP. "}
+,{"form":"1246",	"linea":"165", 	"descripcion":"RET. S/DIVID. Y UTILID. PAGADAS–CONV. DOBLE IMPOS."}
+,{"form":"1246",	"linea":"166", 	"descripcion":"RET. S/DER FEDE, IMAG, SIM DE DEP.–CONV DOBLE IMPO"}
+,{"form":"1246",	"linea":"167", 	"descripcion":"RET. S/GANAN. DE CAPITAL MOBILIA.–CONV DOBLE IMPOS"}
+,{"form":"1246",	"linea":"171", 	"descripcion":"RET. S/ARREND Y OTRAS RENTAS DE CAPITAL INMOBILIARIO"}
+,{"form":"1246",	"linea":"172", 	"descripcion":"RET. S/ARREND REALIZADA POR OTRO AGENTE     "}
+,{"form":"1246",	"linea":"175", 	"descripcion":"RET. S/ARREND. REALIZ. A LA ENTIDAD ADMINSTRADORA"}
+,{"form":"1246",	"linea":"176", 	"descripcion":"RET. S/ARRENDAMIENTOS A TURISTAS"}
+,{"form":"1246",	"linea":"181", 	"descripcion":"RET. POR INC. PATRIMONIALES S/BS. MUEBLES ADQ. REMATE"}
+,{"form":"1246",	"linea":"182", 	"descripcion":"RET. POR OTROS INC. PATRIMONIALES SEGUN DTO. 155/008 "}
+,{"form":"1246",	"linea":"183", 	"descripcion":"RET. S/INCREMENTOS PATRIMONIALES - CONV DOBLE IMPOS"}
+,{"form":"1246",	"linea":"191", 	"descripcion":"RET. S/RENTAS DE ACT. EMPRESARIALES Y ASIMILADAS"}
+,{"form":"1246",	"linea":"192", 	"descripcion":"RET. S/RENTAS DE ACT. EMPRESARIALES INTERNACIONAL"}
+,{"form":"1246",	"linea":"193", 	"descripcion":"RET. S/ RENTAS DE ACT. EMPRESAR.–CONV DOBLE IMPOS"}
+,{"form":"1845",	"linea":"141", 	"descripcion":"RETENCION MENSUAL"}
+,{"form":"1845",	"linea":"142", 	"descripcion":"AJUSTE ANUAL"}
+,{"form":"1845",	"linea":"143", 	"descripcion":"RETENCION COMPLEMENTARIA"}
+,{"form":"1845",	"linea":"145", 	"descripcion":"RETENCION CORRESP A EJERCICIOS ANTERIORES"}
+,{"form":"1700",	"linea":"048", 	"descripcion":"ITP - IMPUESTO A LAS TRANSMISIONES PATRIMONOLES"}
+,{"form":"1700",	"linea":"082", 	"descripcion":"IRPF - INCREMENTOS PATRIMONIALES - AG. RET."}
+,{"form":"1700",	"linea":"083", 	"descripcion":"IRNR - INCREMENTOS PATRIMONIALES - AG. RET."}
+,{"form":"1701",	"linea":"048", 	"descripcion":"ITP - IMPUESTO A LAS TRANSMISIONES PATRIMONOLES"}
+,{"form":"1701",	"linea":"082", 	"descripcion":"IRPF - INCREMENTOS PATRIMONIALES - AG. RET."}
+,{"form":"1701",	"linea":"083", 	"descripcion":"IRNR - INCREMENTOS PATRIMONIALES - AG. RET."}
+,{"form":"2142",	"linea":"011", 	"descripcion":"AG.RET-ADICIONAL MEVIR PLAZA (COD.574) "}
+,{"form":"2142",	"linea":"012", 	"descripcion":"AG.RET-ADICIONAL INIA PLAZA (COD.576) "}
+,{"form":"2142",	"linea":"021", 	"descripcion":"AG.RET-ADICIONAL MEVIR EXPORTACION (COD.584) "}
+,{"form":"2142",	"linea":"022", 	"descripcion":"AG.RET-ADICIONAL INIA EXPORTACION (COD.586) "}
+,{"form":"2142",	"linea":"101", 	"descripcion":"AG.RET-IMEBA MIGRACION "}
+,{"form":"2142",	"linea":"110", 	"descripcion":"AG.RET-IMEBA PLAZA-LANAS (COD.572) "}
+,{"form":"2142",	"linea":"111", 	"descripcion":"AG.RET-IMEBA PLAZA-CUEROS (COD.572) "}
+,{"form":"2142",	"linea":"112", 	"descripcion":"AG.RET-IMEBA PLAZA-GANADO BOVINO (COD.572) "}
+,{"form":"2142",	"linea":"113", 	"descripcion":"AG.RET-IMEBA PLAZA-GANADO OVINO (COD.572) "}
+,{"form":"2142",	"linea":"114", 	"descripcion":"AG.RET-IMEBA PLAZA-GANADO SUINO (COD.572) "}
+,{"form":"2142",	"linea":"115", 	"descripcion":"AG.RET-IMEBA PLAZA-CEREALES Y OLEAGIN.(COD.572) "}
+,{"form":"2142",	"linea":"116", 	"descripcion":"AG.RET-IMEBA PLAZA-LECHE (COD.572) "}
+,{"form":"2142",	"linea":"117", 	"descripcion":"AG.RET-IMEBA PLAZA-PROD.DE AVICULTURA (COD.572)  "}
+,{"form":"2142",	"linea":"118", 	"descripcion":"AG.RET-IMEBA PLAZA-PROD.DE APICULTURA (COD.572)  "}
+,{"form":"2142",	"linea":"119", 	"descripcion":"AG.RET-IMEBA PLAZA-PROD.DE CUNICULTURA (COD.572)  "}
+,{"form":"2142",	"linea":"120", 	"descripcion":"AG.RET-IMEBA PLAZA-FLORES Y SEMILLAS (COD.572)  "}
+,{"form":"2142",	"linea":"121", 	"descripcion":"AG.RET-IMEBA PLAZA-HORTICULTURA Y FRUTIC.(COD.572) "}
+,{"form":"2142",	"linea":"122", 	"descripcion":"AG.RET-IMEBA PLAZA-CITRUS (COD.572) "}
+,{"form":"2142",	"linea":"123", 	"descripcion":"AG.RET-IMEBA PLAZA-RANICULTURA (COD.572)"}
+,{"form":"2142",	"linea":"124", 	"descripcion":"AG.RET-IMEBA PLAZA-HELICICULTURA(COD.572)"}
+,{"form":"2142",	"linea":"125", 	"descripcion":"AG.RET-IMEBA PLAZA-CRIA DE NANDU(COD.572)"}
+,{"form":"2142",	"linea":"126", 	"descripcion":"AG.RET-IMEBA PLAZA-CRIA DE NUTRIAS(COD.572)"}
+,{"form":"2142",	"linea":"127", 	"descripcion":"AG.RET-IMEBA PLAZA-PRODUCTOS DE ORIGEN FORESTAL(COD.572) "}
+,{"form":"2142",	"linea":"128", 	"descripcion":"AG.RET-IMEBA PLAZA - RESTANTES PRODUCTOS AGROP. (COD.572)"}
+,{"form":"2142",	"linea":"129", 	"descripcion":"AG.RET- IMEBA PLAZA - CAÑA DE AZUCAR (COD.572)"}
+,{"form":"2142",	"linea":"210", 	"descripcion":"AG.RET-IMEBA EXPORTACION-LANAS (COD.582) "}
+,{"form":"2142",	"linea":"211", 	"descripcion":"AG.RET-IMEBA EXPORTACION-CUEROS (COD.582) "}
+,{"form":"2142",	"linea":"212", 	"descripcion":"AG.RET-IMEBA EXPORTACION-GANADO BOVINO (COD.582) "}
+,{"form":"2142",	"linea":"213", 	"descripcion":"AG.RET-IMEBA EXPORTACION-GANADO OVINO (COD.582) "}
+,{"form":"2142",	"linea":"214", 	"descripcion":"AG.RET-IMEBA EXPORTACION-GANADO SUINO (COD.582) "}
+,{"form":"2142",	"linea":"215", 	"descripcion":"AG.RET-IMEBA EXPORTACION-CEREALES Y OLEAGIN.(COD.582) "}
+,{"form":"2142",	"linea":"216", 	"descripcion":"AG.RET-IMEBA EXPORTACION-LECHE (COD.582) "}
+,{"form":"2142",	"linea":"217", 	"descripcion":"AG.RET-IMEBA EXPORTACION-PROD.DE AVICULTURA (COD.582)  "}
+,{"form":"2142",	"linea":"218", 	"descripcion":"AG.RET-IMEBA EXPORTACION-PROD.DE APICULTURA (COD.582)  "}
+,{"form":"2142",	"linea":"219", 	"descripcion":"AG.RET-IMEBA EXPORTACION-PROD.DE CUNICULTURA (COD.582)  "}
+,{"form":"2142",	"linea":"220", 	"descripcion":"AG.RET-IMEBA EXPORTACION-FLORES Y SEMILLAS (COD.582)  "}
+,{"form":"2142",	"linea":"221", 	"descripcion":"AG.RET-IMEBA EXPORTACION-HORTICULTURA Y FRUTIC.(COD.582)   "}
+,{"form":"2142",	"linea":"222", 	"descripcion":"AG.RET-IMEBA EXPORTACION-CITRUS (COD.582) "}
+,{"form":"2142",	"linea":"223", 	"descripcion":"AG.RET-IMEBA EXP.-RANICULTURA (COD.572)"}
+,{"form":"2142",	"linea":"224", 	"descripcion":"AG.RET-IMEBA EXP.-HELICICULTURA(COD.572)"}
+,{"form":"2142",	"linea":"225", 	"descripcion":"AG.RET-IMEBA EXP.-CRIA DE NANDU(COD.572)"}
+,{"form":"2142",	"linea":"226", 	"descripcion":"AG.RET-IMEBA EXP-CRIA DE NUTRIAS(COD.572)"}
+,{"form":"2142",	"linea":"227", 	"descripcion":"AG.RET-IMEBA EXP.-PRODUCTOS DE ORIGEN FORESTAL(COD.572) "}
+,{"form":"2142",	"linea":"228", 	"descripcion":"AG.RET-IMEBA EXP-RESTANTES PRODUCTOS AGROP.(COD.572)"}
+,{"form":"2142",	"linea":"229", 	"descripcion":"AG.RET- IMEBA EXP - CAÑA DE AZUCAR (COD.572)"}
+,{"form":"2180",	"linea":"048", 	"descripcion":"ITP - IMPUESTO A LAS TRASMISIONES PATRIMONIALES "}
+,{"form":"2180",	"linea":"049", 	"descripcion":"ITP - ADICIONAL IMPUESTO A LAS TRASMISIONES PATRIMONIALES "}
+,{"form":"2181",	"linea":"040", 	"descripcion":"REDUCCION DEL IVA – DECRETO 203/014"}
+,{"form":"2181",	"linea":"410", 	"descripcion":"REDUCCION ALICUOTA LEY 17.934 "}
+,{"form":"2181",	"linea":"411", 	"descripcion":"REDUCCION ALICUOTA ART.5 DEC. 288/012 "}
+,{"form":"2181",	"linea":"412", 	"descripcion":"CRED. ARRENDAMIENTO TERMINALES ART.12 DEC. 288/012"}
+,{"form":"2181",	"linea":"413", 	"descripcion":"REDUCCION TOTAL DEL IVA A TURISTAS NO RESIDENTES"}
+,{"form":"2181",	"linea":"414", 	"descripcion":"CREDITO ARRENDAMIENTO A TURISTAS NO RESIDENTES"}
+,{"form":"2181",	"linea":"415", 	"descripcion":"REDUCCION DEL IVA - ART.10 DEC. 203/014"}
+,{"form":"2181",	"linea":"421", 	"descripcion":"REDUCCION ALICUOTA ART.6 DEC. 288/012"}
+,{"form":"2181",	"linea":"422", 	"descripcion":"CRED. ARRENDAMIENTO TERMINALES ART.13 DEC. 288/012"}
+,{"form":"2181",	"linea":"425", 	"descripcion":"REDUCCION DEL IVA - ART.13 DEC. 203/014"}
+,{"form":"2183",	"linea":"010", 	"descripcion":"IVA "}
+,{"form":"2183",	"linea":"011", 	"descripcion":"IVA BANCA DE CUBIERTA COLECTIVA "}
+,{"form":"2183",	"linea":"021", 	"descripcion":"IRIC - REGALIAS, ARREND., USO Y CESION DE USO DE EQUIP. "}
+,{"form":"2183",	"linea":"022", 	"descripcion":"IRIC - REMUNERACIONES DE SERVICIOS TECNICOS "}
+,{"form":"2183",	"linea":"023", 	"descripcion":"IRIC - DIVIDENDOS "}
+,{"form":"2183",	"linea":"024", 	"descripcion":"IRIC - UTILIDADES PERSONAS DEL EXTERIOR "}
+,{"form":"2183",	"linea":"025", 	"descripcion":"IRIC - DERECHOS DE AUTOR "}
+,{"form":"2183",	"linea":"030", 	"descripcion":"IMPUESTO AL PATRIMONIO "}
+,{"form":"2183",	"linea":"031", 	"descripcion":"IMPUESTO AL PATRIMONIO - CONVENIO DOBLE IMPOSICION"}
+,{"form":"2183",	"linea":"040", 	"descripcion":"IMPUESTO A LAS COMISIONES "}
+,{"form":"2183",	"linea":"041", 	"descripcion":"IMP. A LA  COMPRA VTA  BS. MUEBLES EN REMATE PUBLICO "}
+,{"form":"2183",	"linea":"042", 	"descripcion":"IMPUESTO A LOS ACTIVOS DE EMPRESAS BANCARIAS "}
+,{"form":"2183",	"linea":"043", 	"descripcion":"IMP. A LOS INGRESOS DE LOS ORGANIZADORES DE SORTEOS "}
+,{"form":"2183",	"linea":"044", 	"descripcion":"IMP.A LAS RETRIB. POR SERV.AL ESTADO (ART.587 LEY 17.296) "}
+,{"form":"2183",	"linea":"045", 	"descripcion":"ADIC. IMP. A LAS RETRIB. PERSONALES (ART.7 LEY 17.453) "}
+,{"form":"2183",	"linea":"046", 	"descripcion":"IMPUESTO DE CONTROL DEL SISTEMA FINANCIERO "}
+,{"form":"2183",	"linea":"047", 	"descripcion":"IMPUESTO A LAS RETRIB.PERSONALES (ART.7 LEY 17.502) "}
+,{"form":"2183",	"linea":"051", 	"descripcion":"IVA - FRIGORIFICOS Y MATADEROS "}
+,{"form":"2183",	"linea":"052", 	"descripcion":"IVA - INAVI "}
+,{"form":"2183",	"linea":"060", 	"descripcion":"IMESI "}
+,{"form":"2183",	"linea":"070", 	"descripcion":"IMP. A LAS CESIONES DE DERECHOS SOBRE DEPORTISTAS "}
+,{"form":"2183",	"linea":"110", 	"descripcion":"IVA - PRESTACIONES SERVICIOS DE SALUD (ART.8 BIS DTO. 220/98) "}
+,{"form":"2183",	"linea":"111", 	"descripcion":"IVA -CONTRATOS CONSULT. CON EL  ESTADO (ART.7 DTO. 220/98) "}
+,{"form":"2183",	"linea":"112", 	"descripcion":"IVA - CORREDORES DE SEGUROS (RES. 406/82) "}
+,{"form":"2183",	"linea":"113", 	"descripcion":"IVA - CORREDORES DE BOLSA (RES.10/83) "}
+,{"form":"2183",	"linea":"114", 	"descripcion":"IVA - EMP.SEGURIDAD, VIGILANCIA Y LIMPIEZA (D.194/00 Y 528/03)"}
+,{"form":"2183",	"linea":"115", 	"descripcion":"IVA - EMP. TRANSPORTISTAS PROFESIONALES DE CARGA "}
+,{"form":"2183",	"linea":"116", 	"descripcion":"IVA - ENTIDADES ASEGURADORAS ( DTO. 336/03) "}
+,{"form":"2183",	"linea":"117", 	"descripcion":"IVA - TRANSPORTE TERRESTRE DE PASAJEROS ( DTO. 405/03) "}
+,{"form":"2183",	"linea":"118", 	"descripcion":"IVA - COMPRAS DEL ESTADO (DTOS. 528/03 Y 319/06) "}
+,{"form":"2183",	"linea":"119", 	"descripcion":"IVA - OTRAS RETENCIONES "}
+,{"form":"2183",	"linea":"121", 	"descripcion":"IRIC/IRAE- EMP. SEGURIDAD, VIGILANCIA Y LIMPIEZA (DTO.194/00) "}
+,{"form":"2183",	"linea":"122", 	"descripcion":"IRIC/IRAE EMP- CONTRAT.DE OBRAS PUBLIC.VIALES (DTO.271/90) "}
+,{"form":"2183",	"linea":"123", 	"descripcion":"IRIC/IRAE - OTRAS RETENCIONES "}
+,{"form":"2183",	"linea":"124", 	"descripcion":"IRAE - INSTITUCIONES DEPORTIVAS"}
+,{"form":"2183",	"linea":"131", 	"descripcion":"IMPUESTO AL PATRIMONIO - CONVENIO DOBLE IMPOSICION"}
+,{"form":"2183",	"linea":"141", 	"descripcion":"IMPUESTO AL PATRIMONIO "}
+,{"form":"2183",	"linea":"151", 	"descripcion":"IMP. COMISIONES . CORREDORES DE SEG. (ART. 8 DTO. 691/90) "}
+,{"form":"2183",	"linea":"152", 	"descripcion":"IMP. COMISIONES - REMATADORES (ART.10 DTO.691/90) "}
+,{"form":"2183",	"linea":"153", 	"descripcion":"IMP. COMISIONES - OTRAS RETENCIONES "}
+,{"form":"2183",	"linea":"160", 	"descripcion":"OBLIGACIONES TRIBUT.-ADMINIST. DE CRED.CONTRIB. LIT. E "}
+,{"form":"2183",	"linea":"161", 	"descripcion":"OBLIGACIONES TRIBUT.-ADMINIST. DE CRED. TASA 5% "}
+,{"form":"2183",	"linea":"162", 	"descripcion":"OBLIGACIONES TRIBUT.-ADMINIST. DE CRED. TASA 2% "}
+,{"form":"2183",	"linea":"163", 	"descripcion":"OBLIGACIONES TRIBUT.-ADMINIST. DE CRED. LEY 17.934 "}
+,{"form":"2183",	"linea":"164", 	"descripcion":"OBLIGACIONES TRIBUTARIAS DE TERCEROS - ANTEL "}
+,{"form":"2183",	"linea":"165", 	"descripcion":"OBLIGACIONES TRIBUTARIAS DE TERCEROS - DTO. 134/2009 "}
+,{"form":"2183",	"linea":"166", 	"descripcion":"OBLIGACIONES TRIB.- ADM. DE TARJETAS DEC.288/012"}
+,{"form":"2183",	"linea":"167", 	"descripcion":"OBLIGACIONES TRIB.- OPERACIONES DEL ART. 1 DEC. 203/014."}
+,{"form":"2183",	"linea":"168", 	"descripcion":"OBLIGACIONES TRIB.- OPERACIONES DEL ART. 2 DEC. 203/014"}
+,{"form":"2183",	"linea":"169", 	"descripcion":"OBLIGACIONES TRIB.- OPERACIONES DEL ART. 3 DEC. 203/014"}
+,{"form":"2183",	"linea":"170", 	"descripcion":"COFIS "}
+,{"form":"2183",	"linea":"211", 	"descripcion":"IVA - FRIGORIF. Y MATAD. CARNE FRESCA (ART.9 DTO.220/98) "}
+,{"form":"2183",	"linea":"212", 	"descripcion":"IVA - FRIGORIF. Y MATADEROS FAENA (ART.12 DTO.220/98) "}
+,{"form":"2183",	"linea":"213", 	"descripcion":"IVA - GRASAS Y LUBRICANTES (ART.14 DTO.220/98) "}
+,{"form":"2183",	"linea":"214", 	"descripcion":"IVA - VENTA DIRECTA (ART.16 DTO.220/98) "}
+,{"form":"2183",	"linea":"215", 	"descripcion":"IVA - VEHICULOS AUTOMOTORES (ART.20 DTO.220/98) "}
+,{"form":"2183",	"linea":"216", 	"descripcion":"IVA - INAVI "}
+,{"form":"2183",	"linea":"217", 	"descripcion":"IVA - FABRICANTES E IMPORT. DE PREFORMAS P.E.T. "}
+,{"form":"2183",	"linea":"218", 	"descripcion":"IVA -  ESTABLECIMIENTOS DE FAENA DE AVES (DTO. 621/2006) "}
+,{"form":"2183",	"linea":"219", 	"descripcion":"IVA GAS OIL "}
+,{"form":"2183",	"linea":"220", 	"descripcion":"IVA - OTRAS PERCEPCIONES "}
+,{"form":"2183",	"linea":"221", 	"descripcion":"IVA - FUEGOS ARTIFICIALES (RES 4080/2013)"}
+,{"form":"2183",	"linea":"228", 	"descripcion":"IRIC/IRAE - ESTABLECIMIENTOS DE FAENA DE AVES (DTO. 621/2006) "}
+,{"form":"2183",	"linea":"229", 	"descripcion":"IRAE - OTRAS PERCEPCIONES"}
+,{"form":"2192",	"linea":"202", 	"descripcion":"SEGUROS - INCENDIO "}
+,{"form":"2192",	"linea":"205", 	"descripcion":"SEGUROS - VEHICULOS AUTOMOT. O REMOLCAD. "}
+,{"form":"2192",	"linea":"208", 	"descripcion":"SEGUROS - ROBO Y RIESGOS SIMILARES "}
+,{"form":"2192",	"linea":"211", 	"descripcion":"SEGUROS - RESPONSABILIDAD CIVIL "}
+,{"form":"2192",	"linea":"214", 	"descripcion":"SEGUROS - CAUCION "}
+,{"form":"2192",	"linea":"217", 	"descripcion":"SEGUROS - TRANSPORTE "}
+,{"form":"2192",	"linea":"220", 	"descripcion":"SEGUROS - MARITIMOS "}
+,{"form":"2192",	"linea":"223", 	"descripcion":"SEGUROS - ULT. INC. ART. 2 LEY 16426, INTERPRE. POR LEY 16851"}
+,{"form":"2192",	"linea":"226", 	"descripcion":"SEGUROS - OTROS "}
+,{"form":"2192",	"linea":"229", 	"descripcion":"SEGUROS - VIDA "}
+,{"form":"2192",	"linea":"232", 	"descripcion":"SEGUROS - VIDA OTROS"}
+]

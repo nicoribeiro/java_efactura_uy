@@ -23,30 +23,28 @@ import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.EFacturaException;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.commons.Commons.DgiService;
+import com.bluedot.efactura.interceptors.CDataWriterInterceptor;
+import com.bluedot.efactura.interceptors.NamespacesInterceptor;
+import com.bluedot.efactura.interceptors.SignatureInterceptor;
 
 import dgi.soap.recepcion.WSEFacturaSoapPort;
 
-public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPort>
-{
+public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 	private static WSRecepcionPool instance = null;
 
-	public static synchronized WSRecepcionPool getInstance() throws IOException, EFacturaException, KeyStoreException, NoSuchAlgorithmException, CertificateException
-	{
-		if (instance == null)
-		{
-
-		
+	public static synchronized WSRecepcionPool getInstance()
+			throws IOException, EFacturaException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
+		if (instance == null) {
 			Settings settings = Settings.getInstance();
 			CallbackHandler passwordCallback = Commons.getPasswordCallback();
-			instance = new WSRecepcionPool(settings.getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(), passwordCallback,
-					Commons.getURL(DgiService.Recepcion));
+			instance = new WSRecepcionPool(settings.getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(),
+					passwordCallback, Commons.getURL(DgiService.Recepcion));
 		}
 
 		return instance;
 	}
 
-	public Object clone() throws CloneNotSupportedException
-	{
+	public Object clone() throws CloneNotSupportedException {
 		throw new CloneNotSupportedException();
 	}
 
@@ -55,8 +53,10 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPort>
 	private final CallbackHandler passwordCallback;
 	private final String serviceURL;
 
-	private WSRecepcionPool(String securityPropertiesPath, String keystoreAlias, CallbackHandler passwordCallback, String serviceURL) {
-		this.securityPropertiesPath = Objects.requireNonNull(securityPropertiesPath, "Security properties path is required");
+	private WSRecepcionPool(String securityPropertiesPath, String keystoreAlias, CallbackHandler passwordCallback,
+			String serviceURL) {
+		this.securityPropertiesPath = Objects.requireNonNull(securityPropertiesPath,
+				"Security properties path is required");
 		this.certificateAlias = Objects.requireNonNull(keystoreAlias, "Certificate alias is required");
 		this.passwordCallback = Objects.requireNonNull(passwordCallback, "Password callback is required");
 		this.serviceURL = serviceURL;
@@ -67,8 +67,7 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPort>
 	 * service proxy
 	 */
 	@Override
-	protected WSEFacturaSoapPort create()
-	{
+	protected WSEFacturaSoapPortWrapper create() {
 		JaxWsProxyFactoryBean factory = new JaxWsProxyFactoryBean();
 		factory.setAddress(serviceURL);
 		WSEFacturaSoapPort port = factory.create(WSEFacturaSoapPort.class);
@@ -88,18 +87,25 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPort>
 		// Note: uncomment this if you need to log outgoing signed request
 		cxfEndpoint.getOutInterceptors().add(new LoggingOutInterceptor());
 
-		return port;
+		SignatureInterceptor signatureInterceptor = new SignatureInterceptor();
+		cxfEndpoint.getOutInterceptors().add(signatureInterceptor);
+
+		NamespacesInterceptor interceptor = new NamespacesInterceptor();
+		cxfEndpoint.getOutInterceptors().add(interceptor);
+
+		CDataWriterInterceptor cdataInterceptor = new CDataWriterInterceptor();
+		cxfEndpoint.getOutInterceptors().add(cdataInterceptor);
+
+		return new WSEFacturaSoapPortWrapper(port);
 	}
 
 	@Override
-	public boolean validate(WSEFacturaSoapPort o)
-	{
+	public boolean validate(WSEFacturaSoapPortWrapper o) {
 		return true;
 	}
 
 	@Override
-	public void expire(WSEFacturaSoapPort o)
-	{
+	public void expire(WSEFacturaSoapPortWrapper o) {
 	}
 
 }

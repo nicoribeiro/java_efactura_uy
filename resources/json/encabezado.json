@@ -1,0 +1,21 @@
+		{
+			"Emisor":{
+				"RUCEmisor":"215071660012",
+				"RznSoc":"Binalor S.A",
+				"CdgDGISucur":"2",
+				"DomFiscal":"Juana de Arco 3338",
+				"Ciudad":"MONTEVIDEO",
+				"Departamento":"MONTEVIDEO"
+			},
+			"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"219999830019",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernandez Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},
+			"Totales":{
+				"TpoMoneda":"UYU"
+			}
+		}

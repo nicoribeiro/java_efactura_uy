@@ -1,30 +1,58 @@
 package com.bluedot.efactura.services;
 
-import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableEntryException;
-import java.security.cert.CertificateException;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactoryConfigurationError;
+import java.util.Date;
+import java.util.List;
 
 import com.bluedot.efactura.EFacturaException;
+import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
 
-import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.EnvioCFE;
 import dgi.soap.recepcion.Data;
 
-public interface RecepcionService
-{
+public interface RecepcionService {
 
-	Data send(String cfe) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, EFacturaException, JAXBException;
+	Data sendCFE(String cfe) throws EFacturaException;
 
-	Data send(EnvioCFE cfe) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, EFacturaException, JAXBException, TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException;
+	Data sendSobre(EnvioCFE cfe) throws EFacturaException;
 
-	Data send(EFact efactura) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, EFacturaException, JAXBException, TransformerFactoryConfigurationError, TransformerException, UnrecoverableEntryException, DatatypeConfigurationException;
+	Data sendCFE(Object cfe) throws EFacturaException;
 
+	Data consultaEstado(String token, String idReceptor) throws EFacturaException;
+
+	Data consultaResultado(TipoDoc tipo, String serie, String nro, Date fecha) throws EFacturaException;
+
+	Data generarReporteDiario(Date date) throws EFacturaException;
+
+	List<ResultadoConsulta> consultarResultados(Date date) throws EFacturaException;
+
+	public class ResultadoConsulta{
+		public TipoDoc tipoDoc;
+		public int conResultado;
+		public int conRespuesta;
+		public int conError;
+		public int unsigned;
+		public int signed;
+		
+		public ResultadoConsulta(TipoDoc tipoDoc, int conResultado, int conRespuesta, int conError, int unsigned,
+				int signed) {
+			super();
+			this.tipoDoc = tipoDoc;
+			this.conResultado = conResultado;
+			this.conRespuesta = conRespuesta;
+			this.conError = conError;
+			this.unsigned = unsigned;
+			this.signed = signed;
+		}
+
+		@Override
+		public String toString() {
+			return "ResultadoConsulta [tipoDoc=" + tipoDoc + ", conResultado=" + conResultado + ", conRespuesta="
+					+ conRespuesta + ", conError=" + conError + ", unsigned=" + unsigned + ", signed=" + signed
+					+ "]";
+		}
+		
+		
+		
+	}
+	
 }

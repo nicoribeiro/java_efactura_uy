@@ -7,12 +7,12 @@ import java.security.cert.CertificateException;
 import java.util.Objects;
 
 import com.bluedot.efactura.EFacturaException;
+import com.bluedot.efactura.pool.WSPersonaGetActEmpresarialSoapPortWrapper;
 import com.bluedot.efactura.pool.WSRutPool;
 import com.bluedot.efactura.services.ConsultaRutService;
 
 import dgi.soap.rut.WSPersonaGetActEmpresarialExecute;
 import dgi.soap.rut.WSPersonaGetActEmpresarialExecuteResponse;
-import dgi.soap.rut.WSPersonaGetActEmpresarialSoapPort;
 
 public class ConsultaRutServiceImpl implements ConsultaRutService {
 
@@ -22,14 +22,14 @@ public class ConsultaRutServiceImpl implements ConsultaRutService {
 		{
 			Objects.requireNonNull(rut, "Parameter RUT is required");
 
-			WSPersonaGetActEmpresarialSoapPort port = WSRutPool.getInstance().checkOut();
+			WSPersonaGetActEmpresarialSoapPortWrapper portWrapper = WSRutPool.getInstance().checkOut();
 
 			WSPersonaGetActEmpresarialExecute input = new WSPersonaGetActEmpresarialExecute();
 			input.setRut(rut);
 			
-			WSPersonaGetActEmpresarialExecuteResponse output = port.execute(input);
+			WSPersonaGetActEmpresarialExecuteResponse output = portWrapper.getPort().execute(input);
 			
-			WSRutPool.getInstance().checkIn(port);
+			WSRutPool.getInstance().checkIn(portWrapper);
 
 			return output.getData();
 		} catch (IOException e)

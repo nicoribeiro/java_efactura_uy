@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -26,6 +28,8 @@ import com.bluedot.efactura.EFacturaException.EFacturaErrors;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
+import dgi.classes.recepcion.IdDocResg;
+import dgi.classes.recepcion.IdDocTck;
 
 public class CAEManagerImpl implements CAEManager
 {
@@ -87,10 +91,24 @@ public class CAEManagerImpl implements CAEManager
 		public int value;
 		public String friendlyName;
 
+		private static Map<Integer, TipoDoc> idMap = new TreeMap<Integer,TipoDoc>();
+		
+		static {
+	        for (TipoDoc tipoDoc : values()) {
+	        	//values()[i].value = START_VALUE + i;
+	            idMap.put(tipoDoc.value, tipoDoc);
+	        }
+	    }
+		
+		 public static TipoDoc fromInt(int i) {
+		        return idMap.get(i);
+		 }
+		
 		TipoDoc(int value, String friendlyName) {
 			this.value = value;
 			this.friendlyName = friendlyName;
 		}
+		
 
 	}
 
@@ -100,30 +118,7 @@ public class CAEManagerImpl implements CAEManager
 	 * @see com.bluedot.efactura.CAEManagers#getIdDoc()
 	 */
 
-	@Override
-	public synchronized IdDocFact getIdDocFact() throws DatatypeConfigurationException, IOException, JSONException, EFacturaException
-	{
-		IdDocFact iddoc = new IdDocFact();
-
-		JSONObject cae = caesMap.get(TipoDoc.eFactura.value);
-
-		iddoc.setTipoCFE(new BigInteger(String.valueOf(TipoDoc.eFactura.value)));
-		iddoc.setSerie(cae.getString("serie"));
-		iddoc.setNro(new BigInteger(consumeId(cae)));
-		/*
-		 * 1 = Contado
-		 * 
-		 * 2 = Credito
-		 */
-		iddoc.setFmaPago(new BigInteger("2"));
-		/*
-		 * Fecha
-		 */
-		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-		iddoc.setFchEmis(date);
-
-		return iddoc;
-	}
+	
 
 	private synchronized String consumeId(JSONObject cae) throws IOException, JSONException, EFacturaException
 	{
@@ -190,6 +185,77 @@ public class CAEManagerImpl implements CAEManager
 
 		return cae;
 
+	}
+
+	@Override
+	public IdDocTck getIdDocTick(TipoDoc tipoDoc) throws EFacturaException, DatatypeConfigurationException, IOException {
+		IdDocTck iddoc = new IdDocTck();
+
+		JSONObject cae = caesMap.get(tipoDoc.value);
+
+		if (cae==null)
+			throw EFacturaException.raise(EFacturaErrors.ERROR_IN_CAE_FILE).setDetailMessage("No se encuentra cae para TipoDoc:" + tipoDoc.value);
+		
+		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
+		iddoc.setSerie(cae.getString("serie"));
+		iddoc.setNro(new BigInteger(consumeId(cae)));
+		/*
+		 * 1 = Contado
+		 * 
+		 * 2 = Credito
+		 */
+		iddoc.setFmaPago(new BigInteger("1"));
+		/*
+		 * Fecha
+		 */
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		iddoc.setFchEmis(date);
+
+		return iddoc;
+	}
+	
+	@Override
+	public synchronized IdDocFact getIdDocFact(TipoDoc tipoDoc) throws DatatypeConfigurationException, IOException, JSONException, EFacturaException
+	{
+		IdDocFact iddoc = new IdDocFact();
+
+		JSONObject cae = caesMap.get(tipoDoc.value);
+
+		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
+		iddoc.setSerie(cae.getString("serie"));
+		iddoc.setNro(new BigInteger(consumeId(cae)));
+		/*
+		 * 1 = Contado
+		 * 
+		 * 2 = Credito
+		 */
+		iddoc.setFmaPago(new BigInteger("2"));
+		/*
+		 * Fecha
+		 */
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		iddoc.setFchEmis(date);
+
+		return iddoc;
+	}
+
+	@Override
+	public IdDocResg getIdDocResg(TipoDoc tipoDoc) throws EFacturaException, DatatypeConfigurationException, IOException {
+		IdDocResg iddoc = new IdDocResg();
+
+		JSONObject cae = caesMap.get(tipoDoc.value);
+
+		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
+		iddoc.setSerie(cae.getString("serie"));
+		iddoc.setNro(new BigInteger(consumeId(cae)));
+		
+		/*
+		 * Fecha
+		 */
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		iddoc.setFchEmis(date);
+
+		return iddoc;
 	}
 
 }

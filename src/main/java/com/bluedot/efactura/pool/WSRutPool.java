@@ -24,9 +24,7 @@ import com.bluedot.efactura.EFacturaException;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.commons.Commons.DgiService;
 
-import dgi.soap.rut.WSPersonaGetActEmpresarialSoapPort;
-
-public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPort>
+public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPortWrapper>
 {
 	private static WSRutPool instance = null;
 
@@ -66,11 +64,11 @@ public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPort>
 	 * service proxy
 	 */
 	@Override
-	protected WSPersonaGetActEmpresarialSoapPort create()
+	protected WSPersonaGetActEmpresarialSoapPortWrapper create()
 	{
 		JaxWsProxyFactoryBean factory = new JaxWsProxyFactoryBean();
 		factory.setAddress(serviceURL);
-		WSPersonaGetActEmpresarialSoapPort port = factory.create(WSPersonaGetActEmpresarialSoapPort.class);
+		WSPersonaGetActEmpresarialSoapPortWrapper port = factory.create(WSPersonaGetActEmpresarialSoapPortWrapper.class);
 
 		Endpoint cxfEndpoint = ClientProxy.getClient(port).getEndpoint();
 
@@ -91,13 +89,13 @@ public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPort>
 	}
 
 	@Override
-	public boolean validate(WSPersonaGetActEmpresarialSoapPort o)
+	public boolean validate(WSPersonaGetActEmpresarialSoapPortWrapper o)
 	{
 		return true;
 	}
 
 	@Override
-	public void expire(WSPersonaGetActEmpresarialSoapPort o)
+	public void expire(WSPersonaGetActEmpresarialSoapPortWrapper o)
 	{
 	}
 
