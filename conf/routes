@@ -1,0 +1,27 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET      /                                        com.bluedot.efactura.controllers.Application.index()
+
+# Map static resources from the /public folder to the /assets URL path
+GET      /assets/*file                            controllers.Assets.versioned(path="/public", file: Asset)
+
+
+# API
+GET      /api/rut/:idrut                          com.bluedot.efactura.controllers.RutController.darInformacionRut(idrut:String)
+
+POST     /api/documentos                          com.bluedot.efactura.controllers.DocumentController.aceptarDocumento()
+DELETE   /api/documentos/:idTipoDoc/:serie/:nro   com.bluedot.efactura.controllers.DocumentController.anularDocumento(idTipoDoc:Integer, serie:String, nro:Integer, fecha:String)
+
+GET      /api/resultado                           com.bluedot.efactura.controllers.DocumentController.resultadoDocumento(nro:Integer, serie:String , fecha:String , idTipoDoc:Integer)
+GET      /api/resultados/:fecha                   com.bluedot.efactura.controllers.DocumentController.resultadoDocumentosFecha(fecha: String)
+
+POST     /api/reporteDiario/:fecha                com.bluedot.efactura.controllers.DocumentController.generarReporteDiario(fecha: String)
+
+POST     /api/modo/:modo                          com.bluedot.efactura.controllers.DocumentController.cambiarModo(modo:String)
+
+POST     /api/pruebas/testing                     com.bluedot.efactura.controllers.TestingController.generarPrueba()
+POST     /api/pruebas/homologacion                com.bluedot.efactura.controllers.HomologacionController.generarPrueba()
+POST     /api/pruebas/intercambio                 com.bluedot.efactura.controllers.HomologacionController_Intercambio.ingresoSobre()	

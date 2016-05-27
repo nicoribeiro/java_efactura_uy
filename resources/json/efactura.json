@@ -1,6 +1,9 @@
-{
-	"eFact":{
+[
+	{
 		"Encabezado":{
+			"Identificacion":{
+				"tipo":"101"
+			},
 			"Emisor":{
 				"RUCEmisor":"215071660012",
 				"RznSoc":"DGI RUC PRUEBA CEDE",
@@ -55,4 +58,4 @@
 			}
 		]
 	}
-}
+]

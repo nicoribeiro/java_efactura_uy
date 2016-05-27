@@ -1,0 +1,13 @@
+		{
+			"Emisor":{
+				"RUCEmisor":"215071660012",
+				"RznSoc":"Binalor S.A",
+				"CdgDGISucur":"2",
+				"DomFiscal":"Juana de Arco 3338",
+				"Ciudad":"MONTEVIDEO",
+				"Departamento":"MONTEVIDEO"
+			},
+			"Totales":{
+				"TpoMoneda":"UYU"
+			}
+		}

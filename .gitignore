@@ -9,7 +9,15 @@ src/main/resources/security/
 resources/cfe/
 resources/images/qr/
 *.pkcs12
-
+*.DS_Store
+project/target/*
+project/project/*
 resources/security/security.properties
 
 hs_err_pid43043.log
+
+.cache-main
+
+.cache-tests
+
+.sbtserver/*

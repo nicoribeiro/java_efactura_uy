@@ -1,0 +1,681 @@
+{
+
+"101":[
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4200.00",
+	                "NomItem": "PROCESADOR INTEL CELERON 2350"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1},
+	
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1650.00",
+	                "NomItem": "MEMORIA DIMM DDR3 8G KINGSTON"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1},    
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1500.00",
+	                "NomItem": "GABINETE GAMER THERMALTAKE X200"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1},    
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "6400.00",
+	                "NomItem": "FUENTE THERMALTAKE 850W"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1},
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4400.00",
+	                "NomItem": "MOTHER INTEL E4320 SOCKET AM3"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1}
+	],
+
+
+
+
+
+
+
+
+
+
+
+"102":[  
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4200.00",
+	                "NomItem": "PROCESADOR INTEL CELERON 2350"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"1"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	 },    
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1650.00",
+	                "NomItem": "MEMORIA DIMM DDR3 8G KINGSTON"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"2"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1500.00",
+	                "NomItem": "GABINETE GAMER THERMALTAKE X200"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"3"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "6400.00",
+	                "NomItem": "FUENTE THERMALTAKE 850W"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"4"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4400.00",
+	                "NomItem": "MOTHER INTEL E4320 SOCKET AM3"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"5"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  }
+	],
+	
+	
+	
+	
+	
+	
+	
+	
+	
+"103":[  
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4200.00",
+	                "NomItem": "PROCESADOR INTEL CELERON 2350"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"1"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	 },    
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1650.00",
+	                "NomItem": "MEMORIA DIMM DDR3 8G KINGSTON"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"2"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1500.00",
+	                "NomItem": "GABINETE GAMER THERMALTAKE X200"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"3"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "6400.00",
+	                "NomItem": "FUENTE THERMALTAKE 850W"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"4"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4400.00",
+	                "NomItem": "MOTHER INTEL E4320 SOCKET AM3"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "101",
+	        	"Serie":"A",
+	        	"NroCFERef":"5"
+	        },"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  }
+	
+	
+	],
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+"111":[
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4200.00",
+	                "NomItem": "PROCESADOR INTEL CELERON 2350"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	},
+	{"Detalle": [
+	             {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1650.00",
+	                "NomItem": "MEMORIA DIMM DDR3 8G KINGSTON"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":2
+	},    
+	{"Detalle": [
+	             {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1500.00",
+	                "NomItem": "GABINETE GAMER THERMALTAKE X200"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	},    
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4400.00",
+	                "NomItem": "MOTHER INTEL E4320 SOCKET AM3"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	},
+	{"Detalle": [
+	            
+	        ],"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	}
+			
+	],
+
+
+
+
+
+
+
+"112":[  
+	{"Detalle": [
+	           {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4200.00",
+	                "NomItem": "PROCESADOR INTEL CELERON 2350"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"1"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":2
+	},    
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1650.00",
+	                "NomItem": "MEMORIA DIMM DDR3 8G KINGSTON"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"2"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1500.00",
+	                "NomItem": "GABINETE GAMER THERMALTAKE X200"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"3"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "6400.00",
+	                "NomItem": "FUENTE THERMALTAKE 850W"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"4"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	           {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4400.00",
+	                "NomItem": "MOTHER INTEL E4320 SOCKET AM3"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"5"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  }
+	],
+	
+	
+	
+	
+	
+	
+	
+	
+	
+"113":[  
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4200.00",
+	                "NomItem": "PROCESADOR INTEL CELERON 2350"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"1"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	},    
+	{"Detalle": [
+	             {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1650.00",
+	                "NomItem": "MEMORIA DIMM DDR3 8G KINGSTON"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"2"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	             {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "1500.00",
+	                "NomItem": "GABINETE GAMER THERMALTAKE X200"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"3"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "6400.00",
+	                "NomItem": "FUENTE THERMALTAKE 850W"
+	            } 
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"4"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  },
+	  {"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "1",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4400.00",
+	                "NomItem": "MOTHER INTEL E4320 SOCKET AM3"
+	            }
+	        ],
+	        "Referencia":{
+	        	"TpoDocRef": "111",
+	        	"Serie":"A",
+	        	"NroCFERef":"5"
+	        },"Receptor":{
+				"TipoDocRecep":"2",
+				"CodPaisRecep":"UY",
+				"DocRecep":"214844360018",
+				"RznSocRecep":"DGI",
+				"DirRecep":"Fernández Crespo 1534",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	  }
+	]
+	
+
+	
+}

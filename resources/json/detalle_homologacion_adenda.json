@@ -1,0 +1,42 @@
+{
+
+"101":[
+	{"Detalle": [
+	            {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4200.00",
+	                "NomItem": "PROCESADOR INTEL CELERON 2350"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1
+	},
+	{"Detalle": [
+	           {
+	                "NroLinDet": 1,
+	                "IndFact": "3",
+	                "Cantidad": "2",
+	                "UniMed": "N/A",
+	                "PrecioUnitario": "4200.00",
+	                "NomItem": "PROCESADOR INTEL CELERON 2350"
+	            }
+	        ],"Receptor":{
+				"TipoDocRecep":"3",
+				"CodPaisRecep":"UY",
+				"DocRecep":"13353214",
+				"RznSocRecep":"Juan Pérez",
+				"CiudadRecep":"Montevideo"
+			},"FmaPago":1,
+			"Adenda":"Prueba Adenda"
+	}    
+	
+	]
+	
+}
