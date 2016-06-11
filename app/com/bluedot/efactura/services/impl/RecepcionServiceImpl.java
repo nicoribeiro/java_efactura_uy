@@ -105,7 +105,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 		 */
 		EnvioCFE envioCFE = new EnvioCFE();
 		envioCFE.setVersion("1.0");
-		envioCFE.getCFE().add(cfeDefType);
+		envioCFE.getCVES().add(cfeDefType);
 
 		/*
 		 * Add caratula
@@ -118,7 +118,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 	private void addCaratulaSobre(EnvioCFE signed) throws EFacturaException {
 		try {
-			List<CFEDefType> cfes = signed.getCFE();
+			List<CFEDefType> cfes = signed.getCVES();
 
 			String RUCemisor = null;
 
@@ -208,14 +208,14 @@ public class RecepcionServiceImpl implements RecepcionService {
 			//TODO optimizar esto, se hace dump 2 veces
 			
 			// Dump sobre
-			for (int i = 0; i < envioCFE.getCFE().size(); i++) {
+			for (int i = 0; i < envioCFE.getCVES().size(); i++) {
 				Commons.dumpSobreToFile(envioCFE, i, false, null);
 			}
 			
 			Data data = this.sendCFE(PrettyPrint.prettyPrintXML(sw.toString()));
 
 			// Dump sobre y response to disk
-			for (int i = 0; i < envioCFE.getCFE().size(); i++) {
+			for (int i = 0; i < envioCFE.getCVES().size(); i++) {
 				Commons.dumpSobreToFile(envioCFE, i, false, data);
 			}
 

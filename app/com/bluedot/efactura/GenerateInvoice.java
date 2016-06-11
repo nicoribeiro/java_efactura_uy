@@ -225,7 +225,7 @@ public class GenerateInvoice {
 		createHeadings(cb, emisor_x, emisor_y - detailsRowSize, emisor.getDomFiscal());
 		createHeadings(cb, emisor_x, emisor_y - detailsRowSize * 2, emisor.getCiudad());
 		createHeadings(cb, emisor_x, emisor_y - detailsRowSize * 3,
-				emisor.getTelefono() != null && emisor.getTelefono().size() > 0 ? emisor.getTelefono().get(0) : null);
+				emisor.getTelefonos() != null && emisor.getTelefonos().size() > 0 ? emisor.getTelefonos().get(0) : null);
 
 	}
 

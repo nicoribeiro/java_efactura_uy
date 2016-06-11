@@ -206,7 +206,7 @@ public class Commons {
 
 		Node node = document.getElementsByTagName("DGICFE:CFE").item(indiceCFE);
 
-		String filenamePrefix = Commons.getFilenamePrefix(envioCFE.getCFE().get(indiceCFE));
+		String filenamePrefix = Commons.getFilenamePrefix(envioCFE.getCVES().get(indiceCFE));
 
 		dumpNodeToFile(node, isSigned, filenamePrefix, response);
 	}

@@ -13,7 +13,8 @@ import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.Emisor;
-import dgi.classes.recepcion.ReferenciaType;
+import dgi.classes.recepcion.ReferenciaTipo;
+import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.wrappers.IdDocInterface;
 import dgi.classes.recepcion.wrappers.ItemInterface;
 import dgi.classes.recepcion.wrappers.ReceptorInterface;
@@ -136,7 +137,7 @@ public interface CFEStrategy {
 
 	ItemInterface createItem();
 
-	ReferenciaType getReferenciaType();
+	ReferenciaTipo getReferenciaTipo();
 
 	void setTimestampFirma(XMLGregorianCalendar newXMLGregorianCalendar);
 

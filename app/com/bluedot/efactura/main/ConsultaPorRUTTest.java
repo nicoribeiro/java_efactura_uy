@@ -2,7 +2,7 @@ package com.bluedot.efactura.main;
 
 import com.bluedot.efactura.services.ConsultaRutService;
 import com.bluedot.efactura.services.impl.ConsultaRutServiceImpl;
-import com.sun.org.apache.xml.internal.security.c14n.helper.C14nHelper;
+//import com.sun.org.apache.xml.internal.security.c14n.helper.C14nHelper;
 
 /**
  * Test class showcasing the setup required to call the service RUT.

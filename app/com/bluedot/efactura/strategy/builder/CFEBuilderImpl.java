@@ -23,8 +23,8 @@ import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
 import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.Emisor;
-import dgi.classes.recepcion.ReferenciaType;
-import dgi.classes.recepcion.ReferenciaType.Referencia;
+import dgi.classes.recepcion.ReferenciaTipo;
+import dgi.classes.recepcion.ReferenciaTipo.Referencia;
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.recepcion.wrappers.ItemInterface;
 import dgi.classes.recepcion.wrappers.ReceptorInterface;
@@ -338,7 +338,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	public void buildReferencia(JSONObject referenciaJSON) throws EFacturaException {
 
 		try {
-			ReferenciaType referenciaType = strategy.getReferenciaType();
+			ReferenciaTipo referenciaType = strategy.getReferenciaTipo();
 
 			Referencia referencia = new Referencia();
 
@@ -387,7 +387,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 
 			referencia.setNroLinRef(1);
 
-			referenciaType.getReferencia().add(referencia);
+			referenciaType.getReferencias().add(referencia);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

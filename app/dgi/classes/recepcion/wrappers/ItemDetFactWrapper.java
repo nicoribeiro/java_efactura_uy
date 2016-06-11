@@ -35,8 +35,8 @@ public class ItemDetFactWrapper implements ItemInterface {
 	public List<CodItemInterface> getGenericCodItem() {
 		if (codItems == null) {
 			codItems = new ArrayList<CodItemInterface>();
-			if (delegate.getCodItem() != null) {
-				for (CodItem codItem : delegate.getCodItem()) {
+			if (delegate.getCodItems() != null) {
+				for (CodItem codItem : delegate.getCodItems()) {
 					codItems.add(new ItemDetFactCodItemWrapper(codItem));
 				}
 			}
@@ -106,9 +106,9 @@ public class ItemDetFactWrapper implements ItemInterface {
 	}
 
 	@Override
-	public List<RetPercInterface> getRetencPercep() {
+	public List<RetPercInterface> getRetencPerceps() {
 		ArrayList<RetPercInterface> list = new ArrayList<RetPercInterface>();
-		for (Iterator<RetPerc> iterator = delegate.getRetencPercep().iterator(); iterator.hasNext();) {
+		for (Iterator<RetPerc> iterator = delegate.getRetencPerceps().iterator(); iterator.hasNext();) {
 			RetPerc retPerc = iterator.next();
 			list.add(new RetPercFactTck(retPerc));
 		}
@@ -128,8 +128,8 @@ public class ItemDetFactWrapper implements ItemInterface {
 	}
 
 	@Override
-	public List<CodItem> getCodItem() {
-		return delegate.getCodItem();
+	public List<CodItem> getCodItems() {
+		return delegate.getCodItems();
 	}
 
 	@Override
@@ -179,8 +179,8 @@ public class ItemDetFactWrapper implements ItemInterface {
 	}
 
 	@Override
-	public List<SubDescuento> getSubDescuento() {
-		return delegate.getSubDescuento();
+	public List<SubDescuento> getSubDescuentos() {
+		return delegate.getSubDescuentos();
 	}
 
 	@Override
@@ -194,8 +194,8 @@ public class ItemDetFactWrapper implements ItemInterface {
 	}
 
 	@Override
-	public List<SubRecargo> getSubRecargo() {
-		return delegate.getSubRecargo();
+	public List<SubRecargo> getSubRecargos() {
+		return delegate.getSubRecargos();
 	}
 
 	@Override
@@ -204,10 +204,10 @@ public class ItemDetFactWrapper implements ItemInterface {
 	}
 
 	@Override
-	public void setRetencPercep(List<RetPercInterface> list) {
+	public void setRetencPerceps(List<RetPercInterface> list) {
 		for (Iterator<RetPercInterface> iterator = list.iterator(); iterator.hasNext();) {
 			RetPercInterface retencion = iterator.next();
-			delegate.getRetencPercep().add((RetPerc) retencion.getDelegate());
+			delegate.getRetencPerceps().add((RetPerc) retencion.getDelegate());
 		}
 	}
 

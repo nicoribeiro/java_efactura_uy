@@ -44,7 +44,7 @@ public class EfacturaSecurity
 
 		try
 		{
-			CFEDefType cfe = envioCFE.getCFE().get(0);
+			CFEDefType cfe = envioCFE.getCVES().get(0);
 
 			String filenamePrefix = Commons.getFilenamePrefix(cfe);
 

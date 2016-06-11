@@ -53,7 +53,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 			
 			
 			
-			List<RetPercInterface> retenciones = item.getRetencPercep();
+			List<RetPercInterface> retenciones = item.getRetencPerceps();
 			
 			for (int j = 0; j < retencionesJSON.length(); j++) {
 				RetPercResg retencion = new RetPercResg();
@@ -79,7 +79,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 
 			}
 			
-			item.setRetencPercep(retenciones);
+			item.setRetencPerceps(retenciones);
 
 		}
 	}
@@ -119,11 +119,11 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 		
 		BigDecimal total = new BigDecimal("0");
 		
-		List<TotalesRetencPercepInterface> totalesRetenciones = totales.getRetencPercep();
+		List<TotalesRetencPercepInterface> totalesRetenciones = totales.getRetencPerceps();
 		
 		for (Iterator<ItemInterface> iterator = items.iterator(); iterator.hasNext();) {
 			ItemInterface item = iterator.next();
-			List<RetPercInterface> retencionesPercepciones = item.getRetencPercep();
+			List<RetPercInterface> retencionesPercepciones = item.getRetencPerceps();
 			
 			TotalesRetencPercepResg retencion = new TotalesRetencPercepResg(new RetencPercep()); 
 			
