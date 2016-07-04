@@ -1,21 +1,31 @@
 package com.bluedot.efactura.controllers;
 
+import java.io.File;
 import java.io.IOException;
 
-import org.json.JSONArray;
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
-import com.bluedot.commons.IO;
-import com.bluedot.efactura.EFacturaFactory;
+import com.bluedot.commons.XML;
 import com.bluedot.efactura.global.EFacturaException;
 import com.bluedot.efactura.global.ErrorMessage;
 import com.bluedot.efactura.global.Secured;
-import com.bluedot.efactura.impl.EFacturaFactoryImpl;
-import com.bluedot.efactura.services.RecepcionService;
-import com.bluedot.efactura.services.impl.RecepcionServiceImpl;
+import com.bluedot.efactura.services.IntercambioService;
+import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.istack.logging.Logger;
 
+import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
+import dgi.classes.respuestas.cfe.ACKCFEdefType;
+import dgi.classes.respuestas.sobre.ACKSobredefType;
 import play.mvc.BodyParser;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -25,21 +35,59 @@ import play.mvc.Security;
 @Security.Authenticated(Secured.class)
 public class HomologacionController_Intercambio extends Controller {
 
+	static Logger logger = Logger.getLogger(HomologacionController_Intercambio.class);
+	
 	protected HomologacionController_Intercambio() {
 
 	}
 
 	@BodyParser.Of(BodyParser.Json.class)
-	public Result ingresoSobre() throws EFacturaException {
+	public Result ingresoSobre() throws EFacturaException, TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
 		try {
 
 			JsonNode jsonNode = request().body().asJson();
 
-			return ok("").as("application/json");
+			JSONObject jsonObject = new JSONObject(jsonNode.toString());
+			
+			String path = jsonObject.getString("path");
+			
+			IntercambioService service = new IntercambioServiceImpl();
+			
+			Document document = XML.readDocument(path);
+			
+			EnvioCFEEntreEmpresas envioCFEEntreEmpresas = (EnvioCFEEntreEmpresas) XML.unMarshall(document, EnvioCFEEntreEmpresas.class);
+			
+			/* TODO pasar a Logger
+			 * print!
+			 */
+			XML.marshall(envioCFEEntreEmpresas, System.out);
+			
+			ACKSobredefType ackSobredefType = service.procesarSobre(envioCFEEntreEmpresas, new File(path).getName());
+			
+			XML.marshall(ackSobredefType, System.out);
+			
+			ACKCFEdefType resultCFE = service.procesarCFESobre(envioCFEEntreEmpresas, ackSobredefType, new File(path).getName());
 
+			if (resultCFE !=null)
+				XML.marshall(resultCFE, System.out);
+			
 		} catch (JSONException e) {
 			throw EFacturaException.raise(e);
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JAXBException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
+		return ok("").as("application/json");
 
 	}
 }

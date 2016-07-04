@@ -36,7 +36,7 @@ public class CreateEfacturaFromJSON
 			RecepcionService service = new RecepcionServiceImpl();
 
 			// Call the service
-			Data response = service.sendCFE(efactura);
+			Data response = service.sendCFE(efactura,null);
 
 			System.out.println("Output data:\n" + response.getXmlData());
 

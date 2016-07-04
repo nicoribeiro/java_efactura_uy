@@ -87,9 +87,9 @@ public class ItemResgWrapper implements ItemInterface {
 	}
 
 	@Override
-	public List<RetPercInterface> getRetencPercep() {
+	public List<RetPercInterface> getRetencPerceps() {
 		ArrayList<RetPercInterface> list = new ArrayList<RetPercInterface>();
-		for (Iterator<RetPercResg> iterator = delegate.getRetencPercep().iterator(); iterator.hasNext();) {
+		for (Iterator<RetPercResg> iterator = delegate.getRetencPerceps().iterator(); iterator.hasNext();) {
 			RetPercResg retPerc = iterator.next();
 			list.add(new RetPercResgWrapper(retPerc));
 		}
@@ -109,7 +109,7 @@ public class ItemResgWrapper implements ItemInterface {
 	}
 
 	@Override
-	public List<CodItem> getCodItem() {
+	public List<CodItem> getCodItems() {
 		return null;
 	}
 
@@ -152,7 +152,7 @@ public class ItemResgWrapper implements ItemInterface {
 	}
 
 	@Override
-	public List<SubDescuento> getSubDescuento() {
+	public List<SubDescuento> getSubDescuentos() {
 		return null;
 	}
 
@@ -165,7 +165,7 @@ public class ItemResgWrapper implements ItemInterface {
 	}
 
 	@Override
-	public List<SubRecargo> getSubRecargo() {
+	public List<SubRecargo> getSubRecargos() {
 		return null;
 	}
 
@@ -174,10 +174,10 @@ public class ItemResgWrapper implements ItemInterface {
 	}
 
 	@Override
-	public void setRetencPercep(List<RetPercInterface> list) {
+	public void setRetencPerceps(List<RetPercInterface> list) {
 		for (Iterator<RetPercInterface> iterator = list.iterator(); iterator.hasNext();) {
 			RetPercInterface retencion = iterator.next();
-			delegate.getRetencPercep().add((RetPercResg) retencion.getDelegate());
+			delegate.getRetencPerceps().add((RetPercResg) retencion.getDelegate());
 		}
 	}
 

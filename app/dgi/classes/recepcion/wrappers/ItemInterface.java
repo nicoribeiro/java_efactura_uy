@@ -45,7 +45,7 @@ public interface ItemInterface {
 	 * 
 	 * 
 	 */
-	List<CodItem> getCodItem();
+	List<CodItem> getCodItems();
 
 	/**
 	 * Gets the value of the indFact property.
@@ -249,7 +249,7 @@ public interface ItemInterface {
 	 * 
 	 * 
 	 */
-	List<SubDescuento> getSubDescuento();
+	List<SubDescuento> getSubDescuentos();
 
 	/**
 	 * Gets the value of the recargoPct property.
@@ -313,7 +313,7 @@ public interface ItemInterface {
 	 * 
 	 * 
 	 */
-	List<SubRecargo> getSubRecargo();
+	List<SubRecargo> getSubRecargos();
 
 	/**
 	 * Gets the value of the retencPercep property.
@@ -337,7 +337,7 @@ public interface ItemInterface {
 	 * 
 	 * 
 	 */
-	List<RetPercInterface> getRetencPercep();
+	List<RetPercInterface> getRetencPerceps();
 
 	/**
 	 * Gets the value of the montoItem property.
@@ -362,6 +362,6 @@ public interface ItemInterface {
 
 	List<CodItemInterface> getGenericCodItem();
 	
-	void setRetencPercep(List<RetPercInterface> list);
+	void setRetencPerceps(List<RetPercInterface> list);
 
 }

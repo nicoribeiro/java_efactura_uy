@@ -362,7 +362,7 @@ public interface TotalesInterface {
 	 * 
 	 * 
 	 */
-	List<TotalesRetencPercepInterface> getRetencPercep();
+	List<TotalesRetencPercepInterface> getRetencPerceps();
 
 	/**
 	 * Gets the value of the montoNF property.

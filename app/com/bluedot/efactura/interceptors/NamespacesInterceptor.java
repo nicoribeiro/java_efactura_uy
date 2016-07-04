@@ -23,10 +23,20 @@ public class NamespacesInterceptor extends AbstractPhaseInterceptor<Message> {
 		if (!(list.get(0) instanceof WSEFacturaEFACRECEPCIONSOBRE))
 			return;
 		
-		WSEFacturaEFACRECEPCIONSOBRE narf = (WSEFacturaEFACRECEPCIONSOBRE)list.get(0);
+		WSEFacturaEFACRECEPCIONSOBRE sobre= (WSEFacturaEFACRECEPCIONSOBRE)list.get(0);
 		
-		Data data = narf.getDatain();
+		Data data = sobre.getDatain();
 		
+		data.setXmlData(doNamespaceChanges(data.getXmlData()));
+		
+		/*
+		 * update the message
+		 */
+		message.setContent(List.class, list);
+		
+	}
+
+	public static String doNamespaceChanges(String data) {
 		// CFE NAMESPACE CORRECTIONS
 		String oldPrefix = "DGICFE";
 		String newPrefix = "ns0";
@@ -36,9 +46,9 @@ public class NamespacesInterceptor extends AbstractPhaseInterceptor<Message> {
 		 *  change root node
 		 */
 		// open tag
-		data.setXmlData(data.getXmlData().replaceAll("<"+oldPrefix+":CFE", "<"+newPrefix+":CFE xmlns:"+newPrefix+"=\"http://cfe.dgi.gub.uy\" "));
+		data = data.replaceAll("<"+oldPrefix+":CFE ", "<"+newPrefix+":CFE xmlns:"+newPrefix+"=\"http://cfe.dgi.gub.uy\" ");
 		// close tag 
-		data.setXmlData(data.getXmlData().replaceAll("</"+oldPrefix+":CFE>", "</"+newPrefix+":CFE>"));
+		data = data.replaceAll("</"+oldPrefix+":CFE>", "</"+newPrefix+":CFE>");
 		
 		
 		/*
@@ -47,7 +57,7 @@ public class NamespacesInterceptor extends AbstractPhaseInterceptor<Message> {
 		 *  2 - the CFE stating with: "xmlns:cfe="http://cfe.dgi.gub.uy"  version="1.0">" and ending with: </
 		 *  3 - the rest: "> </DGICFE:EnvioCFE>"
 		 */
-		String[] dataArray = data.getXmlData().split(split);
+		String[] dataArray = data.split(split);
 		
 		/*
 		 * change inner prefixes
@@ -57,14 +67,9 @@ public class NamespacesInterceptor extends AbstractPhaseInterceptor<Message> {
 		/*
 		 * concatat 3 parts
 		 */
-		data.setXmlData(dataArray[0] + split + dataArray[1]+ split + dataArray[2]);
+		data = dataArray[0] + split + dataArray[1]+ split + dataArray[2];
 		
-		
-		/*
-		 * update the message
-		 */
-		message.setContent(List.class, list);
-		
+		return data;
 	}
 
 }

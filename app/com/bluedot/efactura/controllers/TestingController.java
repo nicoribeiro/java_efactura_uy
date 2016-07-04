@@ -137,7 +137,7 @@ public class TestingController extends PruebasController {
 			 * Nota de credito de efactura
 			 */
 			for (int i = 0; i < cantidadDocumentos; i++) {
-				BigDecimal value = eFacturas[i].getDetalle().getItem().get(0).getMontoItem();
+				BigDecimal value = eFacturas[i].getDetalle().getItems().get(0).getMontoItem();
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaCredito = new JSONObject();
@@ -160,7 +160,7 @@ public class TestingController extends PruebasController {
 			 * Nota de debito de efactura
 			 */
 			for (int i = 0; i < cantidadDocumentos; i++) {
-				BigDecimal value = eFacturas[i].getDetalle().getItem().get(0).getMontoItem();
+				BigDecimal value = eFacturas[i].getDetalle().getItems().get(0).getMontoItem();
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaDebito = new JSONObject();
@@ -231,7 +231,7 @@ public class TestingController extends PruebasController {
 			 * Nota de credito de eTicket
 			 */
 			for (int i = 0; i < cantidadDocumentos; i++) {
-				BigDecimal value = eTickets[i].getDetalle().getItem().get(0).getMontoItem();
+				BigDecimal value = eTickets[i].getDetalle().getItems().get(0).getMontoItem();
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaCredito = new JSONObject();
@@ -254,7 +254,7 @@ public class TestingController extends PruebasController {
 			 * Nota de debito de eTicket
 			 */
 			for (int i = 0; i < cantidadDocumentos; i++) {
-				BigDecimal value = eTickets[i].getDetalle().getItem().get(0).getMontoItem();
+				BigDecimal value = eTickets[i].getDetalle().getItems().get(0).getMontoItem();
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaDebito = new JSONObject();

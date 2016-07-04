@@ -21,3 +21,4 @@ hs_err_pid43043.log
 .cache-tests
 
 .sbtserver/*
+logs/application.log

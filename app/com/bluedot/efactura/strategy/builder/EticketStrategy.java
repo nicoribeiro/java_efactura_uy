@@ -23,7 +23,7 @@ import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.IdDocTck;
 import dgi.classes.recepcion.ItemDetFact;
 import dgi.classes.recepcion.ReceptorTck;
-import dgi.classes.recepcion.ReferenciaType;
+import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.Totales;
 import dgi.classes.recepcion.wrappers.IdDocInterface;
 import dgi.classes.recepcion.wrappers.IdDocTickWrapper;
@@ -95,7 +95,7 @@ public class EticketStrategy implements CFEStrategy {
 	public List<ItemInterface> getItem() {
 		ArrayList<ItemInterface> list = new ArrayList<ItemInterface>();
 
-		for (ItemDetFact itemDetFact : cfe.getDetalle().getItem()) {
+		for (ItemDetFact itemDetFact : cfe.getDetalle().getItems()) {
 			list.add(new ItemDetFactWrapper(itemDetFact));
 		}
 		return list;
@@ -136,14 +136,14 @@ public class EticketStrategy implements CFEStrategy {
 	@Override
 	public ItemInterface createItem() {
 		ItemDetFact item = new ItemDetFact();
-		getDetalle().getItem().add(item);
+		getDetalle().getItems().add(item);
 		return new ItemDetFactWrapper(item);
 	}
 
 	@Override
-	public ReferenciaType getReferenciaType() {
+	public ReferenciaTipo getReferenciaTipo() {
 		if (cfe.getReferencia() == null)
-			cfe.setReferencia(new ReferenciaType());
+			cfe.setReferencia(new ReferenciaTipo());
 		return cfe.getReferencia();
 	}
 

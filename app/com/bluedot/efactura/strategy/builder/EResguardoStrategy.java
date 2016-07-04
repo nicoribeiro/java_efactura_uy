@@ -23,7 +23,7 @@ import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.IdDocResg;
 import dgi.classes.recepcion.ItemResg;
 import dgi.classes.recepcion.ReceptorResg;
-import dgi.classes.recepcion.ReferenciaType;
+import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.TotalesResg;
 import dgi.classes.recepcion.wrappers.IdDocInterface;
 import dgi.classes.recepcion.wrappers.IdDocResgWrapper;
@@ -91,7 +91,7 @@ public class EResguardoStrategy implements CFEStrategy {
 	public List<ItemInterface> getItem() {
 		ArrayList<ItemInterface> list = new ArrayList<ItemInterface>();
 
-		for (ItemResg itemResg : cfe.getDetalle().getItem()) {
+		for (ItemResg itemResg : cfe.getDetalle().getItems()) {
 			list.add(new ItemResgWrapper(itemResg));
 		}
 		return list;
@@ -132,14 +132,14 @@ public class EResguardoStrategy implements CFEStrategy {
 	@Override
 	public ItemInterface createItem() {
 		ItemResg item = new ItemResg();
-		getDetalle().getItem().add(item);
+		getDetalle().getItems().add(item);
 		return new ItemResgWrapper(item);
 	}
 
 	@Override
-	public ReferenciaType getReferenciaType() {
+	public ReferenciaTipo getReferenciaTipo() {
 		if (cfe.getReferencia() == null)
-			cfe.setReferencia(new ReferenciaType());
+			cfe.setReferencia(new ReferenciaTipo());
 		return cfe.getReferencia();
 	}
 

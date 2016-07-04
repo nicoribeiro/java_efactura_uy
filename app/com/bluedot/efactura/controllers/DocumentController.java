@@ -103,7 +103,7 @@ public class DocumentController extends Controller {
 			break;
 		case eFactura:
 			EFact eFactura = factory.getCFEController().createEfactura(document);
-			response = service.sendCFE(eFactura);
+			response = service.sendCFE(eFactura,null);
 			break;
 		case eFactura_Contingencia:
 			break;
@@ -129,7 +129,7 @@ public class DocumentController extends Controller {
 			break;
 		case eTicket:
 			ETck eticket = factory.getCFEController().createETicket(document);
-			response = service.sendCFE(eticket);
+			response = service.sendCFE(eticket,null);
 			break;
 		case eTicket_Contingencia:
 			break;

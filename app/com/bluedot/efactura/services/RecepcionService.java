@@ -6,17 +6,19 @@ import java.util.List;
 import com.bluedot.efactura.global.EFacturaException;
 import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
 
+import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.recepcion.EnvioCFE;
 import dgi.soap.recepcion.Data;
 
 public interface RecepcionService {
 
-	Data sendCFE(String cfe) throws EFacturaException;
-
-	Data sendSobre(EnvioCFE cfe) throws EFacturaException;
-
-	Data sendCFE(Object cfe) throws EFacturaException;
-
+	Data sendCFE(CFEDefType.EFact cfe, String adenda) throws EFacturaException;
+	Data sendCFE(CFEDefType.EFactExp cfe, String adenda) throws EFacturaException;
+	Data sendCFE(CFEDefType.ERem cfe, String adenda) throws EFacturaException;
+	Data sendCFE(CFEDefType.ERemExp cfe, String adenda) throws EFacturaException;
+	Data sendCFE(CFEDefType.EResg cfe, String adenda) throws EFacturaException;
+	Data sendCFE(CFEDefType.ETck cfe, String adenda) throws EFacturaException;
+	
 	Data consultaEstado(String token, String idReceptor) throws EFacturaException;
 
 	Data consultaResultado(TipoDoc tipo, String serie, int nro, Date fecha) throws EFacturaException;

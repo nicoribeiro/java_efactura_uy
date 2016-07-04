@@ -181,9 +181,9 @@ public class TotalesResguardoWrrapper implements TotalesInterface {
 	}
 
 	@Override
-	public List<TotalesRetencPercepInterface> getRetencPercep() {
+	public List<TotalesRetencPercepInterface> getRetencPerceps() {
 		ArrayList<TotalesRetencPercepInterface> list = new ArrayList<TotalesRetencPercepInterface>();
-		for (Iterator<RetencPercep> iterator = delegate.getRetencPercep().iterator(); iterator.hasNext();) {
+		for (Iterator<RetencPercep> iterator = delegate.getRetencPerceps().iterator(); iterator.hasNext();) {
 			RetencPercep retPerc = iterator.next();
 			list.add(new TotalesRetencPercepResg(retPerc));
 		}
@@ -213,7 +213,7 @@ public class TotalesResguardoWrrapper implements TotalesInterface {
 	public void setRetencPercep(List<TotalesRetencPercepInterface> list) {
 		for (Iterator<TotalesRetencPercepInterface> iterator = list.iterator(); iterator.hasNext();) {
 			TotalesRetencPercepInterface retencion = iterator.next();
-			delegate.getRetencPercep().add((RetencPercep) retencion.getDelegate());
+			delegate.getRetencPerceps().add((RetencPercep) retencion.getDelegate());
 		}
 	}
 

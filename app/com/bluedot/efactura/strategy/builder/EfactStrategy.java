@@ -16,14 +16,14 @@ import com.bluedot.efactura.impl.CAEManagerImpl;
 import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
 
 import dgi.classes.recepcion.CAEDataType;
-import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EFact.Detalle;
 import dgi.classes.recepcion.CFEDefType.EFact.Encabezado;
+import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.IdDocFact;
 import dgi.classes.recepcion.ItemDetFact;
 import dgi.classes.recepcion.ReceptorFact;
-import dgi.classes.recepcion.ReferenciaType;
+import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.Totales;
 import dgi.classes.recepcion.wrappers.IdDocFactWrapper;
 import dgi.classes.recepcion.wrappers.IdDocInterface;
@@ -95,7 +95,7 @@ public class EfactStrategy implements CFEStrategy {
 	public List<ItemInterface> getItem() {
 		ArrayList<ItemInterface> list = new ArrayList<ItemInterface>();
 
-		for (ItemDetFact itemDetFact : cfe.getDetalle().getItem()) {
+		for (ItemDetFact itemDetFact : cfe.getDetalle().getItems()) {
 			list.add(new ItemDetFactWrapper(itemDetFact));
 		}
 		return list;
@@ -136,14 +136,14 @@ public class EfactStrategy implements CFEStrategy {
 	@Override
 	public ItemInterface createItem() {
 		ItemDetFact item = new ItemDetFact();
-		getDetalle().getItem().add(item);
+		getDetalle().getItems().add(item);
 		return new ItemDetFactWrapper(item);
 	}
 
 	@Override
-	public ReferenciaType getReferenciaType() {
+	public ReferenciaTipo getReferenciaTipo() {
 		if (cfe.getReferencia() == null)
-			cfe.setReferencia(new ReferenciaType());
+			cfe.setReferencia(new ReferenciaTipo());
 		return cfe.getReferencia();
 	}
 

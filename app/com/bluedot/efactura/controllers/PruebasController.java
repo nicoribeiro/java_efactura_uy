@@ -69,7 +69,7 @@ public abstract class PruebasController extends Controller {
 				EFact eFactura = efacturas[i];
 				Data response;
 				try {
-					response = service.sendCFE(eFactura);
+					response = service.sendCFE(eFactura,null);
 					Logger.info("Output data:\n" + response.getXmlData());
 					correctos++;
 				} catch (Exception e) {
@@ -89,7 +89,7 @@ public abstract class PruebasController extends Controller {
 			for (int i = 0; i < eResguardos.length; i++) {
 				EResg eResguardo = eResguardos[i];
 				try {
-					Data response = service.sendCFE(eResguardo);
+					Data response = service.sendCFE(eResguardo,null);
 					Logger.info("Output data:\n" + response.getXmlData());
 					correctos++;
 				} catch (Exception e) {
@@ -110,7 +110,7 @@ public abstract class PruebasController extends Controller {
 				ETck eticket = eTickets[i];
 				Data response;
 				try {
-					response = service.sendCFE(eticket);
+					response = service.sendCFE(eticket,null);
 					Logger.info("Output data:\n" + response.getXmlData());
 					correctos++;
 				} catch (Exception e) {
