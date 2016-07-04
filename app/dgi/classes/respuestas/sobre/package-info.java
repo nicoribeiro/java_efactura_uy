@@ -5,5 +5,23 @@
 // Generated on: 2016.06.11 at 05:25:19 PM UYT 
 //
 
-@javax.xml.bind.annotation.XmlSchema(namespace = "http://www.w3.org/2000/09/xmldsig#", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
+
+
+@javax.xml.bind.annotation.XmlSchema(
+		namespace = "http://cfe.dgi.gub.uy", 
+		elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED,
+		
+		
+					    xmlns={@XmlNs(prefix="", namespaceURI="http://cfe.dgi.gub.uy")
+					    ,@XmlNs(prefix="firma", namespaceURI="http://www.w3.org/2000/09/xmldsig#")
+					    
+		}
+					
+		
+		)  
+
+
+//@javax.xml.bind.annotation.XmlSchema(namespace = "http://www.w3.org/2000/09/xmldsig#", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
 package dgi.classes.respuestas.sobre;
+
+import javax.xml.bind.annotation.XmlNs;

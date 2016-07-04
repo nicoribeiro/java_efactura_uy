@@ -15,6 +15,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -153,6 +154,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "ackcfeDet",
     "signature"
 })
+@XmlRootElement(name = "ACKCFE")
 public class ACKCFEdefType {
 
     @XmlElement(name = "Caratula", required = true)

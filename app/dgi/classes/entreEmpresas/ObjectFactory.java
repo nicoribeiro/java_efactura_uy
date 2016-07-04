@@ -9,10 +9,13 @@
 package dgi.classes.entreEmpresas;
 
 import java.math.BigInteger;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlElementDecl;
 import javax.xml.bind.annotation.XmlRegistry;
 import javax.xml.namespace.QName;
+
+import dgi.classes.recepcion.CFEDefType;
 
 
 /**

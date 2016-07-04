@@ -192,17 +192,7 @@ public class Commons {
 	public static void dumpSobreToFile(EnvioCFE envioCFE, int indiceCFE, Boolean isSigned, Data response)
 			throws JAXBException, FileNotFoundException, IOException, EFacturaException, ParserConfigurationException,
 			TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
-		// Create the JAXBContext
-		JAXBContext context = JAXBContext.newInstance(EnvioCFE.class);
-		// Create the marshaller
-		Marshaller marshaller = context.createMarshaller();
-		// Create the Document
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		Document document = db.newDocument();
-
-		// Marshall the Object to a Document
-		marshaller.marshal(envioCFE, document);
+		Document document = XML.marshall(envioCFE);
 
 		Node node = document.getElementsByTagName("DGICFE:CFE").item(indiceCFE);
 
@@ -235,7 +225,9 @@ public class Commons {
 		SimpleDateFormat reader = new SimpleDateFormat("yyyy-MM-dd");
 		String folder = Settings.getInstance().getString(Constants.GENERATED_CFE_FOLDER,
 				"resources" + File.separator + "cfe");
-
+		Node encabezado=null;
+		boolean entreEmpresas = false;
+		
 		if (node.getNodeName().equals("Reporte")) {
 			// Es un Reporte
 			Node caratula = getChildNode(node, "Caratula");
@@ -244,19 +236,32 @@ public class Commons {
 			return folder + File.separator + date + File.separator + "reporteDiario_"
 					+ date + "_" + getChildValue(caratula, "SecEnvio");
 
-		} else {
+		} 
+		
+		else if (node.getNodeName().endsWith("EnvioCFE_entreEmpresas")) { 
+			// Es un CFE entre empresas
+			//TODO este item(0) es porque no viene con prettyprint, con pretty print va item(1). sin va item(0) ver que no sea dependiente de esto
+			encabezado = getChildNode(getChildNode(getChildNode(node,":CFE_Adenda"),":CFE").getChildNodes().item(0), ":Encabezado");
+			entreEmpresas = true;
+		}
+		
+		else if (node.getNodeName().endsWith("EnvioCFE")){
 			// Es un CFE
-			Node encabezado = getChildNode(node.getChildNodes().item(1), ":Encabezado");
-
+			//TODO este item(0) es porque no viene con prettyprint, con pretty print va item(1). sin va item(0) ver que no sea dependiente de esto
+			encabezado = getChildNode(getChildNode(node,":CFE").getChildNodes().item(0), ":Encabezado");
+		}
+		
+		if (encabezado!=null){
 			Node idDoc = getChildNode(encabezado, ":IdDoc");
-
+	
 			String type = getChildValue(idDoc, ":TipoCFE");
 			String date = formatter.format(reader.parse(getChildValue(idDoc, ":FchEmis")));
 			String serie = getChildValue(idDoc, ":Serie");
 			String nro = getChildValue(idDoc, ":Nro");
-
-			return folder + File.separator + date + File.separator + type + File.separator + serie + "_" + nro;
+	
+			return folder + File.separator + date + File.separator + type + File.separator + serie + "_" + nro + (entreEmpresas?"_entre_empresas":"");
 		}
+		return null;
 	}
 
 	private static String getChildValue(Node node, String name) {

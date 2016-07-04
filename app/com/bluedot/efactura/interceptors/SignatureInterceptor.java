@@ -68,7 +68,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 
 	}
 
-	private void signReporte(Message message) throws TransformerFactoryConfigurationError, EFacturaException, Exception{
+	private  void signReporte(Message message) throws TransformerFactoryConfigurationError, EFacturaException, Exception{
 		List list = message.getContent(java.util.List.class);
 		
 		WSEFacturaEFACRECEPCIONREPORTE sobre = (WSEFacturaEFACRECEPCIONREPORTE) list.get(0);
@@ -80,6 +80,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		 * Instantiate the DocumentBuilderFactory.
 		 * IMPORTANT: NamespaceAwerness=true!!
 		 */
+		//TODO usar los metodos de la clase XML
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware(true);
 		
@@ -147,13 +148,30 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		InputStream stream = new ByteArrayInputStream(docString.getBytes());			
 		Document allDocument= dbf.newDocumentBuilder().parse(stream);
 		
+		signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE");
+		
+		data.setXmlData(XML.documentToString(allDocument));
+		message.setContent(List.class, list);
+		
+		String filenamePrefix = Commons.getFilenamePrefix(allDocument.getDocumentElement());
+		
+		Commons.dumpNodeToFile(allDocument, true,filenamePrefix, null);
+		
+	}
+
+	public static void signDocument(DocumentBuilderFactory dbf, Document allDocument, String childTagName, String parentTagName)
+			throws ParserConfigurationException, FileNotFoundException, IOException, KeyStoreException,
+			NoSuchAlgorithmException, CertificateException, Exception {
 		/*
 		 * Isolate the CFE 
 		 */
 		Document cfeDocument = dbf.newDocumentBuilder().newDocument();
-		Node unsignedNode = allDocument.getElementsByTagName("ns0:CFE").item(0);
-		cfeDocument.adoptNode(unsignedNode);
-		cfeDocument.appendChild(unsignedNode);
+		
+		if (childTagName!=null){
+			Node unsignedNode = allDocument.getElementsByTagName(childTagName).item(0);
+			cfeDocument.adoptNode(unsignedNode);
+			cfeDocument.appendChild(unsignedNode);
+		}
 		
 		/*
 		 * Key Store & Cert 
@@ -167,20 +185,22 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		 * Sign the CFE
 		 */
 		XmlSignature xmlSignature = new XmlSignature(certName, certPass, keystore);
-		xmlSignature.sign(cfeDocument);
+		if (childTagName==null)
+			xmlSignature.sign(allDocument);
+		else
+			xmlSignature.sign(cfeDocument);
 		
 		
 		/*
 		 *  Build the message again 
 		 */
-		Node signedNode = allDocument.importNode(cfeDocument.getElementsByTagName("ns0:CFE").item(0), true);
-		unsignedNode = allDocument.getElementsByTagName("ns0:CFE").item(0);
-		allDocument.getElementsByTagName("DGICFE:EnvioCFE").item(0).appendChild(signedNode);
-		data.setXmlData(XML.documentToString(allDocument));
-		message.setContent(List.class, list);
+		if (parentTagName!=null){
+			Node signedNode = allDocument.importNode(cfeDocument.getElementsByTagName(childTagName).item(0), true);
+			allDocument.getElementsByTagName(parentTagName).item(0).appendChild(signedNode);
+		}else
+			allDocument = cfeDocument;
 		
-		Commons.dumpNodeToFile(allDocument, true,Commons.getFilenamePrefix(signedNode), null);
-		
+
 	}
 	
 	

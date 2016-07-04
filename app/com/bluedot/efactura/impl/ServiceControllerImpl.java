@@ -19,7 +19,7 @@ public class ServiceControllerImpl implements ServiceController {
 		RecepcionService service = getRecepcionService();
 
 		// Call the service
-		Data response = service.sendCFE(efactura);
+		Data response = service.sendCFE(efactura,null);
 
 		return new EfacturaResult(response.getXmlData());
 		

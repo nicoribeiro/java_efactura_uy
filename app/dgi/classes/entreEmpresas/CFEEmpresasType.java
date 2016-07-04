@@ -13,6 +13,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import dgi.classes.recepcion.CFEDefType;
+
 
 /**
  * <p>Java class for CFE_Empresas_Type complex type.
