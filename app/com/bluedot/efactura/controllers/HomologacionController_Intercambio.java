@@ -14,10 +14,11 @@ import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import com.bluedot.commons.XML;
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.global.ErrorMessage;
-import com.bluedot.efactura.global.Secured;
+import com.bluedot.commons.controllers.AbstractController;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.security.Secured;
+import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.services.IntercambioService;
 import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,14 +27,14 @@ import com.sun.istack.logging.Logger;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.respuestas.cfe.ACKCFEdefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
+import play.libs.F.Promise;
 import play.mvc.BodyParser;
-import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
 
 @ErrorMessage
 @Security.Authenticated(Secured.class)
-public class HomologacionController_Intercambio extends Controller {
+public class HomologacionController_Intercambio extends AbstractController {
 
 	static Logger logger = Logger.getLogger(HomologacionController_Intercambio.class);
 	
@@ -42,7 +43,7 @@ public class HomologacionController_Intercambio extends Controller {
 	}
 
 	@BodyParser.Of(BodyParser.Json.class)
-	public Result ingresoSobre() throws EFacturaException, TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
+	public Promise<Result> ingresoSobre() throws APIException, TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
 		try {
 
 			JsonNode jsonNode = request().body().asJson();
@@ -72,7 +73,7 @@ public class HomologacionController_Intercambio extends Controller {
 				XML.marshall(resultCFE, System.out);
 			
 		} catch (JSONException e) {
-			throw EFacturaException.raise(e);
+			throw APIException.raise(e);
 		} catch (ParserConfigurationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -87,7 +88,7 @@ public class HomologacionController_Intercambio extends Controller {
 			e.printStackTrace();
 		}
 		
-		return ok("").as("application/json");
+		return Promise.<Result> pure(ok());
 
 	}
 }

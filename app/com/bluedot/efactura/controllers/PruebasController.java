@@ -1,57 +1,72 @@
 package com.bluedot.efactura.controllers;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.bluedot.commons.IO;
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.impl.CAEManagerImpl;
-import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
-import com.bluedot.efactura.services.RecepcionService;
+import com.bluedot.commons.controllers.AbstractController;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
+import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
+import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
-import dgi.soap.recepcion.Data;
-import play.Logger;
-import play.mvc.Controller;
+import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 
-public abstract class PruebasController extends Controller {
+public abstract class PruebasController extends AbstractController {
 
+	final static Logger logger = LoggerFactory.getLogger(PruebasController.class);
+	
 	protected String path;
 	protected String detalle;
 	protected String caeHomologacion;
 	protected String caeActual;
 	protected HashMap<TipoDoc, TipoDoc> tiposDoc = new HashMap<TipoDoc, TipoDoc>();
-
+	protected EfacturaMicroControllersFactory factory;
+	protected Empresa empresa;
+	
 	public PruebasController() {
 		super();
+		try {
+			factory = (new EfacturaMicroControllersFactoryBuilder()).getMicroControllersFactory();
+			//TODO ver de inicializar esto bien
+			empresa = new Empresa();
+		} catch (APIException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	protected void switchToHomologacionCAE() {
-		try {
-			IO.writeFile("resources/conf/cae.json", caeHomologacion);
-			CAEManagerImpl.getInstance().refreshMap();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (EFacturaException e) {
-			e.printStackTrace();
-		}
+//		try {
+			//TODO ver esto 
+//			IO.writeFile("resources/conf/cae.json", caeHomologacion);
+//			CAEManagerImpl.getInstance().refreshMap();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		} catch (APIException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	protected void switchToStandarCAE() {
-		try {
-			IO.writeFile("resources/conf/cae.json", caeActual);
-			CAEManagerImpl.getInstance().refreshMap();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (EFacturaException e) {
-			e.printStackTrace();
-		}
+		//TODO ver esto
+//		try {
+//			IO.writeFile("resources/conf/cae.json", caeActual);
+//			CAEManagerImpl.getInstance().refreshMap();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		} catch (APIException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	protected void loadTiposDoc(JSONArray tiposDocArray) {
@@ -62,73 +77,86 @@ public abstract class PruebasController extends Controller {
 		}
 	}
 
-	protected JSONObject execute(RecepcionService service, int tipoDoc, EFact[] efacturas) throws EFacturaException {
-		if (tiposDoc.containsKey(TipoDoc.fromInt(tipoDoc))) {
+	protected JSONObject execute(TipoDoc tipoDoc, EFact[] efacturas, boolean ultimoEsAnulado) throws APIException {
+		if (tiposDoc.containsKey(tipoDoc)) {
 			int correctos = 0;
 			for (int i = 0; i < efacturas.length; i++) {
 				EFact eFactura = efacturas[i];
-				Data response;
 				try {
-					response = service.sendCFE(eFactura,null);
-					Logger.info("Output data:\n" + response.getXmlData());
+					CFE cfe = new CFE();
+					cfe.setTipo(tipoDoc);
+					cfe.setEfactura(eFactura);
+					if (i==efacturas.length-1 && ultimoEsAnulado){
+						cfe.setEstado(EstadoACKCFEType.BE);
+					}
+					factory.getServiceMicroController(empresa).register(cfe, null);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
 			}
-			Logger.info(tipoDoc + " Correctos:" + correctos);
+			logger.info(tipoDoc + " Correctos:" + correctos);
 			return generarJSONResultado(tipoDoc, efacturas.length, correctos);
 		}
 		return null;
 	}
 
-	protected JSONObject execute(RecepcionService service, int tipoDoc, EResg[] eResguardos) throws EFacturaException {
-		if (tiposDoc.containsKey(TipoDoc.fromInt(tipoDoc))) {
+	protected JSONObject execute(TipoDoc tipoDoc, EResg[] eResguardos, boolean ultimoEsAnulado) throws APIException {
+		if (tiposDoc.containsKey(tipoDoc)) {
 			int correctos = 0;
 			for (int i = 0; i < eResguardos.length; i++) {
 				EResg eResguardo = eResguardos[i];
 				try {
-					Data response = service.sendCFE(eResguardo,null);
-					Logger.info("Output data:\n" + response.getXmlData());
+					CFE cfe = new CFE();
+					cfe.setTipo(tipoDoc);
+					cfe.setEresguardo(eResguardo);
+					if (i==eResguardos.length-1 && ultimoEsAnulado){
+						cfe.setEstado(EstadoACKCFEType.BE);
+					}
+					factory.getServiceMicroController(empresa).register(cfe, null);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-			Logger.info(tipoDoc + " Correctos:" + correctos);
+			logger.info(tipoDoc + " Correctos:" + correctos);
 			return generarJSONResultado(tipoDoc, eResguardos.length, correctos);
 		}
 		return null;
 
 	}
 
-	protected JSONObject execute(RecepcionService service, int tipoDoc, ETck[] eTickets) throws EFacturaException {
-		if (tiposDoc.containsKey(TipoDoc.fromInt(tipoDoc))) {
+	protected JSONObject execute(TipoDoc tipoDoc, ETck[] eTickets, boolean ultimoEsAnulado) throws APIException {
+		if (tiposDoc.containsKey(tipoDoc)) {
 			int correctos = 0;
 			for (int i = 0; i < eTickets.length; i++) {
 				ETck eticket = eTickets[i];
-				Data response;
 				try {
-					response = service.sendCFE(eticket,null);
-					Logger.info("Output data:\n" + response.getXmlData());
+					CFE cfe = new CFE();
+					cfe.setTipo(tipoDoc);
+					cfe.setEticket(eticket);
+					if (i==eTickets.length-1 && ultimoEsAnulado){
+						cfe.setEstado(EstadoACKCFEType.BE);
+					}
+					factory.getServiceMicroController(empresa).register(cfe, null);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-			Logger.info(tipoDoc + " Correctos:" + correctos);
+			logger.info(tipoDoc + " Correctos:" + correctos);
 			return generarJSONResultado(tipoDoc, eTickets.length, correctos);
 		}
 		return null;
 	}
 
-	private JSONObject generarJSONResultado(int tipoDoc, int totalRegistros, int correctos) {
+	private JSONObject generarJSONResultado(TipoDoc tipoDoc, int totalRegistros, int correctos) {
 		JSONObject result = new JSONObject();
 		JSONObject aux = new JSONObject();
 		aux.put("totales", totalRegistros);
 		aux.put("correctos", correctos);
-		result.put(String.valueOf(tipoDoc), aux);
+		result.put(tipoDoc.name(), aux);
 		return result;
 	}
 

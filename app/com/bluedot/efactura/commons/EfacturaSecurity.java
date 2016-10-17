@@ -28,10 +28,10 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import com.bluedot.commons.IO;
-import com.bluedot.commons.PrettyPrint;
-import com.bluedot.commons.XmlSignature;
-import com.bluedot.efactura.global.EFacturaException;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.utils.IO;
+import com.bluedot.commons.utils.PrettyPrint;
+import com.bluedot.commons.utils.XmlSignature;
 
 import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.recepcion.EnvioCFE;
@@ -39,7 +39,7 @@ import dgi.classes.recepcion.EnvioCFE;
 public class EfacturaSecurity
 {
 //TODO no se usa este metodo
-	public static EnvioCFE addInternalSignature(EnvioCFE envioCFE) throws EFacturaException
+	public static EnvioCFE addInternalSignature(EnvioCFE envioCFE) throws APIException
 	{
 
 		try

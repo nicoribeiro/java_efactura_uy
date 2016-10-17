@@ -43,7 +43,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 public class ParamConsultaType {
 
     @XmlElement(name = "Token", required = true)
-    protected byte[] token;
+    protected String token;
     @XmlElement(name = "Fechahora", required = true)
     protected XMLGregorianCalendar fechahora;
 
@@ -54,7 +54,7 @@ public class ParamConsultaType {
      *     possible object is
      *     byte[]
      */
-    public byte[] getToken() {
+    public String getToken() {
         return token;
     }
 
@@ -65,7 +65,7 @@ public class ParamConsultaType {
      *     allowed object is
      *     byte[]
      */
-    public void setToken(byte[] value) {
+    public void setToken(String value) {
         this.token = value;
     }
 

@@ -1,37 +1,51 @@
 package com.bluedot.efactura.strategy.builder;
 
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.global.EFacturaException.EFacturaErrors;
-import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
-
-import dgi.classes.recepcion.CFEDefType.EFact;
-import dgi.classes.recepcion.CFEDefType.EResg;
-import dgi.classes.recepcion.CFEDefType.ETck;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.TipoDoc;
 
 public class CFEBuilderFactory {
 
 	
-	public static CFEBuiderInterface getCFEBuilder(TipoDoc tipo) throws EFacturaException {
-		switch (tipo) {
+	public static CFEBuiderInterface getCFEBuilder(TipoDoc tipo, CAEMicroController caeMicroController) throws APIException {
+		
+		CFEStrategy strategy = (new CFEStrategy.Builder()).withTipo(tipo).withCAEMicroController(caeMicroController).build();
+		
+		return getInterface(tipo, strategy, caeMicroController);
+	}
+	
+	public static CFEBuiderInterface getCFEBuilder(CFE cfe, CAEMicroController caeMicroController) throws APIException {
+		
+		CFEStrategy strategy = (new CFEStrategy.Builder()).withCFE(cfe).withCAEMicroController(caeMicroController).build();
+		
+		return getInterface(cfe.getTipo(), strategy, caeMicroController);
+		
+	}
+	
+	private static CFEBuiderInterface getInterface(TipoDoc tipoDoc, CFEStrategy strategy,
+			CAEMicroController caeMicroController) throws APIException{
+		switch (tipoDoc) {
+		
+		
+		
 		case eFactura:
 		case Nota_de_Debito_de_eFactura:
 		case Nota_de_Credito_de_eFactura:
 		case eFactura_Contingencia:
 		case Nota_de_Debito_de_eFactura_Contingencia:
 		case Nota_de_Credito_de_eFactura_Contingencia:
-			EFact eFactura = new EFact();
-			return new CFEBuilderImpl(eFactura, tipo);
+			return new CFEBuilderImpl(caeMicroController, strategy);
 		case eTicket:
 		case Nota_de_Credito_de_eTicket:
 		case Nota_de_Debito_de_eTicket:
 		case eTicket_Contingencia:
 		case Nota_de_Debito_de_eTicket_Contingencia:
 		case Nota_de_Credito_de_eTicket_Contingencia:
-			ETck eTicket = new ETck();
-			return new CFEBuilderImpl(eTicket, tipo);
+			return new CFEBuilderImpl(caeMicroController, strategy);
 		case eResguardo:
-			EResg eResguardo = new EResg();
-			return new CFEBuiderResguardo(eResguardo, tipo);
+			return new CFEBuiderResguardo(caeMicroController, strategy);
 		case Nota_de_Credito_de_eFactura_Exportacion:
 		case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
 		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
@@ -55,7 +69,7 @@ public class CFEBuilderFactory {
 		case eResguardo_Contingencia:
 		case eTicket_Venta_por_Cuenta_Ajena:
 		case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-			throw EFacturaException.raise(EFacturaErrors.NOT_SUPPORTED).setDetailMessage("No existe Builder para tipoDoc:" + tipo.value);
+			throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage("No existe Builder para tipoDoc:" + tipoDoc.value);
 		}
 		
 		return null;

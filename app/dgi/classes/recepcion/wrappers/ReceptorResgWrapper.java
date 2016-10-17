@@ -1,7 +1,6 @@
 package dgi.classes.recepcion.wrappers;
 
 import dgi.classes.recepcion.ReceptorResg;
-import dgi.classes.recepcion.ReceptorTck;
 
 public class ReceptorResgWrapper implements ReceptorInterface {
 

@@ -81,7 +81,7 @@ public class TotalesFactTickWrapper implements TotalesInterface {
 	}
 
 	@Override
-	public BigDecimal getMntNetoIvaTasaMin() {
+	public BigDecimal getMntNetoIVATasaMin() {
 		return delegate.getMntNetoIvaTasaMin();
 	}
 

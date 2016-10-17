@@ -10,10 +10,14 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.json.JSONException;
 
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.global.EFacturaException.EFacturaErrors;
-import com.bluedot.efactura.impl.CAEManagerImpl;
-import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.Pais;
+import com.bluedot.efactura.model.TipoDocumento;
+import com.bluedot.efactura.model.Titular;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType.ETck;
@@ -34,15 +38,14 @@ import dgi.classes.recepcion.wrappers.ReceptorTickWrapper;
 import dgi.classes.recepcion.wrappers.TotalesFactTickWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 
-public class EticketStrategy implements CFEStrategy {
+public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 
-	private ETck cfe;
-	private TipoDoc tipo;
+	public EticketStrategy(CFE cfe, CAEMicroController caeMicroController) throws APIException {
+		super(cfe, caeMicroController);
+		if (cfe.getEticket()==null)
+			this.cfe.setEticket(new ETck());
 
-	public EticketStrategy(ETck eticket, TipoDoc tipo) throws EFacturaException {
-		this.cfe = eticket;
-	
-		switch (tipo) {
+		switch (cfe.getTipo()) {
 		case eTicket:
 		case eTicket_Contingencia:
 		case Nota_de_Credito_de_eTicket:
@@ -51,10 +54,10 @@ public class EticketStrategy implements CFEStrategy {
 		case Nota_de_Debito_de_eTicket_Contingencia:
 			break;
 		default:
-			throw EFacturaException.raise(EFacturaErrors.NOT_SUPPORTED).setDetailMessage("Estrategia para el tipo: " + tipo.friendlyName);
+			throw APIException.raise(APIErrors.NOT_SUPPORTED)
+					.setDetailMessage("Estrategia para el tipo: " + cfe.getTipo().friendlyName);
 		}
-		
-		this.tipo = tipo;
+
 	}
 
 	@Override
@@ -64,17 +67,16 @@ public class EticketStrategy implements CFEStrategy {
 		return getEncabezado().getEmisor();
 	}
 
-	@Override
-	public ReceptorInterface getReceptor() {
+	private ReceptorInterface getReceptor() {
 		if (getEncabezado().getReceptor() == null)
 			getEncabezado().setReceptor(new ReceptorTck());
 		return new ReceptorTickWrapper(getEncabezado().getReceptor());
 	}
 
 	private Encabezado getEncabezado() {
-		if (cfe.getEncabezado() == null)
-			cfe.setEncabezado(new Encabezado());
-		return cfe.getEncabezado();
+		if (cfe.getEticket().getEncabezado() == null)
+			cfe.getEticket().setEncabezado(new Encabezado());
+		return cfe.getEticket().getEncabezado();
 	}
 
 	@Override
@@ -86,16 +88,16 @@ public class EticketStrategy implements CFEStrategy {
 
 	@Override
 	public CAEDataType getCAEData() {
-		if (cfe.getCAEData() == null)
-			cfe.setCAEData(new CAEDataType());
-		return cfe.getCAEData();
+		if (cfe.getEticket().getCAEData() == null)
+			cfe.getEticket().setCAEData(new CAEDataType());
+		return cfe.getEticket().getCAEData();
 	}
 
 	@Override
 	public List<ItemInterface> getItem() {
 		ArrayList<ItemInterface> list = new ArrayList<ItemInterface>();
 
-		for (ItemDetFact itemDetFact : cfe.getDetalle().getItems()) {
+		for (ItemDetFact itemDetFact : cfe.getEticket().getDetalle().getItems()) {
 			list.add(new ItemDetFactWrapper(itemDetFact));
 		}
 		return list;
@@ -109,28 +111,31 @@ public class EticketStrategy implements CFEStrategy {
 	}
 
 	@Override
-	public void setIdDoc(boolean montosIncluyenIva, int formaPago) {
+	public void setIdDoc() throws APIException {
 		try {
-			getEncabezado().setIdDoc(CAEManagerImpl.getInstance().getIdDocTick(tipo, montosIncluyenIva, formaPago));
-		} catch (DatatypeConfigurationException | IOException | EFacturaException e) {
-			e.printStackTrace();
+			IdDocTck idDocTck = caeMicroController.getIdDocTick(cfe.getTipo(), cfe.isIndMontoBruto(), cfe.getFormaDePago().value);
+			getEncabezado().setIdDoc(idDocTck);
+			cfe.setSerie(idDocTck.getSerie());
+			cfe.setNro(idDocTck.getNro().intValue());
+		} catch (DatatypeConfigurationException | IOException e) {
+			APIException.raise(e);
 		}
 	}
 
 	@Override
-	public void setCAEData() {
+	public void setCAEData() throws APIException {
 		try {
-			cfe.setCAEData(CAEManagerImpl.getInstance().getCaeData(tipo));
-		} catch (DatatypeConfigurationException | IOException | EFacturaException | JSONException | ParseException e) {
-			e.printStackTrace();
+			cfe.getEticket().setCAEData(caeMicroController.getCAEDataType(cfe.getTipo()));
+		} catch (DatatypeConfigurationException | JSONException | ParseException e) {
+			APIException.raise(e);
 		}
 
 	}
 
 	private Detalle getDetalle() {
-		if (cfe.getDetalle() == null)
-			cfe.setDetalle(new Detalle());
-		return cfe.getDetalle();
+		if (cfe.getEticket().getDetalle() == null)
+			cfe.getEticket().setDetalle(new Detalle());
+		return cfe.getEticket().getDetalle();
 	}
 
 	@Override
@@ -142,24 +147,74 @@ public class EticketStrategy implements CFEStrategy {
 
 	@Override
 	public ReferenciaTipo getReferenciaTipo() {
-		if (cfe.getReferencia() == null)
-			cfe.setReferencia(new ReferenciaTipo());
-		return cfe.getReferencia();
+		if (cfe.getEticket().getReferencia() == null)
+			cfe.getEticket().setReferencia(new ReferenciaTipo());
+		return cfe.getEticket().getReferencia();
 	}
 
 	@Override
 	public void setTimestampFirma(XMLGregorianCalendar newXMLGregorianCalendar) {
-		cfe.setTmstFirma(newXMLGregorianCalendar);
+		cfe.getEticket().setTmstFirma(newXMLGregorianCalendar);
 	}
 
 	@Override
-	public Object getCFE() {
+	public CFE getCFE() {
 		return cfe;
 	}
 
 	@Override
-	public boolean esMandatoriaDirRecep() {
-		return false;
-	}
+	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
+			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep) throws APIException {
+		ReceptorInterface receptor = getReceptor();
 
+		
+		
+		
+		if (supera10000UI()) {
+			
+			if (tipoDocRecep==null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("tipoDocRecep"));
+			
+			if (tipoDocRecep == TipoDocumento.RUC)
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("tipoDocRecep")).setDetailMessage("Deberia ser distinto de 2 (RUC)");
+
+			if (codPaisRecep == null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("codPaisRecep"));
+
+			if ((tipoDocRecep==TipoDocumento.RUC || tipoDocRecep==TipoDocumento.CI)  && !codPaisRecep.equals("UY"))
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("codPaisRecep"))
+						.setDetailMessage("Debe ser UY");
+
+			if (tipoDocRecep==TipoDocumento.DNI  && (codPaisRecep.equals("AR") || codPaisRecep.equals("BR") || codPaisRecep.equals("CL") || codPaisRecep.equals("PY"))   )
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("codPaisRecep"))
+						.setDetailMessage("Debe ser UY");
+			
+			if (docRecep == null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("docRecep"));
+
+
+		}
+
+		if (tipoDocRecep!=null)
+			receptor.setTipoDocRecep(tipoDocRecep.getId());
+		if (codPaisRecep != null)
+			receptor.setCodPaisRecep(codPaisRecep);
+		if (docRecep != null)
+			receptor.setDocRecep(docRecep);
+		if (dirRecep != null)
+			receptor.setDirRecep(dirRecep);
+		if (rznSocRecep != null)
+			receptor.setRznSocRecep(rznSocRecep);
+		if (ciudadRecep != null)
+			receptor.setCiudadRecep(ciudadRecep);
+		if (deptoRecep != null)
+			receptor.setDeptoRecep(deptoRecep);
+		
+		if (codPaisRecep != null && docRecep != null && codPaisRecep!=null){
+			Pais pais = Pais.findByCodigo(codPaisRecep, true);
+			cfe.setTitular(getOrCreateTitular(pais,tipoDocRecep,docRecep));
+		}
+	}
+	
+	
 }

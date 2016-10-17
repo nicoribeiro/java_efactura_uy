@@ -4,7 +4,6 @@ import java.math.BigInteger;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import dgi.classes.recepcion.IdDocFact;
 import dgi.classes.recepcion.IdDocResg;
 
 public class IdDocResgWrapper implements IdDocInterface {

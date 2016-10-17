@@ -56,7 +56,7 @@ public class DsigReferenceType {
     @XmlElement(name = "DigestMethod", required = true)
     protected DigestMethod digestMethod;
     @XmlElement(name = "DigestValue", required = true)
-    protected byte[] digestValue;
+    protected String digestValue;
     @XmlAttribute(name = "Id")
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
     @XmlID
@@ -124,7 +124,7 @@ public class DsigReferenceType {
      *     possible object is
      *     byte[]
      */
-    public byte[] getDigestValue() {
+    public String getDigestValue() {
         return digestValue;
     }
 
@@ -135,7 +135,7 @@ public class DsigReferenceType {
      *     allowed object is
      *     byte[]
      */
-    public void setDigestValue(byte[] value) {
+    public void setDigestValue(String value) {
         this.digestValue = value;
     }
 

@@ -11,7 +11,6 @@ import dgi.classes.recepcion.ItemDetFact.CodItem;
 import dgi.classes.recepcion.ItemDetFact.SubDescuento;
 import dgi.classes.recepcion.ItemDetFact.SubRecargo;
 import dgi.classes.recepcion.RetPerc;
-import dgi.classes.recepcion.RetPercResg;
 
 /**
  * Wrapper for the ItemDetFact class
@@ -209,6 +208,15 @@ public class ItemDetFactWrapper implements ItemInterface {
 			RetPercInterface retencion = iterator.next();
 			delegate.getRetencPerceps().add((RetPerc) retencion.getDelegate());
 		}
+	}
+
+	@Override
+	public void addCodItem(TpoCod tpoCod, String cod) {
+		CodItem codItem = new CodItem();
+		codItem.setCod(cod);
+		codItem.setTpoCod(tpoCod.name());
+		delegate.getCodItems().add(codItem);
+		
 	}
 
 }

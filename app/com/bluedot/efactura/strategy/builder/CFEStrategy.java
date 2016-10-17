@@ -4,16 +4,17 @@ import java.util.List;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.global.EFacturaException.EFacturaErrors;
-import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Pais;
+import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.model.TipoDocumento;
+import com.bluedot.efactura.model.Titular;
 
 import dgi.classes.recepcion.CAEDataType;
-import dgi.classes.recepcion.CFEDefType.EFact;
-import dgi.classes.recepcion.CFEDefType.EResg;
-import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.Emisor;
-import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.wrappers.IdDocInterface;
 import dgi.classes.recepcion.wrappers.ItemInterface;
@@ -25,12 +26,16 @@ public interface CFEStrategy {
 	public class Builder {
 
 		private TipoDoc tipoDoc;
-		private EFact eFactura;
-		private ETck eTicket;
-		private EResg eResguardo;
+		private CFE cfe;
+		private CAEMicroController caeMicroController;
 
 		public TipoDoc getTipo() {
 			return tipoDoc;
+		}
+
+		public Builder withCAEMicroController(CAEMicroController caeMicroController) {
+			this.caeMicroController = caeMicroController;
+			return this;
 		}
 
 		public Builder withTipo(TipoDoc tipo) {
@@ -38,22 +43,21 @@ public interface CFEStrategy {
 			return this;
 		}
 
-		public Builder withEfact(EFact efact) {
-			this.eFactura = efact;
+		public Builder withCFE(CFE cfe) {
+			this.cfe = cfe;
 			return this;
 		}
 
-		public Builder withEtick(ETck etick) {
-			this.eTicket = etick;
-			return this;
-		}
-
-		public Builder withEResg(EResg eResguardo) {
-			this.eResguardo = eResguardo;
-			return this;
-		}
-
-		public CFEStrategy build() throws EFacturaException {
+		public CFEStrategy build() throws APIException {
+			if (cfe==null){
+				cfe = new CFE();
+				cfe.setTipo(tipoDoc);
+			}else{
+				tipoDoc = cfe.getTipo();
+			}
+			
+			
+			
 			switch (tipoDoc) {
 
 			case Nota_de_Credito_de_eFactura:
@@ -62,39 +66,34 @@ public interface CFEStrategy {
 			case Nota_de_Credito_de_eFactura_Contingencia:
 			case Nota_de_Debito_de_eFactura_Contingencia:
 			case eFactura_Contingencia:
-				return new EfactStrategy(eFactura, tipoDoc);
+				return new EfactStrategy(cfe, caeMicroController);
 			case eTicket:
 			case Nota_de_Credito_de_eTicket:
 			case Nota_de_Debito_de_eTicket:
 			case Nota_de_Credito_de_eTicket_Contingencia:
 			case Nota_de_Debito_de_eTicket_Contingencia:
 			case eTicket_Contingencia:
-				return new EticketStrategy(eTicket, tipoDoc);
+				return new EticketStrategy(cfe, caeMicroController);
 			case eResguardo:
 			case eResguardo_Contingencia:
-				return new EResguardoStrategy(eResguardo, tipoDoc);
+				return new EResguardoStrategy(cfe, caeMicroController);
 
-			
 			case Nota_de_Credito_de_eFactura_Exportacion:
 			case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
 			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
 			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 
-			
 			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
 			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 
-			
 			case Nota_de_Debito_de_eFactura_Exportacion:
 			case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
 			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
 			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 
-			
 			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
 			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 
-			
 			case eFactura_Exportacion:
 			case eFactura_Exportacion_Contingencia:
 			case eFactura_Venta_por_Cuenta_Ajena:
@@ -105,12 +104,9 @@ public interface CFEStrategy {
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
 
-			
-
-			
 			case eTicket_Venta_por_Cuenta_Ajena:
 			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-				throw EFacturaException.raise(EFacturaErrors.NOT_SUPPORTED)
+				throw APIException.raise(APIErrors.NOT_SUPPORTED)
 						.setDetailMessage("Estrategia para el tipo: " + tipoDoc.friendlyName);
 			}
 			return null;
@@ -121,8 +117,6 @@ public interface CFEStrategy {
 
 	Emisor getEmisor();
 
-	ReceptorInterface getReceptor();
-
 	TotalesInterface getTotales();
 
 	CAEDataType getCAEData();
@@ -131,9 +125,9 @@ public interface CFEStrategy {
 
 	IdDocInterface getIdDoc();
 
-	void setIdDoc(boolean montosIncluyenIva, int formaPago);
+	void setIdDoc() throws APIException;
 
-	void setCAEData();
+	void setCAEData() throws APIException;
 
 	ItemInterface createItem();
 
@@ -141,8 +135,9 @@ public interface CFEStrategy {
 
 	void setTimestampFirma(XMLGregorianCalendar newXMLGregorianCalendar);
 
-	Object getCFE();
+	CFE getCFE();
 
-	boolean esMandatoriaDirRecep();
+	void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
+			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep) throws APIException;
 
 }

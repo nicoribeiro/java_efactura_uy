@@ -10,6 +10,7 @@ package dgi.classes.respuestas.sobre;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -17,6 +18,7 @@ import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlType;
+
 import org.w3c.dom.Element;
 
 
@@ -66,8 +68,8 @@ public class PGPDataType {
      * <p>
      * You are getting this "catch-all" property because of the following reason: 
      * The field name "PGPKeyPacket" is used by two different parts of a schema. See: 
-     * line 218 of file:/Users/nicolasribeiro/Google%20Drive/Proyectos/actual/Lerand%20Group/e-factura/xsd/XSDs_FE_1.35/xmldsig-core-schema.xsd
-     * line 213 of file:/Users/nicolasribeiro/Google%20Drive/Proyectos/actual/Lerand%20Group/e-factura/xsd/XSDs_FE_1.35/xmldsig-core-schema.xsd
+     * line 218 of file:XSDs_FE_1.35/xmldsig-core-schema.xsd
+     * line 213 of file:XSDs_FE_1.35/xmldsig-core-schema.xsd
      * <p>
      * To get rid of this property, apply a property customization to one 
      * of both of the following declarations to change their names: 

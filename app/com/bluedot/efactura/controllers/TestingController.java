@@ -8,19 +8,17 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.bluedot.efactura.EFacturaFactory;
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.global.ErrorMessage;
-import com.bluedot.efactura.global.Secured;
-import com.bluedot.efactura.impl.EFacturaFactoryImpl;
-import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
-import com.bluedot.efactura.services.RecepcionService;
-import com.bluedot.efactura.services.impl.RecepcionServiceImpl;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.security.Secured;
+import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.TipoDoc;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
+import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -33,7 +31,7 @@ public class TestingController extends PruebasController {
 	private int maxLineasPorDocumento = 15;
 
 	@BodyParser.Of(BodyParser.Json.class)
-	public Result generarPrueba() throws EFacturaException {
+	public Promise<Result> generarPrueba() throws APIException {
 
 		JsonNode jsonNode = request().body().asJson();
 
@@ -47,15 +45,11 @@ public class TestingController extends PruebasController {
 
 		loadTiposDoc(tiposDocArray);
 
-		EFacturaFactory factory = EFacturaFactoryImpl.getInstance();
+		JSONArray resultFacturas = eFacturas(encabezadoJSON);
 
-		RecepcionService service = new RecepcionServiceImpl();
+		JSONArray resultTickets = eTickets(encabezadoJSON);
 
-		JSONArray resultFacturas = eFacturas(encabezadoJSON, factory, service);
-
-		JSONArray resultTickets = eTickets(encabezadoJSON, factory, service);
-
-		JSONArray resultResguardos = eResguardos(encabezadoJSON, factory, service);
+		JSONArray resultResguardos = eResguardos(encabezadoJSON);
 
 		JSONObject result = new JSONObject();
 
@@ -63,12 +57,12 @@ public class TestingController extends PruebasController {
 
 		result.put("resultado", aux);
 
-		return ok(result.toString()).as("application/json");
+		return json(result.toString());
 
 	}
 
-	private JSONArray eResguardos(JSONObject encabezadoJSON, EFacturaFactory factory, RecepcionService service)
-			throws EFacturaException {
+	private JSONArray eResguardos(JSONObject encabezadoJSON)
+			throws APIException {
 
 		EResg[] eResguardos = new EResg[cantidadDocumentos];
 
@@ -86,8 +80,8 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create EResg object from json description
 				 */
-				EResg eResguardo = factory.getCFEController().createEResguardo(resguardo);
-				eResguardos[i] = eResguardo;
+				CFE eResguardo = factory.getCFEMicroController(empresa).create(TipoDoc.eResguardo, resguardo);
+				eResguardos[i] = eResguardo.getEresguardo();
 
 			}
 		}
@@ -97,7 +91,7 @@ public class TestingController extends PruebasController {
 		JSONObject result;
 		JSONArray resultado = new JSONArray();
 
-		result = execute(service, 182, eResguardos);
+		result = execute(TipoDoc.eResguardo, eResguardos, false);
 		if (result != null)
 			resultado.put(result);
 
@@ -105,8 +99,8 @@ public class TestingController extends PruebasController {
 
 	}
 
-	private JSONArray eFacturas(JSONObject encabezadoJSON, EFacturaFactory factory, RecepcionService service)
-			throws EFacturaException {
+	private JSONArray eFacturas(JSONObject encabezadoJSON)
+			throws APIException {
 
 		EFact[] eFacturas = new EFact[cantidadDocumentos];
 		EFact[] eFacturas_credito = new EFact[cantidadDocumentos];
@@ -126,8 +120,8 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Efact object from json description
 				 */
-				EFact eFactura = factory.getCFEController().createEfactura(factura);
-				eFacturas[i] = eFactura;
+				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura,factura);
+				eFacturas[i] = eFactura.getEfactura();
 
 			}
 		}
@@ -149,8 +143,8 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Nota de credito object from json description
 				 */
-				EFact eFactura = factory.getCFEController().createNotaCreditoEfactura(notaCredito, referencia);
-				eFacturas_credito[i] = eFactura;
+				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, referencia);
+				eFacturas_credito[i] = eFactura.getEfactura();
 
 			}
 		}
@@ -171,8 +165,8 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Nota de debito object from json description
 				 */
-				EFact eFactura = factory.getCFEController().createNotaDebitoEfactura(notaDebito, referencia);
-				eFacturas_debito[i] = eFactura;
+				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, referencia);
+				eFacturas_debito[i] = eFactura.getEfactura();
 
 			}
 		}
@@ -183,15 +177,15 @@ public class TestingController extends PruebasController {
 		JSONObject result;
 		JSONArray resultado = new JSONArray();
 
-		result = execute(service, 111, eFacturas);
+		result = execute(TipoDoc.eFactura, eFacturas, false);
 		if (result != null)
 			resultado.put(result);
 
-		result = execute(service, 112, eFacturas_credito);
+		result = execute( TipoDoc.Nota_de_Credito_de_eFactura, eFacturas_credito, false);
 		if (result != null)
 			resultado.put(result);
 
-		result = execute(service, 113, eFacturas_debito);
+		result = execute( TipoDoc.Nota_de_Debito_de_eFactura, eFacturas_debito, false);
 		if (result != null)
 			resultado.put(result);
 
@@ -199,8 +193,8 @@ public class TestingController extends PruebasController {
 
 	}
 
-	private JSONArray eTickets(JSONObject encabezadoJSON, EFacturaFactory factory, RecepcionService service)
-			throws EFacturaException {
+	private JSONArray eTickets(JSONObject encabezadoJSON)
+			throws APIException {
 
 		ETck[] eTickets = new ETck[cantidadDocumentos];
 		ETck[] eTickets_credito = new ETck[cantidadDocumentos];
@@ -220,8 +214,8 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create ETck object from json description
 				 */
-				ETck eTicket = factory.getCFEController().createETicket(ticket);
-				eTickets[i] = eTicket;
+				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket, ticket);
+				eTickets[i] = eTicket.getEticket();
 
 			}
 		}
@@ -243,8 +237,8 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Nota de credito object from json description
 				 */
-				ETck eticket = factory.getCFEController().createNotaCreditoETicket(notaCredito, referencia);
-				eTickets_credito[i] = eticket;
+				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eTicket,notaCredito, referencia);
+				eTickets_credito[i] = eTicket.getEticket();
 
 			}
 		}
@@ -265,8 +259,8 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Nota de debito object from json description
 				 */
-				ETck eticket = factory.getCFEController().createNotaDebitoETicket(notaDebito, referencia);
-				etickets_debito[i] = eticket;
+				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eTicket,notaDebito, referencia);
+				etickets_debito[i] = eTicket.getEticket();;
 
 			}
 		}
@@ -277,15 +271,15 @@ public class TestingController extends PruebasController {
 		JSONObject result;
 		JSONArray resultado = new JSONArray();
 
-		result = execute(service, 101, eTickets);
+		result = execute( TipoDoc.eTicket, eTickets, false);
 		if (result != null)
 			resultado.put(result);
 
-		result = execute(service, 102, eTickets_credito);
+		result = execute( TipoDoc.Nota_de_Credito_de_eTicket, eTickets_credito, false);
 		if (result != null)
 			resultado.put(result);
 
-		result = execute(service, 103, etickets_debito);
+		result = execute( TipoDoc.Nota_de_Debito_de_eTicket, etickets_debito, false);
 		if (result != null)
 			resultado.put(result);
 

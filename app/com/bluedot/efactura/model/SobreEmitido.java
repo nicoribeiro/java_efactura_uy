@@ -1,0 +1,164 @@
+package com.bluedot.efactura.model;
+
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.persistence.Entity;
+import javax.persistence.Transient;
+
+import org.hibernate.annotations.Type;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
+
+import com.bluedot.commons.error.APIException;
+import com.play4jpa.jpa.models.DefaultQuery;
+
+import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
+import dgi.classes.recepcion.EnvioCFE;
+@Entity
+public class SobreEmitido extends Sobre{
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 405831344290550640L;
+	
+	/**
+	 * Es el xml que se envio DGI
+	 */
+	@Type(type="text")
+	private String xmlDgi;
+	
+	/**
+	 * Datetime estimado para la consulta del resultado de los CFE incluidos.
+	 * 
+	 * Este campo es relevante si destino==DestinoSobre.CLIENTE
+	 */
+	private Date fechaConsulta;
+	
+	/**
+	 * Respuesta a la recepcion del sobre.
+	 */
+	@Type(type="text")
+	private String respuesta_dgi;
+	
+	/**
+	 * Resultado del procesamiento de los CFEs del sobre. Emitido por DGI
+	 */
+	@Type(type="text")
+	private String resultado_dgi;
+	
+	private Long idReceptor;
+	
+	private String token;
+	
+	@Transient
+	private EnvioCFE envioCFE;
+	
+	@Transient
+	private EnvioCFEEntreEmpresas envioCFEEntreEmpresas;
+
+	public SobreEmitido() {
+		super();
+	}
+
+	public SobreEmitido(Empresa empresaEmisora, Empresa empresaReceptora, String nombreArchivo, int cantComprobantes,
+			List<CFE> cfes) {
+		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes, cfes);
+	}
+	
+	public static List<SobreEmitido> findByEmpresaEmisoraAndDate(Empresa empresaEmisora, Date fecha) throws APIException
+	{
+		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query();
+		
+			
+			q.getCriteria().createAlias("empresaEmisora", "empresa", JoinType.LEFT_OUTER_JOIN);
+			
+			q.getCriteria().add(Restrictions.and
+					
+					(		Restrictions.eq("empresa.id", empresaEmisora.getId()), 
+							Restrictions.eq("fecha", fecha)
+					));
+		
+		LinkedList<SobreEmitido> sobresEmitidos = new LinkedList<SobreEmitido>();
+			
+			
+		List<Sobre> sobres = q.findList();
+		
+		for (Iterator<Sobre> iterator = sobres.iterator(); iterator.hasNext();) {
+			Sobre sobre = iterator.next();
+			if (sobre instanceof SobreEmitido)
+				sobresEmitidos.add((SobreEmitido) sobre);
+		}
+		
+		return sobresEmitidos;
+		
+	}
+	
+	public Date getFechaConsulta() {
+		return fechaConsulta;
+	}
+
+	public void setFechaConsulta(Date fechaConsulta) {
+		this.fechaConsulta = fechaConsulta;
+	}
+	
+	public String getXmlDgi() {
+		return xmlDgi;
+	}
+
+	public void setXmlDgi(String xml) {
+		this.xmlDgi = xml;
+	}
+
+	public String getRespuesta_dgi() {
+		return respuesta_dgi;
+	}
+
+	public void setRespuesta_dgi(String respuesta_dgi) {
+		this.respuesta_dgi = respuesta_dgi;
+	}
+
+	public String getResultado_dgi() {
+		return resultado_dgi;
+	}
+
+	public void setResultado_dgi(String resultado_dgi) {
+		this.resultado_dgi = resultado_dgi;
+	}
+
+	public Long getIdReceptor() {
+		return idReceptor;
+	}
+
+	public void setIdReceptor(Long idReceptor) {
+		this.idReceptor = idReceptor;
+	}
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
+	public EnvioCFE getEnvioCFE() {
+		return envioCFE;
+	}
+
+	public void setEnvioCFE(EnvioCFE envioCFE) {
+		this.envioCFE = envioCFE;
+	}
+
+	public EnvioCFEEntreEmpresas getEnvioCFEEntreEmpresas() {
+		return envioCFEEntreEmpresas;
+	}
+
+	public void setEnvioCFEEntreEmpresas(EnvioCFEEntreEmpresas envioCFEEntreEmpresas) {
+		this.envioCFEEntreEmpresas = envioCFEEntreEmpresas;
+	}
+	
+}

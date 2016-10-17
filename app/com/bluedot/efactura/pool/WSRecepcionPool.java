@@ -16,28 +16,26 @@ import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
 import org.apache.wss4j.dom.handler.WSHandlerConstants;
 
-import com.bluedot.commons.ObjectPool;
-import com.bluedot.commons.Settings;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.utils.ObjectPool;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.commons.Commons.DgiService;
-import com.bluedot.efactura.global.EFacturaException;
 import com.bluedot.efactura.interceptors.CDataWriterInterceptor;
-import com.bluedot.efactura.interceptors.SoapEnvelopeLoggingOutInterceptor;
 import com.bluedot.efactura.interceptors.NamespacesInterceptor;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 
 import dgi.soap.recepcion.WSEFacturaSoapPort;
+import play.Play;
 
 public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 	private static WSRecepcionPool instance = null;
 
 	public static synchronized WSRecepcionPool getInstance()
-			throws IOException, EFacturaException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
+			throws IOException, APIException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
 		if (instance == null) {
-			Settings settings = Settings.getInstance();
 			CallbackHandler passwordCallback = Commons.getPasswordCallback();
-			instance = new WSRecepcionPool(settings.getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(),
+			instance = new WSRecepcionPool(Play.application().configuration().getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(),
 					passwordCallback, Commons.getURL(DgiService.Recepcion));
 		}
 
@@ -95,7 +93,7 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 
 		CDataWriterInterceptor cdataInterceptor = new CDataWriterInterceptor();
 		cxfEndpoint.getOutInterceptors().add(cdataInterceptor);
-
+		
 		return new WSEFacturaSoapPortWrapper(port);
 	}
 

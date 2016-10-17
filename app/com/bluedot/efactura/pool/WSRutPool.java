@@ -12,32 +12,30 @@ import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.frontend.ClientProxy;
-import org.apache.cxf.interceptor.LoggingOutInterceptor;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
 import org.apache.wss4j.dom.handler.WSHandlerConstants;
 
-import com.bluedot.commons.ObjectPool;
-import com.bluedot.commons.Settings;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.utils.ObjectPool;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.commons.Commons.DgiService;
-import com.bluedot.efactura.global.EFacturaException;
 
 import dgi.soap.rut.WSPersonaGetActEmpresarialSoapPort;
+import play.Play;
 
 public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPortWrapper>
 {
 	private static WSRutPool instance = null;
 
-	public static synchronized WSRutPool getInstance() throws IOException, EFacturaException, KeyStoreException, NoSuchAlgorithmException, CertificateException
+	public static synchronized WSRutPool getInstance() throws IOException, APIException, KeyStoreException, NoSuchAlgorithmException, CertificateException
 	{
 		if (instance == null)
 		{
 
-			Settings settings = Settings.getInstance();
 			CallbackHandler passwordCallback = Commons.getPasswordCallback();
-			instance = new WSRutPool(settings.getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(), passwordCallback,
+			instance = new WSRutPool(Play.application().configuration().getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(), passwordCallback,
 					Commons.getURL(DgiService.Rut));
 		}
 

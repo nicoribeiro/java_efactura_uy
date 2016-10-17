@@ -2,18 +2,18 @@ package com.bluedot.efactura.strategy.builder;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.global.EFacturaException.EFacturaErrors;
-import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.commons.Commons;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.model.TipoDoc;
 
-import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.RetPercResg;
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.recepcion.TotalesResg.RetencPercep;
@@ -27,12 +27,13 @@ import dgi.classes.recepcion.wrappers.TotalesRetencPercepResg;
 
 public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInterface {
 
-	public CFEBuiderResguardo(EResg eResguardo, TipoDoc tipo) throws EFacturaException {
-		this.strategy = (new CFEStrategy.Builder()).withEResg(eResguardo).withTipo(tipo).build();
+	
+	public CFEBuiderResguardo(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
+		super(caeMicroController, strategy);
 	}
 
 	@Override
-	public void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws EFacturaException {
+	public void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws APIException {
 
 		for (int i = 1; i <= detalleJson.length(); i++) {
 			ItemResgWrapper item = (ItemResgWrapper) strategy.createItem();
@@ -40,15 +41,12 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 
 			item.setNroLinDet(i);
 
-			if (itemJson.optString("IndFact") == null)
-				item.setIndFact(new BigInteger(itemJson.getString("IndFact")));
+			item.setIndFact(new BigInteger(Commons.safeGetString(itemJson,"IndFact")));
 
-			if (itemJson.optJSONArray("Retenciones") == null)
-				throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("Retenciones");
-			JSONArray retencionesJSON = itemJson.getJSONArray("Retenciones");
+			JSONArray retencionesJSON = Commons.safeGetJSONArray(itemJson,"Retenciones");
 
 			if (retencionesJSON.length() > 5)
-				throw EFacturaException.raise(EFacturaErrors.MALFORMED_CFE).setDetailMessage(
+				throw APIException.raise(APIErrors.MALFORMED_CFE).setDetailMessage(
 						"Se aceptan hasta 5 rentenciones por item, se enviaron " + retencionesJSON.length());
 			
 			
@@ -61,18 +59,18 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 				
 				
 				if (retencionJSON.optString("CodRet") == null)
-					throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("CodRet");
+					throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("CodRet"));
 				retencion.setCodRet(retencionJSON.getString("CodRet"));
 
 				if (retencionJSON.optString("Tasa") == null)
 					retencion.setTasa(new BigDecimal(retencionJSON.getString("Tasa")));
 
 				if (retencionJSON.optString("MntSujetoaRet") == null)
-					throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("MntSujetoaRet");
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("MntSujetoaRet");
 				retencion.setMntSujetoaRet(new BigDecimal(retencionJSON.getString("MntSujetoaRet")));
 
 				if (retencionJSON.optString("ValRetPerc") == null)
-					throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("ValRetPerc");
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("ValRetPerc");
 				retencion.setValRetPerc(new BigDecimal(retencionJSON.getString("ValRetPerc")));
 
 				retenciones.add(new RetPercResgWrapper(retencion));
@@ -85,7 +83,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 	}
 
 	@Override
-	public void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws EFacturaException {
+	public void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws APIException {
 		TotalesInterface totales = strategy.getTotales();
 
 		/*
@@ -94,7 +92,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 		TipMonType moneda = TipMonType.fromValue(totalesJson.getString("TpoMoneda"));
 
 		if (moneda == null)
-			throw EFacturaException.raise(EFacturaErrors.BAD_PARAMETER_VALUE)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TpoMoneda"))
 					.setDetailMessage("El campo TpoMoneda no es ninguno de los conocidos, ver tabla de monedas.");
 
 		totales.setTpoMoneda(moneda);
@@ -106,8 +104,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 			if (totalesJson.has("TpoCambio"))
 				totales.setTpoCambio(new BigDecimal(totalesJson.getString("TpoCambio")));
 			else
-				throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER)
-						.setDetailMessage("Falta el parametro totales.TpoCambio");
+				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("totales.TpoCambio"));
 		
 		
 		List<ItemInterface> items = strategy.getItem();

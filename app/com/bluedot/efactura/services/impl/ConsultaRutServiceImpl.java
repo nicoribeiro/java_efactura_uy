@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Objects;
 
-import com.bluedot.efactura.global.EFacturaException;
+import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.pool.WSPersonaGetActEmpresarialSoapPortWrapper;
 import com.bluedot.efactura.pool.WSRutPool;
 import com.bluedot.efactura.services.ConsultaRutService;
@@ -16,6 +16,10 @@ import dgi.soap.rut.WSPersonaGetActEmpresarialExecuteResponse;
 
 public class ConsultaRutServiceImpl implements ConsultaRutService {
 
+	public ConsultaRutServiceImpl(){
+		
+	}
+	
     @Override
     public String getRutData(String rut) {
         try
@@ -36,7 +40,7 @@ public class ConsultaRutServiceImpl implements ConsultaRutService {
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (EFacturaException e)
+		} catch (APIException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();

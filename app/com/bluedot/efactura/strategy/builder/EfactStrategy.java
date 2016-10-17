@@ -10,10 +10,14 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.json.JSONException;
 
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.global.EFacturaException.EFacturaErrors;
-import com.bluedot.efactura.impl.CAEManagerImpl;
-import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.commons.Commons;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.model.TipoDocumento;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType.EFact;
@@ -34,15 +38,14 @@ import dgi.classes.recepcion.wrappers.ReceptorInterface;
 import dgi.classes.recepcion.wrappers.TotalesFactTickWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 
-public class EfactStrategy implements CFEStrategy {
+public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 
-	private EFact cfe;
-	protected TipoDoc tipo;
-	
-	public EfactStrategy(EFact efactura, TipoDoc tipo) throws EFacturaException {
-		this.cfe = efactura;
+	public EfactStrategy(CFE cfe, CAEMicroController caeMicroController) throws APIException {
+		super(cfe, caeMicroController);
+		if (cfe.getEfactura()==null)
+			this.cfe.setEfactura(new EFact());
 		
-		switch (tipo) {
+		switch (cfe.getTipo()) {
 		case eFactura:
 		case eFactura_Contingencia:
 		case Nota_de_Credito_de_eFactura:
@@ -51,10 +54,10 @@ public class EfactStrategy implements CFEStrategy {
 		case Nota_de_Debito_de_eFactura_Contingencia:
 			break;
 		default:
-			throw EFacturaException.raise(EFacturaErrors.NOT_SUPPORTED).setDetailMessage("Estrategia para el tipo: " + tipo.friendlyName);
+			throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage("Estrategia para el tipo: " + cfe.getTipo().friendlyName);
 		}
 		
-		this.tipo = tipo;
+		
 	}
 	
 	@Override
@@ -64,17 +67,16 @@ public class EfactStrategy implements CFEStrategy {
 		return getEncabezado().getEmisor();
 	}
 
-	@Override
-	public ReceptorInterface getReceptor() {
+	private ReceptorInterface getReceptor() {
 		if (getEncabezado().getReceptor() == null)
 			getEncabezado().setReceptor(new ReceptorFact());
 		return new ReceptorFactWrapper(getEncabezado().getReceptor());
 	}
 
 	private Encabezado getEncabezado() {
-		if (cfe.getEncabezado() == null)
-			cfe.setEncabezado(new Encabezado());
-		return cfe.getEncabezado();
+		if (cfe.getEfactura().getEncabezado() == null)
+			cfe.getEfactura().setEncabezado(new Encabezado());
+		return cfe.getEfactura().getEncabezado();
 	}
 
 	@Override
@@ -86,16 +88,16 @@ public class EfactStrategy implements CFEStrategy {
 
 	@Override
 	public CAEDataType getCAEData() {
-		if (cfe.getCAEData() == null)
-			cfe.setCAEData(new CAEDataType());
-		return cfe.getCAEData();
+		if (cfe.getEfactura().getCAEData() == null)
+			cfe.getEfactura().setCAEData(new CAEDataType());
+		return cfe.getEfactura().getCAEData();
 	}
 
 	@Override
 	public List<ItemInterface> getItem() {
 		ArrayList<ItemInterface> list = new ArrayList<ItemInterface>();
 
-		for (ItemDetFact itemDetFact : cfe.getDetalle().getItems()) {
+		for (ItemDetFact itemDetFact : cfe.getEfactura().getDetalle().getItems()) {
 			list.add(new ItemDetFactWrapper(itemDetFact));
 		}
 		return list;
@@ -109,28 +111,31 @@ public class EfactStrategy implements CFEStrategy {
 	}
 
 	@Override
-	public void setIdDoc(boolean montosIncluyenIva, int formaPago) {
+	public void setIdDoc() throws APIException{
 		try {
-			getEncabezado().setIdDoc(CAEManagerImpl.getInstance().getIdDocFact(tipo, montosIncluyenIva, formaPago));
-		} catch (DatatypeConfigurationException | IOException | EFacturaException e) {
-			e.printStackTrace();
+			IdDocFact idDocFact = caeMicroController.getIdDocFact(cfe.getTipo(), cfe.isIndMontoBruto(), cfe.getFormaDePago().value);
+			getEncabezado().setIdDoc(idDocFact);
+			cfe.setSerie(idDocFact.getSerie());
+			cfe.setNro(idDocFact.getNro().intValue());
+		} catch (DatatypeConfigurationException | IOException e) {
+			APIException.raise(e);
 		}
 	}
 
 	@Override
-	public void setCAEData() {
+	public void setCAEData() throws APIException{
 		try {
-			cfe.setCAEData(CAEManagerImpl.getInstance().getCaeData(tipo));
-		} catch (DatatypeConfigurationException | IOException | EFacturaException | JSONException | ParseException e) {
-			e.printStackTrace();
+			cfe.getEfactura().setCAEData(caeMicroController.getCAEDataType(cfe.getTipo()));
+		} catch (DatatypeConfigurationException | JSONException | ParseException e) {
+			APIException.raise(e);
 		}
 
 	}
 
 	private Detalle getDetalle() {
-		if (cfe.getDetalle() == null)
-			cfe.setDetalle(new Detalle());
-		return cfe.getDetalle();
+		if (cfe.getEfactura().getDetalle() == null)
+			cfe.getEfactura().setDetalle(new Detalle());
+		return cfe.getEfactura().getDetalle();
 	}
 
 	@Override
@@ -142,24 +147,65 @@ public class EfactStrategy implements CFEStrategy {
 
 	@Override
 	public ReferenciaTipo getReferenciaTipo() {
-		if (cfe.getReferencia() == null)
-			cfe.setReferencia(new ReferenciaTipo());
-		return cfe.getReferencia();
+		if (cfe.getEfactura().getReferencia() == null)
+			cfe.getEfactura().setReferencia(new ReferenciaTipo());
+		return cfe.getEfactura().getReferencia();
 	}
 
 	@Override
 	public void setTimestampFirma(XMLGregorianCalendar newXMLGregorianCalendar) {
-		cfe.setTmstFirma(newXMLGregorianCalendar);
+		cfe.getEfactura().setTmstFirma(newXMLGregorianCalendar);
 	}
 
 	@Override
-	public Object getCFE() {
+	public CFE getCFE() {
 		return cfe;
 	}
 
 	@Override
-	public boolean esMandatoriaDirRecep() {
-		return true;
+	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
+			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep) throws APIException {
+		
+		ReceptorInterface receptor = getReceptor();
+		
+		if (tipoDocRecep==null)
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("tipoDocRecep"));
+		
+		if (tipoDocRecep != TipoDocumento.RUC)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("tipoDocRecep")).setDetailMessage("Deberia ser 2 (RUC)");
+		
+		if (codPaisRecep ==null)
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("codPaisRecep"));
+		
+		if (!codPaisRecep.equals("UY"))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("codPaisRecep")).setDetailMessage("Deberia ser UY");
+		
+		if (docRecep ==null)
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("docRecep"));
+		
+		if (dirRecep ==null)
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("dirRecep"));
+		
+		if (rznSocRecep ==null)
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("rznSocRecep"));
+		
+		if (ciudadRecep ==null)
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("ciudadRecep"));
+		
+		if (deptoRecep ==null)
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("deptoRecep"));
+		
+		receptor.setTipoDocRecep(tipoDocRecep.getId());
+		receptor.setCodPaisRecep(codPaisRecep);
+		receptor.setDocRecep(docRecep);
+		receptor.setDirRecep(dirRecep);
+		receptor.setRznSocRecep(rznSocRecep);
+		receptor.setCiudadRecep(ciudadRecep);
+		receptor.setDeptoRecep(deptoRecep);
+		
+		cfe.setEmpresaReceptora(getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep));
+		
 	}
 
+	
 }

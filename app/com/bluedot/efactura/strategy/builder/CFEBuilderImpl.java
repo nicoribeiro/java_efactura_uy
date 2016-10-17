@@ -2,6 +2,7 @@ package com.bluedot.efactura.strategy.builder;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -11,35 +12,40 @@ import java.util.List;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.global.EFacturaException.EFacturaErrors;
-import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.commons.Commons;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Detalle;
+import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.FormaDePago;
+import com.bluedot.efactura.model.IVA;
+import com.bluedot.efactura.model.IndicadorFacturacion;
+import com.bluedot.efactura.model.TipoDocumento;
 
-import dgi.classes.recepcion.CFEDefType;
-import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.ReferenciaTipo.Referencia;
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.recepcion.wrappers.ItemInterface;
-import dgi.classes.recepcion.wrappers.ReceptorInterface;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
+import dgi.classes.recepcion.wrappers.TpoCod;
 
 public class CFEBuilderImpl implements CFEBuiderInterface {
 
 	protected CFEStrategy strategy;
+	protected CAEMicroController caeMicroController;
 
-	public CFEBuilderImpl(CFEDefType.EFact efactura, TipoDoc tipo) throws EFacturaException {
-		this.strategy = (new CFEStrategy.Builder()).withEfact(efactura).withTipo(tipo).build();
-	}
-
-	public CFEBuilderImpl(ETck eticket, TipoDoc tipo) throws EFacturaException {
-		this.strategy = (new CFEStrategy.Builder()).withEtick(eticket).withTipo(tipo).build();
+	public CFEBuilderImpl(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
+		this.caeMicroController = caeMicroController;
+		this.strategy = strategy;
 	}
 
 	protected CFEBuilderImpl() {
@@ -47,75 +53,66 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	}
 
 	@Override
-	public void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws EFacturaException {
+	public void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws APIException {
 
+		strategy.getCFE().setCantLineas(detalleJson.length());
+		
 		for (int i = 1; i <= detalleJson.length(); i++) {
 			ItemInterface item = strategy.createItem();
 			JSONObject itemJson = detalleJson.getJSONObject(i - 1);
-
+			
+			
 			item.setNroLinDet(i);
 
-			if (!itemJson.has("NomItem"))
-				throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("NomItem");
-			item.setNomItem(itemJson.getString("NomItem"));
+			item.setNomItem(Commons.safeGetString(itemJson,"NomItem"));
 
-			if (!itemJson.has("IndFact"))
-				throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("IndFact");
-			item.setIndFact(new BigInteger(itemJson.getString("IndFact")));
+			item.setIndFact(new BigInteger(String.valueOf(Commons.safeGetInteger(itemJson,"IndFact"))));
 
-			if (!itemJson.has("Cantidad"))
-				throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("Cantidad");
-			item.setCantidad(new BigDecimal(itemJson.getString("Cantidad")));
+			item.setCantidad(new BigDecimal(Commons.safeGetString(itemJson,"Cantidad")));
 
-			if (!itemJson.has("UniMed"))
-				throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("UniMed");
-			item.setUniMed(itemJson.getString("UniMed"));
+			item.setUniMed(Commons.safeGetString(itemJson,"UniMed"));
 
-			if (!itemJson.has("PrecioUnitario"))
-				throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("PrecioUnitario");
-			item.setPrecioUnitario(new BigDecimal(itemJson.getString("PrecioUnitario")));
+			item.setPrecioUnitario(new BigDecimal(Commons.safeGetString(itemJson,"PrecioUnitario")));
 
 			if (!itemJson.has("MontoItem"))
 				item.setMontoItem(item.getPrecioUnitario().multiply(item.getCantidad()));
 			else
 				item.setMontoItem(new BigDecimal(itemJson.getString("MontoItem")));
+			
+			Detalle detalle = new Detalle(strategy.getCFE(), i,  item.getNomItem(), item.getCantidad().doubleValue(), item.getUniMed(), item.getPrecioUnitario().doubleValue(), item.getMontoItem().doubleValue());
+			
+			if (itemJson.has("CodItem")){
+				item.addCodItem(TpoCod.INT1, itemJson.getString("CodItem"));
+				detalle.setCodItem(itemJson.getString("CodItem"));
+			}
+			
+			strategy.getCFE().getDetalle().add(detalle);
 		}
 	}
 
 	@Override
-	public void buildReceptor(JSONObject receptorJson) throws EFacturaException {
-		ReceptorInterface receptor = strategy.getReceptor();
-
-		if (!receptorJson.has("TipoDocRecep"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("TipoDocRecep");
-		receptor.setTipoDocRecep(receptorJson.getInt("TipoDocRecep"));
-
-		if (!receptorJson.has("CodPaisRecep"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("CodPaisRecep");
-		receptor.setCodPaisRecep(receptorJson.getString("CodPaisRecep"));
-
-		if (!receptorJson.has("DocRecep"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("DocRecep");
-		receptor.setDocRecep(receptorJson.getString("DocRecep"));
-
-		if (!receptorJson.has("RznSocRecep"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("RznSocRecep");
-		receptor.setRznSocRecep(receptorJson.getString("RznSocRecep"));
-
-		if (strategy.esMandatoriaDirRecep()){
-			if (!receptorJson.has("DirRecep"))
-				throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("DirRecep");
-			receptor.setDirRecep(receptorJson.getString("DirRecep"));
-		}
+	public void buildReceptor(JSONObject receptorJson) throws APIException {
 		
-		if (receptorJson.has("CiudadRecep"))
-			//throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("CiudadRecep");
-			receptor.setCiudadRecep(receptorJson.getString("CiudadRecep"));
+		TipoDocumento TipoDocRecep = receptorJson.has("TipoDocRecep")? TipoDocumento.fromInt(receptorJson.getInt("TipoDocRecep")): null;
 
+		String CodPaisRecep = receptorJson.has("CodPaisRecep") ? receptorJson.getString("CodPaisRecep") : null;
+
+		String DocRecep = receptorJson.has("DocRecep") ? receptorJson.getString("DocRecep") : null;
+
+		String RznSocRecep = receptorJson.has("RznSocRecep") ? receptorJson.getString("RznSocRecep") : null;
+
+		String DirRecep = receptorJson.has("DirRecep") ? receptorJson.getString("DirRecep") : null;
+
+		String CiudadRecep = receptorJson.has("CiudadRecep") ? receptorJson.getString("CiudadRecep") : null;
+		
+		String DeptoRecep = receptorJson.has("DeptoRecep") ? receptorJson.getString("DeptoRecep") : null;
+		
+		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep);
+		
 	}
 
 	@Override
-	public void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws EFacturaException {
+	public void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws APIException {
 		List<ItemInterface> items = strategy.getItem();
 
 		TotalesInterface totales = strategy.getTotales();
@@ -126,20 +123,22 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		TipMonType moneda = TipMonType.fromValue(totalesJson.getString("TpoMoneda"));
 
 		if (moneda == null)
-			throw EFacturaException.raise(EFacturaErrors.BAD_PARAMETER_VALUE)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TpoMoneda"))
 					.setDetailMessage("El campo TpoMoneda no es ninguno de los conocidos, ver tabla de monedas.");
 
 		totales.setTpoMoneda(moneda);
+		strategy.getCFE().setMoneda(moneda);
 
 		/*
 		 * Tipo de cambio
 		 */
 		if (moneda != TipMonType.UYU)
-			if (totalesJson.has("TpoCambio"))
-				totales.setTpoCambio(new BigDecimal(totalesJson.getString("TpoCambio")));
-			else
-				throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER)
-						.setDetailMessage("Falta el parametro totales.TpoCambio");
+			if (totalesJson.has("TpoCambio")){
+				DecimalFormat df = new DecimalFormat("####0.000");
+				totales.setTpoCambio(new BigDecimal(df.format(totalesJson.getDouble("TpoCambio"))));
+				strategy.getCFE().setTipoCambio(totales.getTpoCambio().doubleValue());
+			}else
+				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("totales.TpoCambio"));
 
 		/*
 		 * Cantidad de Lineas
@@ -149,9 +148,9 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		/*
 		 * IVA
 		 */
-		BigDecimal[] iva = new BigDecimal[13];
+		BigDecimal[] iva = new BigDecimal[IndicadorFacturacion.maxIndice + 1];
 
-		for (int i = 0; i < 13; i++) {
+		for (int i = 0; i <= IndicadorFacturacion.maxIndice; i++) {
 			iva[i] = BigDecimal.ZERO;
 		}
 
@@ -162,75 +161,79 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 
 		}
 
-		for (int i = 0; i < 13; i++) {
-			if (iva[i] != BigDecimal.ZERO && i != INDICADOR_FACTURACION_EXCENTO_IVA
-					&& i != INDICADOR_FACTURACION_IVA_OTRA_TASA && i != INDICADOR_FACTURACION_IVA_TASA_BASICA
-					&& i != INDICADOR_FACTURACION_IVA_TASA_MINIMA && i != INDICADOR_FACTURACION_NO_FACTURABLE
-					&& i != INDICADOR_FACTURACION_NO_FACTURABLE_NEGATIVO)
-				throw EFacturaException.raise(EFacturaErrors.BAD_PARAMETER_VALUE)
-						.setDetailMessage("El indicador de facturacion (IndFact=" + i + ") no esta soportado");
+		for (IndicadorFacturacion indiceIva : IndicadorFacturacion.values()) {
+			if (iva[indiceIva.getIndice()] != BigDecimal.ZERO && !indiceIva.isSoportado())
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE)
+				.setDetailMessage("El indicador de facturacion (IndFact=" + indiceIva.getIndice() + ") no esta soportado");
 		}
 		
 		/*
 		 * id:119
 		 */
-		totales.setIVATasaMin(new BigDecimal("10"));
+		totales.setIVATasaMin(new BigDecimal(String.valueOf(IVA.findByIndicadorFacturacion(IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_MINIMA).getPorcentajeIVA())));
+		strategy.getCFE().setIvaTasaMin(totales.getIVATasaMin().doubleValue());
 
 		/*
 		 * id:120
 		 */
-		totales.setIVATasaBasica(new BigDecimal("22"));
-		
+		totales.setIVATasaBasica(new BigDecimal(String.valueOf(IVA.findByIndicadorFacturacion(IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_BASICA).getPorcentajeIVA())));
+		strategy.getCFE().setIvaTasaBas(totales.getIVATasaBasica().doubleValue());
 
 		/*
 		 * id:112
 		 */
-		totales.setMntNoGrv(iva[INDICADOR_FACTURACION_EXCENTO_IVA].setScale(2, BigDecimal.ROUND_HALF_UP));
+		totales.setMntNoGrv(iva[IndicadorFacturacion.INDICADOR_FACTURACION_EXCENTO_IVA.getIndice()].setScale(2, BigDecimal.ROUND_HALF_UP));
+		strategy.getCFE().setTotMntNoGrv(totales.getMntNoGrv().doubleValue());
 
 		/*
 		 * id:113
 		 */
 		totales.setMntExpoyAsim(new BigDecimal("0"));
+		strategy.getCFE().setTotMntExpyAsim(totales.getMntExpoyAsim().doubleValue());
 
 		/*
 		 * id:114
 		 */
 		totales.setMntImpuestoPerc(new BigDecimal("0"));
+		strategy.getCFE().setTotMntImpPerc(totales.getMntImpuestoPerc().doubleValue());
 
 		/*
 		 * id:115
 		 */
 		totales.setMntIVaenSusp(new BigDecimal("0"));
+		strategy.getCFE().setTotMntIVAenSusp(totales.getMntIVaenSusp().doubleValue());
 
 		/*
 		 * id:116
 		 */
 		if (montosIncluyenIva){
 			BigDecimal divisor = (new BigDecimal(1)).add(totales.getIVATasaMin().divide(new BigDecimal("100")));
-			totales.setMntNetoIvaTasaMin((iva[INDICADOR_FACTURACION_IVA_TASA_MINIMA].divide(divisor, 2, BigDecimal.ROUND_HALF_UP)).setScale(2, BigDecimal.ROUND_HALF_UP));
+			totales.setMntNetoIvaTasaMin((iva[IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_MINIMA.getIndice()].divide(divisor, 2, BigDecimal.ROUND_HALF_UP)).setScale(2, BigDecimal.ROUND_HALF_UP));
 		}else
-			totales.setMntNetoIvaTasaMin(iva[INDICADOR_FACTURACION_IVA_TASA_MINIMA].setScale(2, BigDecimal.ROUND_HALF_UP));
-
+			totales.setMntNetoIvaTasaMin(iva[IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_MINIMA.getIndice()].setScale(2, BigDecimal.ROUND_HALF_UP));
+		strategy.getCFE().setTotMntIVATasaMin(totales.getMntNetoIVATasaMin().doubleValue());
+		
 		/*
 		 * id:117
 		 */
 		if (montosIncluyenIva){
 			BigDecimal divisor = (new BigDecimal(1)).add(totales.getIVATasaBasica().divide(new BigDecimal("100")));
 			totales.setMntNetoIVATasaBasica(
-					(iva[INDICADOR_FACTURACION_IVA_TASA_BASICA].divide(divisor, 2, BigDecimal.ROUND_HALF_UP)).setScale(2, BigDecimal.ROUND_HALF_UP));
+					(iva[IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_BASICA.getIndice()].divide(divisor, 2, BigDecimal.ROUND_HALF_UP)).setScale(2, BigDecimal.ROUND_HALF_UP));
 		}else
 			totales.setMntNetoIVATasaBasica(
-				iva[INDICADOR_FACTURACION_IVA_TASA_BASICA].setScale(2, BigDecimal.ROUND_HALF_UP));
-
+				iva[IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_BASICA.getIndice()].setScale(2, BigDecimal.ROUND_HALF_UP));
+		strategy.getCFE().setTotMntIVATasaBas(totales.getMntNetoIVATasaBasica().doubleValue());
+		
 		/*
 		 * id:118
 		 */
 		//TODO otra tasa no se sabe cual es para dividir como en id:117 o id:116
 		if (montosIncluyenIva)
-			totales.setMntNetoIVAOtra(iva[INDICADOR_FACTURACION_IVA_OTRA_TASA].setScale(2, BigDecimal.ROUND_HALF_UP));
+			totales.setMntNetoIVAOtra(iva[IndicadorFacturacion.INDICADOR_FACTURACION_IVA_OTRA_TASA.getIndice()].setScale(2, BigDecimal.ROUND_HALF_UP));
 		else
-			totales.setMntNetoIVAOtra(iva[INDICADOR_FACTURACION_IVA_OTRA_TASA].setScale(2, BigDecimal.ROUND_HALF_UP));
-
+			totales.setMntNetoIVAOtra(iva[IndicadorFacturacion.INDICADOR_FACTURACION_IVA_OTRA_TASA.getIndice()].setScale(2, BigDecimal.ROUND_HALF_UP));
+		strategy.getCFE().setTotMntIVAOtra(totales.getMntNetoIVAOtra().doubleValue());
 		
 
 		/*
@@ -238,22 +241,24 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		 */
 		if (montosIncluyenIva)
 			totales.setMntIVATasaMin(
-					iva[INDICADOR_FACTURACION_IVA_TASA_MINIMA].subtract(totales.getMntNetoIvaTasaMin()).setScale(2, BigDecimal.ROUND_HALF_UP));
+					iva[IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_MINIMA.getIndice()].subtract(totales.getMntNetoIVATasaMin()).setScale(2, BigDecimal.ROUND_HALF_UP));
 		else
 			totales.setMntIVATasaMin(
-					totales.getIVATasaMin().multiply((totales.getMntNetoIvaTasaMin().divide(new BigDecimal("100"))))
+					totales.getIVATasaMin().multiply((totales.getMntNetoIVATasaMin().divide(new BigDecimal("100"))))
 							.setScale(2, BigDecimal.ROUND_HALF_UP));
+		strategy.getCFE().setMntIVATasaMin(totales.getMntIVATasaMin().doubleValue());
 
 		/*
 		 * id:122
 		 */
 		if (montosIncluyenIva)
 			totales.setMntIVATasaBasica(
-					iva[INDICADOR_FACTURACION_IVA_TASA_BASICA].subtract(totales.getMntNetoIVATasaBasica()).setScale(2, BigDecimal.ROUND_HALF_UP));
+					iva[IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_BASICA.getIndice()].subtract(totales.getMntNetoIVATasaBasica()).setScale(2, BigDecimal.ROUND_HALF_UP));
 		else
 		totales.setMntIVATasaBasica(
 				totales.getIVATasaBasica().multiply((totales.getMntNetoIVATasaBasica().divide(new BigDecimal("100"))))
 						.setScale(2, BigDecimal.ROUND_HALF_UP));
+		strategy.getCFE().setMntIVATasaBas(totales.getMntIVATasaBasica().doubleValue());
 
 		/*
 		 * id:123
@@ -262,132 +267,124 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		totales.setMntIVAOtra(
 				(new BigDecimal("1")).multiply((totales.getMntNetoIVAOtra().divide(new BigDecimal("100")))).setScale(2,
 						BigDecimal.ROUND_HALF_UP));
-
+		strategy.getCFE().setMntIVAOtra(totales.getMntIVAOtra().doubleValue());
 		
 
 		/*
 		 * id:124
 		 */
 		BigDecimal mntTotal = (new BigDecimal("0")).add(totales.getMntNoGrv()).add(totales.getMntExpoyAsim())
-				.add(totales.getMntImpuestoPerc()).add(totales.getMntIVaenSusp()).add(totales.getMntNetoIvaTasaMin())
+				.add(totales.getMntImpuestoPerc()).add(totales.getMntIVaenSusp()).add(totales.getMntNetoIVATasaMin())
 				.add(totales.getMntNetoIVATasaBasica()).add(totales.getMntNetoIVAOtra());
 
 		mntTotal = mntTotal.add(totales.getMntIVATasaMin()).add(totales.getMntIVATasaBasica())
 				.add(totales.getMntIVAOtra());
-		totales.setMntTotal(mntTotal.setScale(2, BigDecimal.ROUND_HALF_UP));
+		mntTotal.setScale(2, BigDecimal.ROUND_HALF_UP);
+		totales.setMntTotal(mntTotal);
+		strategy.getCFE().setTotMntTotal(mntTotal.doubleValue());
 		
 		/*
 		 * id:125 
 		 */
 		//TODO esto es distinto de cero cuando se hace una retencion (resguardo no?)
-		totales.setMntTotRetenido(BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP));
+		BigDecimal montoTotalRetenido = BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP);
+		totales.setMntTotRetenido(montoTotalRetenido);
+		strategy.getCFE().setTotMntRetenido(montoTotalRetenido.doubleValue());
 		
 		/*
 		 * id:129
 		 */
-		totales.setMontoNF(iva[INDICADOR_FACTURACION_NO_FACTURABLE].subtract(iva[INDICADOR_FACTURACION_NO_FACTURABLE_NEGATIVO]).setScale(2, BigDecimal.ROUND_HALF_UP));
+		BigDecimal montoNF = iva[IndicadorFacturacion.INDICADOR_FACTURACION_NO_FACTURABLE.getIndice()].subtract(iva[IndicadorFacturacion.INDICADOR_FACTURACION_NO_FACTURABLE_NEGATIVO.getIndice()]).setScale(2, BigDecimal.ROUND_HALF_UP);
+		totales.setMontoNF(montoNF);
 
 		/*
 		 * id:130
 		 */
-		totales.setMntPagar(mntTotal.add(totales.getMontoNF()).add(totales.getMntTotRetenido()).setScale(2, BigDecimal.ROUND_HALF_UP));
-
+		BigDecimal mntPagar = mntTotal.add(totales.getMontoNF()).add(totales.getMntTotRetenido()).setScale(2, BigDecimal.ROUND_HALF_UP);
+		totales.setMntPagar(mntPagar);
+		
 	}
 
 	@Override
-	public void buildIdDoc(boolean montosIncluyenIva, int formaPago) throws EFacturaException {
-		strategy.setIdDoc(montosIncluyenIva, formaPago);
+	public void buildIdDoc(boolean montosIncluyenIva, int formaPago) throws APIException {
+		strategy.getCFE().setFormaDePago(FormaDePago.fromInt(formaPago));
+		strategy.getCFE().setIndMontoBruto(montosIncluyenIva);
+		strategy.getCFE().setCae(caeMicroController.getCAE(strategy.getCFE().getTipo()));
 	}
 
 	@Override
-	public void buildCAEData() throws EFacturaException {
+	public void buildCAEData() throws APIException {
 		strategy.setCAEData();
 	}
 
 	@Override
-	public void buildEmisor(JSONObject emisorJson) throws EFacturaException {
+	public void buildEmisor(Empresa empresaEmisora) throws APIException {
 		Emisor emisor = strategy.getEmisor();
 
-		if (!emisorJson.has("RUCEmisor"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("RUCEmisor");
-		emisor.setRUCEmisor(emisorJson.getString("RUCEmisor"));
+		emisor.setRUCEmisor(empresaEmisora.getRut());
 
-		if (!emisorJson.has("RznSoc"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("RznSoc");
-		emisor.setRznSoc(emisorJson.getString("RznSoc"));
+		emisor.setRznSoc(empresaEmisora.getRazon());
 
-		if (!emisorJson.has("CdgDGISucur"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("CdgDGISucur");
-		emisor.setCdgDGISucur(new BigInteger(emisorJson.getString("CdgDGISucur")));
+		emisor.setCdgDGISucur(new BigInteger(String.valueOf(empresaEmisora.getCodigoSucursal())));
 
-		if (!emisorJson.has("DomFiscal"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("DomFiscal");
-		emisor.setDomFiscal(emisorJson.getString("DomFiscal"));
+		emisor.setDomFiscal(empresaEmisora.getDireccion());
 
-		if (!emisorJson.has("Ciudad"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("Ciudad");
-		emisor.setCiudad(emisorJson.getString("Ciudad"));
+		emisor.setCiudad(empresaEmisora.getLocalidad());
 
-		if (!emisorJson.has("Departamento"))
-			throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("Departamento");
-		emisor.setDepartamento(emisorJson.getString("Departamento"));
+		emisor.setDepartamento(empresaEmisora.getDepartamento());
 
+		strategy.getCFE().setEmpresaEmisora(empresaEmisora);
 	}
 
 	@Override
-	public void buildReferencia(JSONObject referenciaJSON) throws EFacturaException {
+	public void buildReferencia(Empresa empresaEmisora, JSONObject referenciaJSON) throws APIException {
 
 		try {
-			ReferenciaTipo referenciaType = strategy.getReferenciaTipo();
+			if (strategy.getCFE().isObligatorioReferencia()) {
 
-			Referencia referencia = new Referencia();
+				if (referenciaJSON == null)
+					throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("referencia"));
 
-			// Campo Opcional
-			if (referenciaJSON.has("FechaCFEref")) {
-				SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd");
-				Date parsedDate = new SimpleDateFormat("yyyyMMdd").parse(referenciaJSON.getString("FechaCFEref"));
-				referencia.setFechaCFEref(
-						DatatypeFactory.newInstance().newXMLGregorianCalendar(outputFormat.format(parsedDate)));
+				ReferenciaTipo referenciaType = strategy.getReferenciaTipo();
+
+				Referencia referencia = new Referencia();
+
+				/*
+				 * Campo Opcional
+				 */
+				if (referenciaJSON.has("FechaCFEref")) {
+					SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd");
+					Date parsedDate = new SimpleDateFormat("yyyyMMdd").parse(referenciaJSON.getString("FechaCFEref"));
+					referencia.setFechaCFEref(
+							DatatypeFactory.newInstance().newXMLGregorianCalendar(outputFormat.format(parsedDate)));
+				}
+
+				/*
+				 * Se utiliza cuando no se puede identificar los CFE de
+				 * referencia. Por ejemplo: -cuando el CFE afecta a un número
+				 * de más de 40 CFE de referencia, -cuando se referencia a un
+				 * documento no codificado, etc.
+				 * 
+				 * Se debe explicitar el motivo en "Razón Referencia" (C6)
+				 */
+				String generadorId = Commons.safeGetString(referenciaJSON, "NroRef");
+				CFE cfeReferencia = CFE.findByGeneradorId(empresaEmisora, generadorId);
+
+				if (cfeReferencia == null) {
+					referencia.setIndGlobal(new BigInteger("1"));
+					referencia.setRazonRef(Commons.safeGetString(referenciaJSON, "RazonRef"));
+					strategy.getCFE().setRazonReferencia(Commons.safeGetString(referenciaJSON, "RazonRef"));
+				} else {
+					referencia.setNroCFERef(new BigInteger(String.valueOf(cfeReferencia.getNro())));
+					referencia.setSerie(cfeReferencia.getSerie());
+					referencia.setTpoDocRef(new BigInteger(String.valueOf(cfeReferencia.getTipo().value)));
+					strategy.getCFE().setReferencia(cfeReferencia);
+				}
+
+				referencia.setNroLinRef(1);
+
+				referenciaType.getReferencias().add(referencia);
 			}
-
-			/*
-			 * Se utiliza cuando no se puede identificar los CFE de referencia.
-			 * Por ejemplo: -cuando el CFE afecta a un número de más de 40 CFE
-			 * de referencia, -cuando se referencia a un documento no
-			 * codificado, etc.
-			 * 
-			 * Se debe explicitar el motivo en "Razón Referencia" (C6)
-			 */
-			// referencia.setIndGlobal(new BigInteger("1"));
-			// referencia.setRazonRef("razon");
-
-			if (referenciaJSON.has("IndGlobal")) {
-				if (!referenciaJSON.has("RazonRef"))
-					throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("RazonRef");
-				referencia.setRazonRef(referenciaJSON.getString("RazonRef"));
-
-				if (referenciaJSON.getInt("IndGlobal") != 1)
-					throw EFacturaException.raise(EFacturaErrors.BAD_PARAMETER_VALUE).setDetailMessage("IndGlobal");
-				referencia.setIndGlobal(new BigInteger(referenciaJSON.getString("IndGlobal")));
-
-			} else {
-
-				if (!referenciaJSON.has("NroCFERef"))
-					throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("NroCFERef");
-				referencia.setNroCFERef(new BigInteger(referenciaJSON.getString("NroCFERef")));
-
-				if (!referenciaJSON.has("Serie"))
-					throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("Serie");
-				referencia.setSerie(referenciaJSON.getString("Serie"));
-
-				if (!referenciaJSON.has("TpoDocRef"))
-					throw EFacturaException.raise(EFacturaErrors.MISSING_PARAMETER).setDetailMessage("TpoDocRef");
-				referencia.setTpoDocRef(new BigInteger(referenciaJSON.getString("TpoDocRef")));
-			}
-
-			referencia.setNroLinRef(1);
-
-			referenciaType.getReferencias().add(referencia);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -401,19 +398,26 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	}
 
 	@Override
-	public void buildTimestampFirma() throws EFacturaException {
+	public void buildTimestampFirma() throws APIException {
 		try {
-			strategy.setTimestampFirma(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+			GregorianCalendar cal = new GregorianCalendar();
+			XMLGregorianCalendar xmlCal = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
+			strategy.setTimestampFirma(xmlCal);
+			strategy.getCFE().setFecha(cal.getTime());
 		} catch (DatatypeConfigurationException e) {
-			throw EFacturaException.raise(e);
+			throw APIException.raise(e);
 		}
 
 	}
 
 	@Override
-	public Object getCFE() {
-
+	public CFE getCFE() {
 		return strategy.getCFE();
+	}
+
+	@Override
+	public void asignarId() throws APIException {
+		strategy.setIdDoc();
 	}
 
 }

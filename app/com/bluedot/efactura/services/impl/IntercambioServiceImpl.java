@@ -21,11 +21,11 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.w3c.dom.Document;
 
-import com.bluedot.commons.Settings;
-import com.bluedot.commons.XML;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.utils.Settings;
+import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.commons.Commons;
-import com.bluedot.efactura.global.EFacturaException;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.services.IntercambioService;
 
@@ -38,6 +38,7 @@ import dgi.classes.respuestas.cfe.RechazoCFEDGIType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Caratula;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Detalle;
+import play.Play;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 import dgi.classes.respuestas.sobre.ParamConsultaType;
 import dgi.classes.respuestas.sobre.RechazoSobreType;
@@ -100,7 +101,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 				ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.AS);
 				ParamConsultaType params = new ParamConsultaType();
 				params.setFechahora(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-				params.setToken(UUID.randomUUID().toString().getBytes());
+				params.setToken(UUID.randomUUID().toString());
 				ackSobredefType.getDetalle().setParamConsulta(params);
 			}else{
 				/*
@@ -123,7 +124,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 			
 			//System.out.println(XML.documentToString(allDocument));
 			
-			String filenamePrefix = Settings.getInstance().getString(Constants.GENERATED_CFE_FOLDER,
+			String filenamePrefix = Play.application().configuration().getString(Constants.GENERATED_CFE_FOLDER,
 					"resources" + File.separator + "cfe" + File.separator + "sobre.xml");
 			
 			Commons.dumpNodeToFile(allDocument, true, filenamePrefix, null);
@@ -164,7 +165,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 		} catch (TransformerFactoryConfigurationError e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (EFacturaException e) {
+		} catch (APIException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
