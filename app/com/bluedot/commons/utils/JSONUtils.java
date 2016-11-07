@@ -25,4 +25,22 @@ public class JSONUtils
 	    }
 	    return true;
 	}
+	
+	public static JSONObject merge(JSONObject Obj1, JSONObject Obj2){
+		if (Obj1==null && Obj2!=null)
+			return new JSONObject(Obj2, JSONObject.getNames(Obj2));
+		
+		if (Obj1!=null && Obj2==null)
+			return new JSONObject(Obj1, JSONObject.getNames(Obj1));
+		
+		if (Obj1==null && Obj2==null)
+			return new JSONObject();
+		
+		JSONObject merged = new JSONObject(Obj1, JSONObject.getNames(Obj1));
+		for(String key : JSONObject.getNames(Obj2))
+		{
+		  merged.put(key, Obj2.get(key));
+		}
+		return merged;
+	}
 }

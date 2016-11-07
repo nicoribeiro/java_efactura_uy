@@ -52,9 +52,21 @@ public class Empresa extends Model<Empresa>{
 	
 	private String mailRecepcion;
 	
+	private String hostRecepcion;
+	
+	private String userRecepcion;
+	
+	private String passRecepcion;
+	
+	private String puertoRecepcion;
+	
 	private int diasAvisoVencimiento;
 	
 	private boolean emisorElectronico;
+	
+	private String mailNotificaciones;
+	
+	private String fromEnvio; 
 	
 	@Lob
 	private byte[] logo;
@@ -314,5 +326,53 @@ public class Empresa extends Model<Empresa>{
 
 	public void setResolucion(String resolucion) {
 		this.resolucion = resolucion;
+	}
+
+	public String getHostRecepcion() {
+		return hostRecepcion;
+	}
+
+	public void setHostRecepcion(String hostRecepcion) {
+		this.hostRecepcion = hostRecepcion;
+	}
+
+	public String getUserRecepcion() {
+		return userRecepcion;
+	}
+
+	public void setUserRecepcion(String userRecepcion) {
+		this.userRecepcion = userRecepcion;
+	}
+
+	public String getPassRecepcion() {
+		return passRecepcion;
+	}
+
+	public void setPassRecepcion(String passRecepcion) {
+		this.passRecepcion = passRecepcion;
+	}
+
+	public String getMailNotificaciones() {
+		return mailNotificaciones;
+	}
+
+	public void setMailNotificaciones(String mailNotificaciones) {
+		this.mailNotificaciones = mailNotificaciones;
+	}
+
+	public String getPuertoRecepcion() {
+		return puertoRecepcion;
+	}
+
+	public void setPuertoRecepcion(String puertoRecepcion) {
+		this.puertoRecepcion = puertoRecepcion;
+	}
+
+	public String getFromEnvio() {
+		return fromEnvio;
+	}
+
+	public void setFromEnvio(String fromEnvio) {
+		this.fromEnvio = fromEnvio;
 	}
 }

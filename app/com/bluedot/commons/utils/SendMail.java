@@ -30,7 +30,7 @@ public class SendMail
 
 	final static Logger logger = LoggerFactory.getLogger(SendMail.class);
 
-	public static void sendMail(String username, String password, String smtpHost, String smtpPort, String from, String recipient, String subject, String textVersion, String htmlVersion, Map<String, String> attachments, boolean logInstedOfSend) throws MessagingException
+	public static void sendMail(String username, String password, String smtpHost, int smtpPort, String from, String recipient, String subject, String textVersion, String htmlVersion, Map<String, String> attachments, boolean logInstedOfSend) throws MessagingException
 	{
 		Address[] array = new Address[1];
 
@@ -39,7 +39,7 @@ public class SendMail
 
 	}
 
-	public static void sendMail(String username, String password, String smtpHost, String smtpPort, String from, Address[] recipients, String subject, String textVersion, String htmlVersion, Map<String, String> attachments, boolean logInstedOfSend) throws AddressException,
+	public static void sendMail(String username, String password, String smtpHost, int smtpPort, String from, Address[] recipients, String subject, String textVersion, String htmlVersion, Map<String, String> attachments, boolean logInstedOfSend) throws AddressException,
 			MessagingException
 	{
 
@@ -53,12 +53,15 @@ public class SendMail
 		// Setup mail server
 		properties.setProperty("mail.smtp.host", smtpHost);
 		properties.setProperty("mail.smtp.auth", "true");
-		properties.setProperty("mail.smtp.starttls.enable", "true");
-		
-		properties.put("mail.smtp.socketFactory.port", smtpPort);
-		properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+		properties.put("mail.transport.protocol", "smtp");
+		properties.put("mail.smtp.timeout", "10000");
+		properties.put("mail.smtp.socketFactory.port", String.valueOf(smtpPort));
+		properties.put("mail.smtp.ssl.enable", "true");
 		properties.put("mail.smtp.socketFactory.fallback", "false");
-
+		properties.put("mail.smtp.ssl.checkserveridentity", "false");
+		properties.put("mail.smtp.connectiontimeout", "10000");
+		properties.put("mail.smtp.debug", "true");
+		
 		// Get the default Session object.
 		Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
 			protected PasswordAuthentication getPasswordAuthentication()
@@ -66,8 +69,6 @@ public class SendMail
 				return new PasswordAuthentication(usernameFinal, passwordFinal);
 			}
 		});
-
-		// session.setDebug(true);
 
 		// Create a default MimeMessage object.
 		MimeMessage message = new MimeMessage(session);
@@ -120,7 +121,8 @@ public class SendMail
 		if (!logInstedOfSend)
 		{
 			// Send message
-			Transport.send(message);
+			Transport transport = session.getTransport("smtp");
+			transport.send(message);
 		}
 		StringBuilder mails = new StringBuilder();
 

@@ -1,11 +1,7 @@
 package com.bluedot.efactura.strategy.report;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -17,7 +13,6 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.utils.IO;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.IVA;
@@ -107,10 +102,10 @@ public interface SummaryStrategy {
 
 			case eTicket_Venta_por_Cuenta_Ajena:
 			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-//				throw APIException.raise(APIErrors.NOT_SUPPORTED)
-//						.setDetailMessage("Estrategia para el tipo: " + tipo.friendlyName);
+				return null;
+			default:
+				return null;
 			}
-			return null;
 
 		}
 	}
@@ -150,27 +145,10 @@ public interface SummaryStrategy {
 		protected BigDecimal totValRetPerc = new BigDecimal("0");
 	}
 
-	static SummaryDatatype getSummary(Empresa empresa, TipoDoc tipo, Date date)
-			throws APIException {
-		// TODO esto solo camina para un cfe por sobre
-		// File directorio = new File(Commons.getCfeFolder(date, tipo));
+	static SummaryDatatype getSummary(Empresa empresa, TipoDoc tipo, Date date, List<SobreEmitido> sobres) throws APIException {
 		SummaryDatatype summary = new SummaryDatatype();
 		summary.fecha = date;
 
-		// String[] files = directorio.list(new FilenameFilter() {
-		//
-		// @Override
-		// public boolean accept(File dir, String name) {
-		// if (name.contains("unsigned"))
-		// return true;
-		// return false;
-		// }
-		// });
-
-		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, date);
-
-		// summary.cantDoc = files.length;
-//		int i = 0;
 		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
 			SobreEmitido sobreEmitido = (SobreEmitido) iterator.next();
 
@@ -178,18 +156,11 @@ public interface SummaryStrategy {
 				CFE cfe = iterator2.next();
 
 				if (cfe.getTipo() == tipo) {
-//					String serie = files[i].split("_")[0];
-//					String nroCFE = files[i].split("_")[1];
-//					String resultFilePath = directorio + File.separator + serie + "_" + nroCFE + "_result.xml";
 
 					RDUItem item = getRDUItem(cfe.getSerie(), cfe.getNro());
 					summary.rngDocsUtil.getRDUItem().add(item);
 
-//					if (new File(resultFilePath).exists()) {
-//						String content = IO.readFile(resultFilePath, Charset.forName("UTF-8"));
-//						if (content.contains("<Estado>")) {
-//							String estado = content.split("<Estado>")[1].split("</Estado>")[0];
-					if (cfe.getEstado()!=null)
+					if (cfe.getEstado() != null)
 						switch (cfe.getEstado()) {
 						case AE:
 							summary.cantDocEmitidos++;
@@ -201,41 +172,19 @@ public interface SummaryStrategy {
 							RDAItem itemAnul = getRDAItem(cfe.getSerie(), cfe.getNro());
 							summary.rngDocsAnulados.getRDAItem().add(itemAnul);
 							break;
-						
 						}
-					else{
+					else {
 						/*
-						 * No tiene estado, asumo error y se anula el doc
+						 * No tiene estado. Si tiene generador_id entonces esta esperando por la respuesta o anulacion
 						 */
+						if (cfe.getGeneradorId()!=null)
+							throw APIException.raise(APIErrors.HAY_CFE_SIN_RESPUESTA);
+						
 						summary.cantDocSinRespuesta++;
 						RDAItem itemAnul = getRDAItem(cfe.getSerie(), cfe.getNro());
 						summary.rngDocsAnulados.getRDAItem().add(itemAnul);
 					}
-						
-//							if (estado.equals("AE")) {
-//								// Estado es "AE", se aceptop correctamente el
-//								// cfe
-//								summary.cantDocAceptados++;
-//								sumarizarMontos(directorio + File.separator + files[i], summary);
-//							} else {
-//								// Estado distinto de "AE", se rechazo el cfe
-//								summary.cantDocRechazados++;
-//								RDAItem itemAnul = getRDAItem(cfe.getSerie(), cfe.getNro());
-//								summary.rngDocsAnulados.getRDAItem().add(itemAnul);
-//							}
-//						} else {
-//							// resultado no contiene el tag <Estado>, se asume
-//							// que fue rechazado
-//							summary.cantDocRechazados++;
-//							RDAItem itemAnul = getRDAItem(serie, nroCFE);
-//							summary.rngDocsAnulados.getRDAItem().add(itemAnul);
-//						}
 
-//					} else {
-//						summary.cantDocSinRespuesta++;
-//						RDAItem itemAnul = getRDAItem(serie, nroCFE);
-//						summary.rngDocsAnulados.getRDAItem().add(itemAnul);
-//					}
 				}
 			}
 		}
@@ -260,8 +209,8 @@ public interface SummaryStrategy {
 		return item;
 	}
 
-	static void sumarizarMontos(CFE cfe, SummaryDatatype summary){
-//		String content = IO.readFile(file, Charset.forName("UTF-8"));
+	static void sumarizarMontos(CFE cfe, SummaryDatatype summary) {
+		// String content = IO.readFile(file, Charset.forName("UTF-8"));
 		Monto monto = summary.monto;
 
 		monto.totMntNoGrv = safeAdd(monto.totMntNoGrv, cfe.getTotMntNoGrv());
@@ -293,31 +242,31 @@ public interface SummaryStrategy {
 	}
 
 	static BigDecimal safeAdd(BigDecimal acumulado, Double value) {
-//		String open_key = "<" + key + ">";
-//		String close_key = "</" + key + ">";
-//
-//		String[] temp = content.split(open_key);
+		// String open_key = "<" + key + ">";
+		// String close_key = "</" + key + ">";
+		//
+		// String[] temp = content.split(open_key);
 
 		if (acumulado == null)
 			acumulado = new BigDecimal("0");
 
-//		if (temp.length == 1)
-//			return acumulado;
+		// if (temp.length == 1)
+		// return acumulado;
 
-//		for (int i = 1; i < temp.length; i++) {
-//			String add = temp[i].split(close_key)[0];
-//
-//			if (add != null && !add.equals("0")) {
-				acumulado = acumulado.add(new BigDecimal(value));
-//			}
-//		}
+		// for (int i = 1; i < temp.length; i++) {
+		// String add = temp[i].split(close_key)[0];
+		//
+		// if (add != null && !add.equals("0")) {
+		acumulado = acumulado.add(new BigDecimal(value));
+		// }
+		// }
 
 		return acumulado;
 	}
 
-	void buildSummary(Empresa empresa, ReporteDefType reporte, Date date) throws APIException;
+	void buildSummary(Empresa empresa, ReporteDefType reporte, Date date, List<SobreEmitido> sobres) throws APIException;
 
-	static MontosFyT getMontosFyT(SummaryDatatype summary) throws APIException{
+	static MontosFyT getMontosFyT(SummaryDatatype summary) throws APIException {
 		try {
 			MontosFyT montos = new MontosFyT();
 			MntsFyTItem item = new MntsFyTItem();
@@ -351,20 +300,20 @@ public interface SummaryStrategy {
 	}
 
 	static MontosRes getMontosResg(SummaryDatatype summary) throws APIException {
-	try{
-		MontosRes montos = new MontosRes();
-		MntsResItem item = new MntsResItem();
+		try {
+			MontosRes montos = new MontosRes();
+			MntsResItem item = new MntsResItem();
 
-		// TODO sacar el id de sucursal para un lado comun
-		item.setCodSuc(new BigInteger("2"));
-		XMLGregorianCalendar date = DatatypeFactory.newInstance()
-				.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(summary.fecha));
-		item.setFecha(date);
-		item.setTotMntRetenido(summary.monto.totValRetPerc);
-		montos.getMntsResItem().add(item);
-		return montos;
-	} catch (DatatypeConfigurationException e) {
-		throw APIException.raise(e);
-	}
+			// TODO sacar el id de sucursal para un lado comun
+			item.setCodSuc(new BigInteger("2"));
+			XMLGregorianCalendar date = DatatypeFactory.newInstance()
+					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(summary.fecha));
+			item.setFecha(date);
+			item.setTotMntRetenido(summary.monto.totValRetPerc);
+			montos.getMntsResItem().add(item);
+			return montos;
+		} catch (DatatypeConfigurationException e) {
+			throw APIException.raise(e);
+		}
 	}
 }

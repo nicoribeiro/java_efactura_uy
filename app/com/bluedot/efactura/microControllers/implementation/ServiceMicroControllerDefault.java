@@ -1,19 +1,21 @@
 package com.bluedot.efactura.microControllers.implementation;
 
 import java.util.Date;
-import java.util.List;
 
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
-import com.bluedot.efactura.model.Sobre;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.strategy.builder.CFEBuiderInterface;
 import com.bluedot.efactura.strategy.builder.CFEBuilderFactory;
+
+import dgi.classes.respuestas.cfe.EstadoACKCFEType;
+import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 
 public class ServiceMicroControllerDefault extends MicroControllerDefault implements ServiceMicroController {
 
@@ -24,17 +26,22 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		super(empresa);
 		this.recepcionService = recepcionService;
 		this.caeMicroController = caeMicroController;
-	}
+	}	
 
 	@Override
-	public void register(CFE cfe, String adenda) throws APIException {
+	public void enviar(CFE cfe) throws APIException {
 
 		CFEBuiderInterface builder = CFEBuilderFactory.getCFEBuilder(cfe, caeMicroController);
 		//TODO mutex
 		builder.asignarId();
 		
-		recepcionService.sendCFE(cfe, adenda);
+		recepcionService.sendCFE(cfe);
 
+	}
+	
+	@Override
+	public void reenviar(SobreEmitido sobre) throws APIException {
+		recepcionService.reenviarSobre(sobre);
 	}
 
 	@Override
@@ -52,5 +59,36 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	public ReporteDiario generarReporteDiario(Date date, Empresa empresa) throws APIException {
 		return recepcionService.generarReporteDiario(date, empresa);
 	}
+
+	@Override
+	public void anularDocumento(CFE cfe) throws APIException {
+		boolean anular = false;
+		/*
+		 * El sobre fue rechazado
+		 */
+		if (cfe.getSobre()!=null && cfe.getSobre().getEstado() != null && cfe.getSobre().getEstado()== EstadoACKSobreType.BS)
+			anular = true;
+			
+		/*
+		 * El cfe fue rechazado
+		 */
+		if (cfe.getEstado() != null && cfe.getEstado() == EstadoACKCFEType.BE)
+			anular = true;
+		
+		
+		if (anular){
+			if (cfe.getGeneradorId()==null){
+				throw APIException.raise(APIErrors.CFE_YA_FUE_ANULADO);
+			}else{
+				cfe.setGeneradorId(null);
+				cfe.update();
+			}
+		}else
+			throw APIException.raise(APIErrors.CFE_NO_SE_PUEDE_ANULAR);
+		
+		
+	}
+
+	
 
 }

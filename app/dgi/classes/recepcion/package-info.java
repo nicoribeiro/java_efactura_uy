@@ -5,20 +5,8 @@
 // Generated on: 2016.06.01 at 06:36:07 PM UYT 
 //
 
-@javax.xml.bind.annotation.XmlSchema(
-		namespace = "http://cfe.dgi.gub.uy", 
-		elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED,
-		
-		
-					    xmlns={@XmlNs(prefix="DGICFE", namespaceURI="http://cfe.dgi.gub.uy")
-					    ,@XmlNs(prefix="firma", namespaceURI="http://www.w3.org/2000/09/xmldsig#")
-					    
-		}
-					
-		
-		)  
+@javax.xml.bind.annotation.XmlSchema(namespace = "http://cfe.dgi.gub.uy", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED,xmlns={@XmlNs(prefix="DGICFE", namespaceURI="http://cfe.dgi.gub.uy"),@XmlNs(prefix="firma", namespaceURI="http://www.w3.org/2000/09/xmldsig#")})  
 package dgi.classes.recepcion;
-
 import javax.xml.bind.annotation.XmlNs;
 
 

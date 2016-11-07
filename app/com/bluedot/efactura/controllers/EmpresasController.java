@@ -117,7 +117,7 @@ public class EmpresasController extends AbstractController {
 			e.printStackTrace();
 		}
 
-		return Promise.<Result> pure(ok());
+		return json(OK);
 	}
 	
 	public Promise<Result> getEmpresaById(int id) throws APIException {
@@ -165,7 +165,7 @@ public class EmpresasController extends AbstractController {
 		
 		caeMicroController.addCAE(cae);
 		
-		return Promise.<Result> pure(ok());
+		return json(OK);
 	}
 	
 	//TODO permisis de edicion 
@@ -187,7 +187,32 @@ public class EmpresasController extends AbstractController {
 		String telefono = empresaJson.has("telefono") ? empresaJson.findPath("telefono").asText() : null;
 		String codigoPostal = empresaJson.has("codigoPostal") ? empresaJson.findPath("codigoPostal").asText() : null;
 		String resolucion = empresaJson.has("resolucion") ? empresaJson.findPath("resolucion").asText() : null;
+		String razon = empresaJson.has("razon") ? empresaJson.findPath("razon").asText() : null;
 		
+		String hostRecepcion = empresaJson.has("hostRecepcion") ? empresaJson.findPath("hostRecepcion").asText() : null;
+		String passRecepcion = empresaJson.has("passRecepcion") ? empresaJson.findPath("passRecepcion").asText() : null;
+		String puertoRecepcion = empresaJson.has("puertoRecepcion") ? empresaJson.findPath("puertoRecepcion").asText() : null;
+		String userRecepcion = empresaJson.has("userRecepcion") ? empresaJson.findPath("userRecepcion").asText() : null;
+		String mailNotificaciones = empresaJson.has("mailNotificaciones") ? empresaJson.findPath("mailNotificaciones").asText() : null;
+		String fromEnvio = empresaJson.has("fromEnvio") ? empresaJson.findPath("fromEnvio").asText() : null;
+		
+		if (hostRecepcion != null)
+			empresa.setHostRecepcion(hostRecepcion);
+		
+		if (passRecepcion != null)
+			empresa.setPassRecepcion(passRecepcion);
+		
+		if (puertoRecepcion != null)
+			empresa.setPuertoRecepcion(puertoRecepcion);
+		
+		if (userRecepcion != null)
+			empresa.setUserRecepcion(userRecepcion);
+		
+		if (mailNotificaciones != null)
+			empresa.setMailNotificaciones(mailNotificaciones);
+		
+		if (fromEnvio != null)
+			empresa.setFromEnvio(fromEnvio);
 		
 		if (paginaWeb != null)
 			empresa.setPaginaWeb(paginaWeb);
@@ -219,6 +244,9 @@ public class EmpresasController extends AbstractController {
 		if (resolucion != null)
 			empresa.setResolucion(resolucion);
 		
+		if (razon != null)
+			empresa.setRazon(razon);
+		
 		if (vencimientoFirma != null)
 			empresa.setVencimientoFirma(DateHandler.fromStringToDate(vencimientoFirma, new SimpleDateFormat("yyyy-MM-dd")));
 		
@@ -235,7 +263,7 @@ public class EmpresasController extends AbstractController {
 		
 		empresa.update();
 		
-		return Promise.<Result> pure(ok());
+		return json(OK);
 	}
 
 }

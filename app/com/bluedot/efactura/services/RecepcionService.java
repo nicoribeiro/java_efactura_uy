@@ -1,21 +1,18 @@
 package com.bluedot.efactura.services;
 
 import java.util.Date;
-import java.util.List;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
-import com.bluedot.efactura.model.Sobre;
 import com.bluedot.efactura.model.SobreEmitido;
-import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.soap.recepcion.Data;
 
 public interface RecepcionService {
 
-	void sendCFE(CFE cfe, String adenda) throws APIException;
+	void sendCFE(CFE cfe) throws APIException;
 
 	Data consultaResultadoSobre(String token, Long idReceptor) throws APIException;
 
@@ -24,6 +21,8 @@ public interface RecepcionService {
 	ReporteDiario generarReporteDiario(Date date, Empresa empresa) throws APIException;
 
 	void consultarResultados(Date date, Empresa empresa) throws APIException;
+
+	void reenviarSobre(SobreEmitido sobre) throws APIException;
 
 //	public class ResultadoConsulta {
 //		public TipoDoc tipoDoc;

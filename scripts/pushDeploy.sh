@@ -21,19 +21,19 @@ CONF=$BASE/conf
 DEST=/srv/java_efactura_uy
 
 instanceIp() {
-        echo $(cat $CONF/servers.conf | grep $1 | awk -F "|" {'print $2'})
+        echo $(cat $CONF/servers.conf | grep $1 | grep -v "#" | awk -F "|" {'print $2'})
 }
 
 instancePort() {
-	echo $(cat $CONF/servers.conf | grep $1 | awk -F "|" {'print $3'})
+	echo $(cat $CONF/servers.conf | grep $1 | grep -v "#" | awk -F "|" {'print $3'})
 }
 
 instanceKey() {
-        echo $(cat $CONF/servers.conf | grep $1 | awk -F "|" {'print $5'})
+        echo $(cat $CONF/servers.conf | grep $1 | grep -v "#" | awk -F "|" {'print $5'})
 }
 
 instanceUser() {
-        echo $(cat $CONF/servers.conf | grep $1 | awk -F "|" {'print $6'})
+        echo $(cat $CONF/servers.conf | grep $1 | grep -v "#" | awk -F "|" {'print $6'})
 }
 
 pushDeploy() {
@@ -41,7 +41,7 @@ pushDeploy() {
         INFO "PUSHING DEPLOY TO SERVER GROUP: $SERVER_GROUP..."
         INFO
 
-	instances=$(cat $CONF/servers.conf | grep $SERVER_GROUP | awk -F "|" {'print $1'})
+	instances=$(cat $CONF/servers.conf | grep $SERVER_GROUP | grep -v "#" | awk -F "|" {'print $1'})
         INFO $instances
         for instance in $instances; do
 

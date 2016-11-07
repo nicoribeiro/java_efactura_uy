@@ -89,7 +89,7 @@ public abstract class PruebasController extends AbstractController {
 					if (i==efacturas.length-1 && ultimoEsAnulado){
 						cfe.setEstado(EstadoACKCFEType.BE);
 					}
-					factory.getServiceMicroController(empresa).register(cfe, null);
+					factory.getServiceMicroController(empresa).enviar(cfe);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -114,7 +114,7 @@ public abstract class PruebasController extends AbstractController {
 					if (i==eResguardos.length-1 && ultimoEsAnulado){
 						cfe.setEstado(EstadoACKCFEType.BE);
 					}
-					factory.getServiceMicroController(empresa).register(cfe, null);
+					factory.getServiceMicroController(empresa).enviar(cfe);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -139,7 +139,7 @@ public abstract class PruebasController extends AbstractController {
 					if (i==eTickets.length-1 && ultimoEsAnulado){
 						cfe.setEstado(EstadoACKCFEType.BE);
 					}
-					factory.getServiceMicroController(empresa).register(cfe, null);
+					factory.getServiceMicroController(empresa).enviar(cfe);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();

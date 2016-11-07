@@ -1,5 +1,7 @@
 package com.bluedot.efactura.serializers;
 
+import java.text.SimpleDateFormat;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,6 +14,8 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 	
 	JSONSerializer<Empresa> empresaSerializer;
 	JSONSerializer<Detalle> detalleSerializer;
+	
+	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
 	public CFESerializer(JSONSerializer<Empresa> empresaSerializer, JSONSerializer<Detalle> detalleSerializer) {
 		this.empresaSerializer = empresaSerializer;
@@ -32,6 +36,8 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 		cfeJson.put("detalle", cfe.getDetalle()!=null? detalleSerializer.objectToJson(cfe.getDetalle()): JSONObject.NULL);
 		cfeJson.put("xml", cfe.getXml());
 		cfeJson.put("estado", cfe.getEstado());
+		if (cfe.getSobre()!=null && cfe.getSobre().getFechaConsulta()!=null)
+			cfeJson.put("fechaConsulta", sdf.format(cfe.getSobre().getFechaConsulta()));
 		
 		return cfeJson;
 	}

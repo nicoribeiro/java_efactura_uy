@@ -2,8 +2,11 @@ package com.bluedot.commons.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
- 
+
 import javax.mail.Address;
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -40,9 +43,11 @@ public class EmailAttachmentReceiver {
      * @param userName
      * @param password
      */
-    public void downloadEmailAttachments(String host, String port,
+    public List<Email> downloadEmailAttachments(String host, int port,
             String userName, String password) {
-        Properties properties = new Properties();
+        List<Email> emails = new LinkedList<Email>();
+    	
+    	Properties properties = new Properties();
  
         // server setting
         properties.put("mail.pop3.host", host);
@@ -74,7 +79,7 @@ public class EmailAttachmentReceiver {
                 Address[] fromAddress = message.getFrom();
                 String from = fromAddress[0].toString();
                 String subject = message.getSubject();
-                String sentDate = message.getSentDate().toString();
+                Date sentDate = message.getSentDate();
  
                 String contentType = message.getContentType();
                 String messageContent = "";
@@ -82,6 +87,8 @@ public class EmailAttachmentReceiver {
                 // store attachment file name, separated by comma
                 String attachFiles = "";
  
+                Email email = new Email(from,subject,sentDate,messageContent);
+                
                 if (contentType.contains("multipart")) {
                     // content may contain attachments
                     Multipart multiPart = (Multipart) message.getContent();
@@ -92,6 +99,7 @@ public class EmailAttachmentReceiver {
                             // this part is attachment
                             String fileName = part.getFileName();
                             attachFiles += fileName + ", ";
+                            email.getAttachments().put(fileName, part.getContent().toString());
                             part.saveFile(saveDirectory + File.separator + fileName);
                         } else {
                             // this part may be the message content
@@ -117,6 +125,7 @@ public class EmailAttachmentReceiver {
                 System.out.println("\t Sent Date: " + sentDate);
                 System.out.println("\t Message: " + messageContent);
                 System.out.println("\t Attachments: " + attachFiles);
+                
             }
  
             // disconnect
@@ -131,6 +140,8 @@ public class EmailAttachmentReceiver {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        
+        return emails;
     }
  
     /**
@@ -138,7 +149,7 @@ public class EmailAttachmentReceiver {
      */
     public static void main(String[] args) {
         String host = "pop.gmail.com";
-        String port = "995";
+        int port = 995;
         String userName = "your_email";
         String password = "your_password";
  

@@ -9,7 +9,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
@@ -22,11 +21,11 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.utils.Settings;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
+import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.services.IntercambioService;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
@@ -38,20 +37,43 @@ import dgi.classes.respuestas.cfe.RechazoCFEDGIType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Caratula;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Detalle;
-import play.Play;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 import dgi.classes.respuestas.sobre.ParamConsultaType;
 import dgi.classes.respuestas.sobre.RechazoSobreType;
+import play.Play;
 
 public class IntercambioServiceImpl implements IntercambioService {
 
 	@Override
-	public ACKSobredefType procesarSobre(EnvioCFEEntreEmpresas envioCFEEntreEmpresas, String filename) {
+	public ACKSobredefType procesarSobre(SobreRecibido sobreRecibido) {
 		
 		try {
+			
+			EnvioCFEEntreEmpresas envioCFEEntreEmpresas = sobreRecibido.getEnvioCFEEntreEmpresas(); 
+//			String filename = sobreRecibido.getNombreArchivo();
+			
 			ACKSobredefType ackSobredefType = new ACKSobredefType();
 			ackSobredefType.setVersion("1.0");
-			addCaratula(ackSobredefType, envioCFEEntreEmpresas, filename);
+			
+			
+			/*
+			 * Caratula
+			 */
+			Caratula caratula = new Caratula();
+			caratula.setCantidadCFE(envioCFEEntreEmpresas.getCaratula().getCantCFE());
+			caratula.setFecHRecibido(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+			caratula.setTmst(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+			//TODO hace un incremental aca
+			caratula.setIDReceptor(new BigInteger("1"));
+			caratula.setIDRespuesta(new BigInteger("1"));
+			caratula.setIDEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor());
+			caratula.setNomArch(sobreRecibido.getNombreArchivo());
+			caratula.setRUCReceptor(sobreRecibido.getEmpresaReceptora().getRut());
+			caratula.setRUCEmisor(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
+			ackSobredefType.setCaratula(caratula);
+			
+			
+			
 			ackSobredefType.setDetalle(new Detalle());
 			/*
 			 * CONTROLES SOBRE
@@ -176,30 +198,16 @@ public class IntercambioServiceImpl implements IntercambioService {
 		return null;
 	}
 
-	private void addCaratula(ACKSobredefType ackSobredefType, EnvioCFEEntreEmpresas envioCFEEntreEmpresas, String filename) throws DatatypeConfigurationException {
-		Caratula caratula = new Caratula();
-
-		caratula.setCantidadCFE(envioCFEEntreEmpresas.getCaratula().getCantCFE());
-		caratula.setFecHRecibido(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-		caratula.setTmst(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-		//TODO hace un incremental aca
-		caratula.setIDReceptor(new BigInteger("1"));
-		caratula.setIDRespuesta(new BigInteger("1"));
-		caratula.setIDEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor());
-		caratula.setNomArch(filename);
-		//TODO sacar RUT para afuera
-		caratula.setRUCReceptor("215071660012");
-		caratula.setRUCEmisor(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
-		
-		ackSobredefType.setCaratula(caratula);
-		
-	}
-
 	@Override
-	public ACKCFEdefType procesarCFESobre(EnvioCFEEntreEmpresas envioCFEEntreEmpresas,
-			ACKSobredefType ackSobredefType, String filename) {
+	public ACKCFEdefType procesarCFESobre(SobreRecibido sobreRecibido) {
 		
 		try {
+			
+			EnvioCFEEntreEmpresas envioCFEEntreEmpresas = sobreRecibido.getEnvioCFEEntreEmpresas(); 
+			String filename = sobreRecibido.getNombreArchivo();
+			ACKSobredefType ackSobredefType = sobreRecibido.getAckSobredefType();
+			
+			
 			if (ackSobredefType.getDetalle().getMotivosRechazo().size()==0){
 				/*
 				 * CONTROLES CFE

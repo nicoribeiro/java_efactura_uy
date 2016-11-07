@@ -13,6 +13,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.utils.XML;
 import com.play4jpa.jpa.models.DefaultQuery;
 
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
@@ -58,7 +59,7 @@ public class SobreEmitido extends Sobre{
 	private EnvioCFE envioCFE;
 	
 	@Transient
-	private EnvioCFEEntreEmpresas envioCFEEntreEmpresas;
+	private boolean reenvio = false;
 
 	public SobreEmitido() {
 		super();
@@ -146,6 +147,12 @@ public class SobreEmitido extends Sobre{
 	}
 
 	public EnvioCFE getEnvioCFE() {
+		if (envioCFE==null)
+			try {
+				envioCFE = (EnvioCFE) XML.unMarshall(XML.loadXMLFromString(xmlDgi), EnvioCFE.class);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		return envioCFE;
 	}
 
@@ -153,12 +160,12 @@ public class SobreEmitido extends Sobre{
 		this.envioCFE = envioCFE;
 	}
 
-	public EnvioCFEEntreEmpresas getEnvioCFEEntreEmpresas() {
-		return envioCFEEntreEmpresas;
+	public boolean isReenvio() {
+		return reenvio;
 	}
 
-	public void setEnvioCFEEntreEmpresas(EnvioCFEEntreEmpresas envioCFEEntreEmpresas) {
-		this.envioCFEEntreEmpresas = envioCFEEntreEmpresas;
+	public void setReenvio(boolean reenvio) {
+		this.reenvio = reenvio;
 	}
 	
 }

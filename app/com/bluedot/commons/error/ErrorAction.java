@@ -3,10 +3,8 @@ package com.bluedot.commons.error;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bluedot.commons.security.Secured;
 import com.bluedot.efactura.global.RequestUtils;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 
 import play.libs.F.Function;
 import play.libs.F.Promise;
@@ -105,14 +103,15 @@ public class ErrorAction extends Action<ErrorMessage>
 	public static Promise<Result> handleAPIException(APIException e)
 	{
 		ObjectNode jsonError = buildError(e.getError().message(), e.getError().code(), e.getDetailMessage());
-		e.printStackTrace();
+		if (e.isLog())
+			logger.error("APIException is: ", e);
 		return Promise.<Result> pure(Results.status(e.getError().httpCode(), jsonError));
 	}
 	
 	public static Promise<Result> handleUnknownException(Throwable e)
 	{
 		ObjectNode jsonError = buildError(e.getLocalizedMessage(), 500);
-		e.printStackTrace();
+		logger.error("UnknownException is: ", e);
 		return Promise.<Result> pure(internalServerError(jsonError));
 	}
 	

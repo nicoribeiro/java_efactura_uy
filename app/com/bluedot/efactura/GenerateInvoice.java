@@ -9,6 +9,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.StringTokenizer;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.bluedot.commons.utils.QR;
@@ -16,6 +18,7 @@ import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Detalle;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.serializers.AdendaSerializer;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
@@ -38,7 +41,7 @@ public class GenerateInvoice {
 	private int detailsRowSize = 15;
 	private int detailsLowerLeft_y;
 	private int detailsHeight;
-	private int totalesHeight = 100;
+	private int totalesHeight = 90;
 
 	// CABEZAL
 	private int headerHeight = 200;
@@ -57,7 +60,7 @@ public class GenerateInvoice {
 	int selloDigitalAndCAEDataHeight = 130;
 
 	// ADENDA
-	int adendaHeight = 150;
+	int adendaHeight = 160;
 
 	int height;
 	int width;
@@ -73,7 +76,6 @@ public class GenerateInvoice {
 	DecimalFormat df_0 = new DecimalFormat("##.##");
 	SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
 	
-	private JSONObject adenda;
 	private CFE cfe;
 
 	private void initializeCoordenates() {
@@ -83,8 +85,7 @@ public class GenerateInvoice {
 		width = pageWidth - leftMargin - rightMargin;
 	}
 	
-	public GenerateInvoice(CFE cfe, JSONObject adenda, Empresa empresa){
-		this.adenda = adenda;
+	public GenerateInvoice(CFE cfe, Empresa empresa){
 		this.cfe = cfe;
 	}
 	
@@ -146,7 +147,7 @@ public class GenerateInvoice {
 					generateSelloDigital(doc, cb);
 					row = 1;
 				}
-				int cant = generateLineaDeCuerpo(cb, i, row, cfe.getDetalle().get(i));
+				int cant = generateLineaDeCuerpo(cb, row, cfe.getDetalle().get(i));
 				row += cant;
 				if (row == itemsPerPage + 1) {
 					printPageNumber(doc,docWriter, bf, cb);
@@ -159,8 +160,10 @@ public class GenerateInvoice {
 			printPageNumber(doc,docWriter, bf, cb);
 			generateTotales(cb);
 			generateCaeData(cb);
-			generateAdenda(cb, adenda);
+			generateAdenda(cb);
 			generateReferencia(cb);
+			generateEntrega(cb);
+			generateReceptor(cb);
 			
 			total.setFontAndSize(bf, 8);
 			total.beginText();
@@ -271,13 +274,13 @@ public class GenerateInvoice {
 			createHeadings(bf, cb, receptor_x + 50, receptor_y - headerRowSize, cfe.getEmpresaReceptora().getRut(),
 					PdfContentByte.ALIGN_CENTER);
 			
-			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, cfe.getEmpresaReceptora().getRazon(),
-					PdfContentByte.ALIGN_LEFT);
-			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4, cfe.getEmpresaReceptora().getDireccion(),
-					PdfContentByte.ALIGN_LEFT);
-			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5,
-					cfe.getEmpresaReceptora().getLocalidad() + " - " + cfe.getEmpresaReceptora().getDepartamento(), PdfContentByte.ALIGN_LEFT);
 			
+			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, cfe.getEmpresaReceptora().getDireccion(),
+					PdfContentByte.ALIGN_LEFT);
+			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4,
+					cfe.getEmpresaReceptora().getLocalidad() + " - " + cfe.getEmpresaReceptora().getDepartamento(), PdfContentByte.ALIGN_LEFT);
+			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, cfe.getEmpresaReceptora().getRazon(),
+					PdfContentByte.ALIGN_LEFT);
 			break;
 
 		case eTicket:
@@ -359,8 +362,8 @@ public class GenerateInvoice {
 		// Titulos de detalle de productos
 		int title_y = height + detailsLowerLeft_y - detailsRowSize + 5;
 		createHeadings(bfBold, cb, leftMargin + 2, title_y, "Cant");
-		createHeadings(bfBold, cb, leftMargin + cant_ancho + 2, title_y, "Codigo");
-		createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + 2, title_y, "Descripcion");
+		createHeadings(bfBold, cb, leftMargin + cant_ancho + 2, title_y, "Código");
+		createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + 2, title_y, "Descripción");
 		createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + 2, title_y, "Precio Unitario");
 		createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho +  2, title_y, "Monto");
 
@@ -369,7 +372,7 @@ public class GenerateInvoice {
 	/*
 	 * 4) Cuerpo del comprobante;
 	 */
-	public int generateLineaDeCuerpo(PdfContentByte cb, int index, int row, Detalle detalle) {
+	public int generateLineaDeCuerpo(PdfContentByte cb, int row, Detalle detalle) {
 		 	
 			int y = pageHeight - headerHeight - detailsRowSize - row * detailsRowSize + 5;
 
@@ -379,8 +382,7 @@ public class GenerateInvoice {
 			createContent(bf, cb, leftMargin+ cant_ancho + 2, y, detalle.getCodItem()!=null?detalle.getCodItem():"", PdfContentByte.ALIGN_LEFT);
 			
 			
-//			createContent(bf, cb, leftMargin+ cant_ancho + codigo_ancho + 2, y, detalle.getNombreItem(), PdfContentByte.ALIGN_LEFT);
-			int cant = printLongDesc(cb,y,detalle.getNombreItem(), 64);
+			int cant = printLongDesc(cb, leftMargin+ cant_ancho + codigo_ancho + 2, y,detalle.getNombreItem(), 64);
 			
 
 			createContent(bf, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho -2, y, df_2.format(detalle.getPrecioUnitario()), PdfContentByte.ALIGN_RIGHT);
@@ -390,7 +392,26 @@ public class GenerateInvoice {
 			
 	}
 	
-	public int printLongDesc(PdfContentByte cb, int y, String input, int maxLineLength) {
+	public int printLongDesc(PdfContentByte cb, int y, String input, int maxLineLength,int columns, int column) {
+	
+		int columnWidth = pageWidth / columns;
+
+		int offset = columnWidth * column;
+
+		int marginWith= 20;
+		int leftMargin =  marginWith/2;
+		int rightMargin = marginWith/2;
+				
+		if (column==0){
+			leftMargin = marginWith;
+		} else if (column==columns-1){
+			rightMargin= marginWith;
+		}
+		
+		return printLongDesc(cb, offset + leftMargin, y,input, maxLineLength);
+		
+	}
+	public int printLongDesc(PdfContentByte cb, int x, int y, String input, int maxLineLength) {
 	    StringTokenizer tok = new StringTokenizer(input, " ");
 	    StringBuilder output = new StringBuilder(input.length());
 	    int cantLines = 0;
@@ -399,8 +420,7 @@ public class GenerateInvoice {
 	        String word = tok.nextToken();
 
 	        if (lineLen + word.length() > maxLineLength) {
-	        	createContent(bf, cb, leftMargin+ cant_ancho + codigo_ancho + 2, y-(detailsRowSize*cantLines), output.toString(), PdfContentByte.ALIGN_LEFT);
-//	        	output.append("\n");
+	        	createContent(bf, cb, x, y-(detailsRowSize*cantLines), output.toString(), PdfContentByte.ALIGN_LEFT);
 	        	output.setLength(0);
 	            lineLen = 0;
 	            cantLines += 1;
@@ -409,7 +429,7 @@ public class GenerateInvoice {
 	        lineLen += word.length()+1;
 	    }
 	    if  (lineLen>0)
-	    	createContent(bf, cb, leftMargin+ cant_ancho + codigo_ancho + 2, y-(detailsRowSize*cantLines), output.toString(), PdfContentByte.ALIGN_LEFT);
+	    	createContent(bf, cb, x, y-(detailsRowSize*cantLines), output.toString(), PdfContentByte.ALIGN_LEFT);
 	    
 	    return cantLines+1;
 	}
@@ -476,7 +496,7 @@ public class GenerateInvoice {
 		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Imp. Per. : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
 		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntImpPerc()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
 		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Exportacion : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Exportación : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
 		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, df_2.format(cfe.getTotMntExpyAsim()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
 
 //						createContentOnFrame(cb, detailsLowerLeft_y - detailsRowSize * 6, "No Facturable : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
@@ -495,6 +515,7 @@ public class GenerateInvoice {
 				switch (cfe.getMoneda()) {
 				case UYU:
 					moneda = "$";
+					break;
 				case USD:
 					moneda = "U$S";
 					break;
@@ -661,7 +682,7 @@ public class GenerateInvoice {
 		 */
 		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "DATOS CAE", 3, 2);
 
-		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "IVA al dia ", PdfContentByte.ALIGN_LEFT, 3, 2);
+		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "IVA al día ", PdfContentByte.ALIGN_LEFT, 3, 2);
 		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 4, "ID: " + cfe.getCae().getNro(), PdfContentByte.ALIGN_LEFT, 3, 2);
 		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 5, "Fecha Vencimiento: " + sdf.format(cfe.getCae().getFechaVencimiento()),
 				PdfContentByte.ALIGN_LEFT, 3, 2);
@@ -689,28 +710,119 @@ public class GenerateInvoice {
 		 */
 		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "REFERENCIA", 3, 1);
 		
-		if (cfe.getReferencia()==null)
-			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "Razon: " + cfe.getRazonReferencia(), PdfContentByte.ALIGN_LEFT, 3, 1);
-		else{
+		if (cfe.getReferencia()==null){
+			if ( cfe.getRazonReferencia()!=null)
+				createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "Razon: " + cfe.getRazonReferencia(), PdfContentByte.ALIGN_LEFT, 3, 1);
+		}else{
 			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "CFE Tipo: " + cfe.getReferencia().getTipo(), PdfContentByte.ALIGN_LEFT, 3, 1);
 			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 4, "CFE Serie: " + cfe.getReferencia().getSerie(), PdfContentByte.ALIGN_LEFT, 3, 1);
 			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 5, "CFE Nro: " + cfe.getReferencia().getNro(), PdfContentByte.ALIGN_LEFT, 3, 1);
 		}
 	}
+	
+	public void generateEntrega(PdfContentByte cb)
+			throws MalformedURLException, IOException, DocumentException {
+		
+		int frameUp_y = pageHeight - headerHeight - detailsHeight;
+		int frameDown_y = pageHeight - headerHeight - detailsHeight - adendaHeight;
+
+		
+		/*
+		 * ENTREGA
+		 */
+		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "ADENDA - ENTREGA", 3, 1);
+		
+		if (cfe.getAdenda()==null)
+			return;
+		
+		JSONArray array = new JSONArray(cfe.getAdenda());
+		JSONArray entrega = null;
+		
+		for (int i = 0; i < array.length(); i++) {
+			try {
+				JSONObject jsonObject = array.getJSONObject(i);
+				if (jsonObject.get("Entrega")!=null)
+					entrega = jsonObject.getJSONArray("Entrega");
+			} catch (JSONException e) {
+			}
+			
+		}
+		
+		if (entrega!=null){
+			StringBuilder stringBuilder = new StringBuilder();
+			AdendaSerializer.convertAdenda(stringBuilder, entrega);
+			
+			String[] adenda = stringBuilder.toString().split("\\r?\\n");
+			
+			for (int i = 0; i < adenda.length; i++) {
+				createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * (i+3), adenda[i], PdfContentByte.ALIGN_LEFT, 3, 1);
+			}
+			
+		}
+	}
+	
 
 	/*
 	 * 5) Pie del comprobante.(solo ultima pagina)
 	 */
-	public void generateAdenda(PdfContentByte cb, JSONObject adenda) {
+	public void generateAdenda(PdfContentByte cb) {
 
 		int frameUp_y = pageHeight - headerHeight - detailsHeight;
 		int frameDown_y = pageHeight - headerHeight - detailsHeight - adendaHeight;
 
+		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "ADENDA - DATOS INTERNOS",3,0);
+		
+		if (cfe.getAdenda()==null)
+			return;
+		
+		JSONArray array = new JSONArray(cfe.getAdenda());
+		
+		for (int i = 0; i < array.length(); i++) {
+			try {
+				JSONObject jsonObject = array.getJSONObject(i);
+				if (jsonObject.get("Entrega")!=null)
+					array.remove(i);
+			} catch (JSONException e) {
+			}
+			
+		}
+		
+		
 		/*
 		 * ADENDA
 		 */
-		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "ADENDA");
+		
 
+		if (cfe.getAdenda() != null){
+			StringBuilder stringBuilder = new StringBuilder();
+			AdendaSerializer.convertAdenda(stringBuilder, array);
+			
+			String[] adenda = stringBuilder.toString().split("\\r?\\n");
+			int row = 3;
+			for (int i = 0; i < adenda.length; i++) {
+				int cant = printLongDesc(cb, frameUp_y - detailsRowSize * (row) ,adenda[i], 40, 2, 0);
+				row = row+cant;
+				//createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * (i+3), adenda[i], PdfContentByte.ALIGN_LEFT, 2, 0);
+			}
+			
+		}
+		
+		
+		
+	}
+	
+	public void generateReceptor(PdfContentByte cb){
+		int frameUp_y = pageHeight - headerHeight - detailsHeight;
+		int frameDown_y = pageHeight - headerHeight - detailsHeight - adendaHeight;
+		
+		/*
+		 * Firma, Aclaracion y CI 
+		 */
+		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "ADENDA - RECEPTOR",3,2);
+		
+		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 4, "Firma:", PdfContentByte.ALIGN_LEFT, 3, 2);
+		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 6, "Aclaración:", PdfContentByte.ALIGN_LEFT, 3, 2);
+		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 8, "Cédula:", PdfContentByte.ALIGN_LEFT, 3, 2);
 	}
 
 	/*

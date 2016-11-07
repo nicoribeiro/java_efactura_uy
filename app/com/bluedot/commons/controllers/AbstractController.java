@@ -16,6 +16,8 @@ import play.mvc.Result;
 public class AbstractController extends Controller
 {
 
+	public static String OK = "{\"result_code\":0}";
+	
 	protected static Promise<Result> json(String jsonText)
 	{
 		return Promise.<Result> pure(ok(jsonText).as("application/json")); 

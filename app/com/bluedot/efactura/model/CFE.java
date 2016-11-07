@@ -220,6 +220,9 @@ public class CFE extends Model<CFE>{
 	private CFE referencia;
 	
 	private String razonReferencia;
+	
+	@Type(type="text")
+	private String adenda;
 
 	public CFE() {
 		super();
@@ -718,6 +721,12 @@ public class CFE extends Model<CFE>{
 		}
 	}
 
-	
+	public String getAdenda() {
+		return adenda;
+	}
+
+	public void setAdenda(String adenda) {
+		this.adenda = adenda;
+	}
 
 }

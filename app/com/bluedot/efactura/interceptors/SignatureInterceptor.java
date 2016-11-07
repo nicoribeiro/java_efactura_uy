@@ -56,6 +56,8 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 				List list = message.getContent(java.util.List.class);
 				if (list.get(0) instanceof WSEFacturaEFACRECEPCIONSOBRE){
 					SobreEmitido sobre = InterceptorContextHolder.getSobreEmitido();
+					if (sobre.isReenvio())
+						return;
 					signSobre(sobre, message);
 				}
 				

@@ -22,19 +22,19 @@ LOG "WARNING: $@"
 }
 
 instanceIp() {
-        echo $(cat $CONF/servers.conf | grep $1 | awk -F "|" {'print $2'})
+        echo $(cat $CONF/servers.conf | grep $1 | grep -v "#" | awk -F "|" {'print $2'})
 }
 
 instancePort() {
-        echo $(cat $CONF/servers.conf | grep $1 | awk -F "|" {'print $3'})
+        echo $(cat $CONF/servers.conf | grep $1 | grep -v "#" | awk -F "|" {'print $3'})
 }
 
 instanceKey() {
-        echo $(cat $CONF/servers.conf | grep $1 | awk -F "|" {'print $5'})
+        echo $(cat $CONF/servers.conf | grep $1 | grep -v "#" | awk -F "|" {'print $5'})
 }
 
 instanceUser() {
-        echo $(cat $CONF/servers.conf | grep $1 | awk -F "|" {'print $6'})
+        echo $(cat $CONF/servers.conf | grep $1 | grep -v "#" | awk -F "|" {'print $6'})
 }
 
 instanceIp=$(instanceIp $INSTANCE_NAME)

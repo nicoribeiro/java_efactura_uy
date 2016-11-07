@@ -2,9 +2,11 @@ package com.bluedot.efactura.strategy.report;
 
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.List;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.classes.reporte.ReporteDefType;
@@ -15,12 +17,12 @@ public class Strategy_102 implements SummaryStrategy {
 	private TipoDoc tipoDoc = TipoDoc.Nota_de_Credito_de_eTicket;
 
 	@Override
-	public void buildSummary(Empresa empresa, ReporteDefType reporte, Date date) throws APIException {
+	public void buildSummary(Empresa empresa, ReporteDefType reporte, Date date, List<SobreEmitido> sobres) throws APIException {
 		ReporteDefType.RsmnTckNotaCredito resumen = new ReporteDefType.RsmnTckNotaCredito();
 		resumen.setTipoComp(new BigInteger(String.valueOf(tipoDoc.value)));
 
 		RsmnDataTck data = new RsmnDataTck();
-		SummaryDatatype summary = SummaryStrategy.getSummary(empresa, tipoDoc, date);
+		SummaryDatatype summary = SummaryStrategy.getSummary(empresa, tipoDoc, date, sobres);
 
 		data.setCantDocsAnulados(
 				new BigInteger(String.valueOf(summary.cantDocRechazados + summary.cantDocSinRespuesta)));

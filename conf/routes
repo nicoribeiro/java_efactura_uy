@@ -55,18 +55,20 @@ PUT      /api/v1/empresa/:rut                                    com.bluedot.efa
 # Crea, registra y envia un nuevo Documento
 POST     /api/v1/empresa/:rut/documentos                         com.bluedot.efactura.controllers.DocumentController.aceptarDocumento(rut:String)
 
+# Reenvia Documento existente
+PUT      /api/v1/empresa/:rut/documentos                         com.bluedot.efactura.controllers.DocumentController.reenviarDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+
 # Consulta el resultado de un documento
-GET     /api/v1/empresa/:rut/documentos/resultado               com.bluedot.efactura.controllers.DocumentController.resultadoDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+GET      /api/v1/empresa/:rut/documentos/resultado               com.bluedot.efactura.controllers.DocumentController.resultadoDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
 
 # Obtiene la representacion en PDF del documento
 GET      /api/v1/empresa/:rut/documentos/pdf                     com.bluedot.efactura.controllers.DocumentController.pdfDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer, print:Boolean?=false)
 
-
 # Anula un documento
-#DELETE   /api/v1/empresa/:rut/documentos/:idTipoDoc/:serie/:nro   com.bluedot.efactura.controllers.DocumentController.anularDocumento(rut:String, idTipoDoc:Integer, serie:String, nro:Integer, fecha:String)
+DELETE   /api/v1/empresa/:rut/documentos                         com.bluedot.efactura.controllers.DocumentController.anularDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
 
-
-
+# Retorna los documentos entrantes para una empresa
+GET      /api/v1/empresa/:rut/documentos/entrantes               com.bluedot.efactura.controllers.DocumentController.getDocumentosEntrantes(rut:String)
 
 
 

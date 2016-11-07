@@ -7,7 +7,7 @@ CMD=$2
 SERVER_GROUP=$3
 BASE=$SCRIPTS_HOME/..
 CONF=$BASE/conf
-instances=$(cat $CONF/servers.conf | grep $SERVER_GROUP | awk -F "|" {'print $1'})
+instances=$(cat $CONF/servers.conf | grep $SERVER_GROUP | grep -v "#" | awk -F "|" {'print $1'})
 
 
 #LOG functions

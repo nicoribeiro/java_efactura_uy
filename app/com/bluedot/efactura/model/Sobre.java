@@ -19,14 +19,18 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.utils.XML;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
+import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
+import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 
 
@@ -100,10 +104,10 @@ public class Sobre extends Model<Sobre> {
 	
 	/**
 	 * Sobre Emitido:
-	 * Es el xml que se envia hacia la empresa
+	 * Es el xml que se envia hacia la empresa receptora
 	 * 
 	 * Sobre Recibido:
-	 * Es el xml que se recibe de la empresa
+	 * Es el xml que se recibe de la empresa emisora
 	 */
 	@Type(type="text")
 	private String xmlEmpresa;
@@ -138,6 +142,12 @@ public class Sobre extends Model<Sobre> {
 	 */
 	@Type(type="text")
 	private String resultado_empresa;
+	
+	@Transient
+	EnvioCFEEntreEmpresas envioCFEEntreEmpresas;
+	
+	@Transient
+	ACKSobredefType ackSobredefType;
 	
 	public Sobre() {
 		super();
@@ -275,6 +285,29 @@ public class Sobre extends Model<Sobre> {
 
 	public void setFecha(Date fecha) {
 		this.fecha = fecha;
+	}
+
+	public EnvioCFEEntreEmpresas getEnvioCFEEntreEmpresas() {
+		if (envioCFEEntreEmpresas==null)
+			try {
+				envioCFEEntreEmpresas = (EnvioCFEEntreEmpresas) XML.unMarshall(XML.loadXMLFromString(xmlEmpresa), EnvioCFEEntreEmpresas.class);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		
+		return envioCFEEntreEmpresas;
+	}
+
+	public void setEnvioCFEEntreEmpresas(EnvioCFEEntreEmpresas envioCFEEntreEmpresas) {
+		this.envioCFEEntreEmpresas = envioCFEEntreEmpresas;
+	}
+
+	public ACKSobredefType getAckSobredefType() {
+		return ackSobredefType;
+	}
+
+	public void setAckSobredefType(ACKSobredefType ackSobredefType) {
+		this.ackSobredefType = ackSobredefType;
 	}
 	
 }

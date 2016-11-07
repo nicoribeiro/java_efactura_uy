@@ -33,6 +33,12 @@ import javax.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum EstadoACKCFEType {
 
+	/*
+	 * AE - Comprobante Recibido
+	 * BE - Comprobante Rechazado (CFE) 
+	 * CE - Comprobante Observado (CFC)3
+	 */
+	
     AE,
     BE,
     CE;
