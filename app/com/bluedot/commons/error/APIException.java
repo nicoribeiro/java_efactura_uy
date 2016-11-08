@@ -15,7 +15,7 @@ public class APIException extends Throwable
 {
 
 	private APIException(APIErrors error, Throwable cause) {
-		super("", cause);
+		super("Wrraped Exception", cause);
 		this.error = error;
 		this.log = true;
 		
@@ -114,8 +114,8 @@ public class APIException extends Throwable
 		SOBRE_RECHAZADO(113, 200, true), 
 		CFE_YA_FUE_ANULADO(114, 200, true), 
 		CFE_NO_SE_PUEDE_ANULAR(115, 200, true), 
-		HAY_CFE_SIN_RESPUESTA(116, 200, true)
-		
+		HAY_CFE_SIN_RESPUESTA(116, 200, true),
+		FALTA_TIPO_CAMBIO(117,  404, true)
 		;
 
 
@@ -229,9 +229,9 @@ public class APIException extends Throwable
 	public  JSONObject getJSONObject()
 	{
 		JSONObject jsonError = new JSONObject();
-		jsonError.put("result_code", error.httpCode);
-		jsonError.put("result_message", error.message);
-		jsonError.put("result_detail", detailMessage != null? detailMessage:"");
+		jsonError.put("result_code", error.code);
+		jsonError.put("result_message", error.name());
+		jsonError.put("result_detail", getMessage());
 		
 		return jsonError;
 	}
