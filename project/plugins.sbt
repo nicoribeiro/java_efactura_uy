@@ -22,3 +22,6 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-play-enhancer" % "1.1.0")
 
 // Eclipse plugin
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
+
+// Visualize your project's dependencies.
+addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
