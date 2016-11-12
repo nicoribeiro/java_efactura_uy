@@ -115,7 +115,8 @@ public class APIException extends Throwable
 		CFE_YA_FUE_ANULADO(114, 200, true), 
 		CFE_NO_SE_PUEDE_ANULAR(115, 200, true), 
 		HAY_CFE_SIN_RESPUESTA(116, 200, true),
-		FALTA_TIPO_CAMBIO(117,  404, true)
+		FALTA_TIPO_CAMBIO(117,  404, true), 
+		TEMPRANO_PARA_GENERAR_REPORTE(118,  404, true), 
 		;
 
 
@@ -215,7 +216,7 @@ public class APIException extends Throwable
 	@Override
 	public String getMessage()
 	{
-		return super.getMessage() + (getDetailMessage()!=null?". "+getDetailMessage():"");
+		return getDetailMessage() != null ? getDetailMessage() : "";
 	}
 
 	public boolean isLog() {
