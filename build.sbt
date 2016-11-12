@@ -1,24 +1,26 @@
 name := """java_efactura_uy"""
 
-version := "0.57"
+version := "0.61"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
 scalaVersion := "2.11.6"
+
+// el excludeAll(ExclusionRule(organization = "org.apache.geronimo.specs")) es para que no incluya el paquete geronimo-javamail_1.4_spec-1.7.1.jar que es viejo y anda muy mal
 
 libraryDependencies ++= Seq(
   javaJdbc,
   cache,
   javaWs,
     "com.google.code.gson" % "gson" % "2.2",
-    "org.apache.cxf" % "cxf-rt-frontend-jaxws" % "3.1.7",
-    "org.apache.cxf" % "cxf-rt-transports-http" % "3.1.7",
-    "org.apache.cxf" % "cxf-rt-ws-policy" % "3.1.7",
-    "org.apache.cxf" % "cxf-rt-ws-security" % "3.1.7",
+    "org.apache.cxf" % "cxf-rt-frontend-jaxws" % "3.1.7" excludeAll(ExclusionRule(organization = "org.apache.geronimo.specs")),
+    "org.apache.cxf" % "cxf-rt-transports-http" % "3.1.7" excludeAll(ExclusionRule(organization = "org.apache.geronimo.specs")),
+    "org.apache.cxf" % "cxf-rt-ws-policy" % "3.1.7" excludeAll(ExclusionRule(organization = "org.apache.geronimo.specs")),
+    "org.apache.cxf" % "cxf-rt-ws-security" % "3.1.7" excludeAll(ExclusionRule(organization = "org.apache.geronimo.specs")),
     "org.slf4j" % "slf4j-simple" % "1.7.12",
     "org.json" % "json" % "20140107",
 	"net.sf.flexjson" % "flexjson" % "2.1",
-	"javax.mail" % "mail" % "1.4.1",
+	"com.sun.mail" % "javax.mail" % "1.5.6",
     "com.itextpdf" % "itextpdf" % "5.5.6",
 	"com.google.zxing" % "core" % "3.2.1",
 	"org.hibernate" % "hibernate-entitymanager" % "4.3.11.Final",
