@@ -144,14 +144,18 @@ public class IntercambioServiceImpl implements IntercambioService {
 
 			SignatureInterceptor.signDocument(dbf, allDocument,"ACKSobre",null);
 			
-			//System.out.println(XML.documentToString(allDocument));
+			sobreRecibido.setRespuesta_empresa(XML.documentToString(allDocument));
 			
-			String filenamePrefix = Play.application().configuration().getString(Constants.GENERATED_CFE_FOLDER,
-					"resources" + File.separator + "cfe" + File.separator + "sobre.xml");
+			//TODO enviar correo a la empresa con el resultado
 			
-			Commons.dumpNodeToFile(allDocument, true, filenamePrefix, null);
+//			String filenamePrefix = Play.application().configuration().getString(Constants.GENERATED_CFE_FOLDER,
+//					"resources" + File.separator + "cfe" + File.separator + "sobre.xml");
+			
+//			Commons.dumpNodeToFile(allDocument, true, filenamePrefix, null);
 			
 			//ackSobredefType = (ACKSobredefType)XML.unMarshall(allDocument, ackSobredefType.getClass());
+			
+			sobreRecibido.setAckSobredefType(ackSobredefType);
 			
 			return ackSobredefType;
 			
@@ -187,10 +191,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 		} catch (TransformerFactoryConfigurationError e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (APIException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 		
 		
 		
@@ -247,6 +248,10 @@ public class IntercambioServiceImpl implements IntercambioService {
 				SignatureInterceptor.signDocument(dbf, allDocument,null,null);
 				
 				//ackcfEdefType = (ACKCFEdefType)XML.unMarshall(allDocument, ackcfEdefType.getClass());
+				
+				sobreRecibido.setResultado_empresa(XML.documentToString(allDocument));
+				
+				//TODO enviar correo con el resultado
 				
 				return ackcfEdefType;
 			}

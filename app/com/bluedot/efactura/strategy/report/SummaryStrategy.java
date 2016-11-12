@@ -210,7 +210,6 @@ public interface SummaryStrategy {
 	}
 
 	static void sumarizarMontos(CFE cfe, SummaryDatatype summary) {
-		// String content = IO.readFile(file, Charset.forName("UTF-8"));
 		Monto monto = summary.monto;
 
 		monto.totMntNoGrv = safeAdd(monto.totMntNoGrv, cfe.getTotMntNoGrv());
@@ -242,24 +241,14 @@ public interface SummaryStrategy {
 	}
 
 	static BigDecimal safeAdd(BigDecimal acumulado, Double value) {
-		// String open_key = "<" + key + ">";
-		// String close_key = "</" + key + ">";
-		//
-		// String[] temp = content.split(open_key);
 
 		if (acumulado == null)
 			acumulado = new BigDecimal("0");
 
-		// if (temp.length == 1)
-		// return acumulado;
-
-		// for (int i = 1; i < temp.length; i++) {
-		// String add = temp[i].split(close_key)[0];
-		//
-		// if (add != null && !add.equals("0")) {
-		acumulado = acumulado.add(new BigDecimal(value));
-		// }
-		// }
+		if (value==null)
+			value = 0d;
+		
+		acumulado = acumulado.add(new BigDecimal(value)).setScale(2, BigDecimal.ROUND_HALF_UP);
 
 		return acumulado;
 	}
