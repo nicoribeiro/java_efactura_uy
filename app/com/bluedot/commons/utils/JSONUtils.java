@@ -36,7 +36,13 @@ public class JSONUtils
 		if (Obj1==null && Obj2==null)
 			return new JSONObject();
 		
-		JSONObject merged = new JSONObject(Obj1, JSONObject.getNames(Obj1));
+		JSONObject merged;
+		
+		if (JSONObject.getNames(Obj1)==null)
+			merged = new JSONObject();
+		else
+			merged = new JSONObject(Obj1, JSONObject.getNames(Obj1));
+		
 		for(String key : JSONObject.getNames(Obj2))
 		{
 		  merged.put(key, Obj2.get(key));
