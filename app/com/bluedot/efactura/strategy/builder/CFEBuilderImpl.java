@@ -292,6 +292,13 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		strategy.getCFE().setTotMntRetenido(montoTotalRetenido.doubleValue());
 		
 		/*
+		 * id:128 
+		 */
+		//TODO esto es un campo que no se bien para que sirve...
+		strategy.getCFE().setTotValRetPerc(0d);
+		
+		
+		/*
 		 * id:129
 		 */
 		BigDecimal montoNF = iva[IndicadorFacturacion.INDICADOR_FACTURACION_NO_FACTURABLE.getIndice()].subtract(iva[IndicadorFacturacion.INDICADOR_FACTURACION_NO_FACTURABLE_NEGATIVO.getIndice()]).setScale(2, BigDecimal.ROUND_HALF_UP);

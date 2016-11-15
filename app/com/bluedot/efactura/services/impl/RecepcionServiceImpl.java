@@ -625,6 +625,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 			
 			reporteDiario.setXml(reporteString);
 			
+			reporteDiario.setTimestampEnviado(new Date());
+			
 			Data data = sendReporte(reporteString, fecha);
 
 			reporteDiario.setRespuesta(data.getXmlData());
@@ -713,6 +715,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 			if (sobre.getXmlEmpresa()==null){
 				try {
 					EnvioCFE envioCFE = (EnvioCFE) XML.unMarshall(XML.loadXMLFromString(sobre.getXmlDgi()), EnvioCFE.class);
+					CFEDefType cfeDefType = envioCFE.getCVES().get(0);
+					cfeDefType.setSignature(null);
 					generarXMLEmpresa(cfe, envioCFE.getCVES().get(0), sobre);
 				} catch (Exception e) {
 					e.printStackTrace();

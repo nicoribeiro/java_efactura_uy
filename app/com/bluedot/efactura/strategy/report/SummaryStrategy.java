@@ -20,6 +20,7 @@ import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
 
+import dgi.classes.recepcion.TipMonType;
 import dgi.classes.reporte.MontosFyT;
 import dgi.classes.reporte.MontosFyT.MntsFyTItem;
 import dgi.classes.reporte.MontosRes;
@@ -212,31 +213,33 @@ public interface SummaryStrategy {
 	static void sumarizarMontos(CFE cfe, SummaryDatatype summary) {
 		Monto monto = summary.monto;
 
-		monto.totMntNoGrv = safeAdd(monto.totMntNoGrv, cfe.getTotMntNoGrv());
+		double tipoCambio = 1;
+		
+		if (cfe.getMoneda()!=TipMonType.UYU)
+			tipoCambio = cfe.getTipoCambio();
+		
+		monto.totMntNoGrv = safeAdd(monto.totMntNoGrv, cfe.getTotMntNoGrv()*tipoCambio);
+		monto.totMntExpyAsim = safeAdd(monto.totMntExpyAsim, cfe.getTotMntExpyAsim()*tipoCambio);
+		monto.totMntImpPerc = safeAdd(monto.totMntImpPerc, cfe.getTotMntImpPerc()*tipoCambio);
 
-		// TODO tipo moneda es importante, creo que se debe enviar solo pesos,
-		// preguntar a pablo
-		monto.totMntExpyAsim = safeAdd(monto.totMntExpyAsim, cfe.getTotMntExpyAsim());
-		monto.totMntImpPerc = safeAdd(monto.totMntImpPerc, cfe.getTotMntImpPerc());
+		monto.totMntIVAenSusp = safeAdd(monto.totMntIVAenSusp, cfe.getTotMntIVAenSusp()*tipoCambio);
+		monto.totMntIVATasaMin = safeAdd(monto.totMntIVATasaMin, cfe.getTotMntIVATasaMin()*tipoCambio);
+		monto.totMntIVATasaBas = safeAdd(monto.totMntIVATasaBas, cfe.getTotMntIVATasaBas()*tipoCambio);
+		monto.totMntIVAOtra = safeAdd(monto.totMntIVAOtra, cfe.getTotMntIVAOtra()*tipoCambio);
 
-		monto.totMntIVAenSusp = safeAdd(monto.totMntIVAenSusp, cfe.getTotMntIVAenSusp());
-		monto.totMntIVATasaMin = safeAdd(monto.totMntIVATasaMin, cfe.getTotMntIVATasaMin());
-		monto.totMntIVATasaBas = safeAdd(monto.totMntIVATasaBas, cfe.getTotMntIVATasaBas());
-		monto.totMntIVAOtra = safeAdd(monto.totMntIVAOtra, cfe.getTotMntIVAOtra());
+		monto.mntIVATasaBas = safeAdd(monto.mntIVATasaBas, cfe.getMntIVATasaBas()*tipoCambio);
+		monto.mntIVATasaMin = safeAdd(monto.mntIVATasaMin, cfe.getMntIVATasaMin()*tipoCambio);
+		monto.mntIVAOtra = safeAdd(monto.mntIVAOtra, cfe.getMntIVAOtra()*tipoCambio);
 
-		monto.mntIVATasaBas = safeAdd(monto.mntIVATasaBas, cfe.getMntIVATasaBas());
-		monto.mntIVATasaMin = safeAdd(monto.mntIVATasaMin, cfe.getMntIVATasaMin());
-		monto.mntIVAOtra = safeAdd(monto.mntIVAOtra, cfe.getMntIVAOtra());
-
-		monto.totMntTotal = safeAdd(monto.totMntTotal, cfe.getTotMntTotal());
-		monto.totMntRetenido = safeAdd(monto.totMntRetenido, cfe.getTotMntRetenido());
-
+		monto.totMntTotal = safeAdd(monto.totMntTotal, cfe.getTotMntTotal()*tipoCambio);
+		monto.totMntRetenido = safeAdd(monto.totMntRetenido, cfe.getTotMntRetenido()*tipoCambio);
+		monto.totValRetPerc = safeAdd(monto.totValRetPerc, cfe.getTotValRetPerc()*tipoCambio);
+		
 		// TODO sacar el monto de 10000 UI a un lado calculable
-		if ((monto.totMntTotal.subtract(monto.mntIVATasaBas).subtract(monto.mntIVATasaMin).subtract(monto.mntIVAOtra))
-				.compareTo(new BigDecimal(34036)) == 1)
+		if (((cfe.getTotMntTotal() - cfe.getMntIVATasaBas() - cfe.getMntIVATasaMin() - cfe.getMntIVAOtra())*tipoCambio) > 34036)
 			summary.mayor10000UI++;
 
-		monto.totValRetPerc = safeAdd(monto.totValRetPerc, cfe.getTotValRetPerc());
+		
 
 	}
 
