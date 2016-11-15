@@ -1,12 +1,10 @@
 package com.bluedot.commons.utils;
 
-import java.io.IOException;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -19,7 +17,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
+import javax.mail.internet.PreencodedMimeBodyPart;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +46,7 @@ public class SendMail
 		final String passwordFinal = password;
 
 		// Get system properties
-		Properties properties = System.getProperties();
+		Properties properties = new Properties();
 
 		// Setup mail server
 		properties.setProperty("mail.smtp.host", smtpHost);
@@ -72,7 +70,11 @@ public class SendMail
 
 		// Create a default MimeMessage object.
 		MimeMessage message = new MimeMessage(session);
-		Multipart multiPart = new MimeMultipart("alternative");
+		Multipart multiPart;
+		if (attachments.size()>0)
+			multiPart = new MimeMultipart("mixed");
+		else
+			multiPart = new MimeMultipart("alternative");
 
 		// Set From: header field of the header.
 		message.setFrom(new InternetAddress(from));
@@ -97,26 +99,27 @@ public class SendMail
 		
 		// Add attachments if any
 		if (attachments!=null)
-			try {
+//			try {
 				for (Iterator<String> iterator = attachments.keySet().iterator(); iterator.hasNext();) {
 					String filename = iterator.next();
-					MimeBodyPart attachmnetPart = new MimeBodyPart();
-					//DataSource source = new FileDataSource(filename);
-					DataSource source = new ByteArrayDataSource(attachments.get(filename), "application/octet-stream");
-					attachmnetPart.setDataHandler(new DataHandler(source));
+					MimeBodyPart attachmnetPart = new PreencodedMimeBodyPart("base64");
+//					DataSource source = new ByteArrayDataSource(attachments.get(filename), "application/octet-stream");
+//					attachmnetPart.setDataHandler(new DataHandler(source));
+					attachmnetPart.setContent(Base64.getEncoder().encodeToString(attachments.get(filename).getBytes()), "text/xml");  
 					attachmnetPart.setFileName(filename);
 					multiPart.addBodyPart(attachmnetPart);
 				}
-			} catch (IOException e) {
+//			} catch (IOException e) {
 				/*TODO usar esto para loggear Exceptions: 
 				* logger.error("Error", e);
 				* 
 				* Esto aplica para todo el proyecto no solo para este metodo
 				*/
-				e.printStackTrace();
-			}
+//				e.printStackTrace();
+//			}
 		
 		message.setContent(multiPart);
+		message.saveChanges();
 		
 		if (!logInstedOfSend)
 		{

@@ -2,6 +2,7 @@ package com.bluedot.efactura.services.impl;
 
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
@@ -12,13 +13,14 @@ import java.util.TreeMap;
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
 
-import org.json.JSONArray;
 import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.notificationChannels.MessagingHelper;
+import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.commons.Commons;
@@ -34,7 +36,6 @@ import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.pool.WSEFacturaSoapPortWrapper;
 import com.bluedot.efactura.pool.WSRecepcionPool;
-import com.bluedot.efactura.serializers.AdendaSerializer;
 import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.strategy.report.SummaryStrategy;
 import com.sun.istack.logging.Logger;
@@ -52,7 +53,6 @@ import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import dgi.classes.respuestas.cfe.RechazoCFEDGIType;
 import dgi.classes.respuestas.reporte.ACKRepDiariodefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
-import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 import dgi.soap.recepcion.Data;
 import dgi.soap.recepcion.WSEFacturaEFACCONSULTARESTADOENVIO;
 import dgi.soap.recepcion.WSEFacturaEFACCONSULTARESTADOENVIOResponse;
@@ -153,23 +153,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 		 * Creo EnvioCFEEntreEmpresas
 		 */
 		if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico()) {
-			CFEEmpresasType cfeEmpresasType = (new dgi.classes.entreEmpresas.ObjectFactory()).createCFEEmpresasType();
-			cfeEmpresasType.setCFE(cfeDefType);
-			if (cfe.getAdenda() != null) {
-				// TODO volver a poner adenda en el envio al receptor
-				// electronico
-				// StringBuilder stringBuilder = new StringBuilder();
-				// AdendaSerializer.convertAdenda(stringBuilder, new
-				// JSONArray(cfe.getAdenda()));
-				// cfeEmpresasType.setAdenda(stringBuilder.toString());
-			}
-			EnvioCFEEntreEmpresas envioCFEEntreEmpresas = (new dgi.classes.entreEmpresas.ObjectFactory())
-					.createEnvioCFEEntreEmpresas();
-			envioCFEEntreEmpresas.setVersion("1.0");
-			envioCFEEntreEmpresas.getCFEAdendas().add(cfeEmpresasType);
-			addCaratulaEntreEmpresas(envioCFEEntreEmpresas, sobre);
-			sobre.setEnvioCFEEntreEmpresas(envioCFEEntreEmpresas);
-
+			generarXMLEmpresa(cfe, cfeDefType, sobre);
 		}
 
 		/*
@@ -185,12 +169,55 @@ public class RecepcionServiceImpl implements RecepcionService {
 		sobre.setXmlDgi(xmlSobre);
 		enviarSobreDGI(sobre, xmlSobre);
 
-		/*
-		 * Envio a la empresa
-		 */
-		if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico())
-			this.enviarSobreEmpresa(sobre);
+		
 
+	}
+
+	/**
+	 * @param cfe
+	 * @param cfeDefType
+	 * @param sobre
+	 * @throws APIException
+	 */
+	private void generarXMLEmpresa(CFE cfe, CFEDefType cfeDefType, SobreEmitido sobre) throws APIException {
+		CFEEmpresasType cfeEmpresasType = (new dgi.classes.entreEmpresas.ObjectFactory()).createCFEEmpresasType();
+		cfeEmpresasType.setCFE(cfeDefType);
+		if (cfe.getAdenda() != null) {
+			// TODO volver a poner adenda en el envio al receptor
+			// electronico
+			// StringBuilder stringBuilder = new StringBuilder();
+			// AdendaSerializer.convertAdenda(stringBuilder, new
+			// JSONArray(cfe.getAdenda()));
+			// cfeEmpresasType.setAdenda(stringBuilder.toString());
+		}
+		EnvioCFEEntreEmpresas envioCFEEntreEmpresas = (new dgi.classes.entreEmpresas.ObjectFactory())
+				.createEnvioCFEEntreEmpresas();
+		envioCFEEntreEmpresas.setVersion("1.0");
+		envioCFEEntreEmpresas.getCFEAdendas().add(cfeEmpresasType);
+		addCaratulaEntreEmpresas(envioCFEEntreEmpresas, sobre);
+		sobre.setEnvioCFEEntreEmpresas(envioCFEEntreEmpresas);
+		
+		try {
+			Document allDocument = XML.objectToDocument(sobre.getEnvioCFEEntreEmpresas());
+			/*
+			 * Instantiate the DocumentBuilderFactory.
+			 * 
+			 * IMPORTANT:NamespaceAwerness=true!!
+			 */
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			dbf.setNamespaceAware(true);
+
+			allDocument = XML
+					.loadXMLFromString(NamespacesInterceptor.doNamespaceChanges(XML.documentToString(allDocument)));
+
+			SignatureInterceptor.signDocument(dbf, allDocument, "ns0:CFE", "DGICFE:CFE_Adenda");
+
+			sobre.setXmlEmpresa(XML.documentToString(allDocument));
+			
+			
+		} catch (TransformerFactoryConfigurationError | Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void addCaratulaSobre(SobreEmitido sobre) throws APIException {
@@ -375,6 +402,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 				response = output.getDataout();
 
+				logger.info("Respuesta: " + response.getXmlData());
+				
 				WSRecepcionPool.getInstance().checkIn(portWrapper);
 			} catch (Throwable e) {
 				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
@@ -418,29 +447,6 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 	private void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
 		try {
-			Document allDocument = XML.objectToDocument(sobre.getEnvioCFEEntreEmpresas());
-
-			/*
-			 * Instantiate the DocumentBuilderFactory.
-			 * 
-			 * IMPORTANT:NamespaceAwerness=true!!
-			 */
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			dbf.setNamespaceAware(true);
-
-			allDocument = XML
-					.loadXMLFromString(NamespacesInterceptor.doNamespaceChanges(XML.documentToString(allDocument)));
-
-			SignatureInterceptor.signDocument(dbf, allDocument, "ns0:CFE", "DGICFE:CFE_Adenda");
-
-			sobre.setXmlEmpresa(XML.documentToString(allDocument));
-
-			/*
-			 * Se necesita el id del sobre para generar el nombre de archivo,
-			 * por lo tanto debemos forzar la escritura a la BBDD para que se
-			 * genere el id.
-			 */
-			ThreadMan.forceTransactionFlush();
 
 			Map<String, String> attachments = new TreeMap<String, String>();
 
@@ -491,7 +497,9 @@ public class RecepcionServiceImpl implements RecepcionService {
 			WSEFacturaEFACCONSULTARESTADOENVIOResponse output = portWrapper.getPort().efacconsultarestadoenvio(input);
 
 			WSRecepcionPool.getInstance().checkIn(portWrapper);
-
+			
+			logger.info("Respuesta: " + output.getDataout().getXmlData());
+			
 			return output.getDataout();
 		} catch (Throwable e) {
 			throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
@@ -520,7 +528,13 @@ public class RecepcionServiceImpl implements RecepcionService {
 				if (cfe != null) {
 					cfe.setEstado(ACKcfeDet.getEstado());
 					cfe.update();
-					if (cfe.getEstado() != EstadoACKCFEType.AE) {
+					if (cfe.getEstado() == EstadoACKCFEType.AE){ 
+						/*
+						 * Envio a la empresa
+						 */
+						if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null)
+							this.enviarSobreEmpresa(sobre);
+					}else{
 						for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
 								.iterator(); iterator2.hasNext();) {
 							RechazoCFEDGIType rechazo = iterator2.next();
@@ -547,13 +561,25 @@ public class RecepcionServiceImpl implements RecepcionService {
 			if (fecha == null)
 				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("fecha"));
 
+			long hours = ((new Date()).getTime()-fecha.getTime())/1000/60/60;
+			
+			if (hours <= 43)
+				throw APIException.raise(APIErrors.TEMPRANO_PARA_GENERAR_REPORTE).setDetailMessage("Debe esperar al menos " + (43-hours) + " horas mas para generar el reporte.");
+			
+
 			/*
-			 * Consulto los resultados para los CFEs
+			 * Chequeo que todos los CFE tengan respuesta o esten anulados
 			 */
-			this.consultarResultados(fecha, empresa);
-
-			SimpleDateFormat caratulaFormatter = new SimpleDateFormat("yyyy-MM-dd");
-
+			List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, fecha);
+			for (SobreEmitido sobreEmitido : sobres) {
+				List<CFE> cfes = sobreEmitido.getCfes();
+				for (CFE cfe : cfes) {
+					if (cfe.getEstado()==null && cfe.getGeneradorId()!=null)
+						throw APIException.raise(APIErrors.HAY_CFE_SIN_RESPUESTA).setDetailMessage("serie:" + cfe.getSerie() + " nro:" + cfe.getNro() + " tipo:" + cfe.getTipo().value);
+				}
+			}
+			
+			
 			/*
 			 * Creo el Reporte Diario
 			 */
@@ -570,6 +596,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			/*
 			 * Caratula
 			 */
+			SimpleDateFormat caratulaFormatter = new SimpleDateFormat("yyyy-MM-dd");
 			dgi.classes.reporte.ReporteDefType.Caratula caratula = new dgi.classes.reporte.ReporteDefType.Caratula();
 			caratula.setCantComprobantes(new BigInteger("0"));
 			caratula.setFechaResumen(
@@ -583,17 +610,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			caratula.setVersion("1.0");
 			reporte.setCaratula(caratula);
 
-			/*
-			 * Chequeo que todos los CFE tengan respuesta o esten anulados
-			 */
-			List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, fecha);
-			for (SobreEmitido sobreEmitido : sobres) {
-				List<CFE> cfes = sobreEmitido.getCfes();
-				for (CFE cfe : cfes) {
-					if (cfe.getEstado()==null && cfe.getGeneradorId()!=null)
-						throw APIException.raise(APIErrors.HAY_CFE_SIN_RESPUESTA);
-				}
-			}
+			
 			
 			/*
 			 * Resumenes
@@ -604,7 +621,11 @@ public class RecepcionServiceImpl implements RecepcionService {
 					strategy.buildSummary(empresa, reporte, fecha, sobres);
 			}
 
-			Data data = sendReporte(XML.objectToString(reporte), fecha);
+			String reporteString = XML.objectToString(reporte);
+			
+			reporteDiario.setXml(reporteString);
+			
+			Data data = sendReporte(reporteString, fecha);
 
 			reporteDiario.setRespuesta(data.getXmlData());
 
@@ -682,6 +703,24 @@ public class RecepcionServiceImpl implements RecepcionService {
 		sobre.setReenvio(true);
 		sobre.update();
 		this.enviarSobreDGI(sobre, sobre.getXmlDgi());
+	}
+
+	@Override
+	public void enviarMailEmpresa(CFE cfe) throws APIException {
+		SobreEmitido sobre = cfe.getSobre();
+		
+		if (sobre.getEmpresaReceptora().isEmisorElectronico()){
+			if (sobre.getXmlEmpresa()==null){
+				try {
+					EnvioCFE envioCFE = (EnvioCFE) XML.unMarshall(XML.loadXMLFromString(sobre.getXmlDgi()), EnvioCFE.class);
+					generarXMLEmpresa(cfe, envioCFE.getCVES().get(0), sobre);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			enviarSobreEmpresa(cfe.getSobre());
+		}
+		
 	}
 
 	// @Override

@@ -1,22 +1,37 @@
 package com.bluedot.commons.utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
 import javax.mail.Address;
+import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.NoSuchProviderException;
 import javax.mail.Part;
+import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.MimeBodyPart;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.sun.mail.pop3.POP3Message;
+
+
+
  
 /**
  * This program demonstrates how to download e-mail messages and save
@@ -43,9 +58,14 @@ public class EmailAttachmentReceiver {
      * @param userName
      * @param password
      */
-    public List<Email> downloadEmailAttachments(String host, int port,
+    public List<Email> downloadEmail(String host, int port,
             String userName, String password) {
-        List<Email> emails = new LinkedList<Email>();
+        
+    	final String usernameFinal = userName;
+
+		final String passwordFinal = password;
+    	
+    	List<Email> emails = new LinkedList<Email>();
     	
     	Properties properties = new Properties();
  
@@ -54,14 +74,35 @@ public class EmailAttachmentReceiver {
         properties.put("mail.pop3.port", port);
  
         // SSL setting
-        properties.setProperty("mail.pop3.socketFactory.class",
-                "javax.net.ssl.SSLSocketFactory");
-        properties.setProperty("mail.pop3.socketFactory.fallback", "false");
-        properties.setProperty("mail.pop3.socketFactory.port",
-                String.valueOf(port));
+//        properties.setProperty("mail.pop3.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+//        properties.setProperty("mail.pop3.socketFactory.fallback", "false");
+//        properties.setProperty("mail.pop3.socketFactory.port",String.valueOf(port));
  
-        Session session = Session.getDefaultInstance(properties);
- 
+       
+        
+     // Get the default Session object.
+     		Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
+     			protected PasswordAuthentication getPasswordAuthentication()
+     			{
+     				return new PasswordAuthentication(usernameFinal, passwordFinal);
+     			}
+     		});
+     		
+            // session.setDebug(true);
+        
+     		 try {
+				String packageName="javax.mail.internet.";
+				String simpleClassName="MimeMultipart";
+				String className=packageName+simpleClassName;
+				Class<?> cl=Class.forName(className);
+				URL url=cl.getResource(simpleClassName+".class");
+				System.out.println("url="+url);
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+     		
+     		
         try {
             // connects to the message store
             Store store = session.getStore("pop3");
@@ -73,11 +114,13 @@ public class EmailAttachmentReceiver {
  
             // fetches new messages from server
             Message[] arrayMessages = folderInbox.getMessages();
- 
-            for (int i = 0; i < arrayMessages.length; i++) {
-                Message message = arrayMessages[i];
+            //TODO cambiar 10 por arrayMessages.length
+            for (int i = 0; i < 10; i++) {
+            	POP3Message message = (POP3Message)arrayMessages[i];
                 Address[] fromAddress = message.getFrom();
-                String from = fromAddress[0].toString();
+                String from="";
+                if (fromAddress !=null && fromAddress.length > 0)
+                	from = fromAddress[0].toString();
                 String subject = message.getSubject();
                 Date sentDate = message.getSentDate();
  
@@ -89,6 +132,8 @@ public class EmailAttachmentReceiver {
  
                 Email email = new Email(from,subject,sentDate,messageContent);
                 
+//                List<File> attachments = getAttachments(message);
+                
                 if (contentType.contains("multipart")) {
                     // content may contain attachments
                     Multipart multiPart = (Multipart) message.getContent();
@@ -99,8 +144,13 @@ public class EmailAttachmentReceiver {
                             // this part is attachment
                             String fileName = part.getFileName();
                             attachFiles += fileName + ", ";
-                            email.getAttachments().put(fileName, part.getContent().toString());
-                            part.saveFile(saveDirectory + File.separator + fileName);
+                            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                            part.getDataHandler().writeTo(bos);
+
+                            String decodedContent = bos.toString();
+                            	email.getAttachments().put(fileName, decodedContent);
+                            
+//                            part.saveFile(saveDirectory + File.separator + fileName);
                         } else {
                             // this part may be the message content
                             messageContent = part.getContent().toString();
@@ -117,6 +167,11 @@ public class EmailAttachmentReceiver {
                         messageContent = content.toString();
                     }
                 }
+                
+                
+                
+                
+                emails.add(email);
  
                 // print out details of each message
                 System.out.println("Message #" + (i + 1) + ":");
@@ -157,7 +212,44 @@ public class EmailAttachmentReceiver {
  
         EmailAttachmentReceiver receiver = new EmailAttachmentReceiver();
         receiver.setSaveDirectory(saveDirectory);
-        receiver.downloadEmailAttachments(host, port, userName, password);
+        receiver.downloadEmail(host, port, userName, password);
  
     }
+    
+    
+    private static List<File> getAttachments(Message message) throws FileNotFoundException, MessagingException, IOException{
+    	List<File> attachments = new ArrayList<File>();
+    	
+    	System.out.println("#####################################################");
+    	System.out.println(message.getContent());
+    	System.out.println("#####################################################");
+    	
+    	    if (!(message.getContent() instanceof Multipart))
+    	    	return attachments;
+    	    
+    	    Multipart multipart = (Multipart) message.getContent();
+    	    
+    	    // System.out.println(multipart.getCount());
+
+    	    for (int i = 0; i < multipart.getCount(); i++) {
+    	        BodyPart bodyPart = multipart.getBodyPart(i);
+    	        if(!Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition()) &&
+    	               !StringUtils.isNotBlank(bodyPart.getFileName())) {
+    	            continue; // dealing with attachments only
+    	        } 
+    	        InputStream is = bodyPart.getInputStream();
+    	        File f = new File("/tmp/" + bodyPart.getFileName());
+    	        FileOutputStream fos = new FileOutputStream(f);
+    	        byte[] buf = new byte[4096];
+    	        int bytesRead;
+    	        while((bytesRead = is.read(buf))!=-1) {
+    	            fos.write(buf, 0, bytesRead);
+    	        }
+    	        fos.close();
+    	        attachments.add(f);
+    	    }
+    	
+    	return attachments;
+    }
+    
 }

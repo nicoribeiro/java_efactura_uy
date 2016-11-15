@@ -24,6 +24,8 @@ public interface RecepcionService {
 
 	void reenviarSobre(SobreEmitido sobre) throws APIException;
 
+	void enviarMailEmpresa(CFE cfe) throws APIException;
+
 //	public class ResultadoConsulta {
 //		public TipoDoc tipoDoc;
 //		public int conResultado;

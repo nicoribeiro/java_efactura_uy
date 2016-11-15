@@ -29,6 +29,7 @@ import com.bluedot.commons.utils.Email;
 import com.bluedot.commons.utils.EmailAttachmentReceiver;
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.Print;
+import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.GenerateInvoice;
 import com.bluedot.efactura.MODO_SISTEMA;
@@ -290,65 +291,60 @@ public class DocumentController extends AbstractController {
 		return json(cfeJson.toString());
 
 	}
+	
+	public Promise<Result> enviarMailEmpresa(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
-	public Promise<Result> getDocumentosEntrantes(String rut) throws APIException {
-		//TODO terminar
-		// TODO mutex
-		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
+		Empresa empresa = Empresa.findByRUT(rut, true);
 
-		IntercambioService service = new IntercambioServiceImpl();
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
 
-		EmailAttachmentReceiver receiver = new EmailAttachmentReceiver();
-		List<Email> emails = receiver.downloadEmailAttachments(empresaReceptora.getHostRecepcion(),
-				Integer.parseInt(empresaReceptora.getPuertoRecepcion()), empresaReceptora.getUserRecepcion(),
-				empresaReceptora.getPassRecepcion());
+		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		for (Email email : emails)
+		if (tipo == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoDoc", idTipoDoc));
 
-		{
-			for (String attachmentName : email.getAttachments().keySet()) {
-				try {
-					String attachment = email.getAttachments().get(attachmentName);
+		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
 
-					Document document = XML.loadXMLFromString(attachment);
+		JSONObject error = null;
 
-					EnvioCFEEntreEmpresas envioCFEEntreEmpresas = (EnvioCFEEntreEmpresas) XML.unMarshall(document,
-							EnvioCFEEntreEmpresas.class);
-
-					Empresa empresaReceptoraCandidata = Empresa
-							.findByRUT(envioCFEEntreEmpresas.getCaratula().getRutReceptor(), true);
-
-					if (empresaReceptoraCandidata.getId() != empresaReceptora.getId())
-						break;
-
-					/*
-					 * Create el SobreRecibido
-					 */
-					SobreRecibido sobreRecibido = new SobreRecibido();
-					sobreRecibido.setEmpresaReceptora(empresaReceptora);
-					Empresa empresaEmisora = Empresa.findByRUT(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
-					if (empresaEmisora == null) {
-						empresaEmisora = new Empresa(rut, null, null, null, null, null, 0, null);
-						empresaEmisora.save();
-					}
-					sobreRecibido.setEmpresaEmisora(empresaEmisora);
-					sobreRecibido.setEnvioCFEEntreEmpresas(envioCFEEntreEmpresas);
-					sobreRecibido.setNombreArchivo(attachmentName);
-					sobreRecibido.setXmlEmpresa(attachment);
-					sobreRecibido.save();
-
-					service.procesarSobre(sobreRecibido);
-					service.procesarCFESobre(sobreRecibido);
-				} catch (APIException e) {
-					e.printStackTrace();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
-			}
-
+		try {
+			factory.getServiceMicroController(empresa).enviarMailEmpresa(cfe);
+		} catch (APIException e) {
+			logger.error("APIException:", e);
+			error = e.getJSONObject();
 		}
 
+		if (error == null)
+			error =  new JSONObject(OK);
+
+		return json(error.toString());
+
+	}
+
+	public Promise<Result> obtenerMail(String rut) throws APIException {
+		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+
+		JSONObject error = null;
+
+		try {
+				factory.getServiceMicroController(empresaReceptora).getDocumentosEntrantes();
+		} catch (APIException e) {
+			logger.error("APIException:", e);
+			error = e.getJSONObject();
+		}
+		
+		return json(OK);
+
+	}
+	
+	public Promise<Result> getDocumentosEntrantes(String rut, String fecha) throws APIException {
+		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
+		
+		//TODO serializar los Sobres_recibidos y devolver
 		return json(OK);
 
 	}
@@ -373,7 +369,7 @@ public class DocumentController extends AbstractController {
 			try {
 
 				reporte = factory.getServiceMicroController(empresa)
-						.generarReporteDiario(DateHandler.add(date, i, Calendar.DAY_OF_MONTH), empresa);
+						.generarReporteDiario(DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
 
 			} catch (APIException e) {
 				logger.error("APIException:", e);

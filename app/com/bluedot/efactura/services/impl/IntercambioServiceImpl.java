@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.UUID;
@@ -49,8 +50,13 @@ public class IntercambioServiceImpl implements IntercambioService {
 		
 		try {
 			
+			sobreRecibido.setTimestampRecibido(new Date());
+			
+			
+			
 			EnvioCFEEntreEmpresas envioCFEEntreEmpresas = sobreRecibido.getEnvioCFEEntreEmpresas(); 
-//			String filename = sobreRecibido.getNombreArchivo();
+			sobreRecibido.setIdEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor().toString());
+			sobreRecibido.setFecha(envioCFEEntreEmpresas.getCaratula().getFecha().toGregorianCalendar().getTime());
 			
 			ACKSobredefType ackSobredefType = new ACKSobredefType();
 			ackSobredefType.setVersion("1.0");
@@ -97,6 +103,8 @@ public class IntercambioServiceImpl implements IntercambioService {
 			/*
 			 * S02
 			 */
+			
+			//TODO terminar de implementar controles que faltan
 			//TODO mover rut a algo configurable
 			if (!envioCFEEntreEmpresas.getCaratula().getRutReceptor().equals("215071660012")){
 				RechazoSobreType rechazo = new RechazoSobreType();
@@ -120,6 +128,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 				/*
 				 * Se acepta el sobre!
 				 */
+				sobreRecibido.setEstado(EstadoACKSobreType.AS);
 				ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.AS);
 				ParamConsultaType params = new ParamConsultaType();
 				params.setFechahora(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
@@ -129,6 +138,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 				/*
 				 * Se rechaza el sobre!
 				 */
+				sobreRecibido.setEstado(EstadoACKSobreType.BS);
 				ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.BS);
 			}
 			
@@ -203,6 +213,8 @@ public class IntercambioServiceImpl implements IntercambioService {
 	public ACKCFEdefType procesarCFESobre(SobreRecibido sobreRecibido) {
 		
 		try {
+			
+			sobreRecibido.setTimestampProcesado(new Date());
 			
 			EnvioCFEEntreEmpresas envioCFEEntreEmpresas = sobreRecibido.getEnvioCFEEntreEmpresas(); 
 			String filename = sobreRecibido.getNombreArchivo();

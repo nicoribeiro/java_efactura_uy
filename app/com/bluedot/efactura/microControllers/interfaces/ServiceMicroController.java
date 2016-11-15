@@ -4,7 +4,6 @@ import java.util.Date;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CFE;
-import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.SobreEmitido;
 
@@ -18,8 +17,12 @@ public interface ServiceMicroController {
 
 	SobreEmitido consultaResultado(SobreEmitido sobre) throws APIException;
 
-	ReporteDiario generarReporteDiario(Date date, Empresa empresa) throws APIException;
+	ReporteDiario generarReporteDiario(Date date) throws APIException;
 
 	void anularDocumento(CFE cfe) throws APIException;
+
+	void getDocumentosEntrantes() throws APIException;
+
+	void enviarMailEmpresa(CFE cfe) throws APIException;
 
 }
