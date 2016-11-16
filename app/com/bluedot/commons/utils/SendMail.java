@@ -105,7 +105,7 @@ public class SendMail
 					MimeBodyPart attachmnetPart = new PreencodedMimeBodyPart("base64");
 //					DataSource source = new ByteArrayDataSource(attachments.get(filename), "application/octet-stream");
 //					attachmnetPart.setDataHandler(new DataHandler(source));
-					attachmnetPart.setContent(Base64.getEncoder().encodeToString(attachments.get(filename).getBytes()), "text/xml");  
+					attachmnetPart.setContent(Base64.getEncoder().encodeToString(attachments.get(filename).getBytes()), "application/octet-stream");  
 					attachmnetPart.setFileName(filename);
 					multiPart.addBodyPart(attachmnetPart);
 				}
