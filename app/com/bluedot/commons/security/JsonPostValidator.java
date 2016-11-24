@@ -1,11 +1,11 @@
 package com.bluedot.commons.security;
 
+import java.util.concurrent.CompletionStage;
+
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import play.i18n.Messages;
-import play.libs.F.Promise;
 import play.mvc.Action;
 import play.mvc.Http.Context;
 import play.mvc.Result;
@@ -35,7 +35,7 @@ public class JsonPostValidator extends Action<ValidateJsonPost>
 {
 
 	@Override
-	public Promise<Result> call(Context context) throws Throwable
+	public CompletionStage<Result> call(Context context) throws Throwable
 	{
 		String[] values = configuration.fields();
 		JsonNode json = context.request().body().asJson();
@@ -75,7 +75,7 @@ public class JsonPostValidator extends Action<ValidateJsonPost>
 	 *         before.
 	 * @throws Throwable
 	 */
-	protected Promise<Result> raiseValidationError(Context context, APIException exception) throws Throwable
+	protected CompletionStage<Result> raiseValidationError(Context context, APIException exception) throws Throwable
 	{
 		context.args.put("validation_error", "true");
 		context.args.put("validation_exception", exception);

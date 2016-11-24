@@ -1,5 +1,7 @@
 package com.bluedot.commons.error;
 
+import java.util.concurrent.CompletionStage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,10 +36,10 @@ public class ErrorAction extends Action<ErrorMessage>
 	final static Logger logger = LoggerFactory.getLogger(ErrorAction.class);
 
 	@Override
-	public Promise<Result> call(final Context ctx) throws Throwable
+	public CompletionStage<Result> call(final Context ctx) throws Throwable
 	{
-		Promise<Result> result = null;
-		Promise<Result> error = null;
+		CompletionStage<Result> result = null;
+		CompletionStage<Result> error = null;
 		try
 		{
 			error = checkErrorInContext(ctx);
@@ -53,10 +55,10 @@ public class ErrorAction extends Action<ErrorMessage>
 			if(error != null)
 				return error;
 			
-			Promise<Result> mappedResult = result.flatMap(new Function<Result, Promise<Result>>() 
+			CompletionStage<Result> mappedResult = result.flatMap(new Function<Result, CompletionStage<Result>>() 
 			{
 				@Override
-				public Promise<Result> apply(Result r) throws Throwable
+				public CompletionStage<Result> apply(Result r) throws Throwable
 				{
 					int statusCode = r.toScala().header().status();
 					if (200 > statusCode || 400 < statusCode)
@@ -90,7 +92,7 @@ public class ErrorAction extends Action<ErrorMessage>
 		return result;
 	}
 	
-	public Promise<Result> checkErrorInContext(Context ctx){
+	public CompletionStage<Result> checkErrorInContext(Context ctx){
 		if(ctx.args.get("validation_error") != null)
 		{
 			APIException e = (APIException)ctx.args.get("validation_exception");
@@ -100,7 +102,7 @@ public class ErrorAction extends Action<ErrorMessage>
 		return null;
 	}
 	
-	public static Promise<Result> handleAPIException(APIException e)
+	public static CompletionStage<Result> handleAPIException(APIException e)
 	{
 		ObjectNode jsonError = buildError(e.getError().message(), e.getError().code(), e.getDetailMessage());
 		if (e.isLog())
@@ -108,14 +110,14 @@ public class ErrorAction extends Action<ErrorMessage>
 		return Promise.<Result> pure(Results.status(e.getError().httpCode(), jsonError));
 	}
 	
-	public static Promise<Result> handleUnknownException(Throwable e)
+	public static CompletionStage<Result> handleUnknownException(Throwable e)
 	{
 		ObjectNode jsonError = buildError(e.getLocalizedMessage(), 500);
 		logger.error("UnknownException is: ", e);
 		return Promise.<Result> pure(internalServerError(jsonError));
 	}
 	
-	public static Promise<Result> handleExceptionWithStatusCode(String message, int statusCode)
+	public static CompletionStage<Result> handleExceptionWithStatusCode(String message, int statusCode)
 	{
 		ObjectNode jsonError = buildError(message, statusCode);
 		return Promise.<Result> pure(status(statusCode, jsonError));

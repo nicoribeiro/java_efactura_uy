@@ -2,6 +2,7 @@ package com.bluedot.efactura.controllers;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CompletionStage;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -43,7 +44,7 @@ public class HomologacionController_Intercambio extends AbstractController {
 	}
 
 	@BodyParser.Of(BodyParser.Json.class)
-	public Promise<Result> ingresoSobre() throws APIException, TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
+	public CompletionStage<Result> ingresoSobre() throws APIException, TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
 		try {
 
 			JsonNode jsonNode = request().body().asJson();

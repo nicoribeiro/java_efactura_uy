@@ -1,10 +1,11 @@
 package com.bluedot.commons.controllers;
 
 import java.util.Collection;
+import java.util.concurrent.CompletionStage;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.notificationChannels.Email;
 import com.bluedot.commons.notificationChannels.MessagingHelper;
 import com.bluedot.commons.notificationChannels.NotificationChannel;
@@ -36,12 +37,12 @@ public class NotificationChannelController extends AbstractController
 		SMS, MAIL
 	}
 
-	public  Promise<Result> listNotificationChannel(final int userId) throws Throwable
+	public  CompletionStage<Result> listNotificationChannel(final int userId) throws Throwable
 	{
 
 		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				User user = User.findById(userId, true);
 
@@ -56,12 +57,12 @@ public class NotificationChannelController extends AbstractController
 
 	@BodyParser.Of(BodyParser.Json.class)
 	@ValidateJsonPost(fields = { "type", "description" })
-	public  Promise<Result> createNotificationChannel(final int userId) throws Throwable
+	public  CompletionStage<Result> createNotificationChannel(final int userId) throws Throwable
 	{
 
 		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				JsonNode notificationChannelJson = request().body().asJson();
 
@@ -129,12 +130,12 @@ public class NotificationChannelController extends AbstractController
 		}, PermissionNames.ANY);
 	}
 
-	public  Promise<Result> editNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
+	public  CompletionStage<Result> editNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
 	{
 
 		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				JsonNode body = request().body().asJson();
 				User user = User.findById(userId, true);
@@ -156,12 +157,12 @@ public class NotificationChannelController extends AbstractController
 		}, PermissionNames.ANY);
 	}
 
-	public  Promise<Result> deleteNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
+	public  CompletionStage<Result> deleteNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
 	{
 
 		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				User user = User.findById(userId, true);
@@ -181,12 +182,12 @@ public class NotificationChannelController extends AbstractController
 		}, PermissionNames.ANY);
 	}
 
-	public  Promise<Result> sendKeyNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
+	public  CompletionStage<Result> sendKeyNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
 	{
 
 		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				User user = User.findById(userId, true);
@@ -204,12 +205,12 @@ public class NotificationChannelController extends AbstractController
 		}, PermissionNames.ANY);
 	}
 
-	public  Promise<Result> validateNotificationChannel(final int notificationChannelId, final String key) throws Throwable
+	public  CompletionStage<Result> validateNotificationChannel(final int notificationChannelId, final String key) throws Throwable
 	{
 
 		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				NotificationChannel notificationChannel = NotificationChannel.findById(notificationChannelId);
@@ -227,12 +228,12 @@ public class NotificationChannelController extends AbstractController
 		}, PermissionNames.ANY);
 	}
 
-	public  Promise<Result> testNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
+	public  CompletionStage<Result> testNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
 	{
 
 		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				User user = User.findById(userId, true);

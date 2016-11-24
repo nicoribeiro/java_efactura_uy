@@ -15,9 +15,9 @@ public class Global
 //		}
 //
 //		@Override
-//		public Promise<Result> call(Context ctx) throws Throwable
+//		public CompletionStage<Result> call(Context ctx) throws Throwable
 //		{
-//			Promise<Result> result = this.delegate.call(ctx);
+//			CompletionStage<Result> result = this.delegate.call(ctx);
 //			final Http.Request request = ctx.request();
 //
 //			result.onRedeem(new Callback<Result>() {

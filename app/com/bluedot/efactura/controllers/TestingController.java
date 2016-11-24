@@ -3,6 +3,7 @@ package com.bluedot.efactura.controllers;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.json.JSONArray;
@@ -18,7 +19,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
-import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -31,7 +31,7 @@ public class TestingController extends PruebasController {
 	private int maxLineasPorDocumento = 15;
 
 	@BodyParser.Of(BodyParser.Json.class)
-	public Promise<Result> generarPrueba() throws APIException {
+	public CompletionStage<Result> generarPrueba() throws APIException {
 
 		JsonNode jsonNode = request().body().asJson();
 

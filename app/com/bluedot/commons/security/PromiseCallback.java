@@ -1,11 +1,12 @@
 package com.bluedot.commons.security;
 
+import java.util.concurrent.CompletionStage;
+
 import com.bluedot.commons.error.APIException;
 
-import play.libs.F.Promise;
 import play.mvc.Result;
 
 public interface PromiseCallback
 {
-	public Promise<Result> execute() throws APIException;
+	public CompletionStage<Result> execute() throws APIException;
 }

@@ -6,13 +6,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletionStage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.microControllers.factory.MicroControllerFactoryBuilder;
 import com.bluedot.commons.microControllers.factory.MicroControllerFactoryDefault;
 import com.bluedot.commons.microControllers.factory.MicroControllersFactory;
@@ -54,11 +55,11 @@ public class AccountController extends AbstractController
 //	private static String SALT = Play.application().configuration().getString("product.digest.salt", "");
 
 	
-	public  Promise<Result> getAccount(final int accountId) throws APIException
+	public  CompletionStage<Result> getAccount(final int accountId) throws APIException
 	{
 		return accountAction(accountId, new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				Account a = Account.findById(accountId, true);
 
@@ -74,7 +75,7 @@ public class AccountController extends AbstractController
 	}
 
 //	@ValidateJsonPost(fields = { "productId", "productType" })
-//	public  Promise<Result> generateProductKey() throws APIException
+//	public  CompletionStage<Result> generateProductKey() throws APIException
 //	{
 //		try
 //		{
@@ -100,7 +101,7 @@ public class AccountController extends AbstractController
 
 	
 
-	public  Promise<Result> removeUser(int accountId, int userId) throws APIException
+	public  CompletionStage<Result> removeUser(int accountId, int userId) throws APIException
 	{
 		Account a = Account.findById(accountId, true);
 
@@ -118,12 +119,12 @@ public class AccountController extends AbstractController
 
 	
 	
-	public  Promise<Result> addUsersToAccount(final int accountId) throws APIException
+	public  CompletionStage<Result> addUsersToAccount(final int accountId) throws APIException
 	{
 		return accountAction(accountId, new PromiseCallback() {
 			
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				JsonNode emails = request().body().asJson();
 				
@@ -161,12 +162,12 @@ public class AccountController extends AbstractController
 		});
 	}
 	
-	public  Promise<Result> removeUsersFromAccount(final int accountId) throws APIException
+	public  CompletionStage<Result> removeUsersFromAccount(final int accountId) throws APIException
 	{
 		return accountAction(accountId, new PromiseCallback() {
 			
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				JsonNode emails = request().body().asJson();
 				
@@ -230,7 +231,7 @@ public class AccountController extends AbstractController
 		set, unset
 	}
 
-	public  Promise<Result> setAcl(int accountId, int userId) throws APIException
+	public  CompletionStage<Result> setAcl(int accountId, int userId) throws APIException
 	{
 		final User user = User.findById(userId, true);
 
@@ -263,7 +264,7 @@ public class AccountController extends AbstractController
 			accountAction(accountId, new PromiseCallback() {
 
 				@Override
-				public Promise<Result> execute() throws APIException
+				public CompletionStage<Result> execute() throws APIException
 				{
 
 					setAccountACL(account, aclId, aclName, aclAction, user);
@@ -321,11 +322,11 @@ public class AccountController extends AbstractController
 	}
 
 	
-	public  Promise<Result> getSettings(final int accountId) throws APIException
+	public  CompletionStage<Result> getSettings(final int accountId) throws APIException
 	{
 		return accountAction(accountId, new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				Account account = Account.findById(accountId, true);
 
@@ -345,11 +346,11 @@ public class AccountController extends AbstractController
 		});
 	}
 	
-	public  Promise<Result> getUserSettings(final int accountId, final int userId) throws APIException
+	public  CompletionStage<Result> getUserSettings(final int accountId, final int userId) throws APIException
 	{
 		return accountAction(accountId, new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				Account account = Account.findById(accountId, true);
 				
@@ -374,11 +375,11 @@ public class AccountController extends AbstractController
 		});
 	}
 
-	public  Promise<Result> setSettings(final int accountId) throws APIException
+	public  CompletionStage<Result> setSettings(final int accountId) throws APIException
 	{
 		return accountAction(accountId, new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				Account account = Account.findById(accountId, true);
 				JsonNode settings = request().body().asJson();
@@ -398,11 +399,11 @@ public class AccountController extends AbstractController
 
 	
 
-	public  Promise<Result> listAccounts() throws APIException
+	public  CompletionStage<Result> listAccounts() throws APIException
 	{
 		return PermissionValidator.runWithValidation(ctx(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				String keyword = request().getQueryString("keyword");
 				
@@ -424,11 +425,11 @@ public class AccountController extends AbstractController
 	
 
 	@ValidateJsonPost(fields = { "firstName", "lastName" })
-	public  Promise<Result> createAccount() throws APIException {
+	public  CompletionStage<Result> createAccount() throws APIException {
 		return PermissionValidator.runWithValidation(ctx(), new PromiseCallback() {
 
 			@Override
-			public Promise<Result> execute() throws APIException {
+			public CompletionStage<Result> execute() throws APIException {
 				JsonNode userJson = request().body().asJson();
 
 				final String emailAddress = userJson.findPath("email").textValue();
@@ -466,11 +467,11 @@ public class AccountController extends AbstractController
 	}
 	
 	@ValidateJsonPost(fields = { "firstName", "lastName", "email", "password" })
-	public  Promise<Result> createSubAccount(final int accountId) throws APIException
+	public  CompletionStage<Result> createSubAccount(final int accountId) throws APIException
 	{
 		return accountAction(accountId, new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				Account parentAccount = Account.findById(accountId, true);
 				
@@ -550,11 +551,11 @@ public class AccountController extends AbstractController
 		});
 	}
 
-	public  Promise<Result> editAccount(final int accountId) throws APIException
+	public  CompletionStage<Result> editAccount(final int accountId) throws APIException
 	{
 		return PermissionValidator.runWithValidation(ctx(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				JsonNode userJson = request().body().asJson();
 				Account a = Account.findById(accountId, true);
@@ -589,11 +590,11 @@ public class AccountController extends AbstractController
 		}, PermissionNames.MASTER_ADMIN, null, null);
 	}
 
-	public  Promise<Result> deleteAccount(final int accountId) throws APIException
+	public  CompletionStage<Result> deleteAccount(final int accountId) throws APIException
 	{
 		return PermissionValidator.runWithValidation(ctx(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				Account a = Account.findById(accountId, true);
 

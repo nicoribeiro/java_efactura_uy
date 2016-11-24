@@ -1,5 +1,7 @@
 package com.bluedot.commons.controllers;
 
+import java.util.concurrent.CompletionStage;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -8,13 +10,12 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.security.AccountAccessLevel;
 
-import play.libs.F.Promise;
 import play.mvc.Result;
 
 public class AccessLevelsController extends AbstractController
 {
 	
-	public static Promise<Result> getAvailableAccountAccessLevels() throws APIException
+	public static CompletionStage<Result> getAvailableAccountAccessLevels() throws APIException
 	{
 		JSONArray acls = new JSONArray();
 		try{

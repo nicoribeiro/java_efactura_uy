@@ -3,10 +3,11 @@ package com.bluedot.commons.controllers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.notificationChannels.NotificationChannel;
 import com.bluedot.commons.notificationChannels.NotificationRecord;
 import com.bluedot.commons.notificationChannels.SMS;
@@ -36,12 +37,12 @@ import play.mvc.Security;
 public class UserController extends AbstractController
 {
 
-	public  Promise<Result> listUsers() throws APIException
+	public  CompletionStage<Result> listUsers() throws APIException
 	{
 		return PermissionValidator.runIfHasRole(ctx(), new PromiseCallback() {
 
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				List<User> users = User.findAll();
@@ -56,7 +57,7 @@ public class UserController extends AbstractController
 
 	@BodyParser.Of(BodyParser.Json.class)
 	@ValidateJsonPost(fields = { "emailAddress", "password", "firstName", "lastName", "accountId" })
-	public  Promise<Result> createUser() throws APIException
+	public  CompletionStage<Result> createUser() throws APIException
 	{
 		JsonNode userJson = request().body().asJson();
 
@@ -64,7 +65,7 @@ public class UserController extends AbstractController
 
 		return accountAction(accountId, new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				JsonNode userJson = request().body().asJson();
@@ -89,7 +90,7 @@ public class UserController extends AbstractController
 	
 //	@BodyParser.Of(BodyParser.Json.class)
 //	@ValidateJsonPost(fields = { "phone" })
-//	public  Promise<Result> overrideContactInfo(final String email) throws APIException
+//	public  CompletionStage<Result> overrideContactInfo(final String email) throws APIException
 //	{
 //		Account sessionUserAccount = Global.getSessionUser(ctx()).getMasterAccount();
 //		
@@ -101,7 +102,7 @@ public class UserController extends AbstractController
 //		return accountAction(sessionUserAccount.getId(), new PromiseCallback() {
 //			
 //			@Override
-//			public Promise<Result> execute() throws APIException
+//			public CompletionStage<Result> execute() throws APIException
 //			{
 //				JsonNode userJson = request().body().asJson();
 //
@@ -145,7 +146,7 @@ public class UserController extends AbstractController
 //		}, PermissionNames.EDIT_ACCOUNT_SETTINGS);
 //	}
 	
-//	public  Promise<Result> overrideEmail(final int userId) throws APIException
+//	public  CompletionStage<Result> overrideEmail(final int userId) throws APIException
 //	{
 //		Account sessionUserAccount = Global.getSessionUser(ctx()).getMasterAccount();
 //		
@@ -157,7 +158,7 @@ public class UserController extends AbstractController
 //		return accountAction(sessionUserAccount.getId(), new PromiseCallback() {
 //			
 //			@Override
-//			public Promise<Result> execute() throws APIException
+//			public CompletionStage<Result> execute() throws APIException
 //			{
 //				JsonNode userJson = request().body().asJson();
 //
@@ -189,7 +190,7 @@ public class UserController extends AbstractController
 //		}, PermissionNames.EDIT_ACCOUNT_SETTINGS);
 //	}
 	
-	public  Promise<Result> changePassword(final int accountId, final int userId) throws APIException
+	public  CompletionStage<Result> changePassword(final int accountId, final int userId) throws APIException
 	{
 		Account sessionUserAccount = Account.findById(accountId, true);
 		
@@ -201,7 +202,7 @@ public class UserController extends AbstractController
 		return accountAction(sessionUserAccount.getId(), new PromiseCallback() {
 			
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				JsonNode userJson = request().body().asJson();
 
@@ -221,13 +222,13 @@ public class UserController extends AbstractController
 		}, PermissionNames.EDIT_ACCOUNT_SETTINGS);
 	}
 	
-	public  Promise<Result> getAccessLevels(int userId) throws APIException
+	public  CompletionStage<Result> getAccessLevels(int userId) throws APIException
 	{
 		final User u = User.findById(userId, true);
 
 		return userAction(u.getId(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				HashMap<String, String> gateways = new HashMap<>();
@@ -249,13 +250,13 @@ public class UserController extends AbstractController
 		});
 	}
 
-	public  Promise<Result> getUser(String emailAddress) throws APIException
+	public  CompletionStage<Result> getUser(String emailAddress) throws APIException
 	{
 		final User u = User.findByEmailAddress(emailAddress, true);
 
 		return userAction(u.getId(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				JSONSerializer serializer = new JSONSerializer()
@@ -272,13 +273,13 @@ public class UserController extends AbstractController
 	}
 
 	@BodyParser.Of(BodyParser.Json.class)
-	public  Promise<Result> updateUser(int userId) throws APIException
+	public  CompletionStage<Result> updateUser(int userId) throws APIException
 	{
 		final User u = User.findById(userId, true);
 
 		return userAction(u.getId(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				JsonNode userJson = request().body().asJson();
@@ -356,7 +357,7 @@ public class UserController extends AbstractController
 		});
 	}
 
-	public  Promise<Result> deleteUser(int userId) throws APIException
+	public  CompletionStage<Result> deleteUser(int userId) throws APIException
 	{
 
 		final User u = User.findById(userId, true);
@@ -364,7 +365,7 @@ public class UserController extends AbstractController
 		return PermissionValidator.runIfHasRole(ctx(), new PromiseCallback() {
 
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 				u.delete();
 
@@ -373,13 +374,13 @@ public class UserController extends AbstractController
 		}, Role.ADMIN);
 	}
 
-	public  Promise<Result> regenerateCredentials(int userId) throws APIException
+	public  CompletionStage<Result> regenerateCredentials(int userId) throws APIException
 	{
 		final User u = User.findById(userId, true);
 
 		return userAction(u.getId(), new PromiseCallback() {
 			@Override
-			public Promise<Result> execute() throws APIException
+			public CompletionStage<Result> execute() throws APIException
 			{
 
 				u.getCredentials().revoke();
@@ -394,7 +395,7 @@ public class UserController extends AbstractController
 		});
 	}
 
-//	public  Promise<Result> getMotd() throws APIException
+//	public  CompletionStage<Result> getMotd() throws APIException
 //	{
 //		JSONSerializer serializer = new JSONSerializer().exclude("class");
 //		List<Motd> motds = Motd.getTodaysMessages();

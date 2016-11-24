@@ -2,14 +2,15 @@ package com.bluedot.commons.controllers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.microControllers.factory.MicroControllerFactoryDefault;
 import com.bluedot.commons.microControllers.factory.MicroControllersFactory;
 import com.bluedot.commons.microControllers.interfaces.AccountMicroController.SignUpConfigurator;
@@ -37,7 +38,7 @@ public class SignInController extends AbstractController
 	@BodyParser.Of(BodyParser.Json.class)
 	@ValidateJsonPost(fields = { "emailAddress", "password" })
 	@Tx
-	public Promise<Result> signIn() throws APIException
+	public CompletionStage<Result> signIn() throws APIException
 	{
 		JsonNode json = request().body().asJson();
 		String emailAddress = json.findPath("emailAddress").textValue();
@@ -105,7 +106,7 @@ public class SignInController extends AbstractController
 	@BodyParser.Of(BodyParser.Json.class)
 	@ValidateJsonPost(fields = { "firstName", "lastName", "emailAddress", "password" })
 	@Tx
-	public  Promise<Result> signUp() throws APIException
+	public  CompletionStage<Result> signUp() throws APIException
 	{
 		JsonNode userJson = request().body().asJson();
 

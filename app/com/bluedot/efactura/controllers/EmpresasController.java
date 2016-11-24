@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 
 import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
@@ -40,7 +41,6 @@ import com.bluedot.efactura.services.impl.ConsultaRutServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
-import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
 
@@ -58,7 +58,7 @@ public class EmpresasController extends AbstractController {
 		this.mutex = mutex;
 	}
 	
-	public Promise<Result> darInformacionRut(String idrut) throws APIException {
+	public CompletionStage<Result> darInformacionRut(String idrut) throws APIException {
 		//TODO tomar este consulta rut de un factory
 		ConsultaRutService service = new ConsultaRutServiceImpl();
 
@@ -68,7 +68,7 @@ public class EmpresasController extends AbstractController {
 		return json(response);
 	}
 
-	public Promise<Result> cargarEmpresas(String path) throws APIException {
+	public CompletionStage<Result> cargarEmpresas(String path) throws APIException {
 		try {
 
 			File fXmlFile = new File(path);
@@ -120,7 +120,7 @@ public class EmpresasController extends AbstractController {
 		return json(OK);
 	}
 	
-	public Promise<Result> getEmpresaById(int id) throws APIException {
+	public CompletionStage<Result> getEmpresaById(int id) throws APIException {
 		
 		Empresa empresa = Empresa.findById(id, true);
 		
@@ -129,7 +129,7 @@ public class EmpresasController extends AbstractController {
 		return json(json.toString());
 	}
 	
-	public Promise<Result> getEmpresaByRut(String rut) throws APIException {
+	public CompletionStage<Result> getEmpresaByRut(String rut) throws APIException {
 		
 		Empresa empresa = Empresa.findByRUT(rut, true);
 		
@@ -138,7 +138,7 @@ public class EmpresasController extends AbstractController {
 		return json(json.toString());
 	}
 	
-	public Promise<Result> getEmpresas() throws APIException {
+	public CompletionStage<Result> getEmpresas() throws APIException {
 		
 		List<Empresa> empresas = Empresa.findAll();
 		
@@ -148,7 +148,7 @@ public class EmpresasController extends AbstractController {
 	}
 	
 	//TODO agregar validacion de que el usuario tiene permisos sobre esta emepresa
-	public Promise<Result> addCAE(String rut) throws APIException {
+	public CompletionStage<Result> addCAE(String rut) throws APIException {
 		Empresa empresa = Empresa.findByRUT(rut,true);
 		
 		JsonNode jsonNode = request().body().asJson();
@@ -169,7 +169,7 @@ public class EmpresasController extends AbstractController {
 	}
 	
 	//TODO permisis de edicion 
-	public Promise<Result> editarEmpresa(String rut) throws APIException
+	public CompletionStage<Result> editarEmpresa(String rut) throws APIException
 	{
 		Empresa empresa = Empresa.findByRUT(rut,true);
 		

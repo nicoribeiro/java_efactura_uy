@@ -10,14 +10,12 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.concurrent.CompletionStage;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
@@ -25,12 +23,8 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
-import com.bluedot.commons.utils.Email;
-import com.bluedot.commons.utils.EmailAttachmentReceiver;
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.Print;
-import com.bluedot.commons.utils.ThreadMan;
-import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.GenerateInvoice;
 import com.bluedot.efactura.MODO_SISTEMA;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
@@ -38,15 +32,11 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
-import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
-import com.bluedot.efactura.services.IntercambioService;
-import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
-import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import play.Play;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
@@ -60,7 +50,7 @@ public class DocumentController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(DocumentController.class);
 
-	public Promise<Result> cambiarModo(String modo) throws APIException {
+	public CompletionStage<Result> cambiarModo(String modo) throws APIException {
 		MODO_SISTEMA modoEnum = MODO_SISTEMA.valueOf(modo);
 		if (modoEnum == null)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("modo"));
@@ -74,7 +64,7 @@ public class DocumentController extends AbstractController {
 	}
 
 	@BodyParser.Of(BodyParser.Json.class)
-	public Promise<Result> aceptarDocumento(String rut) throws APIException {
+	public CompletionStage<Result> aceptarDocumento(String rut) throws APIException {
 		// TODO meter mutex
 		Empresa empresa = Empresa.findByRUT(rut, true);
 
@@ -190,7 +180,7 @@ public class DocumentController extends AbstractController {
 	}
 
 	@BodyParser.Of(BodyParser.Json.class)
-	public Promise<Result> reenviarDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+	public CompletionStage<Result> reenviarDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 		// TODO meter mutex
 		Empresa empresa = Empresa.findByRUT(rut, true);
 
@@ -226,7 +216,7 @@ public class DocumentController extends AbstractController {
 		return json(cfeJson.toString());
 	}
 
-	public Promise<Result> anularDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+	public CompletionStage<Result> anularDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
 
@@ -242,7 +232,7 @@ public class DocumentController extends AbstractController {
 		return json(OK);
 	}
 
-	public Promise<Result> resultadoDocumentosFecha(String rut, String fecha) throws APIException {
+	public CompletionStage<Result> resultadoDocumentosFecha(String rut, String fecha) throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
 
@@ -257,7 +247,7 @@ public class DocumentController extends AbstractController {
 
 	}
 
-	public Promise<Result> resultadoDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+	public CompletionStage<Result> resultadoDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
 
@@ -292,7 +282,7 @@ public class DocumentController extends AbstractController {
 
 	}
 	
-	public Promise<Result> enviarMailEmpresa(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+	public CompletionStage<Result> enviarMailEmpresa(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
 
@@ -322,7 +312,7 @@ public class DocumentController extends AbstractController {
 
 	}
 
-	public Promise<Result> procesarEmailEntrantes(String rut) throws APIException {
+	public CompletionStage<Result> procesarEmailEntrantes(String rut) throws APIException {
 		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
 
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
@@ -341,7 +331,7 @@ public class DocumentController extends AbstractController {
 
 	}
 	
-	public Promise<Result> getDocumentosEntrantes(String rut, String fecha) throws APIException {
+	public CompletionStage<Result> getDocumentosEntrantes(String rut, String fecha) throws APIException {
 		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
 		
 		//TODO serializar los Sobres_recibidos y devolver
@@ -349,7 +339,7 @@ public class DocumentController extends AbstractController {
 
 	}
 
-	public Promise<Result> generarReporteDiario(String rut, String fecha, int cantReportes) throws APIException {
+	public CompletionStage<Result> generarReporteDiario(String rut, String fecha, int cantReportes) throws APIException {
 
 		if (cantReportes < 1)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("cantReportes", cantReportes));
@@ -391,7 +381,7 @@ public class DocumentController extends AbstractController {
 		return json(reportes.toString());
 	}
 
-	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print)
+	public CompletionStage<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print)
 			throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
@@ -444,7 +434,7 @@ public class DocumentController extends AbstractController {
 		return pdf;
 	}
 
-	// public Promise<Result> printDocumento(String rut, int nro, String serie,
+	// public CompletionStage<Result> printDocumento(String rut, int nro, String serie,
 	// int idTipoDoc, boolean print)
 	// throws APIException {
 	//

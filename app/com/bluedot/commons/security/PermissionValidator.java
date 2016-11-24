@@ -1,6 +1,7 @@
 package com.bluedot.commons.security;
 
 import java.text.MessageFormat;
+import java.util.concurrent.CompletionStage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +11,6 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.security.User.Role;
 import com.bluedot.efactura.global.RequestUtils;
 
-import play.libs.F.Promise;
 import play.mvc.Http.Context;
 import play.mvc.Result;
 
@@ -71,7 +71,7 @@ public class PermissionValidator
 		return sessionUser;
 	}
 	
-	public static Promise<Result> runIfHasRole(Context context, PromiseCallback executionBlock, Role role) throws APIException
+	public static CompletionStage<Result> runIfHasRole(Context context, PromiseCallback executionBlock, Role role) throws APIException
 	{
 		User sessionUser = getSessionUser(Context.current());
 		if (sessionUser.getRole() == (role))
@@ -82,7 +82,7 @@ public class PermissionValidator
 
 	
 
-	public static Promise<Result> runWithValidation(Context context, PromiseCallback executionBlock, PermissionNames permission, Object... args) throws APIException
+	public static CompletionStage<Result> runWithValidation(Context context, PromiseCallback executionBlock, PermissionNames permission, Object... args) throws APIException
 	{
 		if (permission == PermissionNames.ANY || permission == null)
 			return executionBlock.execute();
@@ -96,12 +96,12 @@ public class PermissionValidator
 	}
 	
 	
-	public static Promise<Result> runIfHasAccountAccess(Context context, PromiseCallback executionBlock, Account account) throws APIException
+	public static CompletionStage<Result> runIfHasAccountAccess(Context context, PromiseCallback executionBlock, Account account) throws APIException
 	{
 		return runIfHasAccountAccess(context, executionBlock, account, PermissionNames.ACCOUNT_ACCESS, account.getId()+"");
 	}
 	
-	public static Promise<Result> runIfHasAccountAccess(Context context, PromiseCallback executionBlock, Account account, PermissionNames permission, Object... args) throws APIException
+	public static CompletionStage<Result> runIfHasAccountAccess(Context context, PromiseCallback executionBlock, Account account, PermissionNames permission, Object... args) throws APIException
 	{
 		User sessionUser = getSessionUser(context);
 		
@@ -127,7 +127,7 @@ public class PermissionValidator
 	}
 
 
-	public static Promise<Result> runIfHasUserAccess(Context current, PromiseCallback block, User user) throws APIException
+	public static CompletionStage<Result> runIfHasUserAccess(Context current, PromiseCallback block, User user) throws APIException
 	{
 		User sessionUser = getSessionUser(current);
 	

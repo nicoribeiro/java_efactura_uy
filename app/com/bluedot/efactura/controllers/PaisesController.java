@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import java.util.concurrent.CompletionStage;
+
 import org.json.JSONObject;
 
 import com.bluedot.commons.controllers.AbstractController;
@@ -10,7 +12,6 @@ import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.play4jpa.jpa.db.Tx;
 
-import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
 
@@ -19,7 +20,7 @@ import play.mvc.Security;
 @Security.Authenticated(Secured.class)
 public class PaisesController extends AbstractController {
 	
-	public Promise<Result> getPais(int id) throws APIException {
+	public CompletionStage<Result> getPais(int id) throws APIException {
 		
 		Pais pais = Pais.findById(id, true);
 		

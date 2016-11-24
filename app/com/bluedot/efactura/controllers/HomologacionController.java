@@ -2,6 +2,7 @@ package com.bluedot.efactura.controllers;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.concurrent.CompletionStage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,7 +17,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.ETck;
-import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 
@@ -35,7 +35,7 @@ public class HomologacionController extends PruebasController {
 	}
 
 	@BodyParser.Of(BodyParser.Json.class)
-	public Promise<Result> generarPrueba() throws APIException {
+	public CompletionStage<Result> generarPrueba() throws APIException {
 		try {
 
 			//TODO agregar control en los parametros que vienen
