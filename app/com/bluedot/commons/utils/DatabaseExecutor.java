@@ -1,9 +1,11 @@
 package com.bluedot.commons.utils;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
 import javax.persistence.EntityManager;
 
 import play.db.jpa.JPA;
-import play.libs.F;
 import play.libs.F.Promise;
 
 public class DatabaseExecutor
@@ -14,27 +16,31 @@ public class DatabaseExecutor
 		public T execute() throws Throwable;
 	}
 
-	public static <T> Promise<T> asyncDatabaseAction(final PromiseBlock<T> block, final String emName, final boolean withTx) throws Throwable
+	public static <T> CompletionStage<T> asyncDatabaseAction(final PromiseBlock<T> block, final String emName, final boolean withTx) throws Throwable
 	{
 
-		return Promise.promise(new F.Function0<T>() {
+		return CompletableFuture.supplyAsync(new java.util.function.Supplier<T>() {
 
 			@Override
-			public T apply() throws Throwable
-			{
-				return syncDatabaseAction(block, emName, withTx);
+			public T get() {
+				try {
+					return syncDatabaseAction(block, emName, withTx);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+				return null;
 			}
 
 		});
 
 	}
 
-	public static <T> Promise<T> asyncDatabaseAction(PromiseBlock<T> block, boolean withTx) throws Throwable
+	public static <T> CompletionStage<T> asyncDatabaseAction(PromiseBlock<T> block, boolean withTx) throws Throwable
 	{
 		return asyncDatabaseAction(block, null, withTx);
 	}
 
-	public static <T> Promise<T> asyncDatabaseAction(PromiseBlock<T> block) throws Throwable
+	public static <T> CompletionStage<T> asyncDatabaseAction(PromiseBlock<T> block) throws Throwable
 	{
 		return asyncDatabaseAction(block, null, false);
 	}

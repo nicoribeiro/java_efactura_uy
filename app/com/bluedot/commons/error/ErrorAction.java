@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.bluedot.efactura.global.RequestUtils;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import play.libs.F.Function;
+
 import play.libs.Json;
 import play.mvc.Action;
 import play.mvc.Http.Context;
@@ -36,63 +36,50 @@ public class ErrorAction extends Action<ErrorMessage>
 	final static Logger logger = LoggerFactory.getLogger(ErrorAction.class);
 
 	@Override
-	public CompletionStage<Result> call(final Context ctx) throws Throwable
+	public CompletionStage<Result> call(final Context ctx)
 	{
-		CompletionStage<Result> result = null;
-		CompletionStage<Result> error = null;
-		try
-		{
+		CompletableFuture<Result> result = null;
+		CompletableFuture<Result> error = null;
+		
 			error = checkErrorInContext(ctx);
 			
 			if(error != null)
 				return error;
 			
 			if(this.delegate != null)
-				result = this.delegate.call(ctx);
+				result = this.delegate.call(ctx).toCompletableFuture();
 			
 			error = checkErrorInContext(ctx);
 			
 			if(error != null)
 				return error;
 			
-			CompletionStage<Result> mappedResult = result.flatMap(new Function<Result, CompletionStage<Result>>() 
-			{
-				@Override
-				public CompletionStage<Result> apply(Result r) throws Throwable
+			CompletableFuture<Result> resultOK =  result.thenComposeAsync(( Result r)-> 
 				{
-					int statusCode = r.toScala().header().status();
+					int statusCode = r.status();
 					if (200 > statusCode || 400 < statusCode)
 					{
 						return handleExceptionWithStatusCode(ctx.args.get("error_cause").toString(), statusCode);
 					}
 					return CompletableFuture.completedFuture(r);
-				}
-			});
-			return mappedResult;
-		}
-		catch (APIException e)
-		{
-			result = handleAPIException(e);
-		}
-		catch (RuntimeException e)
-		{
-			if (e.getCause() instanceof APIException)
-			{
-				APIException apiEx = (APIException)e.getCause();
-				result = handleAPIException(apiEx);
-			}else{
-				result = handleUnknownException(e);
-			}
-		}
-		catch (Exception e)
-		{
-			result = handleUnknownException(e);
-		}
-
-		return result;
+				});
+			
+			resultOK.exceptionally( ex->{
+					if (ex instanceof APIException)
+					{
+						APIException apiEx = (APIException)ex.getCause();
+						return handleAPIException(apiEx);
+					}else{
+						return handleUnknownException(ex);
+					}
+					
+				});
+			
+			return resultOK;
+		
 	}
 	
-	public CompletionStage<Result> checkErrorInContext(Context ctx){
+	public CompletableFuture<Result> checkErrorInContext(Context ctx){
 		if(ctx.args.get("validation_error") != null)
 		{
 			APIException e = (APIException)ctx.args.get("validation_exception");
@@ -102,22 +89,22 @@ public class ErrorAction extends Action<ErrorMessage>
 		return null;
 	}
 	
-	public static CompletionStage<Result> handleAPIException(APIException e)
+	public static Result handleAPIException(APIException e)
 	{
 		ObjectNode jsonError = buildError(e.getError().message(), e.getError().code(), e.getDetailMessage());
 		if (e.isLog())
 			logger.error("APIException is: ", e);
-		return CompletableFuture.completedFuture(Results.status(e.getError().httpCode(), jsonError));
+		return Results.status(e.getError().httpCode(), jsonError);
 	}
 	
-	public static CompletionStage<Result> handleUnknownException(Throwable e)
+	public static Result handleUnknownException(Throwable e)
 	{
 		ObjectNode jsonError = buildError(e.getLocalizedMessage(), 500);
 		logger.error("UnknownException is: ", e);
-		return CompletableFuture.completedFuture(internalServerError(jsonError));
+		return internalServerError(jsonError);
 	}
 	
-	public static CompletionStage<Result> handleExceptionWithStatusCode(String message, int statusCode)
+	public static CompletableFuture<Result> handleExceptionWithStatusCode(String message, int statusCode)
 	{
 		ObjectNode jsonError = buildError(message, statusCode);
 		return CompletableFuture.completedFuture(status(statusCode, jsonError));
