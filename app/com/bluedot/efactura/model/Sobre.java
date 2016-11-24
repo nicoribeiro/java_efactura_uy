@@ -163,13 +163,13 @@ public class Sobre extends Model<Sobre> {
 		this.cfes = cfes;
 	}
 	
-	protected static Finder<Integer, Sobre> find = new Finder<Integer, Sobre>(Integer.class, Sobre.class);
+	protected static Finder<Long, Sobre> find = new Finder<Long, Sobre>(Long.class, Sobre.class);
 	
-	public static Sobre findById(Integer id) {
+	public static Sobre findById(Long id) {
 		return find.byId(id);
 	}
 
-	public static Sobre findById(Integer id, boolean throwExceptionWhenMissing) throws APIException {
+	public static Sobre findById(Long id, boolean throwExceptionWhenMissing) throws APIException {
 		Sobre sobre = find.byId(id);
 
 		if (sobre == null && throwExceptionWhenMissing)

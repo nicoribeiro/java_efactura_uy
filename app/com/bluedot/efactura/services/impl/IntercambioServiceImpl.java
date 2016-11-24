@@ -1,31 +1,23 @@
 package com.bluedot.efactura.services.impl;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.math.BigInteger;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.XML;
-import com.bluedot.efactura.Constants;
-import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.services.IntercambioService;
 
@@ -41,211 +33,114 @@ import dgi.classes.respuestas.sobre.ACKSobredefType.Detalle;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 import dgi.classes.respuestas.sobre.ParamConsultaType;
 import dgi.classes.respuestas.sobre.RechazoSobreType;
-import play.Play;
 
 public class IntercambioServiceImpl implements IntercambioService {
 
 	@Override
-	public ACKSobredefType procesarSobre(SobreRecibido sobreRecibido) {
+	public ACKSobredefType procesarSobre(Empresa empresa, SobreRecibido sobreRecibido) throws APIException {
 		
-		try {
+	
 			
-			sobreRecibido.setTimestampRecibido(new Date());
-			
-			
-			
-			EnvioCFEEntreEmpresas envioCFEEntreEmpresas = sobreRecibido.getEnvioCFEEntreEmpresas(); 
-			sobreRecibido.setIdEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor().toString());
-			sobreRecibido.setFecha(envioCFEEntreEmpresas.getCaratula().getFecha().toGregorianCalendar().getTime());
-			
-			ACKSobredefType ackSobredefType = new ACKSobredefType();
-			ackSobredefType.setVersion("1.0");
-			
-			
-			/*
-			 * Caratula
-			 */
-			Caratula caratula = new Caratula();
-			caratula.setCantidadCFE(envioCFEEntreEmpresas.getCaratula().getCantCFE());
-			caratula.setFecHRecibido(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-			caratula.setTmst(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-			//TODO hace un incremental aca
-			caratula.setIDReceptor(new BigInteger("1"));
-			caratula.setIDRespuesta(new BigInteger("1"));
-			caratula.setIDEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor());
-			caratula.setNomArch(sobreRecibido.getNombreArchivo());
-			caratula.setRUCReceptor(sobreRecibido.getEmpresaReceptora().getRut());
-			caratula.setRUCEmisor(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
-			ackSobredefType.setCaratula(caratula);
-			
-			
-			
-			ackSobredefType.setDetalle(new Detalle());
-			/*
-			 * CONTROLES SOBRE
-			 * 
-			 * S01 Formato del archivo no es el indicado
-			 * 
-			 * S02 No coincide RUC de Sobre, Certificado, envío o CFE
-			 * 
-			 * S03 Certificado electrónico no es válido
-			 * 
-			 * S04 No cumple validaciones según Formato de sobre
-			 * 
-			 * S05 No coinciden cantidad CFE de carátula y contenido
-			 * 
-			 * S06 No coinciden certificado de sobre y comprobantes
-			 * 
-			 * S07 Sobre enviado supera el tamaño máximo admitido
-			 * 
-			 */
-			
-			/*
-			 * S02
-			 */
-			
-			//TODO terminar de implementar controles que faltan
-			//TODO mover rut a algo configurable
-			if (!envioCFEEntreEmpresas.getCaratula().getRutReceptor().equals("215071660012")){
-				RechazoSobreType rechazo = new RechazoSobreType();
-				rechazo.setMotivo("S02");
-				rechazo.setGlosa("No coincide RUC de Sobre, Certificado, envío o CFE");
-				ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
-			}
-			
-			/*
-			 * S05
-			 */
-			if (envioCFEEntreEmpresas.getCaratula().getCantCFE() != envioCFEEntreEmpresas.getCFEAdendas().size()){
-				RechazoSobreType rechazo = new RechazoSobreType();
-				rechazo.setMotivo("S05");
-				rechazo.setGlosa("No coinciden cantidad CFE de carátula y contenido");
-				ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
-			}
-			
-			
-			if (ackSobredefType.getDetalle().getMotivosRechazo().size()==0){
-				/*
-				 * Se acepta el sobre!
-				 */
-				sobreRecibido.setEstado(EstadoACKSobreType.AS);
-				ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.AS);
-				ParamConsultaType params = new ParamConsultaType();
-				params.setFechahora(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-				params.setToken(UUID.randomUUID().toString());
-				ackSobredefType.getDetalle().setParamConsulta(params);
-			}else{
-				/*
-				 * Se rechaza el sobre!
-				 */
-				sobreRecibido.setEstado(EstadoACKSobreType.BS);
-				ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.BS);
-			}
-			
-			
-			/*
-			 * Instantiate the DocumentBuilderFactory.
-			 * IMPORTANT: NamespaceAwerness=true!!
-			 */
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			dbf.setNamespaceAware(true);
-			
-			Document allDocument = XML.marshall(ackSobredefType);
-
-			SignatureInterceptor.signDocument(dbf, allDocument,"ACKSobre",null);
-			
-			sobreRecibido.setRespuesta_empresa(XML.documentToString(allDocument));
-			
-			//TODO enviar correo a la empresa con el resultado
-			
-//			String filenamePrefix = Play.application().configuration().getString(Constants.GENERATED_CFE_FOLDER,
-//					"resources" + File.separator + "cfe" + File.separator + "sobre.xml");
-			
-//			Commons.dumpNodeToFile(allDocument, true, filenamePrefix, null);
-			
-			//ackSobredefType = (ACKSobredefType)XML.unMarshall(allDocument, ackSobredefType.getClass());
-			
-			sobreRecibido.setAckSobredefType(ackSobredefType);
-			
-			return ackSobredefType;
-			
-			
-		
-		} catch (DatatypeConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JAXBException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (KeyStoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CertificateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TransformerFactoryConfigurationError e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		
-		
-		
-		
-		return null;
-	}
-
-	@Override
-	public ACKCFEdefType procesarCFESobre(SobreRecibido sobreRecibido) {
-		
-		try {
-			
-			sobreRecibido.setTimestampProcesado(new Date());
-			
-			EnvioCFEEntreEmpresas envioCFEEntreEmpresas = sobreRecibido.getEnvioCFEEntreEmpresas(); 
-			String filename = sobreRecibido.getNombreArchivo();
-			ACKSobredefType ackSobredefType = sobreRecibido.getAckSobredefType();
-			
-			
-			if (ackSobredefType.getDetalle().getMotivosRechazo().size()==0){
-				/*
-				 * CONTROLES CFE
-				 * 
-				 * E02 Tipo y No de CFE ya existe en los registros
-				 * 
-				 * E03 Tipo y No de CFE no se corresponden con el CAE
-				 * 
-				 * E04 Firma electrónica no es válida
-				 * 
-				 * E05 No cumple validaciones (*) de Formato comprobantes
-				 * 
-				 * E07 Fecha Firma de CFE no se corresponde con fecha CAE
-				 */
-				ACKCFEdefType ackcfEdefType = new ACKCFEdefType();
-				addCaratula(ackcfEdefType, envioCFEEntreEmpresas, filename);
-				ackcfEdefType.setVersion("1.0");
+			try {
+				sobreRecibido.setTimestampRecibido(new Date());
 				
-				int i = 1;
-				for (Iterator<CFEEmpresasType> iterator = envioCFEEntreEmpresas.getCFEAdendas().iterator(); iterator.hasNext();) {
-					CFEEmpresasType cfe = iterator.next();
-					procesarCFE(cfe, ackcfEdefType, new BigInteger(String.valueOf(i)));
-					i++;
+				
+				
+				EnvioCFEEntreEmpresas envioCFEEntreEmpresas = sobreRecibido.getEnvioCFEEntreEmpresas(); 
+				sobreRecibido.setIdEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor().longValue());
+				sobreRecibido.setFecha(envioCFEEntreEmpresas.getCaratula().getFecha().toGregorianCalendar().getTime());
+				
+				ACKSobredefType ackSobredefType = new ACKSobredefType();
+				ackSobredefType.setVersion("1.0");
+				
+				
+				/*
+				 * Caratula
+				 */
+				Caratula caratula = new Caratula();
+				caratula.setCantidadCFE(envioCFEEntreEmpresas.getCaratula().getCantCFE());
+				caratula.setFecHRecibido(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+				caratula.setTmst(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+				caratula.setIDReceptor(BigInteger.valueOf(sobreRecibido.getId()));
+				//TODO cambiar este id
+				caratula.setIDRespuesta(new BigInteger("1"));
+				caratula.setIDEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor());
+				caratula.setNomArch(sobreRecibido.getNombreArchivo());
+				caratula.setRUCReceptor(sobreRecibido.getEmpresaReceptora().getRut());
+				caratula.setRUCEmisor(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
+				ackSobredefType.setCaratula(caratula);
+				ackSobredefType.setDetalle(new Detalle());
+				
+				//TODO terminar de implementar controles que faltan
+				/*
+				 * CONTROLES SOBRE
+				 * 
+				 * S01 Formato del archivo no es el indicado
+				 * 
+				 * S02 No coincide RUC de Sobre, Certificado, envío o CFE
+				 * 
+				 * S03 Certificado electrónico no es válido
+				 * 
+				 * S04 No cumple validaciones según Formato de sobre
+				 * 
+				 * S05 No coinciden cantidad CFE de carátula y contenido
+				 * 
+				 * S06 No coinciden certificado de sobre y comprobantes
+				 * 
+				 * S07 Sobre enviado supera el tamaño máximo admitido
+				 * 
+				 */
+
+				/*
+				 * Controlo que no exista el sobre en mi sistema (para evitar envios dobles)
+				 */
+				List<SobreRecibido> sobres = SobreRecibido.findSobreRecibido(envioCFEEntreEmpresas.getCaratula().getIdemisor().longValue(), sobreRecibido.getEmpresaEmisora(),sobreRecibido.getEmpresaReceptora());
+				// 1 porque el sobre actual ya fue persistido
+				if (sobres.size()>1){
+					RechazoSobreType rechazo = new RechazoSobreType();
+					rechazo.setMotivo("S08");
+					rechazo.setGlosa("Ya existe sobre con idEmisor:" + envioCFEEntreEmpresas.getCaratula().getIdemisor());
+					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
+				}
+					
+				/*
+				 * S02
+				 */
+				if (!envioCFEEntreEmpresas.getCaratula().getRutReceptor().equals(empresa.getRut())){
+					RechazoSobreType rechazo = new RechazoSobreType();
+					rechazo.setMotivo("S02");
+					rechazo.setGlosa("No coincide RUC de Sobre, Certificado, envío o CFE");
+					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
 				}
 				
+				/*
+				 * S05
+				 */
+				if (envioCFEEntreEmpresas.getCaratula().getCantCFE() != envioCFEEntreEmpresas.getCFEAdendas().size()){
+					RechazoSobreType rechazo = new RechazoSobreType();
+					rechazo.setMotivo("S05");
+					rechazo.setGlosa("No coinciden cantidad CFE de carátula y contenido");
+					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
+				}
+				
+				
+				if (ackSobredefType.getDetalle().getMotivosRechazo().size()==0){
+					/*
+					 * Se acepta el sobre!
+					 */
+					sobreRecibido.setEstado(EstadoACKSobreType.AS);
+					ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.AS);
+					ParamConsultaType params = new ParamConsultaType();
+					params.setFechahora(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+					params.setToken(UUID.randomUUID().toString());
+					ackSobredefType.getDetalle().setParamConsulta(params);
+				}else{
+					/*
+					 * Se rechaza el sobre!
+					 */
+					sobreRecibido.setEstado(EstadoACKSobreType.BS);
+					ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.BS);
+				}
 				
 				
 				/*
@@ -255,52 +150,90 @@ public class IntercambioServiceImpl implements IntercambioService {
 				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 				dbf.setNamespaceAware(true);
 				
-				Document allDocument = XML.marshall(ackcfEdefType);
+				Document allDocument = XML.marshall(ackSobredefType);
 
-				SignatureInterceptor.signDocument(dbf, allDocument,null,null);
+				allDocument = SignatureInterceptor.signDocument(dbf, allDocument,"ACKSobre",null);
 				
-				//ackcfEdefType = (ACKCFEdefType)XML.unMarshall(allDocument, ackcfEdefType.getClass());
+				sobreRecibido.setRespuesta_empresa(XML.documentToString(allDocument));
 				
-				sobreRecibido.setResultado_empresa(XML.documentToString(allDocument));
+				//TODO enviar correo a la empresa con el resultado primario (el secundario debe pasar por administracion de la empresa)
 				
-				//TODO enviar correo con el resultado
+				sobreRecibido.setAckSobredefType(ackSobredefType);
 				
-				return ackcfEdefType;
+				return ackSobredefType;
+			} catch (TransformerFactoryConfigurationError | Exception e) {
+				throw APIException.raise(e);
 			}
-		} catch (DatatypeConfigurationException e) {
-			e.printStackTrace();
-		} catch (JAXBException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (KeyStoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CertificateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			
+		
+	}
+
+	@Override
+	public ACKCFEdefType procesarCFESobre(Empresa empresa, SobreRecibido sobreRecibido) throws APIException {
+		
+			try {
+				sobreRecibido.setTimestampProcesado(new Date());
+				
+				EnvioCFEEntreEmpresas envioCFEEntreEmpresas = sobreRecibido.getEnvioCFEEntreEmpresas(); 
+				String filename = sobreRecibido.getNombreArchivo();
+				ACKSobredefType ackSobredefType = sobreRecibido.getAckSobredefType();
+				
+				sobreRecibido.setCantComprobantes(envioCFEEntreEmpresas.getCFEAdendas().size());
+				
+				if (ackSobredefType.getDetalle().getMotivosRechazo().size()==0){
+					
+					ACKCFEdefType ackcfEdefType = new ACKCFEdefType();
+					addCaratula(ackcfEdefType, envioCFEEntreEmpresas, filename);
+					ackcfEdefType.setVersion("1.0");
+					
+					/*
+					 * Proceso uno a uno todos los CFE dentro del sobre
+					 */
+					int i = 1;
+					for (Iterator<CFEEmpresasType> iterator = envioCFEEntreEmpresas.getCFEAdendas().iterator(); iterator.hasNext();) {
+						CFEEmpresasType cfe = iterator.next();
+						procesarCFE(cfe, ackcfEdefType, new BigInteger(String.valueOf(i)));
+						i++;
+					}
+					
+					/*
+					 * Serializo el XML respuesta
+					 */
+					DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+					dbf.setNamespaceAware(true);
+					Document allDocument = XML.marshall(ackcfEdefType);
+					allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null);
+					sobreRecibido.setResultado_empresa(XML.documentToString(allDocument));
+					
+					return ackcfEdefType;
+				}
+				return null;
+			} catch (TransformerFactoryConfigurationError | Exception e) {
+				throw APIException.raise(e);
+			}
+		
+		
 		//TODO si los servicios son la capa superior nunca deberian tirar exepciones distintas de APIException
-		return null;
 	}
 
 	private void procesarCFE(CFEEmpresasType cfe, ACKCFEdefType ackcfEdefType, BigInteger ordinal) {
 		ACKCFEDet ack = new ACKCFEDet();
 		ack.setNroOrdinal(ordinal);
+		
+		/*
+		 * CONTROLES CFE
+		 * 
+		 * E02 Tipo y No de CFE ya existe en los registros
+		 * 
+		 * E03 Tipo y No de CFE no se corresponden con el CAE
+		 * 
+		 * E04 Firma electrónica no es válida
+		 * 
+		 * E05 No cumple validaciones (*) de Formato comprobantes
+		 * 
+		 * E07 Fecha Firma de CFE no se corresponde con fecha CAE
+		 */
+		
 		
 		if (cfe.getCFE().getEFact()!=null){
 			ack.setNroCFE(cfe.getCFE().getEFact().getEncabezado().getIdDoc().getNro());

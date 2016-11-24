@@ -210,7 +210,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			allDocument = XML
 					.loadXMLFromString(NamespacesInterceptor.doNamespaceChanges(XML.documentToString(allDocument)));
 
-			SignatureInterceptor.signDocument(dbf, allDocument, "ns0:CFE", "DGICFE:CFE_Adenda");
+			allDocument = SignatureInterceptor.signDocument(dbf, allDocument, "ns0:CFE", "DGICFE:CFE_Adenda");
 
 			sobre.setXmlEmpresa(XML.documentToString(allDocument));
 			

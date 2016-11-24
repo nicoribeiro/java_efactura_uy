@@ -322,7 +322,7 @@ public class DocumentController extends AbstractController {
 
 	}
 
-	public Promise<Result> obtenerMail(String rut) throws APIException {
+	public Promise<Result> procesarEmailEntrantes(String rut) throws APIException {
 		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
 
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())

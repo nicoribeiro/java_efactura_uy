@@ -179,7 +179,7 @@ public class XmlSignature {
 		// Validate the XMLSignature.
 		boolean coreValidity = XMLsignature.validate(valContext);
 
-		System.out.println(XML.documentToString(docToSign));
+		//System.out.println(XML.documentToString(docToSign));
 		
 		return docToSign;
 

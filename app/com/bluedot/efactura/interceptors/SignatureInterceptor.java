@@ -146,7 +146,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		InputStream stream = new ByteArrayInputStream(docString.getBytes());			
 		Document allDocument= dbf.newDocumentBuilder().parse(stream);
 		
-		signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE");
+		allDocument = signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE");
 		
 		String documentString = XML.documentToString(allDocument);
 		data.setXmlData(documentString);
@@ -190,7 +190,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		
 	}
 
-	public static void signDocument(DocumentBuilderFactory dbf, Document allDocument, String childTagName, String parentTagName)
+	public static Document signDocument(DocumentBuilderFactory dbf, Document allDocument, String childTagName, String parentTagName)
 			throws ParserConfigurationException, FileNotFoundException, IOException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException, Exception {
 		/*
@@ -225,11 +225,15 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		/*
 		 *  Build the message again 
 		 */
+		
 		if (parentTagName!=null){
 			Node signedNode = allDocument.importNode(cfeDocument.getElementsByTagName(childTagName).item(0), true);
 			allDocument.getElementsByTagName(parentTagName).item(0).appendChild(signedNode);
 		}else
-			allDocument = cfeDocument;
+			if (childTagName!=null)
+				allDocument = cfeDocument;
+		
+		return allDocument;
 		
 
 	}

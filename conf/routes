@@ -70,6 +70,10 @@ DELETE   /api/v1/empresa/:rut/documentos                         com.bluedot.efa
 # Retorna los documentos entrantes para una empresa
 GET      /api/v1/empresa/:rut/documentos/entrantes               com.bluedot.efactura.controllers.DocumentController.getDocumentosEntrantes(rut:String, fecha:String)
 
+# Retorna los documentos entrantes para una empresa
+GET      /api/v1/empresa/:rut/procesarEmailEntrantes               com.bluedot.efactura.controllers.DocumentController.procesarEmailEntrantes(rut:String)
+
+
 # Envia por correo el documento a la empresa
 GET      /api/v1/empresa/:rut/documentos/enviarMailEmpresa       com.bluedot.efactura.controllers.DocumentController.enviarMailEmpresa(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
 

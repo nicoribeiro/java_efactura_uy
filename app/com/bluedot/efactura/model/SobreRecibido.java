@@ -1,9 +1,16 @@
 package com.bluedot.efactura.model;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.Entity;
+
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
+
+import com.play4jpa.jpa.models.DefaultQuery;
 @Entity
 public class SobreRecibido extends Sobre{
 
@@ -15,7 +22,7 @@ public class SobreRecibido extends Sobre{
 	/**
 	 * Id que le otorga el emisor al sobre
 	 */
-	private String idEmisor;
+	private Long idEmisor;
 	
 	/**
 	 * Fecha recibido por el sistema de correo
@@ -38,13 +45,39 @@ public class SobreRecibido extends Sobre{
 		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes, cfes);
 	}
 
+	public static List<SobreRecibido> findSobreRecibido(long idEmisor, Empresa empresaEmisora, Empresa empresaReceptora) {
+		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query();
 
-	public String getIdEmisor() {
+
+		q.getCriteria().createAlias("empresaEmisora", "empresaEmisora", JoinType.LEFT_OUTER_JOIN);
+		q.getCriteria().createAlias("empresaReceptora", "empresaReceptora", JoinType.LEFT_OUTER_JOIN);
+
+		q.getCriteria().add(Restrictions.and
+
+				(		Restrictions.eq("empresaEmisora.id", empresaEmisora.getId()),
+						Restrictions.eq("empresaReceptora.id", empresaReceptora.getId())
+						));
+
+		
+		List<Sobre> sobres = q.findList();
+		
+		LinkedList<SobreRecibido> sobresRecibidos = new LinkedList<SobreRecibido>();
+		
+		for (Iterator<Sobre> iterator = sobres.iterator(); iterator.hasNext();) {
+			Sobre sobre = iterator.next();
+			if (sobre instanceof SobreRecibido && ((SobreRecibido)sobre).getIdEmisor()==idEmisor)
+				 sobresRecibidos.add((SobreRecibido) sobre);
+		}
+		
+		return sobresRecibidos;
+	}
+
+	public long getIdEmisor() {
 		return idEmisor;
 	}
 
 
-	public void setIdEmisor(String idEmisor) {
+	public void setIdEmisor(long idEmisor) {
 		this.idEmisor = idEmisor;
 	}
 

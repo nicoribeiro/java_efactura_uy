@@ -1,6 +1,6 @@
 name := """java_efactura_uy"""
 
-version := "0.62"
+version := "0.63"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 

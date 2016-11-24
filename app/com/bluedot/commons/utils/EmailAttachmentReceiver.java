@@ -114,8 +114,8 @@ public class EmailAttachmentReceiver {
  
             // fetches new messages from server
             Message[] arrayMessages = folderInbox.getMessages();
-            //TODO cambiar 10 por arrayMessages.length
-            for (int i = 0; i < 10; i++) {
+           
+            for (int i = 0; i < arrayMessages.length; i++) {
             	POP3Message message = (POP3Message)arrayMessages[i];
                 Address[] fromAddress = message.getFrom();
                 String from="";
