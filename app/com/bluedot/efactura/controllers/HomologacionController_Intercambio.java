@@ -2,6 +2,7 @@ package com.bluedot.efactura.controllers;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import javax.xml.bind.JAXBException;
@@ -28,7 +29,6 @@ import com.sun.istack.logging.Logger;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.respuestas.cfe.ACKCFEdefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
-import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -89,7 +89,7 @@ public class HomologacionController_Intercambio extends AbstractController {
 			e.printStackTrace();
 		}
 		
-		return Promise.<Result> pure(ok());
+		return CompletableFuture.completedFuture(ok());
 
 	}
 }

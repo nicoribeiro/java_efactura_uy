@@ -1,5 +1,6 @@
 package com.bluedot.commons.error;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import org.slf4j.Logger;
@@ -9,7 +10,6 @@ import com.bluedot.efactura.global.RequestUtils;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import play.libs.F.Function;
-import play.libs.F.Promise;
 import play.libs.Json;
 import play.mvc.Action;
 import play.mvc.Http.Context;
@@ -65,7 +65,7 @@ public class ErrorAction extends Action<ErrorMessage>
 					{
 						return handleExceptionWithStatusCode(ctx.args.get("error_cause").toString(), statusCode);
 					}
-					return Promise.<Result> pure(r);
+					return CompletableFuture.completedFuture(r);
 				}
 			});
 			return mappedResult;
@@ -97,7 +97,7 @@ public class ErrorAction extends Action<ErrorMessage>
 		{
 			APIException e = (APIException)ctx.args.get("validation_exception");
 			ObjectNode jsonError = buildError(e.getError().message(), e.getError().code(), e.getDetailMessage());
-			return Promise.<Result>pure(Results.status(e.getError().httpCode(), jsonError));
+			return CompletableFuture.completedFuture(Results.status(e.getError().httpCode(), jsonError));
 		}
 		return null;
 	}
@@ -107,20 +107,20 @@ public class ErrorAction extends Action<ErrorMessage>
 		ObjectNode jsonError = buildError(e.getError().message(), e.getError().code(), e.getDetailMessage());
 		if (e.isLog())
 			logger.error("APIException is: ", e);
-		return Promise.<Result> pure(Results.status(e.getError().httpCode(), jsonError));
+		return CompletableFuture.completedFuture(Results.status(e.getError().httpCode(), jsonError));
 	}
 	
 	public static CompletionStage<Result> handleUnknownException(Throwable e)
 	{
 		ObjectNode jsonError = buildError(e.getLocalizedMessage(), 500);
 		logger.error("UnknownException is: ", e);
-		return Promise.<Result> pure(internalServerError(jsonError));
+		return CompletableFuture.completedFuture(internalServerError(jsonError));
 	}
 	
 	public static CompletionStage<Result> handleExceptionWithStatusCode(String message, int statusCode)
 	{
 		ObjectNode jsonError = buildError(message, statusCode);
-		return Promise.<Result> pure(status(statusCode, jsonError));
+		return CompletableFuture.completedFuture(status(statusCode, jsonError));
 	}
 	
 	protected static ObjectNode buildError(final String msg, int statusCode)

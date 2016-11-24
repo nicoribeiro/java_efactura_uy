@@ -1,6 +1,7 @@
 package com.bluedot.commons.controllers;
 
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import com.bluedot.commons.error.APIException;
@@ -20,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
 import flexjson.JSONSerializer;
-import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Http.Context;
 import play.mvc.Result;
@@ -50,7 +50,7 @@ public class NotificationChannelController extends AbstractController
 
 				JSONSerializer serializer = new JSONSerializer().include("email", "phone", "enabled", "validated", "id").exclude("*").prettyPrint(true);
 
-				return Promise.<Result> pure(ok(serializer.deepSerialize(notificationsChannels)));
+				return CompletableFuture.completedFuture(ok(serializer.deepSerialize(notificationsChannels)));
 			}
 		}, PermissionNames.ANY);
 	}
@@ -125,7 +125,7 @@ public class NotificationChannelController extends AbstractController
 
 				notificationChannel.sendValidationKey(MessagingHelper.getValidationHost(request().host()));
 				
-				return Promise.<Result> pure(created());
+				return CompletableFuture.completedFuture(created());
 			}
 		}, PermissionNames.ANY);
 	}
@@ -151,7 +151,7 @@ public class NotificationChannelController extends AbstractController
 					notificationChannel.update();
 				}
 				
-				return Promise.<Result> pure(ok());
+				return CompletableFuture.completedFuture(ok());
 				
 			}
 		}, PermissionNames.ANY);
@@ -176,7 +176,7 @@ public class NotificationChannelController extends AbstractController
 
 				notificationChannel.delete();
 
-				return Promise.<Result> pure(ok());
+				return CompletableFuture.completedFuture(ok());
 
 			}
 		}, PermissionNames.ANY);
@@ -199,7 +199,7 @@ public class NotificationChannelController extends AbstractController
 
 				notificationChannel.sendValidationKey(MessagingHelper.getValidationHost(request().host()));
 
-				return Promise.<Result> pure(ok());
+				return CompletableFuture.completedFuture(ok());
 
 			}
 		}, PermissionNames.ANY);
@@ -220,7 +220,7 @@ public class NotificationChannelController extends AbstractController
 				notificationChannel.update();
 
 				if (validated)
-					return Promise.<Result> pure(ok());
+					return CompletableFuture.completedFuture(ok());
 				else
 					throw APIException.raise(APIErrors.INVALID_VALIDATION_KEY);
 
@@ -245,7 +245,7 @@ public class NotificationChannelController extends AbstractController
 
 				notificationChannel.test();
 
-				return Promise.<Result> pure(ok());
+				return CompletableFuture.completedFuture(ok());
 			}
 		}, PermissionNames.ANY);
 	}

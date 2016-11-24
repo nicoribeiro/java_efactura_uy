@@ -3,6 +3,7 @@ package com.bluedot.commons.controllers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import com.bluedot.commons.error.APIException;
@@ -26,7 +27,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
 import flexjson.JSONSerializer;
-import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -82,7 +82,7 @@ public class UserController extends AbstractController
 				account.getUsers().add(user);
 				account.update();
 
-				return Promise.<Result>pure(created());
+				return CompletableFuture.completedFuture(created());
 			}
 		});
 	}
@@ -120,7 +120,7 @@ public class UserController extends AbstractController
 //					SMS sms = iterator.next();
 //					
 //					if(sms.getPhone().equals(phone))
-//						return Promise.<Result>pure(ok());
+//						return CompletableFuture.completedFuture(ok());
 //					
 //					for(NotificationRecord nr : sms.getNotificationRecords()){
 //						nr.setNotificationChannel(null);
@@ -141,7 +141,7 @@ public class UserController extends AbstractController
 //				
 //				user.update();
 //				
-//				return Promise.<Result>pure(ok());
+//				return CompletableFuture.completedFuture(ok());
 //			}
 //		}, PermissionNames.EDIT_ACCOUNT_SETTINGS);
 //	}
@@ -177,7 +177,7 @@ public class UserController extends AbstractController
 //				Email emailChannel = user.getEmailNotificationChannel();
 //				
 //				if(emailChannel.getEmail().equals(email))
-//					return Promise.<Result>pure(ok());
+//					return CompletableFuture.completedFuture(ok());
 //				
 //				emailChannel.setEmail(email);
 //				
@@ -185,7 +185,7 @@ public class UserController extends AbstractController
 //				
 //				user.update();
 //				
-//				return Promise.<Result>pure(ok());
+//				return CompletableFuture.completedFuture(ok());
 //			}
 //		}, PermissionNames.EDIT_ACCOUNT_SETTINGS);
 //	}
@@ -217,7 +217,7 @@ public class UserController extends AbstractController
 				user.setPassword(password);
 				user.update();
 				
-				return Promise.<Result>pure(ok());
+				return CompletableFuture.completedFuture(ok());
 			}
 		}, PermissionNames.EDIT_ACCOUNT_SETTINGS);
 	}
@@ -351,7 +351,7 @@ public class UserController extends AbstractController
 
 				u.update();
 
-				return Promise.<Result> pure(ok());
+				return CompletableFuture.completedFuture(ok());
 			}
 
 		});
@@ -369,7 +369,7 @@ public class UserController extends AbstractController
 			{
 				u.delete();
 
-				return Promise.<Result> pure(ok());
+				return CompletableFuture.completedFuture(ok());
 			}
 		}, Role.ADMIN);
 	}

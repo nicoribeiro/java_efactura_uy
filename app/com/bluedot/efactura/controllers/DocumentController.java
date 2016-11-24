@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import javax.inject.Inject;
@@ -40,8 +41,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
 import play.Application;
-import play.Environment;
-import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -406,7 +405,7 @@ public class DocumentController extends AbstractController {
 			if (print)
 				Print.print(null, pdf);
 
-			return Promise.<Result>pure(ok(pdf));
+			return CompletableFuture.completedFuture(ok(pdf));
 
 		} catch (IOException | PrinterException e) {
 			throw APIException.raise(e);
@@ -479,7 +478,7 @@ public class DocumentController extends AbstractController {
 	//// printjob.print(pdfp, new HashPrintRequestAttributeSet());
 	//// bis.close();
 	//
-	// return Promise.<Result>pure(ok());
+	// return CompletableFuture.completedFuture(ok());
 	//
 	// } catch (IOException | PrinterException e) {
 	// throw APIException.raise(e);

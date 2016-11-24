@@ -1,6 +1,7 @@
 package com.bluedot.commons.controllers;
 
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import com.bluedot.commons.error.APIException;
@@ -10,7 +11,6 @@ import com.bluedot.commons.security.PermissionValidator;
 import com.bluedot.commons.security.PromiseCallback;
 import com.bluedot.commons.security.User;
 
-import play.libs.F.Promise;
 import play.mvc.Controller;
 import play.mvc.Http.Context;
 import play.mvc.Result;
@@ -22,7 +22,7 @@ public class AbstractController extends Controller
 	
 	protected static CompletionStage<Result> json(String jsonText)
 	{
-		return Promise.<Result> pure(ok(jsonText).as("application/json")); 
+		return CompletableFuture.completedFuture(ok(jsonText).as("application/json")); 
 	}
 	
 	protected static CompletionStage<Result> accountAction(int accountId, PromiseCallback block) throws APIException

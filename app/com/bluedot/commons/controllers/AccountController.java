@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import org.json.JSONException;
@@ -39,7 +40,6 @@ import com.play4jpa.jpa.db.Tx;
 
 import flexjson.JSONSerializer;
 import play.i18n.Messages;
-import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
 
@@ -88,7 +88,7 @@ public class AccountController extends AbstractController
 //
 //			String toEncrypt = json.toString() + SALT;
 //
-//			return Promise.<Result> pure(ok(Crypto.encrypt(toEncrypt, true, KEY, IV)));
+//			return CompletableFuture.completedFuture(ok(Crypto.encrypt(toEncrypt, true, KEY, IV)));
 //		} catch (JSONException e)
 //		{
 //			throw APIException.raise(APIErrors.WRONG_FORMAT);
@@ -114,7 +114,7 @@ public class AccountController extends AbstractController
 		
 		u.update();
 
-		return Promise.<Result> pure(ok());
+		return CompletableFuture.completedFuture(ok());
 	}
 
 	
@@ -157,7 +157,7 @@ public class AccountController extends AbstractController
 
 				a.update();
 				
-				return Promise.<Result>pure(ok());
+				return CompletableFuture.completedFuture(ok());
 			}
 		});
 	}
@@ -192,7 +192,7 @@ public class AccountController extends AbstractController
 
 				a.update();
 				
-				return Promise.<Result>pure(ok());
+				return CompletableFuture.completedFuture(ok());
 			}
 		});
 	}
@@ -269,7 +269,7 @@ public class AccountController extends AbstractController
 
 					setAccountACL(account, aclId, aclName, aclAction, user);
 
-					return Promise.<Result> pure(ok());
+					return CompletableFuture.completedFuture(ok());
 				}
 			});
 
@@ -279,7 +279,7 @@ public class AccountController extends AbstractController
 
 		user.update();
 
-		return Promise.<Result> pure(ok());
+		return CompletableFuture.completedFuture(ok());
 	}
 
 	
@@ -387,7 +387,7 @@ public class AccountController extends AbstractController
 				{
 					account.getSettings().updateSettings(new JSONObject(settings.toString()));
 					account.update();
-					return Promise.<Result> pure(ok());
+					return CompletableFuture.completedFuture(ok());
 				} catch (Throwable e)
 				{
 					throw APIException.raise(APIErrors.BAD_JSON).setDetailMessage("Wrong json settings");
@@ -461,7 +461,7 @@ public class AccountController extends AbstractController
 				microControllersFactory.getAccountController().signUp(emailAddress, password, firstName, lastName,
 						companyName, accountType, addresses, phone, signUpConfigurator);
 
-				return Promise.<Result>pure(created());
+				return CompletableFuture.completedFuture(created());
 			}
 		}, PermissionNames.MASTER_ADMIN, null, null);
 	}
@@ -546,7 +546,7 @@ public class AccountController extends AbstractController
 				user.update();
 				parentAccount.update();
 
-				return Promise.<Result> pure(created());
+				return CompletableFuture.completedFuture(created());
 			}
 		});
 	}
@@ -585,7 +585,7 @@ public class AccountController extends AbstractController
 				
 				a.update();
 
-				return Promise.<Result> pure(ok());
+				return CompletableFuture.completedFuture(ok());
 			}
 		}, PermissionNames.MASTER_ADMIN, null, null);
 	}
@@ -600,7 +600,7 @@ public class AccountController extends AbstractController
 
 				a.delete();
 
-				return Promise.<Result> pure(ok());
+				return CompletableFuture.completedFuture(ok());
 			}
 		}, PermissionNames.MASTER_ADMIN, null, null);
 	}

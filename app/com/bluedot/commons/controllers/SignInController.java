@@ -2,6 +2,7 @@ package com.bluedot.commons.controllers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import org.json.JSONObject;
@@ -25,7 +26,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
 import play.i18n.Messages;
-import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 
@@ -140,7 +140,7 @@ public class SignInController extends AbstractController
 		
 		microControllersFactory.getAccountController().signUp(emailAddress, password, firstName, lastName, companyName, null, addresses, phone, signUpConfigurator);
 
-		return Promise.<Result> pure(created());
+		return CompletableFuture.completedFuture(created());
 	}
 
 
