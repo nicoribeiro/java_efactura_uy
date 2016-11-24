@@ -35,7 +35,7 @@ public class JsonPostValidator extends Action<ValidateJsonPost>
 {
 
 	@Override
-	public CompletionStage<Result> call(Context context) throws Throwable
+	public CompletionStage<Result> call(Context context) 
 	{
 		String[] values = configuration.fields();
 		JsonNode json = context.request().body().asJson();
@@ -75,7 +75,7 @@ public class JsonPostValidator extends Action<ValidateJsonPost>
 	 *         before.
 	 * @throws Throwable
 	 */
-	protected CompletionStage<Result> raiseValidationError(Context context, APIException exception) throws Throwable
+	protected CompletionStage<Result> raiseValidationError(Context context, APIException exception)
 	{
 		context.args.put("validation_error", "true");
 		context.args.put("validation_exception", exception);
