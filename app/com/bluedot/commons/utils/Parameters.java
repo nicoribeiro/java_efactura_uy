@@ -6,12 +6,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import javax.inject.Inject;
+
+import play.Application;
+
 public class Parameters
 {
+	private Application application;
 
 	private static Parameters instance;
 	private Properties properties;
 
+	@Inject
+	public void setApplication(Application application) {
+		this.application = application;
+	}
+	
 	public static Parameters getInstance()
 	{
 		if (instance == null)
@@ -67,7 +77,7 @@ public class Parameters
 		{
 			properties = new Properties();
 			
-			InputStream is = play.Play.application().resourceAsStream("parameters.properties");
+			InputStream is = application.resourceAsStream("parameters.properties");
 			
 			properties.load(is);
 		} catch (FileNotFoundException e)

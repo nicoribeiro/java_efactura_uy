@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.inject.Inject;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -38,25 +39,42 @@ import com.bluedot.commons.utils.PrettyPrint;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.model.TipoDoc;
+import com.google.inject.Singleton;
 
 import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.recepcion.EnvioCFE;
 import dgi.classes.reporte.ReporteDefType;
 import dgi.soap.recepcion.Data;
-import play.Play;
+import play.Application;
+import play.Environment;
 
+@Singleton
 public class Commons {
 	private static String securityPrefixName = "org.apache.ws.security.crypto.merlin.keystore.";
 	private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
 	private static Properties securityProperties;
 	
-	static{
+	private Application application;
+	
+	private Environment environment;
+	
+	@Inject
+	public void setApplication(Application application) {
+		this.application = application;
+	}
+	
+	@Inject
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
+	}
+	
+	{
 		securityProperties = new Properties();
 		try {
-			if (Play.isDev())
-				securityProperties.load(new FileInputStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
+			if (environment.isDev())
+				securityProperties.load(new FileInputStream(application.configuration().getString(Constants.SECURITY_FILE)));
 			else
-				securityProperties.load(Commons.class.getClassLoader().getResourceAsStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
+				securityProperties.load(Commons.class.getClassLoader().getResourceAsStream(application.configuration().getString(Constants.SECURITY_FILE)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -66,23 +84,23 @@ public class Commons {
 		Recepcion, Consulta, Rut
 	}
 
-	public static String getURL(DgiService service) throws FileNotFoundException, IOException {
+	public String getURL(DgiService service) throws FileNotFoundException, IOException {
 
-		String environment = Play.application().configuration().getString(Constants.ENVIRONMENT);
+		String environment = application.configuration().getString(Constants.ENVIRONMENT);
 
 		switch (service) {
 		case Consulta:
-			return Play.application().configuration().getString(Constants.SERVICE_CONSULTA_PREFIX + "." + environment);
+			return application.configuration().getString(Constants.SERVICE_CONSULTA_PREFIX + "." + environment);
 		case Recepcion:
-			return Play.application().configuration().getString(Constants.SERVICE_RECEPCION_URL_PREFIX + "." + environment);
+			return application.configuration().getString(Constants.SERVICE_RECEPCION_URL_PREFIX + "." + environment);
 		case Rut:
-			return Play.application().configuration().getString(Constants.SERVICE_RUT_URL_PREFIX + "." + environment);
+			return application.configuration().getString(Constants.SERVICE_RUT_URL_PREFIX + "." + environment);
 		}
 		return null;
 
 	}
 
-	public static KeyPasswordCallback getPasswordCallback() throws FileNotFoundException, IOException,
+	public KeyPasswordCallback getPasswordCallback() throws FileNotFoundException, IOException,
 			KeyStoreException, NoSuchAlgorithmException, CertificateException {
 
 		Map<String, String> keystorePasswords = new HashMap<>();
@@ -91,7 +109,7 @@ public class Commons {
 
 	}
 
-	public static KeyStore getKeyStore() throws FileNotFoundException, IOException, KeyStoreException,
+	public KeyStore getKeyStore() throws FileNotFoundException, IOException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException {
 		KeyStore keystore = KeyStore.getInstance(securityProperties.getProperty(securityPrefixName + "type"));
 		InputStream fIn = Commons.class.getClassLoader().getResourceAsStream(securityProperties.getProperty(securityPrefixName + "file"));
@@ -100,40 +118,40 @@ public class Commons {
 		return keystore;
 	}
 
-	public static String getCertificatePassword() throws FileNotFoundException, IOException, KeyStoreException,
+	public String getCertificatePassword() throws FileNotFoundException, IOException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException {
 		return securityProperties.getProperty("certificate.password");
 	}
 
-	public static String getCetificateAlias() throws FileNotFoundException, IOException {
+	public String getCetificateAlias() throws FileNotFoundException, IOException {
 		return securityProperties.getProperty("certificate.alias");
 	}
 
-	public static JSONObject safeGetJSONObject(JSONObject object, String key) throws APIException {
+	public JSONObject safeGetJSONObject(JSONObject object, String key) throws APIException {
 		if (object.optJSONObject(key) == null)
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
 		return object.getJSONObject(key);
 	}
 	
-	public static JSONArray safeGetJSONArray(JSONObject object, String key) throws APIException {
+	public JSONArray safeGetJSONArray(JSONObject object, String key) throws APIException {
 		if (object.optJSONArray(key) == null)
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
 		return object.getJSONArray(key);
 	}
 	
-	public static String safeGetString(JSONObject object, String key) throws APIException {
+	public String safeGetString(JSONObject object, String key) throws APIException {
 		if (object.optString(key).equals(""))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
 		return object.optString(key);
 	}
 	
-	public static Integer safeGetInteger(JSONObject object, String key) throws APIException {
+	public Integer safeGetInteger(JSONObject object, String key) throws APIException {
 		if (!object.has(key))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
 		return object.optInt(key);
 	}
 
-	public static String getFilenamePrefix(CFEDefType cfe)
+	public String getFilenamePrefix(CFEDefType cfe)
 			throws APIException, FileNotFoundException, IOException {
 
 		String type = null;
@@ -191,31 +209,31 @@ public class Commons {
 
 	}
 
-	public static String getCfeFolder(Date date, TipoDoc tipo) throws FileNotFoundException, IOException {
+	public String getCfeFolder(Date date, TipoDoc tipo) throws FileNotFoundException, IOException {
 		return getCfeFolder(date) + File.separator + tipo.value;
 
 	}
 
-	public static String getCfeFolder(Date date) throws FileNotFoundException, IOException {
-		String folder = Play.application().configuration().getString(Constants.GENERATED_CFE_FOLDER,
+	public String getCfeFolder(Date date) throws FileNotFoundException, IOException {
+		String folder = application.configuration().getString(Constants.GENERATED_CFE_FOLDER,
 				"resources" + File.separator + "cfe");
 		return folder + File.separator + formatter.format(date);
 
 	}
 
-	public static void dumpSobreToFile(EnvioCFE envioCFE, int indiceCFE, Boolean isSigned, Data response)
+	public void dumpSobreToFile(EnvioCFE envioCFE, int indiceCFE, Boolean isSigned, Data response)
 			throws JAXBException, FileNotFoundException, IOException, APIException, ParserConfigurationException,
 			TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
 		Document document = XML.marshall(envioCFE);
 
 		Node node = document.getElementsByTagName("DGICFE:CFE").item(indiceCFE);
 
-		String filenamePrefix = Commons.getFilenamePrefix(envioCFE.getCVES().get(indiceCFE));
+		String filenamePrefix = this.getFilenamePrefix(envioCFE.getCVES().get(indiceCFE));
 
 		dumpNodeToFile(node, isSigned, filenamePrefix, response);
 	}
 
-	public static void dumpNodeToFile(Node node, Boolean isSigned, String filenamePrefix, Data response)
+	public void dumpNodeToFile(Node node, Boolean isSigned, String filenamePrefix, Data response)
 			throws JAXBException, FileNotFoundException, IOException, APIException,
 			TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
 //TODO reactivar el pretty print aca, ojo que se caga la prueba de homologacion con los signed
@@ -235,9 +253,9 @@ public class Commons {
 		IO.writeFile(filenamePrefix + "_envelope.xml", PrettyPrint.prettyPrintXML(envelope));
 	}
 
-	public static String getFilenamePrefix(Node node) throws FileNotFoundException, IOException, ParseException {
+	public String getFilenamePrefix(Node node) throws FileNotFoundException, IOException, ParseException {
 		SimpleDateFormat reader = new SimpleDateFormat("yyyy-MM-dd");
-		String folder = Play.application().configuration().getString(Constants.GENERATED_CFE_FOLDER,
+		String folder = application.configuration().getString(Constants.GENERATED_CFE_FOLDER,
 				"resources" + File.separator + "cfe");
 		Node encabezado=null;
 		boolean entreEmpresas = false;
@@ -293,7 +311,7 @@ public class Commons {
 		return null;
 	}
 
-	public static void dumpReporteToFile(ReporteDefType reporte, Boolean isSigned, Data response, Date date)
+	public void dumpReporteToFile(ReporteDefType reporte, Boolean isSigned, Data response, Date date)
 			throws JAXBException, TransformerConfigurationException, IOException, TransformerFactoryConfigurationError,
 			TransformerException, ParserConfigurationException, APIException, ParseException {
 		// Create the JAXBContext
@@ -314,11 +332,11 @@ public class Commons {
 
 	}
 
-	public static String getRucDGI() {
+	public String getRucDGI() {
 		
-		String environment = Play.application().configuration().getString(Constants.ENVIRONMENT);
+		String environment = application.configuration().getString(Constants.ENVIRONMENT);
 
-		return Play.application().configuration().getString(Constants.RUC_DGI + "." + environment, "219999830019");
+		return application.configuration().getString(Constants.RUC_DGI + "." + environment, "219999830019");
 		
 	}
 

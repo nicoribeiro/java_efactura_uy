@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.inject.Inject;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.cxf.endpoint.Endpoint;
@@ -21,25 +22,21 @@ import com.bluedot.commons.utils.ObjectPool;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.commons.Commons.DgiService;
+import com.google.inject.Singleton;
 
 import dgi.soap.rut.WSPersonaGetActEmpresarialSoapPort;
-import play.Play;
+import play.Application;
 
+@Singleton
 public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPortWrapper>
 {
-	private static WSRutPool instance = null;
 
-	public static synchronized WSRutPool getInstance() throws IOException, APIException, KeyStoreException, NoSuchAlgorithmException, CertificateException
+	@Inject
+	public WSRutPool(Application application, Commons commons) throws IOException, APIException, KeyStoreException, NoSuchAlgorithmException, CertificateException
 	{
-		if (instance == null)
-		{
 
-			CallbackHandler passwordCallback = Commons.getPasswordCallback();
-			instance = new WSRutPool(Play.application().configuration().getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(), passwordCallback,
-					Commons.getURL(DgiService.Rut));
-		}
-
-		return instance;
+			this(application.configuration().getString(Constants.SECURITY_FILE), commons.getCetificateAlias(), commons.getPasswordCallback(),
+					commons.getURL(DgiService.Rut));
 	}
 
 	public Object clone() throws CloneNotSupportedException

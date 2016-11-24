@@ -3,6 +3,8 @@ package com.bluedot.commons.security;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.slf4j.Logger;
@@ -11,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.bluedot.commons.utils.Crypto;
 import com.bluedot.efactura.global.RequestUtils;
 
-import play.Play;
+import play.Application;
 import play.i18n.Messages;
 import play.mvc.Http.Context;
 import play.mvc.Result;
@@ -20,6 +22,8 @@ import play.mvc.Security;
 public class Secured extends Security.Authenticator
 {
 
+	private Application application;
+	
 	public static final String AUTH_HEADER = "AUTH-TOKEN";
 	
 	public static final String HMAC_KEY_HEADER = "ACCESS_KEY";
@@ -31,6 +35,11 @@ public class Secured extends Security.Authenticator
 	public static final String HMAC_NONCE_QS = "accessNonce";
 
 	final static Logger logger = LoggerFactory.getLogger(Secured.class);
+	
+	@Inject
+	public void setApplication(Application application) {
+		this.application = application;
+	}
 	
 	@Override
 	public String getUsername(Context ctx)
@@ -183,7 +192,7 @@ public class Secured extends Security.Authenticator
 	
 	private boolean checkSecurityExceptions(Context ctx)
 	{
-		String exceptions = Play.application().configuration().getString("security.exceptions", "[]");
+		String exceptions = application.configuration().getString("security.exceptions", "[]");
 		
 		try
 		{

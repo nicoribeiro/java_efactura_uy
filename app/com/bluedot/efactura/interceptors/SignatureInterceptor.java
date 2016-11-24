@@ -11,6 +11,7 @@ import java.security.cert.CertificateException;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
@@ -41,6 +42,13 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
 
 public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 
+	private Commons commons;
+	
+	@Inject
+	public void setCommons(Commons commons) {
+		this.commons = commons;
+	}
+	
 	public SignatureInterceptor() {
 		super(Phase.MARSHAL);
 		addAfter(NamespacesInterceptor.class.getName());
@@ -97,9 +105,9 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		/*
 		 * Key Store & Cert 
 		 */
-		KeyStore keystore = Commons.getKeyStore();
-		String certName = Commons.getCetificateAlias();
-		String certPass = Commons.getCertificatePassword();
+		KeyStore keystore = commons.getKeyStore();
+		String certName = commons.getCetificateAlias();
+		String certPass = commons.getCertificatePassword();
 
 		
 		/*
@@ -119,9 +127,9 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		message.setContent(List.class, list);
 
 		
-//		String filenamePrefix = Commons.getFilenamePrefix(signedNode);
+//		String filenamePrefix = commons.getFilenamePrefix(signedNode);
 //		
-//		Commons.dumpNodeToFile(signedNode, true, filenamePrefix, null);
+//		commons.dumpNodeToFile(signedNode, true, filenamePrefix, null);
 	}
 
 	private void signSobre(SobreEmitido sobreEmitido, Message message) throws TransformerFactoryConfigurationError, APIException, Exception {
@@ -146,7 +154,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		InputStream stream = new ByteArrayInputStream(docString.getBytes());			
 		Document allDocument= dbf.newDocumentBuilder().parse(stream);
 		
-		allDocument = signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE");
+		allDocument = signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE", commons);
 		
 		String documentString = XML.documentToString(allDocument);
 		data.setXmlData(documentString);
@@ -184,13 +192,13 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 			
 		}
 		
-//		String filenamePrefix = Commons.getFilenamePrefix(allDocument.getDocumentElement());
+//		String filenamePrefix = commons.getFilenamePrefix(allDocument.getDocumentElement());
 //		
-//		Commons.dumpNodeToFile(allDocument, true,filenamePrefix, null);
+//		commons.dumpNodeToFile(allDocument, true,filenamePrefix, null);
 		
 	}
 
-	public static Document signDocument(DocumentBuilderFactory dbf, Document allDocument, String childTagName, String parentTagName)
+	public static Document signDocument(DocumentBuilderFactory dbf, Document allDocument, String childTagName, String parentTagName, Commons commons)
 			throws ParserConfigurationException, FileNotFoundException, IOException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException, Exception {
 		/*
@@ -207,9 +215,9 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		/*
 		 * Key Store & Cert 
 		 */
-		KeyStore keystore = Commons.getKeyStore();
-		String certName = Commons.getCetificateAlias();
-		String certPass = Commons.getCertificatePassword();
+		KeyStore keystore = commons.getKeyStore();
+		String certName = commons.getCetificateAlias();
+		String certPass = commons.getCertificatePassword();
 
 		
 		/*

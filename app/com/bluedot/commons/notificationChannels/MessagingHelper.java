@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.http.NameValuePair;
@@ -17,7 +18,7 @@ import com.twilio.sdk.TwilioRestException;
 import com.twilio.sdk.resource.factory.MessageFactory;
 import com.twilio.sdk.resource.instance.Message;
 
-import play.Play;
+import play.Application;
 
 public class MessagingHelper {
 	final static Logger logger = LoggerFactory.getLogger(MessagingHelper.class);
@@ -31,16 +32,23 @@ public class MessagingHelper {
 	private String signature;
 	private Map<String, String> attachments;
 
+	private Application application;
+	
+	@Inject
+	public void setApplication(Application application) {
+		this.application = application;
+	}
+	
 	public MessagingHelper() {
 
 	}
 
 	public MessagingHelper withPlayConfig() {
-		from = Play.application().configuration().getString("mail.from", "");
-		host = Play.application().configuration().getString("mail.host", "");
-		port = Play.application().configuration().getInt("mail.port", 25);
-		username = Play.application().configuration().getString("mail.user", "");
-		password = Play.application().configuration().getString("mail.password", "");
+		from = application.configuration().getString("mail.from", "");
+		host = application.configuration().getString("mail.host", "");
+		port = application.configuration().getInt("mail.port", 25);
+		username = application.configuration().getString("mail.user", "");
+		password = application.configuration().getString("mail.password", "");
 		return this;
 	}
 
@@ -64,15 +72,15 @@ public class MessagingHelper {
 	}
 
 	public String getValidationHost(String host) {
-		return Play.application().configuration().getString("app.validation.host", "https://" + host);
+		return application.configuration().getString("app.validation.host", "https://" + host);
 	}
 
 	public boolean sendEmail(String to, String textBody, String htmlBody, String subject, boolean html) {
 
 		if (signature == null || "".equals(signature))
-			signature = Play.application().configuration().getString("mail.signature", "");
+			signature = application.configuration().getString("mail.signature", "");
 
-		boolean logInstedOfSend = Play.application().configuration().getBoolean("mail.log", false);
+		boolean logInstedOfSend = application.configuration().getBoolean("mail.log", false);
 
 		try {
 			SendMail.sendMail(username, password, host, port, from, to, subject, textBody, null, attachments,
@@ -90,11 +98,11 @@ public class MessagingHelper {
 	}
 
 	public boolean sendSMS(String to, String body, String subject, String signature, String attachment) {
-		String from = Play.application().configuration().getString("sms.from", "");
-		String sid = Play.application().configuration().getString("sms.app.sid", "");
-		String token = Play.application().configuration().getString("sms.app.token", "");
+		String from = application.configuration().getString("sms.from", "");
+		String sid = application.configuration().getString("sms.app.sid", "");
+		String token = application.configuration().getString("sms.app.token", "");
 
-		boolean logInstedOfSend = Play.application().configuration().getBoolean("sms.log", false);
+		boolean logInstedOfSend = application.configuration().getBoolean("sms.log", false);
 
 		TwilioRestClient client = new TwilioRestClient(sid, token);
 

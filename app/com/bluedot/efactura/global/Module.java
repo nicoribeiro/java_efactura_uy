@@ -2,6 +2,9 @@ package com.bluedot.efactura.global;
 
 import com.bluedot.commons.hazelcast.HazelcastFactory;
 import com.bluedot.commons.hazelcast.Mutex;
+import com.bluedot.efactura.commons.Commons;
+import com.bluedot.efactura.pool.WSRecepcionPool;
+import com.bluedot.efactura.pool.WSRutPool;
 import com.google.inject.AbstractModule;
 
 /**
@@ -21,6 +24,12 @@ public class Module extends AbstractModule {
 		bind(HazelcastFactory.class);
 
 		bind(Mutex.class);
+		
+		bind(WSRecepcionPool.class);
+		
+		bind(WSRutPool.class);
+		
+		bind(Commons.class);
 	}
 
 }

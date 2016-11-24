@@ -2,7 +2,6 @@ package com.bluedot.efactura.services.impl;
 
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,7 +20,6 @@ import org.w3c.dom.Document;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.notificationChannels.MessagingHelper;
-import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.commons.Commons;
@@ -60,12 +59,34 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTEResponse;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBREResponse;
-import play.Play;
+import play.Application;
+
 
 public class RecepcionServiceImpl implements RecepcionService {
 
 	static Logger logger = Logger.getLogger(RecepcionServiceImpl.class);
 
+	private Commons commons;
+	
+	private Application application;
+	
+	private WSRecepcionPool wsRecepcionPool;
+	
+	@Inject
+	public void setApplication(Application application) {
+		this.application = application;
+	}
+	
+	@Inject
+	public void setCommons(Commons commons) {
+		this.commons = commons;
+	}
+	
+	@Inject
+	public void setWsRecepcionPool(WSRecepcionPool wsRecepcionPool) {
+		this.wsRecepcionPool = wsRecepcionPool;
+	}
+	
 	@Override
 	public void sendCFE(CFE cfe) throws APIException {
 		// TODO soportar mas de un CFE por sobre
@@ -234,7 +255,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 				CFEDefType cfeDefType = iterator.next();
 
 				String rucEmisor = null;
-				String rucReceptor = Commons.getRucDGI();
+				String rucReceptor = commons.getRucDGI();
 
 				if (cfeDefType.getEFact() != null) {
 					rucEmisor = cfeDefType.getEFact().getEncabezado().getEmisor().getRUCEmisor();
@@ -282,8 +303,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 			caratula.setRUCEmisor(RUCemisor);
 			caratula.setRutReceptor(RUCreceptor);
 			caratula.setVersion("1.0");
-			caratula.setX509Certificate(EfacturaSecurity.getCertificate(Commons.getCetificateAlias(),
-					Commons.getCertificatePassword(), Commons.getKeyStore()));
+			caratula.setX509Certificate(EfacturaSecurity.getCertificate(commons.getCetificateAlias(),
+					commons.getCertificatePassword(), commons.getKeyStore()));
 
 			envioCFE.setCaratula(caratula);
 		} catch (Exception e) {
@@ -359,8 +380,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 			caratula.setRUCEmisor(RUCemisor);
 			caratula.setRutReceptor(RUCreceptor);
 			caratula.setVersion("1.0");
-			caratula.setX509Certificate(EfacturaSecurity.getCertificate(Commons.getCetificateAlias(),
-					Commons.getCertificatePassword(), Commons.getKeyStore()));
+			caratula.setX509Certificate(EfacturaSecurity.getCertificate(commons.getCetificateAlias(),
+					commons.getCertificatePassword(), commons.getKeyStore()));
 
 			signed.setCaratula(caratula);
 		} catch (Exception e) {
@@ -391,7 +412,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 			Data response;
 			try {
-				WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
+				WSEFacturaSoapPortWrapper portWrapper = wsRecepcionPool.checkOut();
 
 				WSEFacturaEFACRECEPCIONSOBRE input = new WSEFacturaEFACRECEPCIONSOBRE();
 				Data data = new Data();
@@ -404,7 +425,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 				logger.info("Respuesta: " + response.getXmlData());
 				
-				WSRecepcionPool.getInstance().checkIn(portWrapper);
+				wsRecepcionPool.checkIn(portWrapper);
 			} catch (Throwable e) {
 				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
 			}
@@ -455,10 +476,10 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 			Empresa empresa = sobre.getEmpresaEmisora();
 
-			String subject = Play.application().configuration().getString("mail.subject").replace("<cfe>",
+			String subject = application.configuration().getString("mail.subject").replace("<cfe>",
 					sobre.getNombreArchivo());
 
-			String body = Play.application().configuration().getString("mail.body")
+			String body = application.configuration().getString("mail.body")
 					.replace("<nombre>", empresa.getNombreComercial())
 					.replace("<mail>", empresa.getMailNotificaciones()).replace("<tel>", empresa.getTelefono())
 					.replace("<nl>", "\n");
@@ -484,7 +505,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("idReceptor"));
 
 		try {
-			WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
+			WSEFacturaSoapPortWrapper portWrapper = wsRecepcionPool.checkOut();
 
 			WSEFacturaEFACCONSULTARESTADOENVIO input = new WSEFacturaEFACCONSULTARESTADOENVIO();
 			String xml = "<ConsultaCFE xmlns=\"http://dgi.gub.uy\"><IdReceptor>" + idReceptor + "</IdReceptor><Token>"
@@ -496,7 +517,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 			WSEFacturaEFACCONSULTARESTADOENVIOResponse output = portWrapper.getPort().efacconsultarestadoenvio(input);
 
-			WSRecepcionPool.getInstance().checkIn(portWrapper);
+			wsRecepcionPool.checkIn(portWrapper);
 			
 			logger.info("Respuesta: " + output.getDataout().getXmlData());
 			
@@ -650,7 +671,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 	private Data sendReporte(String reporte, Date date) throws APIException {
 		try {
-			WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
+			WSEFacturaSoapPortWrapper portWrapper = wsRecepcionPool.checkOut();
 
 			WSEFacturaEFACRECEPCIONREPORTE input = new WSEFacturaEFACRECEPCIONREPORTE();
 			Data data = new Data();
@@ -659,7 +680,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 			WSEFacturaEFACRECEPCIONREPORTEResponse output = portWrapper.getPort().efacrecepcionreporte(input);
 
-			WSRecepcionPool.getInstance().checkIn(portWrapper);
+			wsRecepcionPool.checkIn(portWrapper);
 
 			return output.getDataout();
 		} catch (Throwable e) {
@@ -679,7 +700,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 	// this.sendReporte(PrettyPrint.prettyPrintXML(sw.toString()), date);
 	//
 	// // Dump sobre y response to disk
-	// Commons.dumpReporteToFile(reporte, false, response, date);
+	// commons.dumpReporteToFile(reporte, false, response, date);
 	//
 	// return response;
 	// } catch (Exception e) {

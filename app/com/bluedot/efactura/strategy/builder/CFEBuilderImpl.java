@@ -10,6 +10,7 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -43,6 +44,13 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	protected CFEStrategy strategy;
 	protected CAEMicroController caeMicroController;
 
+	private Commons commons;
+	
+	@Inject
+	public void setCommons(Commons commons) {
+		this.commons = commons;
+	}
+	
 	public CFEBuilderImpl(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
 		this.caeMicroController = caeMicroController;
 		this.strategy = strategy;
@@ -64,15 +72,15 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 			
 			item.setNroLinDet(i);
 
-			item.setNomItem(Commons.safeGetString(itemJson,"NomItem"));
+			item.setNomItem(commons.safeGetString(itemJson,"NomItem"));
 
-			item.setIndFact(new BigInteger(String.valueOf(Commons.safeGetInteger(itemJson,"IndFact"))));
+			item.setIndFact(new BigInteger(String.valueOf(commons.safeGetInteger(itemJson,"IndFact"))));
 
-			item.setCantidad(new BigDecimal(Commons.safeGetString(itemJson,"Cantidad")));
+			item.setCantidad(new BigDecimal(commons.safeGetString(itemJson,"Cantidad")));
 
-			item.setUniMed(Commons.safeGetString(itemJson,"UniMed"));
+			item.setUniMed(commons.safeGetString(itemJson,"UniMed"));
 
-			item.setPrecioUnitario(new BigDecimal(Commons.safeGetString(itemJson,"PrecioUnitario")));
+			item.setPrecioUnitario(new BigDecimal(commons.safeGetString(itemJson,"PrecioUnitario")));
 
 			if (!itemJson.has("MontoItem"))
 				item.setMontoItem(item.getPrecioUnitario().multiply(item.getCantidad()));
@@ -374,13 +382,13 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 				 * 
 				 * Se debe explicitar el motivo en "Razón Referencia" (C6)
 				 */
-				String generadorId = Commons.safeGetString(referenciaJSON, "NroRef");
+				String generadorId = commons.safeGetString(referenciaJSON, "NroRef");
 				CFE cfeReferencia = CFE.findByGeneradorId(empresaEmisora, generadorId);
 
 				if (cfeReferencia == null) {
 					referencia.setIndGlobal(new BigInteger("1"));
-					referencia.setRazonRef(Commons.safeGetString(referenciaJSON, "RazonRef"));
-					strategy.getCFE().setRazonReferencia(Commons.safeGetString(referenciaJSON, "RazonRef"));
+					referencia.setRazonRef(commons.safeGetString(referenciaJSON, "RazonRef"));
+					strategy.getCFE().setRazonReferencia(commons.safeGetString(referenciaJSON, "RazonRef"));
 				} else {
 					referencia.setNroCFERef(new BigInteger(String.valueOf(cfeReferencia.getNro())));
 					referencia.setSerie(cfeReferencia.getSerie());

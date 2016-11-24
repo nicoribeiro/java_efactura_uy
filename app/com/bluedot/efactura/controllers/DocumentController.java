@@ -12,6 +12,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.CompletionStage;
 
+import javax.inject.Inject;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -37,7 +39,8 @@ import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
-import play.Play;
+import play.Application;
+import play.Environment;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
@@ -50,6 +53,13 @@ public class DocumentController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(DocumentController.class);
 
+	private Application application;
+	
+	@Inject
+	public void setApplication(Application application) {
+		this.application = application;
+	}
+	
 	public CompletionStage<Result> cambiarModo(String modo) throws APIException {
 		MODO_SISTEMA modoEnum = MODO_SISTEMA.valueOf(modo);
 		if (modoEnum == null)
@@ -422,7 +432,7 @@ public class DocumentController extends AbstractController {
 
 		String filename = cfe.getTipo().value + "-" + cfe.getSerie() + "-" + cfe.getNro() + ".pdf";
 
-		String path = Play.application().configuration().getString("documentos.pdf.path", "/mnt/efacturas");
+		String path = application.configuration().getString("documentos.pdf.path", "/mnt/efacturas");
 
 		File pdf = new File(path + File.separator + filename);
 

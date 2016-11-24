@@ -6,6 +6,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Objects;
 
+import javax.inject.Inject;
+
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.pool.WSPersonaGetActEmpresarialSoapPortWrapper;
 import com.bluedot.efactura.pool.WSRutPool;
@@ -13,50 +15,36 @@ import com.bluedot.efactura.services.ConsultaRutService;
 
 import dgi.soap.rut.WSPersonaGetActEmpresarialExecute;
 import dgi.soap.rut.WSPersonaGetActEmpresarialExecuteResponse;
+import play.Application;
 
 public class ConsultaRutServiceImpl implements ConsultaRutService {
 
-	public ConsultaRutServiceImpl(){
-		
+	private WSRutPool wsRutPool;
+
+	@Inject
+	public void setWsRutPool(WSRutPool wsRutPool) {
+		this.wsRutPool = wsRutPool;
 	}
-	
-    @Override
-    public String getRutData(String rut) {
-        try
-		{
-			Objects.requireNonNull(rut, "Parameter RUT is required");
 
-			WSPersonaGetActEmpresarialSoapPortWrapper portWrapper = WSRutPool.getInstance().checkOut();
+	public ConsultaRutServiceImpl() {
 
-			WSPersonaGetActEmpresarialExecute input = new WSPersonaGetActEmpresarialExecute();
-			input.setRut(rut);
-			
-			WSPersonaGetActEmpresarialExecuteResponse output = portWrapper.getPort().execute(input);
-			
-			WSRutPool.getInstance().checkIn(portWrapper);
+	}
 
-			return output.getData();
-		} catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (APIException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (KeyStoreException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CertificateException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        return null;
-    }
+	@Override
+	public String getRutData(String rut) {
+
+		Objects.requireNonNull(rut, "Parameter RUT is required");
+
+		WSPersonaGetActEmpresarialSoapPortWrapper portWrapper = wsRutPool.checkOut();
+
+		WSPersonaGetActEmpresarialExecute input = new WSPersonaGetActEmpresarialExecute();
+		input.setRut(rut);
+
+		WSPersonaGetActEmpresarialExecuteResponse output = portWrapper.getPort().execute(input);
+
+		wsRutPool.checkIn(portWrapper);
+
+		return output.getData();
+
+	}
 }

@@ -5,6 +5,8 @@ import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -27,6 +29,12 @@ import dgi.classes.recepcion.wrappers.TotalesRetencPercepResg;
 
 public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInterface {
 
+	private Commons commons;
+	
+	@Inject
+	public void setCommons(Commons commons) {
+		this.commons = commons;
+	}
 	
 	public CFEBuiderResguardo(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
 		super(caeMicroController, strategy);
@@ -41,9 +49,9 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 
 			item.setNroLinDet(i);
 
-			item.setIndFact(new BigInteger(Commons.safeGetString(itemJson,"IndFact")));
+			item.setIndFact(new BigInteger(commons.safeGetString(itemJson,"IndFact")));
 
-			JSONArray retencionesJSON = Commons.safeGetJSONArray(itemJson,"Retenciones");
+			JSONArray retencionesJSON = commons.safeGetJSONArray(itemJson,"Retenciones");
 
 			if (retencionesJSON.length() > 5)
 				throw APIException.raise(APIErrors.MALFORMED_CFE).setDetailMessage(

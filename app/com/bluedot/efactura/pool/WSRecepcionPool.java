@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.inject.Inject;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.cxf.endpoint.Endpoint;
@@ -24,23 +25,21 @@ import com.bluedot.efactura.commons.Commons.DgiService;
 import com.bluedot.efactura.interceptors.CDataWriterInterceptor;
 import com.bluedot.efactura.interceptors.NamespacesInterceptor;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
+import com.google.inject.Singleton;
 
 import dgi.soap.recepcion.WSEFacturaSoapPort;
-import play.Play;
+import play.Application;
 
+@Singleton
 public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
-	private static WSRecepcionPool instance = null;
 
-	public static synchronized WSRecepcionPool getInstance()
+	@Inject
+	public WSRecepcionPool(Application application, Commons commons)
 			throws IOException, APIException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
-		if (instance == null) {
-			CallbackHandler passwordCallback = Commons.getPasswordCallback();
-			instance = new WSRecepcionPool(Play.application().configuration().getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(),
-					passwordCallback, Commons.getURL(DgiService.Recepcion));
-		}
-
-		return instance;
+			this(application.configuration().getString(Constants.SECURITY_FILE), commons.getCetificateAlias(),
+					commons.getPasswordCallback(), commons.getURL(DgiService.Recepcion));
 	}
+	
 
 	public Object clone() throws CloneNotSupportedException {
 		throw new CloneNotSupportedException();

@@ -20,7 +20,8 @@ import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
-import play.Play;
+import play.Application;
+import play.Environment;
 import play.inject.ApplicationLifecycle;
 import play.libs.F;
 
@@ -31,6 +32,20 @@ public class HazelcastFactory {
 
 	final static Logger logger = LoggerFactory.getLogger(HazelcastFactory.class);
 
+	private Application application;
+	
+	private Environment environment;
+	
+	@Inject
+	public void setApplication(Application application) {
+		this.application = application;
+	}
+	
+	@Inject
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
+	}
+	
 	@Inject
     public HazelcastFactory(ApplicationLifecycle lifecycle) {
 		
@@ -47,8 +62,8 @@ public class HazelcastFactory {
         
     }
 
-	private static Config getServerConfig() throws FileNotFoundException {
-		String filePath = Play.application().path().getAbsolutePath() + "/conf/hazelcast.xml";
+	private Config getServerConfig() throws FileNotFoundException {
+		String filePath = application.path().getAbsolutePath() + "/conf/hazelcast.xml";
 
 		logger.info("Trying file at: " + filePath);
 
@@ -64,12 +79,12 @@ public class HazelcastFactory {
 
 		awsConfig.setInsideAws(true);
 		awsConfig.setEnabled(true);
-		awsConfig.setAccessKey(Play.application().configuration().getString("aws.api.key"));
-		awsConfig.setSecretKey(Play.application().configuration().getString("aws.api.secret"));
-		awsConfig.setRegion(Play.application().configuration().getString("hazelcast.region"));
-		awsConfig.setSecurityGroupName(Play.application().configuration().getString("hazelcast.securityGroupName"));
-		awsConfig.setTagKey(Play.application().configuration().getString("hazelcast.tagKey"));
-		awsConfig.setTagValue(Play.application().configuration().getString("hazelcast.tagValue"));
+		awsConfig.setAccessKey(application.configuration().getString("aws.api.key"));
+		awsConfig.setSecretKey(application.configuration().getString("aws.api.secret"));
+		awsConfig.setRegion(application.configuration().getString("hazelcast.region"));
+		awsConfig.setSecurityGroupName(application.configuration().getString("hazelcast.securityGroupName"));
+		awsConfig.setTagKey(application.configuration().getString("hazelcast.tagKey"));
+		awsConfig.setTagValue(application.configuration().getString("hazelcast.tagValue"));
 
 		clientConfig.setNetworkConfig(clientNetworkConfig.setAwsConfig(awsConfig));
 
@@ -89,7 +104,7 @@ public class HazelcastFactory {
 			try {
 				logger.info("Attempting to create a new Hazelcast Client (attempt {})", i + 1);
 
-				if (Play.isDev())
+				if (environment.isDev())
 					hazelcastInstance = HazelcastClient.newHazelcastClient();
 				else
 					hazelcastInstance = HazelcastClient.newHazelcastClient(getAWSClientConfig());
@@ -107,7 +122,7 @@ public class HazelcastFactory {
 		return hazelcastInstance;
 	}
 
-	private static synchronized HazelcastInstance createHazelcastInstance() {
+	private synchronized HazelcastInstance createHazelcastInstance() {
 		if (hazelcastInstance == null) {
 
 			logger.info("Creating new hazelcast instance on this server");

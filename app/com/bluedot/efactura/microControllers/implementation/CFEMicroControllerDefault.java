@@ -1,5 +1,7 @@
 package com.bluedot.efactura.microControllers.implementation;
 
+import javax.inject.Inject;
+
 import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
@@ -20,6 +22,13 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 	
 	private CAEMicroController caeMicroController;
 	
+	private Commons commons;
+	
+	@Inject
+	public void setCommons(Commons commons) {
+		this.commons = commons;
+	}
+	
 	public CFEMicroControllerDefault(MODO_SISTEMA modo, Empresa empresa, CAEMicroController caeMicroController) {
 		super(empresa);
 		this.modo = modo;
@@ -34,17 +43,17 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Encabezado
 		 */
-		JSONObject encabezadoJSON = Commons.safeGetJSONObject(docJSON,"Encabezado");
+		JSONObject encabezadoJSON = commons.safeGetJSONObject(docJSON,"Encabezado");
 
-		int MntBruto = Commons.safeGetInteger(encabezadoJSON, "MntBruto");
+		int MntBruto = commons.safeGetInteger(encabezadoJSON, "MntBruto");
 		boolean montosIncluyenIva = (MntBruto==1); 
 				
-		int formaPago = Commons.safeGetInteger(encabezadoJSON, "FmaPago");
+		int formaPago = commons.safeGetInteger(encabezadoJSON, "FmaPago");
 		
 		/*
 		 * Detalle (lineas de factura)
 		 */
-		cfeBuilder.buildDetalle(Commons.safeGetJSONArray(docJSON,"Detalle"), montosIncluyenIva);
+		cfeBuilder.buildDetalle(commons.safeGetJSONArray(docJSON,"Detalle"), montosIncluyenIva);
 		
 		/*
 		 * Emisor (dentro de encabezado)
@@ -54,12 +63,12 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Totales (dentro de encabezado)
 		 */
-		cfeBuilder.buildTotales(Commons.safeGetJSONObject(encabezadoJSON,"Totales"), montosIncluyenIva);
+		cfeBuilder.buildTotales(commons.safeGetJSONObject(encabezadoJSON,"Totales"), montosIncluyenIva);
 
 		/*
 		 * Receptor (dentro de encabezado)
 		 */
-		cfeBuilder.buildReceptor(Commons.safeGetJSONObject(encabezadoJSON,"Receptor"));
+		cfeBuilder.buildReceptor(commons.safeGetJSONObject(encabezadoJSON,"Receptor"));
 		
 		/*
 		 * IdDoc (dentro de encabezado)
@@ -84,8 +93,8 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * ID Generador
 		 */
-		if (Commons.safeGetJSONObject(encabezadoJSON,"Identificacion").has("id"))
-  			cfeBuilder.getCFE().setGeneradorId(Commons.safeGetJSONObject(encabezadoJSON,"Identificacion").getString("id"));
+		if (commons.safeGetJSONObject(encabezadoJSON,"Identificacion").has("id"))
+  			cfeBuilder.getCFE().setGeneradorId(commons.safeGetJSONObject(encabezadoJSON,"Identificacion").getString("id"));
 		
 		return cfeBuilder.getCFE();
 	}

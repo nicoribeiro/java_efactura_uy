@@ -9,6 +9,7 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
@@ -35,6 +36,13 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
 
 public class SoapEnvelopeLoggingOutInterceptor extends AbstractLoggingInterceptor {
 
+	private Commons commons;
+	
+	@Inject
+	public void setCommons(Commons commons) {
+		this.commons = commons;
+	}
+	
 	public SoapEnvelopeLoggingOutInterceptor(String phase) {
 		super(phase);
 		addBefore(StaxOutInterceptor.class.getName());
@@ -121,7 +129,7 @@ public class SoapEnvelopeLoggingOutInterceptor extends AbstractLoggingIntercepto
 				 */
 				Document cfeDocument = dbf.newDocumentBuilder().newDocument();
 				Node unsignedNode = allDocument.getElementsByTagName("ns0:CFE").item(0);
-				String filenamePrefix = Commons.getFilenamePrefix(unsignedNode);
+				String filenamePrefix = commons.getFilenamePrefix(unsignedNode);
 				
 				
 				/*
