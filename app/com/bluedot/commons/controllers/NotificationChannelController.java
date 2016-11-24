@@ -122,7 +122,7 @@ public class NotificationChannelController extends AbstractController
 
 				notificationChannel.save();
 
-				notificationChannel.sendValidationKey(MessagingHelper.getValidationHost(request().host()));
+				notificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(request().host()));
 				
 				return Promise.<Result> pure(created());
 			}
@@ -196,7 +196,7 @@ public class NotificationChannelController extends AbstractController
 				if (!user.getNotificationChannels().contains(notificationChannel))
 					throw APIException.raise(APIErrors.UNAUTHORIZED).setDetailMessage("Notification Channel does not belog to you");
 
-				notificationChannel.sendValidationKey(MessagingHelper.getValidationHost(request().host()));
+				notificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(request().host()));
 
 				return Promise.<Result> pure(ok());
 

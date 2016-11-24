@@ -1,5 +1,6 @@
 package com.bluedot.commons.notificationChannels;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 import javax.persistence.Entity;
@@ -33,7 +34,9 @@ public class Email extends NotificationChannel
 
 			StringBuilder mailBody = new StringBuilder(alert.getBody());
 			String subject = alert.getSubject();
-			MessagingHelper.sendEmail(email, mailBody.toString(), mailBody.toString().replace("\n", "<br>"), subject, true, alert.getAttachment());
+			HashMap<String,String> attachments = new HashMap<String,String>();
+			attachments.put("attachment", alert.getAttachment());
+			new MessagingHelper().withPlayConfig().withAttachment(attachments).sendEmail(email, mailBody.toString(), mailBody.toString().replace("\n", "<br>"), subject, true);
 		}
 	}
 
@@ -44,7 +47,7 @@ public class Email extends NotificationChannel
 		{ 
 			StringBuilder mailBody = new StringBuilder(Messages.get("test_mail"));
 			String subject = "Mail Test";
-			MessagingHelper.sendEmail(email, mailBody.toString(), mailBody.toString(), subject, false, null);
+			new MessagingHelper().withPlayConfig().sendEmail(email, mailBody.toString(), mailBody.toString(), subject, false);
 		}
 		
 	}
@@ -68,7 +71,7 @@ public class Email extends NotificationChannel
 		textEmailBody.append("Validate this Channel by accessing this URL: "+activationLink);
 		
 		String subject = "Mail Test";
-		MessagingHelper.sendEmail(email, textEmailBody.toString(), htmlEmailBody.toString(), subject, true, null);
+		new MessagingHelper().withPlayConfig().sendEmail(email, textEmailBody.toString(), htmlEmailBody.toString(), subject, true);
 		
 	}
 
@@ -94,7 +97,7 @@ public class Email extends NotificationChannel
 		if (getValidated() && getEnabled())
 		{
 			String subject = Messages.get("messages_new_message_title");
-			MessagingHelper.sendEmail(email, message.getMessage(), message.getMessage().replace("\n", "<br>"), subject, true, message.getFromString());
+			new MessagingHelper().withPlayConfig().sendEmail(email, message.getMessage(), message.getMessage().replace("\n", "<br>"), subject, true);
 		}
 		
 	}

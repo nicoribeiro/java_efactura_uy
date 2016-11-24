@@ -30,7 +30,7 @@ public class SMS extends NotificationChannel
 	{
 		if (getValidated() && getEnabled())
 		{
-			MessagingHelper.sendSMS(phone, alert.getBody(), alert.getSubject(), alert.getAttachment());
+			new MessagingHelper().withPlayConfig().sendSMS(phone, alert.getBody(), alert.getSubject(), alert.getAttachment());
 		}
 	}
 
@@ -39,14 +39,14 @@ public class SMS extends NotificationChannel
 	{
 		if (getValidated() && getEnabled())
 		{
-			MessagingHelper.sendSMS(phone, "Test SMS", "Test SMS", null);
+			new MessagingHelper().withPlayConfig().sendSMS(phone, "Test SMS", "Test SMS", null);
 		}
 	}
 
 	@Override
 	public void sendValidationKey(String arg)
 	{
-		MessagingHelper.sendSMS(phone, "Confirmation CODE: " + getValidationKey(), "Confirmation CODE", null);
+		new MessagingHelper().withPlayConfig().sendSMS(phone, "Confirmation CODE: " + getValidationKey(), "Confirmation CODE", null);
 
 	}
 
@@ -72,7 +72,7 @@ public class SMS extends NotificationChannel
 	{
 		if (getValidated() && getEnabled())
 		{
-			MessagingHelper.sendSMS(phone, message.getMessage(), Messages.get("messages_new_message_title"), message.getFromString());
+			new MessagingHelper().withPlayConfig().sendSMS(phone, message.getMessage(), Messages.get("messages_new_message_title"), message.getFromString());
 		}
 	}
 }
