@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -32,14 +33,10 @@ public class HazelcastFactory {
 
 	final static Logger logger = LoggerFactory.getLogger(HazelcastFactory.class);
 
-	private Application application;
+	@Inject
+	private Provider<Application> application;
 	
 	private Environment environment;
-	
-	@Inject
-	public void setApplication(Application application) {
-		this.application = application;
-	}
 	
 	@Inject
 	public void setEnvironment(Environment environment) {
@@ -63,7 +60,7 @@ public class HazelcastFactory {
     }
 
 	private Config getServerConfig() throws FileNotFoundException {
-		String filePath = application.path().getAbsolutePath() + "/conf/hazelcast.xml";
+		String filePath = application.get().path().getAbsolutePath() + "/conf/hazelcast.xml";
 
 		logger.info("Trying file at: " + filePath);
 
@@ -79,12 +76,12 @@ public class HazelcastFactory {
 
 		awsConfig.setInsideAws(true);
 		awsConfig.setEnabled(true);
-		awsConfig.setAccessKey(application.configuration().getString("aws.api.key"));
-		awsConfig.setSecretKey(application.configuration().getString("aws.api.secret"));
-		awsConfig.setRegion(application.configuration().getString("hazelcast.region"));
-		awsConfig.setSecurityGroupName(application.configuration().getString("hazelcast.securityGroupName"));
-		awsConfig.setTagKey(application.configuration().getString("hazelcast.tagKey"));
-		awsConfig.setTagValue(application.configuration().getString("hazelcast.tagValue"));
+		awsConfig.setAccessKey(application.get().configuration().getString("aws.api.key"));
+		awsConfig.setSecretKey(application.get().configuration().getString("aws.api.secret"));
+		awsConfig.setRegion(application.get().configuration().getString("hazelcast.region"));
+		awsConfig.setSecurityGroupName(application.get().configuration().getString("hazelcast.securityGroupName"));
+		awsConfig.setTagKey(application.get().configuration().getString("hazelcast.tagKey"));
+		awsConfig.setTagValue(application.get().configuration().getString("hazelcast.tagValue"));
 
 		clientConfig.setNetworkConfig(clientNetworkConfig.setAwsConfig(awsConfig));
 

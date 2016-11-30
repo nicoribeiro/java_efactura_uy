@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -16,6 +17,7 @@ import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.XML;
+import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.SobreRecibido;
@@ -36,8 +38,16 @@ import dgi.classes.respuestas.sobre.RechazoSobreType;
 
 public class IntercambioServiceImpl implements IntercambioService {
 
+	private Commons commons;
+	
+	@Inject
+	public void setCommons(Commons commons) {
+		this.commons = commons;
+	}
+	
 	@Override
 	public ACKSobredefType procesarSobre(Empresa empresa, SobreRecibido sobreRecibido) throws APIException {
+		
 		
 	
 			
@@ -152,7 +162,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 				
 				Document allDocument = XML.marshall(ackSobredefType);
 
-				allDocument = SignatureInterceptor.signDocument(dbf, allDocument,"ACKSobre",null);
+				allDocument = SignatureInterceptor.signDocument(dbf, allDocument,"ACKSobre",null,commons);
 				
 				sobreRecibido.setRespuesta_empresa(XML.documentToString(allDocument));
 				
@@ -202,7 +212,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 					DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 					dbf.setNamespaceAware(true);
 					Document allDocument = XML.marshall(ackcfEdefType);
-					allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null);
+					allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null,commons);
 					sobreRecibido.setResultado_empresa(XML.documentToString(allDocument));
 					
 					return ackcfEdefType;

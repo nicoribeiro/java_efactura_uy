@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -52,12 +53,8 @@ public class DocumentController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(DocumentController.class);
 
-	private Application application;
-	
 	@Inject
-	public void setApplication(Application application) {
-		this.application = application;
-	}
+	private Provider<Application> application;
 	
 	public CompletionStage<Result> cambiarModo(String modo) throws APIException {
 		MODO_SISTEMA modoEnum = MODO_SISTEMA.valueOf(modo);
@@ -431,7 +428,7 @@ public class DocumentController extends AbstractController {
 
 		String filename = cfe.getTipo().value + "-" + cfe.getSerie() + "-" + cfe.getNro() + ".pdf";
 
-		String path = application.configuration().getString("documentos.pdf.path", "/mnt/efacturas");
+		String path = application.get().configuration().getString("documentos.pdf.path", "/mnt/efacturas");
 
 		File pdf = new File(path + File.separator + filename);
 
