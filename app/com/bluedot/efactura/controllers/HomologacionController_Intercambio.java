@@ -63,15 +63,15 @@ public class HomologacionController_Intercambio extends AbstractController {
 			 * print!
 			 */
 			XML.marshall(envioCFEEntreEmpresas, System.out);
+			//TODO rehacer
+//			ACKSobredefType ackSobredefType = service.procesarSobre(envioCFEEntreEmpresas, new File(path).getName());
 			
-			ACKSobredefType ackSobredefType = service.procesarSobre(envioCFEEntreEmpresas, new File(path).getName());
+//			XML.marshall(ackSobredefType, System.out);
 			
-			XML.marshall(ackSobredefType, System.out);
-			
-			ACKCFEdefType resultCFE = service.procesarCFESobre(envioCFEEntreEmpresas, ackSobredefType, new File(path).getName());
+//			ACKCFEdefType resultCFE = service.procesarCFESobre(envioCFEEntreEmpresas, ackSobredefType, new File(path).getName());
 
-			if (resultCFE !=null)
-				XML.marshall(resultCFE, System.out);
+//			if (resultCFE !=null)
+//				XML.marshall(resultCFE, System.out);
 			
 		} catch (JSONException e) {
 			throw APIException.raise(e);
