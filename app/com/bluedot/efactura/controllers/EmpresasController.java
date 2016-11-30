@@ -51,12 +51,12 @@ public class EmpresasController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(EmpresasController.class);
 
-	private Mutex mutex;
-	
-	@Inject
-	public EmpresasController(Mutex mutex){
-		this.mutex = mutex;
-	}
+//	private Mutex mutex;
+//	
+//	@Inject
+//	public EmpresasController(Mutex mutex){
+//		this.mutex = mutex;
+//	}
 	
 	public CompletionStage<Result> darInformacionRut(String idrut) throws APIException {
 		//TODO tomar este consulta rut de un factory
