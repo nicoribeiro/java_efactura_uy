@@ -22,3 +22,5 @@ resources/images/logo.jpg
 builds
 deploys
 deploy_conf
+
+.cache-macros
