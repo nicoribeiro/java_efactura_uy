@@ -12,6 +12,7 @@ import com.bluedot.commons.security.User.Role;
 import com.bluedot.efactura.global.RequestUtils;
 
 import play.mvc.Http.Context;
+import play.db.jpa.JPAApi;
 import play.mvc.Result;
 
 public class PermissionValidator
@@ -19,7 +20,7 @@ public class PermissionValidator
 
 	final static Logger logger = LoggerFactory.getLogger(PermissionValidator.class);
 	
-	public static User getSessionUser(Context ctx) throws APIException
+	public static User getSessionUser(JPAApi jpaApi, Context ctx) throws APIException
 	{
 		User sessionUser = null;
 
@@ -36,7 +37,7 @@ public class PermissionValidator
 			Credential credential = null;
 			try
 			{
-				credential = Credential.findByKey(key, true);
+				credential = Credential.findByKey(jpaApi, key, true);
 
 				sessionUser = credential.getUser();
 
@@ -57,7 +58,7 @@ public class PermissionValidator
 			Session session = null;
 			try
 			{
-				session = Session.findByAuthToken(authToken, true);
+				session = Session.findByAuthToken(jpaApi, authToken, true);
 
 				sessionUser = session.getUser();
 
@@ -71,9 +72,9 @@ public class PermissionValidator
 		return sessionUser;
 	}
 	
-	public static CompletionStage<Result> runIfHasRole(Context context, PromiseCallback executionBlock, Role role) throws APIException
+	public static CompletionStage<Result> runIfHasRole(JPAApi jpaApi, Context context, PromiseCallback executionBlock, Role role) throws APIException
 	{
-		User sessionUser = getSessionUser(Context.current());
+		User sessionUser = getSessionUser(jpaApi, Context.current());
 		if (sessionUser.getRole() == (role))
 			return executionBlock.execute();
 
@@ -82,12 +83,12 @@ public class PermissionValidator
 
 	
 
-	public static CompletionStage<Result> runWithValidation(Context context, PromiseCallback executionBlock, PermissionNames permission, Object... args) throws APIException
+	public static CompletionStage<Result> runWithValidation(JPAApi jpaApi, Context context, PromiseCallback executionBlock, PermissionNames permission, Object... args) throws APIException
 	{
 		if (permission == PermissionNames.ANY || permission == null)
 			return executionBlock.execute();
 
-		User sessionUser = getSessionUser(context);
+		User sessionUser = getSessionUser(jpaApi, context);
 
 		if (has(sessionUser, permission, args))
 			return executionBlock.execute();
@@ -96,14 +97,14 @@ public class PermissionValidator
 	}
 	
 	
-	public static CompletionStage<Result> runIfHasAccountAccess(Context context, PromiseCallback executionBlock, Account account) throws APIException
+	public static CompletionStage<Result> runIfHasAccountAccess(JPAApi jpaApi, Context context, PromiseCallback executionBlock, Account account) throws APIException
 	{
-		return runIfHasAccountAccess(context, executionBlock, account, PermissionNames.ACCOUNT_ACCESS, account.getId()+"");
+		return runIfHasAccountAccess(jpaApi, context, executionBlock, account, PermissionNames.ACCOUNT_ACCESS, account.getId()+"");
 	}
 	
-	public static CompletionStage<Result> runIfHasAccountAccess(Context context, PromiseCallback executionBlock, Account account, PermissionNames permission, Object... args) throws APIException
+	public static CompletionStage<Result> runIfHasAccountAccess(JPAApi jpaApi, Context context, PromiseCallback executionBlock, Account account, PermissionNames permission, Object... args) throws APIException
 	{
-		User sessionUser = getSessionUser(context);
+		User sessionUser = getSessionUser(jpaApi, context);
 		
 		logger.info("Session user is: " + sessionUser);
 		logger.info("Account is: " + account);
@@ -113,7 +114,7 @@ public class PermissionValidator
 			return executionBlock.execute();
 		}
 		
-		return runWithValidation(context, executionBlock, permission, args);
+		return runWithValidation(jpaApi, context, executionBlock, permission, args);
 	}
 
 	private static String p(PermissionNames permissionName, Object... args)
@@ -127,9 +128,9 @@ public class PermissionValidator
 	}
 
 
-	public static CompletionStage<Result> runIfHasUserAccess(Context current, PromiseCallback block, User user) throws APIException
+	public static CompletionStage<Result> runIfHasUserAccess(JPAApi jpaApi, Context current, PromiseCallback block, User user) throws APIException
 	{
-		User sessionUser = getSessionUser(current);
+		User sessionUser = getSessionUser(jpaApi, current);
 	
 		if (sessionUser.getId()==user.getId())
 			return block.execute();

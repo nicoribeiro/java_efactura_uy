@@ -12,8 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.utils.Crypto;
 import com.bluedot.efactura.global.RequestUtils;
+import com.google.inject.Provider;
 
 import play.Application;
+import play.db.jpa.JPAApi;
 import play.i18n.Messages;
 import play.mvc.Http.Context;
 import play.mvc.Result;
@@ -22,7 +24,8 @@ import play.mvc.Security;
 public class Secured extends Security.Authenticator
 {
 
-	private Application application;
+	private Provider<Application> application;
+	private JPAApi jpaApi;
 	
 	public static final String AUTH_HEADER = "AUTH-TOKEN";
 	
@@ -37,8 +40,9 @@ public class Secured extends Security.Authenticator
 	final static Logger logger = LoggerFactory.getLogger(Secured.class);
 	
 	@Inject
-	public void setApplication(Application application) {
+	public void setApplication(Provider<Application> application, JPAApi jpaApi) {
 		this.application = application;
+		this.jpaApi = jpaApi;
 	}
 	
 	@Override
@@ -68,6 +72,7 @@ public class Secured extends Security.Authenticator
 		{
 			authToken = ctx.request().getQueryString("api_key");
 			if (authToken == null || "".equals(authToken)){
+				//TODO mejorar esto, deberia retornar un json
 				ctx.args.put("error_cause", Messages.get("auth_token_not_found"));
 				return null;
 			}
@@ -77,7 +82,7 @@ public class Secured extends Security.Authenticator
 		try
 		{
 
-			session = Session.findByAuthToken(authToken);
+			session = Session.findByAuthToken(jpaApi, authToken);
 			
 		} catch (Throwable e)
 		{
@@ -132,7 +137,7 @@ public class Secured extends Security.Authenticator
 		Credential credential = null;
 		try
 		{
-			credential = Credential.findByKey(key);
+			credential = Credential.findByKey(jpaApi, key);
 		} catch (Throwable e)
 		{
 			e.printStackTrace();
@@ -192,7 +197,7 @@ public class Secured extends Security.Authenticator
 	
 	private boolean checkSecurityExceptions(Context ctx)
 	{
-		String exceptions = application.configuration().getString("security.exceptions", "[]");
+		String exceptions = application.get().configuration().getString("security.exceptions", "[]");
 		
 		try
 		{

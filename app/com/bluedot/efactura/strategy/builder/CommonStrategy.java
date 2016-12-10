@@ -12,15 +12,18 @@ import com.bluedot.efactura.model.Titular;
 import com.bluedot.efactura.model.UI;
 
 import dgi.classes.recepcion.TipMonType;
+import play.db.jpa.JPAApi;
 
 public class CommonStrategy {
 
 	protected CFE cfe;
 	protected CAEMicroController caeMicroController;
+	protected JPAApi jpaApi;
 
-	public CommonStrategy(CFE cfe, CAEMicroController caeMicroController) throws APIException {
+	public CommonStrategy(CFE cfe, CAEMicroController caeMicroController, JPAApi jpaApi) throws APIException {
 		this.caeMicroController = caeMicroController;
 		this.cfe = cfe;
+		this.jpaApi = jpaApi;
 	}
 
 	protected boolean supera10000UI() throws APIException {
@@ -39,7 +42,7 @@ public class CommonStrategy {
 		cal.setTime(cfe.getFecha());
 		int anio = cal.get(Calendar.YEAR);
 
-		UI ui = UI.findByAnio(anio, true);
+		UI ui = UI.findByAnio(jpaApi, anio, true);
 
 		return (monto / ui.getCotizacion()) > 10000;
 
@@ -48,7 +51,7 @@ public class CommonStrategy {
 	public Titular getOrCreateTitular(Pais paisEmisorDocumento, TipoDocumento tipoDocumento, String documento)
 			throws APIException {
 
-		Titular titular = Titular.findById(paisEmisorDocumento, tipoDocumento, documento);
+		Titular titular = Titular.findById(jpaApi, paisEmisorDocumento, tipoDocumento, documento);
 		/*
 		 * Si el titular no existe la registro como nuevo en el sistema
 		 */
@@ -63,7 +66,7 @@ public class CommonStrategy {
 
 	public Empresa getOrCreateEmpresa(String docRecep, String rznSocRecep, String dirRecep, String ciudadRecep,
 			String deptoRecep) {
-		Empresa empresa = Empresa.findByRUT(docRecep);
+		Empresa empresa = Empresa.findByRUT(jpaApi, docRecep);
 		
 		if (empresa == null) {
 			/*

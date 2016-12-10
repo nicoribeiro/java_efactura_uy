@@ -12,12 +12,12 @@ import org.json.JSONException;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.efactura.commons.Commons;
-import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroControllerFactory;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
-import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.TipoDocumento;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType.EFact;
@@ -37,11 +37,13 @@ import dgi.classes.recepcion.wrappers.ReceptorFactWrapper;
 import dgi.classes.recepcion.wrappers.ReceptorInterface;
 import dgi.classes.recepcion.wrappers.TotalesFactTickWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
+import play.db.jpa.JPAApi;
 
 public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 
-	public EfactStrategy(CFE cfe, CAEMicroController caeMicroController) throws APIException {
-		super(cfe, caeMicroController);
+	@Inject
+	public EfactStrategy(@Assisted CFE cfe, @Assisted Empresa empresa, JPAApi jpaApi, CAEMicroControllerFactory caeMicroControllerFactory) throws APIException {
+		super(cfe, caeMicroControllerFactory.create(empresa), jpaApi);
 		if (cfe.getEfactura()==null)
 			this.cfe.setEfactura(new EFact());
 		

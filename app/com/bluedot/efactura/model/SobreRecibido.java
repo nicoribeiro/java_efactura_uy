@@ -11,6 +11,8 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import com.play4jpa.jpa.models.DefaultQuery;
+
+import play.db.jpa.JPAApi;
 @Entity
 public class SobreRecibido extends Sobre{
 
@@ -45,8 +47,8 @@ public class SobreRecibido extends Sobre{
 		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes, cfes);
 	}
 
-	public static List<SobreRecibido> findSobreRecibido(long idEmisor, Empresa empresaEmisora, Empresa empresaReceptora) {
-		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query();
+	public static List<SobreRecibido> findSobreRecibido(JPAApi jpaApi, long idEmisor, Empresa empresaEmisora, Empresa empresaReceptora) {
+		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query(jpaApi);
 
 
 		q.getCriteria().createAlias("empresaEmisora", "empresaEmisora", JoinType.LEFT_OUTER_JOIN);

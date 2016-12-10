@@ -12,6 +12,8 @@ import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPAApi;
+
 @Entity
 public class Pais extends Model<Pais> {
 
@@ -43,12 +45,12 @@ public class Pais extends Model<Pais> {
 
 	private static Finder<Integer, Pais> find = new Finder<Integer, Pais>(Integer.class, Pais.class);
 
-	public static Pais findById(Integer id) {
-		return find.byId(id);
+	public static Pais findById(JPAApi jpaApi, Integer id) {
+		return find.byId(jpaApi, id);
 	}
 
-	public static Pais findById(Integer id, boolean throwExceptionWhenMissing) throws APIException {
-		Pais pais = find.byId(id);
+	public static Pais findById(JPAApi jpaApi, Integer id, boolean throwExceptionWhenMissing) throws APIException {
+		Pais pais = find.byId(jpaApi, id);
 
 		if (pais == null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.PAIS_NO_ENCONTRADO.withParams("id",id));
@@ -56,9 +58,9 @@ public class Pais extends Model<Pais> {
 		return pais;
 	}
 	
-	public static Pais findByCodigo(String codigo, boolean throwExceptionWhenMissing) throws APIException {
+	public static Pais findByCodigo(JPAApi jpaApi, String codigo, boolean throwExceptionWhenMissing) throws APIException {
 
-		DefaultQuery<Pais> q = (DefaultQuery<Pais>) find.query();
+		DefaultQuery<Pais> q = (DefaultQuery<Pais>) find.query(jpaApi);
 
 		q.getCriteria().add(Restrictions.eq("codigo", codigo));
 
@@ -71,8 +73,8 @@ public class Pais extends Model<Pais> {
 	}
 	
 	
-	public static long count(){
-		DefaultQuery<Pais> q = (DefaultQuery<Pais>) find.query();
+	public static long count(JPAApi jpaApi){
+		DefaultQuery<Pais> q = (DefaultQuery<Pais>) find.query(jpaApi);
 		return q.findRowCount();
 	}
 	

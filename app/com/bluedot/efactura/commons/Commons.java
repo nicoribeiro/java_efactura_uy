@@ -39,6 +39,7 @@ import com.bluedot.commons.utils.PrettyPrint;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.model.TipoDoc;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import dgi.classes.recepcion.CFEDefType;
@@ -50,51 +51,35 @@ import play.Environment;
 
 @Singleton
 public class Commons {
-	private static String securityPrefixName = "org.apache.ws.security.crypto.merlin.keystore.";
-	private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-	private static Properties securityProperties;
+	private String securityPrefixName = "org.apache.ws.security.crypto.merlin.keystore.";
+	private SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+	private Properties securityProperties;
 	
-	private Application application;
+	private Provider<Application> application;
 	
 	private Environment environment;
 	
 	@Inject
-	public void setApplication(Application application) {
+	public Commons(Provider<Application> application, Environment environment){
 		this.application = application;
-	}
-	
-	@Inject
-	public void setEnvironment(Environment environment) {
 		this.environment = environment;
-	}
-	
-	{
-		securityProperties = new Properties();
-		try {
-			if (environment.isDev())
-				securityProperties.load(new FileInputStream(application.configuration().getString(Constants.SECURITY_FILE)));
-			else
-				securityProperties.load(Commons.class.getClassLoader().getResourceAsStream(application.configuration().getString(Constants.SECURITY_FILE)));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	public enum DgiService {
 		Recepcion, Consulta, Rut
 	}
 
-	public String getURL(DgiService service) throws FileNotFoundException, IOException {
+	public String getURL(DgiService service) {
 
-		String environment = application.configuration().getString(Constants.ENVIRONMENT);
+		String environment = application.get().configuration().getString(Constants.ENVIRONMENT);
 
 		switch (service) {
 		case Consulta:
-			return application.configuration().getString(Constants.SERVICE_CONSULTA_PREFIX + "." + environment);
+			return application.get().configuration().getString(Constants.SERVICE_CONSULTA_PREFIX + "." + environment);
 		case Recepcion:
-			return application.configuration().getString(Constants.SERVICE_RECEPCION_URL_PREFIX + "." + environment);
+			return application.get().configuration().getString(Constants.SERVICE_RECEPCION_URL_PREFIX + "." + environment);
 		case Rut:
-			return application.configuration().getString(Constants.SERVICE_RUT_URL_PREFIX + "." + environment);
+			return application.get().configuration().getString(Constants.SERVICE_RUT_URL_PREFIX + "." + environment);
 		}
 		return null;
 
@@ -109,22 +94,22 @@ public class Commons {
 
 	}
 
-	public KeyStore getKeyStore() throws FileNotFoundException, IOException, KeyStoreException,
+	public KeyStore getKeyStore() throws IOException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException {
-		KeyStore keystore = KeyStore.getInstance(securityProperties.getProperty(securityPrefixName + "type"));
-		InputStream fIn = Commons.class.getClassLoader().getResourceAsStream(securityProperties.getProperty(securityPrefixName + "file"));
-		keystore.load(fIn, securityProperties.getProperty(securityPrefixName + "password").toCharArray());
+		KeyStore keystore = KeyStore.getInstance(getSecurityProperties().getProperty(securityPrefixName + "type"));
+		InputStream fIn = Commons.class.getClassLoader().getResourceAsStream(getSecurityProperties().getProperty(securityPrefixName + "file"));
+		keystore.load(fIn, getSecurityProperties().getProperty(securityPrefixName + "password").toCharArray());
 
 		return keystore;
 	}
 
 	public String getCertificatePassword() throws FileNotFoundException, IOException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException {
-		return securityProperties.getProperty("certificate.password");
+		return getSecurityProperties().getProperty("certificate.password");
 	}
 
 	public String getCetificateAlias() throws FileNotFoundException, IOException {
-		return securityProperties.getProperty("certificate.alias");
+		return getSecurityProperties().getProperty("certificate.alias");
 	}
 
 	public JSONObject safeGetJSONObject(JSONObject object, String key) throws APIException {
@@ -215,7 +200,7 @@ public class Commons {
 	}
 
 	public String getCfeFolder(Date date) throws FileNotFoundException, IOException {
-		String folder = application.configuration().getString(Constants.GENERATED_CFE_FOLDER,
+		String folder = application.get().configuration().getString(Constants.GENERATED_CFE_FOLDER,
 				"resources" + File.separator + "cfe");
 		return folder + File.separator + formatter.format(date);
 
@@ -255,7 +240,7 @@ public class Commons {
 
 	public String getFilenamePrefix(Node node) throws FileNotFoundException, IOException, ParseException {
 		SimpleDateFormat reader = new SimpleDateFormat("yyyy-MM-dd");
-		String folder = application.configuration().getString(Constants.GENERATED_CFE_FOLDER,
+		String folder = application.get().configuration().getString(Constants.GENERATED_CFE_FOLDER,
 				"resources" + File.separator + "cfe");
 		Node encabezado=null;
 		boolean entreEmpresas = false;
@@ -334,10 +319,25 @@ public class Commons {
 
 	public String getRucDGI() {
 		
-		String environment = application.configuration().getString(Constants.ENVIRONMENT);
+		String environment = application.get().configuration().getString(Constants.ENVIRONMENT);
 
-		return application.configuration().getString(Constants.RUC_DGI + "." + environment, "219999830019");
+		return application.get().configuration().getString(Constants.RUC_DGI + "." + environment, "219999830019");
 		
+	}
+
+	public Properties getSecurityProperties() {
+		if (securityProperties==null){
+		securityProperties = new Properties();
+		try {
+			if (environment.isDev())
+				securityProperties.load(new FileInputStream(application.get().configuration().getString(Constants.SECURITY_FILE)));
+			else
+				securityProperties.load(Commons.class.getClassLoader().getResourceAsStream(application.get().configuration().getString(Constants.SECURITY_FILE)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		}
+		return securityProperties;
 	}
 
 }

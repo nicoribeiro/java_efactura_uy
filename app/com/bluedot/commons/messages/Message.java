@@ -14,6 +14,9 @@ import javax.persistence.Transient;
 
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPA;
+import play.db.jpa.JPAApi;
+
 @Entity
 public class Message extends Model<Message>
 {
@@ -83,10 +86,10 @@ public class Message extends Model<Message>
 		this.generationDate = generationDate;
 	}
 
-	public MessageReceiver getFrom()
+	public MessageReceiver getFrom(JPAApi jpaApi)
 	{
 		if (fromObject == null)
-			fromObject = MessageHelper.getMessageReceiver(fromString);
+			fromObject = MessageHelper.getMessageReceiver(jpaApi, fromString);
 		return fromObject;
 	}
 
@@ -95,10 +98,10 @@ public class Message extends Model<Message>
 		this.fromObject = from;
 	}
 
-	public List<MessageReceiver> getTo()
+	public List<MessageReceiver> getTo(JPAApi jpaApi)
 	{
 		if (toObejcts == null)
-			toObejcts = MessageHelper.getMessageReceivers(toStrings);
+			toObejcts = MessageHelper.getMessageReceivers(jpaApi, toStrings);
 		return toObejcts;
 	}
 

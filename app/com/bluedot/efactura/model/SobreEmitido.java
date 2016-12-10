@@ -18,6 +18,7 @@ import com.play4jpa.jpa.models.DefaultQuery;
 
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.recepcion.EnvioCFE;
+import play.db.jpa.JPAApi;
 @Entity
 public class SobreEmitido extends Sobre{
 	
@@ -70,9 +71,9 @@ public class SobreEmitido extends Sobre{
 		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes, cfes);
 	}
 	
-	public static List<SobreEmitido> findByEmpresaEmisoraAndDate(Empresa empresaEmisora, Date fecha) throws APIException
+	public static List<SobreEmitido> findByEmpresaEmisoraAndDate(JPAApi jpaApi, Empresa empresaEmisora, Date fecha) throws APIException
 	{
-		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query();
+		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query(jpaApi);
 		
 			
 			q.getCriteria().createAlias("empresaEmisora", "empresa", JoinType.LEFT_OUTER_JOIN);

@@ -9,21 +9,34 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.VerboseAction;
 import com.bluedot.commons.utils.IO;
 import com.bluedot.efactura.MODO_SISTEMA;
+import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
+import com.bluedot.efactura.microControllers.interfaces.CFEMicroControllerFactory;
+import com.bluedot.efactura.microControllers.interfaces.ServiceMicroControllerFactory;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.TipoDoc;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.ETck;
+import play.Application;
+import play.db.jpa.JPAApi;
 import play.mvc.BodyParser;
 import play.mvc.Result;
+import play.mvc.With;
 
 public class HomologacionController extends PruebasController {
 
-	public HomologacionController() {
+	private CFEMicroController cfeMicroController;
+	
+	@Inject
+	public HomologacionController(JPAApi jpaApi, Provider<Application> application, ServiceMicroControllerFactory serviceMicroControllerFactory, CFEMicroControllerFactory cfeMicroControllerFactory) {
 
+		super(jpaApi, application, serviceMicroControllerFactory, cfeMicroControllerFactory);
 		try {
 			path = "resources/conf/cae_" + System.currentTimeMillis() + ".json";
 			caeHomologacion = IO.readFile("resources/json/cae_homologacion.json", Charset.defaultCharset());
@@ -31,6 +44,8 @@ public class HomologacionController extends PruebasController {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		this.cfeMicroController = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa);
 
 	}
 
@@ -119,7 +134,7 @@ public class HomologacionController extends PruebasController {
 				 * Create Efact object from json description
 				 */
 				//TODO en todos estos create no se asigna la serie y el nro de CFE, para acerlo ver aceptarDocumento en DocumentController
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura, factura);
+				CFE eFactura = cfeMicroController.create(TipoDoc.eFactura, factura);
 				eFacturas[i] = eFactura.getEfactura();
 
 			}
@@ -127,7 +142,7 @@ public class HomologacionController extends PruebasController {
 			/*
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
-			CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura, factura);
+			CFE eFactura = cfeMicroController.create(TipoDoc.eFactura, factura);
 			eFacturas[detalleJSON.getJSONArray("111").length()] = eFactura.getEfactura();
 		}
 
@@ -153,7 +168,7 @@ public class HomologacionController extends PruebasController {
 				/*
 				 * Create Nota de credito object from json description
 				 */
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, referencia);
+				CFE eFactura = cfeMicroController.create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, referencia);
 				eFacturas_credito[i] = eFactura.getEfactura();
 
 			}
@@ -161,7 +176,7 @@ public class HomologacionController extends PruebasController {
 			/*
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
-			CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, referencia);
+			CFE eFactura = cfeMicroController.create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, referencia);
 			eFacturas_credito[detalleJSON.getJSONArray("112").length()] = eFactura.getEfactura();
 		}
 
@@ -187,7 +202,7 @@ public class HomologacionController extends PruebasController {
 				/*
 				 * Create Nota de debito object from json description
 				 */
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, referencia);
+				CFE eFactura = cfeMicroController.create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, referencia);
 				eFacturas_debito[i] = eFactura.getEfactura();;
 
 			}
@@ -195,7 +210,7 @@ public class HomologacionController extends PruebasController {
 			/*
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
-			CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, referencia);
+			CFE eFactura = cfeMicroController.create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, referencia);
 			eFacturas_debito[detalleJSON.getJSONArray("113").length()] = eFactura.getEfactura();
 		}
 
@@ -203,7 +218,7 @@ public class HomologacionController extends PruebasController {
 			/*
 			 * efactura contingencia
 			 */
-			factory.setModo(MODO_SISTEMA.CONTINGENCIA);
+			cfeMicroController.setModo(MODO_SISTEMA.CONTINGENCIA);
 
 			for (int i = 0; i < detalleJSON.getJSONArray("211").length(); i++) {
 				JSONObject object = detalleJSON.getJSONArray("211").getJSONObject(i);
@@ -220,11 +235,11 @@ public class HomologacionController extends PruebasController {
 				/*
 				 * Create Efactura object from json description
 				 */
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura_Contingencia, efactura);
+				CFE eFactura = cfeMicroController.create(TipoDoc.eFactura_Contingencia, efactura);
 				eFacturas_contingencia[i] = eFactura.getEfactura();
 
 			}
-			factory.setModo(MODO_SISTEMA.NORMAL);
+			cfeMicroController.setModo(MODO_SISTEMA.NORMAL);
 		}
 
 		/*
@@ -282,7 +297,7 @@ public class HomologacionController extends PruebasController {
 				/*
 				 * Create ETck object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket, ticket);
+				CFE eTicket = cfeMicroController.create(TipoDoc.eTicket, ticket);
 				eTickets[i] = eTicket.getEticket();
 
 			}
@@ -290,7 +305,7 @@ public class HomologacionController extends PruebasController {
 			/*
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
-			CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket, ticket);
+			CFE eTicket = cfeMicroController.create(TipoDoc.eTicket, ticket);
 			eTickets[detalleJSON.getJSONArray("101").length()] = eTicket.getEticket();
 			
 			
@@ -318,7 +333,7 @@ public class HomologacionController extends PruebasController {
 				/*
 				 * Create Nota de credito object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eTicket, notaCredito, referencia);
+				CFE eTicket = cfeMicroController.create(TipoDoc.Nota_de_Credito_de_eTicket, notaCredito, referencia);
 				eTickets_credito[i] = eTicket.getEticket();
 
 			}
@@ -326,7 +341,7 @@ public class HomologacionController extends PruebasController {
 			/*
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
-			CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eTicket,notaCredito, referencia);
+			CFE eTicket = cfeMicroController.create(TipoDoc.Nota_de_Credito_de_eTicket,notaCredito, referencia);
 			eTickets[detalleJSON.getJSONArray("102").length()] = eTicket.getEticket();
 		}
 
@@ -352,7 +367,7 @@ public class HomologacionController extends PruebasController {
 				/*
 				 * Create Nota de debito object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eTicket, notaDebito, referencia);
+				CFE eTicket = cfeMicroController.create(TipoDoc.Nota_de_Debito_de_eTicket, notaDebito, referencia);
 				etickets_debito[i] = eTicket.getEticket();
 
 			}
@@ -360,7 +375,7 @@ public class HomologacionController extends PruebasController {
 			/*
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
-			CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eTicket,notaDebito, referencia);
+			CFE eTicket = cfeMicroController.create(TipoDoc.Nota_de_Debito_de_eTicket,notaDebito, referencia);
 			etickets_debito[detalleJSON.getJSONArray("103").length()] = eTicket.getEticket();
 		}
 
@@ -368,7 +383,7 @@ public class HomologacionController extends PruebasController {
 			/*
 			 * efactura contingencia
 			 */
-			factory.setModo(MODO_SISTEMA.CONTINGENCIA);
+			cfeMicroController.setModo(MODO_SISTEMA.CONTINGENCIA);
 
 			for (int i = 0; i < detalleJSON.getJSONArray("201").length(); i++) {
 				JSONObject object = detalleJSON.getJSONArray("201").getJSONObject(i);
@@ -385,11 +400,11 @@ public class HomologacionController extends PruebasController {
 				/*
 				 * Create Efactura object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket_Contingencia, ticket);
+				CFE eTicket = cfeMicroController.create(TipoDoc.eTicket_Contingencia, ticket);
 				eTicket_contingencia[i] = eTicket.getEticket();;
 
 			}
-			factory.setModo(MODO_SISTEMA.NORMAL);
+			cfeMicroController.setModo(MODO_SISTEMA.NORMAL);
 		}
 
 		/*

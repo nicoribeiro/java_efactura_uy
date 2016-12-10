@@ -22,6 +22,8 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
+
+import play.db.jpa.JPAApi;
 @Entity
 public class Empresa extends Model<Empresa>{
 
@@ -107,12 +109,12 @@ public class Empresa extends Model<Empresa>{
 	
 	private static Finder<Integer, Empresa> find = new Finder<Integer, Empresa>(Integer.class, Empresa.class);
 	
-	public static Empresa findById(Integer id) {
-		return find.byId(id);
+	public static Empresa findById(JPAApi jpaApi, Integer id) {
+		return find.byId(jpaApi, id);
 	}
 
-	public static Empresa findById(Integer id, boolean throwExceptionWhenMissing) throws APIException {
-		Empresa empresa = find.byId(id);
+	public static Empresa findById(JPAApi jpaApi, Integer id, boolean throwExceptionWhenMissing) throws APIException {
+		Empresa empresa = find.byId(jpaApi, id);
 
 		if (empresa == null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA.withParams("id",id));
@@ -122,13 +124,13 @@ public class Empresa extends Model<Empresa>{
 	}
 	
 	
-	public static Empresa findByRUT(String rut)
+	public static Empresa findByRUT(JPAApi jpaApi, String rut)
 	{
-		return find.query().eq("rut", rut).findUnique();
+		return find.query(jpaApi).eq("rut", rut).findUnique();
 	}
 	
-	public static Empresa findByRUT(String rut, boolean throwExceptionWhenMissing) throws APIException {
-		Empresa empresa = find.query().eq("rut", rut).findUnique();
+	public static Empresa findByRUT(JPAApi jpaApi, String rut, boolean throwExceptionWhenMissing) throws APIException {
+		Empresa empresa = find.query(jpaApi).eq("rut", rut).findUnique();
 
 		if (empresa == null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA.withParams("rut", rut));
@@ -136,13 +138,13 @@ public class Empresa extends Model<Empresa>{
 		return empresa;
 	}
 	
-	public static List<Empresa> findAll()
+	public static List<Empresa> findAll(JPAApi jpaApi)
 	{
-		return find.all();
+		return find.all(jpaApi);
 	}
 	
-	public static long count(){
-		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
+	public static long count(JPAApi jpaApi){
+		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query(jpaApi);
 		return q.findRowCount();
 	}
 

@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import javax.inject.Inject;
+
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,8 +20,10 @@ import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.MotivoRechazoSobre;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.services.IntercambioService;
+import com.google.inject.Inject;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
@@ -32,6 +34,7 @@ import dgi.classes.respuestas.cfe.RechazoCFEDGIType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Caratula;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Detalle;
+import play.db.jpa.JPAApi;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 import dgi.classes.respuestas.sobre.ParamConsultaType;
 import dgi.classes.respuestas.sobre.RechazoSobreType;
@@ -40,10 +43,16 @@ public class IntercambioServiceImpl implements IntercambioService {
 
 	private Commons commons;
 	
+	private JPAApi jpaApi;
+	
 	@Inject
-	public void setCommons(Commons commons) {
+	public IntercambioServiceImpl(Commons commons, JPAApi jpaApi) {
 		this.commons = commons;
+		this.jpaApi = jpaApi;
 	}
+	
+	
+	
 	
 	@Override
 	public ACKSobredefType procesarSobre(Empresa empresa, SobreRecibido sobreRecibido) throws APIException {
@@ -102,14 +111,17 @@ public class IntercambioServiceImpl implements IntercambioService {
 				 */
 
 				/*
+				 * S08
 				 * Controlo que no exista el sobre en mi sistema (para evitar envios dobles)
 				 */
-				List<SobreRecibido> sobres = SobreRecibido.findSobreRecibido(envioCFEEntreEmpresas.getCaratula().getIdemisor().longValue(), sobreRecibido.getEmpresaEmisora(),sobreRecibido.getEmpresaReceptora());
+				List<SobreRecibido> sobres = SobreRecibido.findSobreRecibido(jpaApi, envioCFEEntreEmpresas.getCaratula().getIdemisor().longValue(), sobreRecibido.getEmpresaEmisora(),sobreRecibido.getEmpresaReceptora());
 				// 1 porque el sobre actual ya fue persistido
 				if (sobres.size()>1){
 					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo("S08");
-					rechazo.setGlosa("Ya existe sobre con idEmisor:" + envioCFEEntreEmpresas.getCaratula().getIdemisor());
+					MotivoRechazoSobre motivoRechazoSobre = MotivoRechazoSobre.S08;
+					rechazo.setMotivo(motivoRechazoSobre.name());
+					sobreRecibido.setMotivo(motivoRechazoSobre);
+					rechazo.setGlosa(motivoRechazoSobre.getMotivo() + envioCFEEntreEmpresas.getCaratula().getIdemisor());
 					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
 				}
 					
@@ -118,8 +130,10 @@ public class IntercambioServiceImpl implements IntercambioService {
 				 */
 				if (!envioCFEEntreEmpresas.getCaratula().getRutReceptor().equals(empresa.getRut())){
 					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo("S02");
-					rechazo.setGlosa("No coincide RUC de Sobre, Certificado, envío o CFE");
+					MotivoRechazoSobre motivoRechazoSobre = MotivoRechazoSobre.S02;
+					rechazo.setMotivo(motivoRechazoSobre.name());
+					sobreRecibido.setMotivo(motivoRechazoSobre);
+					rechazo.setGlosa(motivoRechazoSobre.getMotivo());
 					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
 				}
 				
@@ -128,8 +142,10 @@ public class IntercambioServiceImpl implements IntercambioService {
 				 */
 				if (envioCFEEntreEmpresas.getCaratula().getCantCFE() != envioCFEEntreEmpresas.getCFEAdendas().size()){
 					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo("S05");
-					rechazo.setGlosa("No coinciden cantidad CFE de carátula y contenido");
+					MotivoRechazoSobre motivoRechazoSobre = MotivoRechazoSobre.S05;
+					rechazo.setMotivo(motivoRechazoSobre.name());
+					sobreRecibido.setMotivo(motivoRechazoSobre);
+					rechazo.setGlosa(motivoRechazoSobre.getMotivo());
 					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
 				}
 				

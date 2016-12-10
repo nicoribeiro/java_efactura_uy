@@ -10,22 +10,35 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.error.VerboseAction;
 import com.bluedot.commons.security.Secured;
+import com.bluedot.efactura.MODO_SISTEMA;
+import com.bluedot.efactura.microControllers.interfaces.CFEMicroControllerFactory;
+import com.bluedot.efactura.microControllers.interfaces.ServiceMicroControllerFactory;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.TipoDoc;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.play4jpa.jpa.db.Tx;
 
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
 import play.mvc.BodyParser;
+import play.Application;
 import play.mvc.Result;
 import play.mvc.Security;
+import play.mvc.With;
 
-@ErrorMessage
-@Security.Authenticated(Secured.class)
 public class TestingController extends PruebasController {
+
+	@Inject
+	public TestingController(JPAApi jpaApi, Provider<Application> application, ServiceMicroControllerFactory serviceMicroControllerFactory, CFEMicroControllerFactory cfeMicroControllerFactory) {
+		super(jpaApi, application, serviceMicroControllerFactory, cfeMicroControllerFactory);
+	}
 
 	private int cantidadDocumentos = 50;
 	private int maxLineasPorDocumento = 15;
@@ -80,7 +93,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create EResg object from json description
 				 */
-				CFE eResguardo = factory.getCFEMicroController(empresa).create(TipoDoc.eResguardo, resguardo);
+				CFE eResguardo = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa).create(TipoDoc.eResguardo, resguardo);
 				eResguardos[i] = eResguardo.getEresguardo();
 
 			}
@@ -120,7 +133,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Efact object from json description
 				 */
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura,factura);
+				CFE eFactura = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa).create(TipoDoc.eFactura,factura);
 				eFacturas[i] = eFactura.getEfactura();
 
 			}
@@ -143,7 +156,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Nota de credito object from json description
 				 */
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, referencia);
+				CFE eFactura = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa).create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, referencia);
 				eFacturas_credito[i] = eFactura.getEfactura();
 
 			}
@@ -165,7 +178,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Nota de debito object from json description
 				 */
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, referencia);
+				CFE eFactura = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa).create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, referencia);
 				eFacturas_debito[i] = eFactura.getEfactura();
 
 			}
@@ -214,7 +227,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create ETck object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket, ticket);
+				CFE eTicket = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa).create(TipoDoc.eTicket, ticket);
 				eTickets[i] = eTicket.getEticket();
 
 			}
@@ -237,7 +250,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Nota de credito object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eTicket,notaCredito, referencia);
+				CFE eTicket = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa).create(TipoDoc.Nota_de_Credito_de_eTicket,notaCredito, referencia);
 				eTickets_credito[i] = eTicket.getEticket();
 
 			}
@@ -259,7 +272,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Nota de debito object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eTicket,notaDebito, referencia);
+				CFE eTicket = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa).create(TipoDoc.Nota_de_Debito_de_eTicket,notaDebito, referencia);
 				etickets_debito[i] = eTicket.getEticket();;
 
 			}

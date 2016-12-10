@@ -8,14 +8,33 @@ import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.error.VerboseAction;
 import com.bluedot.commons.security.AccountAccessLevel;
+import com.bluedot.commons.security.Secured;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.play4jpa.jpa.db.Tx;
 
+import play.Application;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
 import play.mvc.Result;
+import play.mvc.Security;
+import play.mvc.With;
 
+@With(VerboseAction.class)
+@Tx
+@Transactional
+@Security.Authenticated(Secured.class)
 public class AccessLevelsController extends AbstractController
 {
 	
-	public static CompletionStage<Result> getAvailableAccountAccessLevels() throws APIException
+	@Inject
+	public AccessLevelsController(JPAApi jpaApi, Provider<Application> application) {
+		super(jpaApi, application);
+	}
+
+	public CompletionStage<Result> getAvailableAccountAccessLevels() throws APIException
 	{
 		JSONArray acls = new JSONArray();
 		try{

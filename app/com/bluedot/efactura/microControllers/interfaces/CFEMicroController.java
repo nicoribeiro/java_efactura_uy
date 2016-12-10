@@ -3,6 +3,7 @@ package com.bluedot.efactura.microControllers.interfaces;
 import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
+import com.bluedot.efactura.MODO_SISTEMA;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.TipoDoc;
 
@@ -17,5 +18,6 @@ public interface CFEMicroController
 	 */
 	public CFE create(TipoDoc tipo, JSONObject jsonObject) throws APIException;
 	public CFE create(TipoDoc tipo, JSONObject jsonObject, JSONObject referencia) throws APIException;
+	public void setModo(MODO_SISTEMA modo);
 	
 }

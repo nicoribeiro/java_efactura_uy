@@ -22,12 +22,8 @@ public class ConsultaRutServiceImpl implements ConsultaRutService {
 	private WSRutPool wsRutPool;
 
 	@Inject
-	public void setWsRutPool(WSRutPool wsRutPool) {
+	public ConsultaRutServiceImpl(WSRutPool wsRutPool) {
 		this.wsRutPool = wsRutPool;
-	}
-
-	public ConsultaRutServiceImpl() {
-
 	}
 
 	@Override

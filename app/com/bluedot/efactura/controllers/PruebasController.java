@@ -10,17 +10,32 @@ import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
+import com.bluedot.commons.error.VerboseAction;
+import com.bluedot.commons.security.Secured;
+import com.bluedot.efactura.microControllers.interfaces.CFEMicroControllerFactory;
+import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
+import com.bluedot.efactura.microControllers.interfaces.ServiceMicroControllerFactory;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.play4jpa.jpa.db.Tx;
 
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
+import play.Application;
+import play.mvc.Security;
+import play.mvc.With;
 
+@With(VerboseAction.class)
+@Tx
+@Transactional
+@Security.Authenticated(Secured.class)
 public abstract class PruebasController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(PruebasController.class);
@@ -30,19 +45,17 @@ public abstract class PruebasController extends AbstractController {
 	protected String caeHomologacion;
 	protected String caeActual;
 	protected HashMap<TipoDoc, TipoDoc> tiposDoc = new HashMap<TipoDoc, TipoDoc>();
-	protected EfacturaMicroControllersFactory factory;
 	protected Empresa empresa;
+	protected ServiceMicroControllerFactory serviceMicroControllerFactory;
+	protected CFEMicroControllerFactory cfeMicroControllerFactory;
 	
-	public PruebasController() {
-		super();
-		try {
-			factory = (new EfacturaMicroControllersFactoryBuilder()).getMicroControllersFactory();
-			//TODO ver de inicializar esto bien
-			empresa = new Empresa();
-		} catch (APIException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	@Inject
+	public PruebasController(JPAApi jpaApi, Provider<Application> application, ServiceMicroControllerFactory serviceMicroControllerFactory, CFEMicroControllerFactory cfeMicroControllerFactory) {
+		super(jpaApi, application);
+		this.serviceMicroControllerFactory =  serviceMicroControllerFactory;
+		this.cfeMicroControllerFactory = cfeMicroControllerFactory;
+		//TODO ver de inicializar esto bien
+		empresa = new Empresa();
 	}
 
 	protected void switchToHomologacionCAE() {
@@ -89,7 +102,7 @@ public abstract class PruebasController extends AbstractController {
 					if (i==efacturas.length-1 && ultimoEsAnulado){
 						cfe.setEstado(EstadoACKCFEType.BE);
 					}
-					factory.getServiceMicroController(empresa).enviar(cfe);
+					serviceMicroControllerFactory.create(empresa).enviar(cfe);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -114,7 +127,7 @@ public abstract class PruebasController extends AbstractController {
 					if (i==eResguardos.length-1 && ultimoEsAnulado){
 						cfe.setEstado(EstadoACKCFEType.BE);
 					}
-					factory.getServiceMicroController(empresa).enviar(cfe);
+					serviceMicroControllerFactory.create(empresa).enviar(cfe);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -139,7 +152,7 @@ public abstract class PruebasController extends AbstractController {
 					if (i==eTickets.length-1 && ultimoEsAnulado){
 						cfe.setEstado(EstadoACKCFEType.BE);
 					}
-					factory.getServiceMicroController(empresa).enviar(cfe);
+					serviceMicroControllerFactory.create(empresa).enviar(cfe);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();

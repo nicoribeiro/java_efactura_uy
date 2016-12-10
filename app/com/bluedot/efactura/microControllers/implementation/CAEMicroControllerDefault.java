@@ -23,6 +23,8 @@ import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
@@ -47,7 +49,8 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	 */
 	
 	//TODO revisar que todas las llamadas a este constructor eesten con mutex
-	public CAEMicroControllerDefault(Empresa empresa){
+	@Inject
+	public CAEMicroControllerDefault(@Assisted Empresa empresa){
 		super(empresa);
 		caesMap = new HashMap<TipoDoc, CAE>();
 		for (Iterator<CAE> iterator = empresa.getCAEs().iterator(); iterator.hasNext();) {

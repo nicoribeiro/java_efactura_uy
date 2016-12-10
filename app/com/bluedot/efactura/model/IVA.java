@@ -10,6 +10,8 @@ import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPAApi;
+
 @Entity
 public class IVA extends Model<IVA>{
 	
@@ -44,21 +46,21 @@ public class IVA extends Model<IVA>{
 
 	private static Finder<Integer, IVA> find = new Finder<Integer, IVA>(Integer.class, IVA.class);
 	
-	public static IVA findById(Integer id) {
-		return find.byId(id);
+	public static IVA findById(JPAApi jpaApi, Integer id) {
+		return find.byId(jpaApi, id);
 	}
 	
-	public static List<IVA> findAll() {
-		return find.all();
+	public static List<IVA> findAll(JPAApi jpaApi) {
+		return find.all(jpaApi);
 	}
 	
-	public static IVA findByIndicadorFacturacion(IndicadorFacturacion indicadorFacturacion)
+	public static IVA findByIndicadorFacturacion(JPAApi jpaApi, IndicadorFacturacion indicadorFacturacion)
 	{
-		return find.query().eq("indiceFacturacion", indicadorFacturacion.getIndice()).findUnique();
+		return find.query(jpaApi).eq("indiceFacturacion", indicadorFacturacion.getIndice()).findUnique();
 	}
 	
-	public static long count(){
-		DefaultQuery<IVA> q = (DefaultQuery<IVA>) find.query();
+	public static long count(JPAApi jpaApi){
+		DefaultQuery<IVA> q = (DefaultQuery<IVA>) find.query(jpaApi);
 		return q.findRowCount();
 	}
 

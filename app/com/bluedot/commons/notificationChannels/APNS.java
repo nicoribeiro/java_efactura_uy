@@ -14,20 +14,20 @@ public class APNS extends NotificationChannel
 	}
 
 	@Override
-	public void sendNotification(Alert alert)
+	public void sendNotification(MessagingHelper messagingHelper, Alert alert)
 	{
 		
 	}
 
 	@Override
-	public void test()
+	public void test(MessagingHelper messagingHelper)
 	{
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void sendValidationKey(String host)
+	public void sendValidationKey(MessagingHelper messagingHelper, String host)
 	{
 		// TODO Auto-generated method stub
 		
@@ -41,7 +41,7 @@ public class APNS extends NotificationChannel
 	}
 
 	@Override
-	public void sendMessage(Message message)
+	public void sendMessage(MessagingHelper messagingHelper, Message message)
 	{
 		// TODO Auto-generated method stub
 		

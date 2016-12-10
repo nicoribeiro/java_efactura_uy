@@ -6,6 +6,8 @@ import javax.persistence.Id;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPAApi;
+
 @Entity
 public class AlertMetadata extends Model<AlertMetadata>
 {
@@ -140,9 +142,9 @@ public class AlertMetadata extends Model<AlertMetadata>
 	public static final int PROPERTY_CUSTOM2_HOLD = 55;
 	public static final int PROPERTY_CUSTOM2_FINISHED = 56;
 	
-	public static AlertMetadata findById(Integer id)
+	public static AlertMetadata findById(JPAApi jpaApi, Integer id)
 	{
-		return find.byId(id);
+		return find.byId(jpaApi, id);
 	}
 
 	public int getId()

@@ -14,6 +14,8 @@ import com.bluedot.commons.utils.Crypto;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPAApi;
+
 @Entity
 public class Credential extends Model<Credential>
 {
@@ -55,22 +57,22 @@ public class Credential extends Model<Credential>
 	
 	public static Finder<String, Credential> find = new Finder<String, Credential>(String.class, Credential.class);
 	
-	public static Credential findByKey(String key)
+	public static Credential findByKey(JPAApi jpaApi, String key)
 	{
 		if (key == null) return null;
 
 		try
 		{
-			return find.query().eq("token", key).findUnique();
+			return find.query(jpaApi).eq("token", key).findUnique();
 		} catch (Exception e)
 		{
 			return null;
 		}
 	}
 	
-	public static Credential findByKey(String key, boolean throwExceptionWhenMissing) throws APIException
+	public static Credential findByKey(JPAApi jpaApi, String key, boolean throwExceptionWhenMissing) throws APIException
 	{
-		Credential credential = findByKey(key);
+		Credential credential = findByKey(jpaApi, key);
 		
 		if (credential==null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.CREDENTIAL_NOT_FOUND.withParams("key", key));

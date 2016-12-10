@@ -14,10 +14,8 @@ import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.error.ErrorMessage;
-import com.bluedot.commons.microControllers.factory.MicroControllerFactoryBuilder;
-import com.bluedot.commons.microControllers.factory.MicroControllerFactoryDefault;
-import com.bluedot.commons.microControllers.factory.MicroControllersFactory;
+import com.bluedot.commons.error.VerboseAction;
+import com.bluedot.commons.microControllers.interfaces.AccountMicroController;
 import com.bluedot.commons.microControllers.interfaces.AccountMicroController.SignUpConfigurator;
 import com.bluedot.commons.notificationChannels.Email;
 import com.bluedot.commons.notificationChannels.NotificationChannel;
@@ -36,15 +34,22 @@ import com.bluedot.commons.security.ValidateJsonPost;
 import com.bluedot.commons.serializers.JSONSerializerProvider;
 import com.bluedot.commons.utils.ThreadMan;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.play4jpa.jpa.db.Tx;
 
 import flexjson.JSONSerializer;
+import play.Application;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
 import play.i18n.Messages;
 import play.mvc.Result;
 import play.mvc.Security;
+import play.mvc.With;
 
-@ErrorMessage
+@With(VerboseAction.class)
 @Tx
+@Transactional
 @Security.Authenticated(Secured.class)
 public class AccountController extends AbstractController
 {
@@ -54,14 +59,21 @@ public class AccountController extends AbstractController
 //
 //	private static String SALT = Play.application().configuration().getString("product.digest.salt", "");
 
+	private AccountMicroController accountMicroController;
 	
+	@Inject
+	public AccountController(JPAApi jpaApi, Provider<Application> application, AccountMicroController accountMicroController) {
+		super(jpaApi, application);
+		this.accountMicroController = accountMicroController;
+	}
+
 	public  CompletionStage<Result> getAccount(final int accountId) throws APIException
 	{
 		return accountAction(accountId, new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
-				Account a = Account.findById(accountId, true);
+				Account a = Account.findById(jpaApi, accountId, true);
 
 				//TODO hacer un serializer como la gente
 				JSONSerializer serializer = new JSONSerializer()
@@ -103,9 +115,9 @@ public class AccountController extends AbstractController
 
 	public  CompletionStage<Result> removeUser(int accountId, int userId) throws APIException
 	{
-		Account a = Account.findById(accountId, true);
+		Account a = Account.findById(jpaApi, accountId, true);
 
-		User u = User.findById(userId, true);
+		User u = User.findById(jpaApi, userId, true);
 		
 		removeAllAccountPermissions(u, a);
 		
@@ -128,11 +140,11 @@ public class AccountController extends AbstractController
 			{
 				JsonNode emails = request().body().asJson();
 				
-				Account a = Account.findById(accountId, true);
+				Account a = Account.findById(jpaApi, accountId, true);
 				
 				for (JsonNode email : emails)
 				{
-					User u = User.findByEmailAddress(email.asText());
+					User u = User.findByEmailAddress(jpaApi, email.asText());
 	
 					if (u == null)
 						continue;
@@ -171,11 +183,11 @@ public class AccountController extends AbstractController
 			{
 				JsonNode emails = request().body().asJson();
 				
-				Account a = Account.findById(accountId, true);
+				Account a = Account.findById(jpaApi, accountId, true);
 				
 				for (JsonNode email : emails)
 				{
-					User u = User.findByEmailAddress(email.asText());
+					User u = User.findByEmailAddress(jpaApi, email.asText());
 	
 					if (u == null)
 						continue;
@@ -233,9 +245,9 @@ public class AccountController extends AbstractController
 
 	public  CompletionStage<Result> setAcl(int accountId, int userId) throws APIException
 	{
-		final User user = User.findById(userId, true);
+		final User user = User.findById(jpaApi, userId, true);
 
-		final Account account = Account.findById(accountId, true);
+		final Account account = Account.findById(jpaApi, accountId, true);
 
 		if (!account.isUserInAccount(user))
 			throw APIException.raise(APIErrors.USER_NOT_PART_OF_ACCOUNT);
@@ -313,9 +325,7 @@ public class AccountController extends AbstractController
 		if ("set".equals(aclAction))
 		{
 
-			MicroControllersFactory microControllersFactory = new MicroControllerFactoryBuilder().getMicroControllersFactory();
-
-			microControllersFactory.getAccountController().addPermissionsToUser(user, accountAcl.permissions, "access-level-account_{0}:{1}", String.valueOf(account.getId()), aclName);
+			accountMicroController.addPermissionsToUser(user, accountAcl.permissions, "access-level-account_{0}:{1}", String.valueOf(account.getId()), aclName);
 
 		}
 
@@ -328,7 +338,7 @@ public class AccountController extends AbstractController
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
-				Account account = Account.findById(accountId, true);
+				Account account = Account.findById(jpaApi, accountId, true);
 
 				JSONObject result;
 				try
@@ -352,9 +362,9 @@ public class AccountController extends AbstractController
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
-				Account account = Account.findById(accountId, true);
+				Account account = Account.findById(jpaApi, accountId, true);
 				
-				User user = User.findById(userId, true);
+				User user = User.findById(jpaApi, userId, true);
 				
 				if (!account.isUserInAccount(user))
 					throw APIException.raise(APIErrors.USER_NOT_PART_OF_ACCOUNT);
@@ -381,7 +391,7 @@ public class AccountController extends AbstractController
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
-				Account account = Account.findById(accountId, true);
+				Account account = Account.findById(jpaApi, accountId, true);
 				JsonNode settings = request().body().asJson();
 				try
 				{
@@ -401,7 +411,7 @@ public class AccountController extends AbstractController
 
 	public  CompletionStage<Result> listAccounts() throws APIException
 	{
-		return PermissionValidator.runWithValidation(ctx(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, ctx(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
@@ -411,7 +421,7 @@ public class AccountController extends AbstractController
 					return json("[]");
 				
 				Collection<Account> accounts = new ArrayList<>();
-				accounts = Account.find(keyword);
+				accounts = Account.find(jpaApi, keyword);
 				
 				//TODO cambiar a un serializer como la gente
 				JSONSerializer serializer = new JSONSerializer()
@@ -426,7 +436,7 @@ public class AccountController extends AbstractController
 
 	@ValidateJsonPost(fields = { "firstName", "lastName" })
 	public  CompletionStage<Result> createAccount() throws APIException {
-		return PermissionValidator.runWithValidation(ctx(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, ctx(), new PromiseCallback() {
 
 			@Override
 			public CompletionStage<Result> execute() throws APIException {
@@ -451,14 +461,12 @@ public class AccountController extends AbstractController
 					addresses.add(address);
 				}
 
-				final MicroControllersFactory microControllersFactory = new MicroControllerFactoryDefault();
-
 				//User sessionUser = Global.getSessionUser(ctx());
 
 				SignUpConfigurator signUpConfigurator = new SignUpConfigurator(false, true, true, false,
 						request().host(), null);
 
-				microControllersFactory.getAccountController().signUp(emailAddress, password, firstName, lastName,
+				accountMicroController.signUp(emailAddress, password, firstName, lastName,
 						companyName, accountType, addresses, phone, signUpConfigurator);
 
 				return CompletableFuture.completedFuture(created());
@@ -473,7 +481,7 @@ public class AccountController extends AbstractController
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
-				Account parentAccount = Account.findById(accountId, true);
+				Account parentAccount = Account.findById(jpaApi, accountId, true);
 				
 				
 				JsonNode userJson = request().body().asJson();
@@ -486,9 +494,9 @@ public class AccountController extends AbstractController
 				
 				User user = null;
 				
-				if (User.findByEmailAddress(emailAddress) != null)
+				if (User.findByEmailAddress(jpaApi, emailAddress) != null)
 				{
-					user = User.findByEmailAddress(emailAddress);
+					user = User.findByEmailAddress(jpaApi, emailAddress);
 					
 					if (parentAccount.getUsers().contains(user))
 						throw APIException.raise(APIErrors.USER_ALREADY_EXISTS.withParams("emailAddress", emailAddress));
@@ -553,12 +561,12 @@ public class AccountController extends AbstractController
 
 	public  CompletionStage<Result> editAccount(final int accountId) throws APIException
 	{
-		return PermissionValidator.runWithValidation(ctx(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, ctx(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
 				JsonNode userJson = request().body().asJson();
-				Account a = Account.findById(accountId, true);
+				Account a = Account.findById(jpaApi, accountId, true);
 
 //				String firstName = userJson.has("firstName") ? userJson.findPath("firstName").textValue() : null;
 //				String lastName = userJson.has("lastName") ? userJson.findPath("lastName").asText() : null;
@@ -592,11 +600,11 @@ public class AccountController extends AbstractController
 
 	public  CompletionStage<Result> deleteAccount(final int accountId) throws APIException
 	{
-		return PermissionValidator.runWithValidation(ctx(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, ctx(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
-				Account a = Account.findById(accountId, true);
+				Account a = Account.findById(jpaApi, accountId, true);
 
 				a.delete();
 

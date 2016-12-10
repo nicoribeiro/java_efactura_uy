@@ -24,3 +24,5 @@ deploys
 deploy_conf
 
 .cache-macros
+
+conf/secret.conf

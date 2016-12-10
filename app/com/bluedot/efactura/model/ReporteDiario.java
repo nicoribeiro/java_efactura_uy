@@ -29,6 +29,7 @@ import com.play4jpa.jpa.models.Model;
 
 import dgi.classes.reporte.ReporteDefType;
 import dgi.classes.respuestas.reporte.EstadoACKRepType;
+import play.db.jpa.JPAApi;
 
 @Entity
 public class ReporteDiario extends Model<ReporteDiario>{
@@ -84,14 +85,14 @@ public class ReporteDiario extends Model<ReporteDiario>{
 		super();
 	}
 
-	public ReporteDiario(Empresa empresa, Date fecha) {
+	public ReporteDiario(JPAApi jpaApi, Empresa empresa, Date fecha) {
 		super();
 		this.empresa = empresa;
 		this.fecha = fecha;
 		
 		int secuencial = 0;
 		
-		List<ReporteDiario> reportes = findByEmpresaFecha(empresa, fecha);
+		List<ReporteDiario> reportes = findByEmpresaFecha(jpaApi, empresa, fecha);
 		
 		for (Iterator<ReporteDiario> iterator = reportes.iterator(); iterator.hasNext();) {
 			ReporteDiario reporteDiario = iterator.next();
@@ -104,12 +105,12 @@ public class ReporteDiario extends Model<ReporteDiario>{
 	
 	private static Finder<Integer, ReporteDiario> find = new Finder<Integer, ReporteDiario>(Integer.class, ReporteDiario.class);
 	
-	public static ReporteDiario findById(Integer id) {
-		return find.byId(id);
+	public static ReporteDiario findById(JPAApi jpaApi, Integer id) {
+		return find.byId(jpaApi, id);
 	}
 
-	public static ReporteDiario findById(Integer id, boolean throwExceptionWhenMissing) throws APIException {
-		ReporteDiario reporteDiario = find.byId(id);
+	public static ReporteDiario findById(JPAApi jpaApi, Integer id, boolean throwExceptionWhenMissing) throws APIException {
+		ReporteDiario reporteDiario = find.byId(jpaApi, id);
 
 		if (reporteDiario == null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.REPORTE_DIARIO_NO_ENCONTRADO.withParams("id",id));
@@ -117,9 +118,9 @@ public class ReporteDiario extends Model<ReporteDiario>{
 	}
 
 	
-	public static List<ReporteDiario> findByEmpresaFecha(Empresa empresa, Date fecha)
+	public static List<ReporteDiario> findByEmpresaFecha(JPAApi jpaApi, Empresa empresa, Date fecha)
 	{
-		DefaultQuery<ReporteDiario> q = (DefaultQuery<ReporteDiario>) find.query();
+		DefaultQuery<ReporteDiario> q = (DefaultQuery<ReporteDiario>) find.query(jpaApi);
 		
 			
 			q.getCriteria().createAlias("empresa", "empresa", JoinType.LEFT_OUTER_JOIN);

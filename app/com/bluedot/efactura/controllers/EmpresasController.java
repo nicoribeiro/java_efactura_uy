@@ -25,13 +25,12 @@ import org.w3c.dom.NodeList;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.error.VerboseAction;
 import com.bluedot.commons.hazelcast.Mutex;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroControllerFactory;
 import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
@@ -39,15 +38,30 @@ import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.bluedot.efactura.services.ConsultaRutService;
 import com.bluedot.efactura.services.impl.ConsultaRutServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Provider;
 import com.play4jpa.jpa.db.Tx;
 
+import play.Application;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
 import play.mvc.Result;
 import play.mvc.Security;
+import play.mvc.With;
 
-@ErrorMessage
+@With(VerboseAction.class)
 @Tx
+@Transactional
 @Security.Authenticated(Secured.class)
 public class EmpresasController extends AbstractController {
+
+	private ConsultaRutService consultaRutService;
+	private CAEMicroControllerFactory caeMicroControllerFactory;
+	
+	@Inject
+	public EmpresasController(JPAApi jpaApi, Provider<Application> application, ConsultaRutService consultaRutService, CAEMicroControllerFactory caeMicroControllerFactory) {
+		super(jpaApi,application);
+		this.consultaRutService = consultaRutService;
+	}
 
 	final static Logger logger = LoggerFactory.getLogger(EmpresasController.class);
 
@@ -59,11 +73,9 @@ public class EmpresasController extends AbstractController {
 //	}
 	
 	public CompletionStage<Result> darInformacionRut(String idrut) throws APIException {
-		//TODO tomar este consulta rut de un factory
-		ConsultaRutService service = new ConsultaRutServiceImpl();
 
 		// Call the service
-		String response = service.getRutData(idrut);
+		String response = consultaRutService.getRutData(idrut);
 
 		return json(response);
 	}
@@ -99,7 +111,7 @@ public class EmpresasController extends AbstractController {
 					String fechaInicio = eElement.getElementsByTagName("FECHA_INICIO").item(0).getTextContent();
 					String mail = eElement.getElementsByTagName("MAIL").item(0).getTextContent();
 
-					Empresa empresa = Empresa.findByRUT(rut);
+					Empresa empresa = Empresa.findByRUT(jpaApi, rut);
 					if ( empresa == null) {
 						empresa = new Empresa(rut, null, null, null, null, null, 0, null);
 						empresa.save();
@@ -122,7 +134,7 @@ public class EmpresasController extends AbstractController {
 	
 	public CompletionStage<Result> getEmpresaById(int id) throws APIException {
 		
-		Empresa empresa = Empresa.findById(id, true);
+		Empresa empresa = Empresa.findById(jpaApi, id, true);
 		
 		JSONObject json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresa);
 		
@@ -131,7 +143,7 @@ public class EmpresasController extends AbstractController {
 	
 	public CompletionStage<Result> getEmpresaByRut(String rut) throws APIException {
 		
-		Empresa empresa = Empresa.findByRUT(rut, true);
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 		
 		JSONObject json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresa);
 		
@@ -140,7 +152,7 @@ public class EmpresasController extends AbstractController {
 	
 	public CompletionStage<Result> getEmpresas() throws APIException {
 		
-		List<Empresa> empresas = Empresa.findAll();
+		List<Empresa> empresas = Empresa.findAll(jpaApi);
 		
 		JSONArray json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresas);
 		
@@ -149,15 +161,13 @@ public class EmpresasController extends AbstractController {
 	
 	//TODO agregar validacion de que el usuario tiene permisos sobre esta emepresa
 	public CompletionStage<Result> addCAE(String rut) throws APIException {
-		Empresa empresa = Empresa.findByRUT(rut,true);
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut,true);
 		
 		JsonNode jsonNode = request().body().asJson();
 
 		JSONObject caeJson = new JSONObject(jsonNode.toString());
 		
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder()).getMicroControllersFactory();
-		
-		CAEMicroController caeMicroController = factory.getCAEMicroController(empresa);
+		CAEMicroController caeMicroController = caeMicroControllerFactory.create(empresa);
 		
 		Date fechaVencimiento = DateHandler.fromStringToDate(caeJson.getString("FVD"), new SimpleDateFormat("yyyy-MM-dd"));
 		
@@ -171,7 +181,7 @@ public class EmpresasController extends AbstractController {
 	//TODO permisis de edicion 
 	public CompletionStage<Result> editarEmpresa(String rut) throws APIException
 	{
-		Empresa empresa = Empresa.findByRUT(rut,true);
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 		
 		JsonNode empresaJson = request().body().asJson();
 		

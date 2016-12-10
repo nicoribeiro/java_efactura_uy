@@ -16,6 +16,8 @@ import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPAApi;
+
 @Entity
 public class Titular extends Model<Titular> {
 
@@ -52,13 +54,13 @@ public class Titular extends Model<Titular> {
 
 	private static Finder<Integer, Titular> find = new Finder<Integer, Titular>(Integer.class, Titular.class);
 
-	public static Titular findById(Integer id) {
-		return find.byId(id);
+	public static Titular findById(JPAApi jpaApi, Integer id) {
+		return find.byId(jpaApi, id);
 	}
 
-	public static Titular findById(Pais paisEmisorDocumento, TipoDocumento tipoDocumento, String documento)
+	public static Titular findById(JPAApi jpaApi, Pais paisEmisorDocumento, TipoDocumento tipoDocumento, String documento)
 			throws APIException {
-		DefaultQuery<Titular> q = (DefaultQuery<Titular>) find.query();
+		DefaultQuery<Titular> q = (DefaultQuery<Titular>) find.query(jpaApi);
 
 		q.getCriteria().add(Restrictions.and
 

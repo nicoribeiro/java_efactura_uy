@@ -26,27 +26,27 @@ public class SMS extends NotificationChannel
 	private String phone;
 
 	@Override
-	public void sendNotification(Alert alert)
+	public void sendNotification(MessagingHelper messagingHelper, Alert alert)
 	{
 		if (getValidated() && getEnabled())
 		{
-			new MessagingHelper().withPlayConfig().sendSMS(phone, alert.getBody(), alert.getSubject(), alert.getAttachment());
+			messagingHelper.withPlayConfig().sendSMS(phone, alert.getBody(), alert.getSubject(), alert.getAttachment());
 		}
 	}
 
 	@Override
-	public void test()
+	public void test(MessagingHelper messagingHelper)
 	{
 		if (getValidated() && getEnabled())
 		{
-			new MessagingHelper().withPlayConfig().sendSMS(phone, "Test SMS", "Test SMS", null);
+			messagingHelper.withPlayConfig().sendSMS(phone, "Test SMS", "Test SMS", null);
 		}
 	}
 
 	@Override
-	public void sendValidationKey(String arg)
+	public void sendValidationKey(MessagingHelper messagingHelper, String arg)
 	{
-		new MessagingHelper().withPlayConfig().sendSMS(phone, "Confirmation CODE: " + getValidationKey(), "Confirmation CODE", null);
+		messagingHelper.withPlayConfig().sendSMS(phone, "Confirmation CODE: " + getValidationKey(), "Confirmation CODE", null);
 
 	}
 
@@ -68,11 +68,11 @@ public class SMS extends NotificationChannel
 	}
 
 	@Override
-	public void sendMessage(Message message)
+	public void sendMessage(MessagingHelper messagingHelper, Message message)
 	{
 		if (getValidated() && getEnabled())
 		{
-			new MessagingHelper().withPlayConfig().sendSMS(phone, message.getMessage(), Messages.get("messages_new_message_title"), message.getFromString());
+			messagingHelper.withPlayConfig().sendSMS(phone, message.getMessage(), Messages.get("messages_new_message_title"), message.getFromString());
 		}
 	}
 }

@@ -30,6 +30,7 @@ import com.bluedot.efactura.model.FormaDePago;
 import com.bluedot.efactura.model.IVA;
 import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.TipoDocumento;
+import com.google.inject.assistedinject.Assisted;
 
 import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.ReferenciaTipo;
@@ -38,27 +39,24 @@ import dgi.classes.recepcion.TipMonType;
 import dgi.classes.recepcion.wrappers.ItemInterface;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 import dgi.classes.recepcion.wrappers.TpoCod;
+import play.db.jpa.JPAApi;
 
-public class CFEBuilderImpl implements CFEBuiderInterface {
+public class CFEBuilderImpl implements CFEBuilder {
 
 	protected CFEStrategy strategy;
 	protected CAEMicroController caeMicroController;
-
-	private Commons commons;
+	protected JPAApi jpaApi;
+	protected Commons commons;
 	
 	@Inject
-	public void setCommons(Commons commons) {
-		this.commons = commons;
-	}
-	
-	public CFEBuilderImpl(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
+	public CFEBuilderImpl(@Assisted CFEStrategy strategy, @Assisted CAEMicroController caeMicroController, JPAApi jpaApi, Commons commons) throws APIException {
 		this.caeMicroController = caeMicroController;
 		this.strategy = strategy;
+		this.commons = commons;
+		this.jpaApi = jpaApi;
+		
 	}
 
-	protected CFEBuilderImpl() {
-
-	}
 
 	@Override
 	public void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws APIException {
@@ -178,13 +176,13 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		/*
 		 * id:119
 		 */
-		totales.setIVATasaMin(new BigDecimal(String.valueOf(IVA.findByIndicadorFacturacion(IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_MINIMA).getPorcentajeIVA())));
+		totales.setIVATasaMin(new BigDecimal(String.valueOf(IVA.findByIndicadorFacturacion(jpaApi, IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_MINIMA).getPorcentajeIVA())));
 		strategy.getCFE().setIvaTasaMin(totales.getIVATasaMin().doubleValue());
 
 		/*
 		 * id:120
 		 */
-		totales.setIVATasaBasica(new BigDecimal(String.valueOf(IVA.findByIndicadorFacturacion(IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_BASICA).getPorcentajeIVA())));
+		totales.setIVATasaBasica(new BigDecimal(String.valueOf(IVA.findByIndicadorFacturacion(jpaApi, IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_BASICA).getPorcentajeIVA())));
 		strategy.getCFE().setIvaTasaBas(totales.getIVATasaBasica().doubleValue());
 
 		/*
@@ -383,7 +381,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 				 * Se debe explicitar el motivo en "Razón Referencia" (C6)
 				 */
 				String generadorId = commons.safeGetString(referenciaJSON, "NroRef");
-				CFE cfeReferencia = CFE.findByGeneradorId(empresaEmisora, generadorId);
+				CFE cfeReferencia = CFE.findByGeneradorId(jpaApi, empresaEmisora, generadorId);
 
 				if (cfeReferencia == null) {
 					referencia.setIndGlobal(new BigInteger("1"));

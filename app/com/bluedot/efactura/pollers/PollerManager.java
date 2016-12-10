@@ -9,7 +9,11 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.bluedot.efactura.microControllers.interfaces.ServiceMicroControllerFactory;
+import com.google.inject.Injector;
 
+import play.Play;
+import play.db.jpa.JPAApi;
 import play.inject.ApplicationLifecycle;
 import play.libs.F;
 
@@ -21,8 +25,12 @@ public class PollerManager {
 	
 	public static boolean shutdownInProgress = false;
 
+	private JPAApi jpaApi;
+	
+	private ServiceMicroControllerFactory serviceMicroControllerFactory;
+	
 	@Inject
-	public PollerManager(ApplicationLifecycle lifecycle) {
+	public PollerManager(JPAApi jpaApi, ApplicationLifecycle lifecycle, ServiceMicroControllerFactory serviceMicroControllerFactory) {
 
 		lifecycle.addStopHook(() -> {
 			
@@ -42,6 +50,9 @@ public class PollerManager {
 			}
 			return F.Promise.pure(null);
 		});
+		
+		this.jpaApi = jpaApi;
+		this.serviceMicroControllerFactory = serviceMicroControllerFactory;
 
 	}
 
@@ -49,7 +60,7 @@ public class PollerManager {
 		Runnable runner; 
 		
 			logger.info("Encolador de Documentos: running");
-			runner = new EmailEntrantesRunner();
+			runner = new EmailEntrantesRunner(jpaApi, serviceMicroControllerFactory);
 			executor.execute(runner);
 		}
 

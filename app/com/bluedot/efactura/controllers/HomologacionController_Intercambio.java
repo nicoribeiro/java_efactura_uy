@@ -18,30 +18,43 @@ import org.xml.sax.SAXException;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.error.VerboseAction;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.services.IntercambioService;
 import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.play4jpa.jpa.db.Tx;
 import com.sun.istack.logging.Logger;
 
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.respuestas.cfe.ACKCFEdefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
+import play.Application;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
+import play.mvc.With;
 
-@ErrorMessage
+@With(VerboseAction.class)
+@Tx
+@Transactional
 @Security.Authenticated(Secured.class)
 public class HomologacionController_Intercambio extends AbstractController {
 
-	static Logger logger = Logger.getLogger(HomologacionController_Intercambio.class);
+	private IntercambioService intercambioService;
 	
-	protected HomologacionController_Intercambio() {
-
+	@Inject
+	public HomologacionController_Intercambio(JPAApi jpaApi, Provider<Application> application, IntercambioService intercambioService) {
+		super(jpaApi,application);
+		this.intercambioService = intercambioService;
 	}
+
+	static Logger logger = Logger.getLogger(HomologacionController_Intercambio.class);
 
 	@BodyParser.Of(BodyParser.Json.class)
 	public CompletionStage<Result> ingresoSobre() throws APIException, TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
@@ -52,8 +65,6 @@ public class HomologacionController_Intercambio extends AbstractController {
 			JSONObject jsonObject = new JSONObject(jsonNode.toString());
 			
 			String path = jsonObject.getString("path");
-			
-			IntercambioService service = new IntercambioServiceImpl();
 			
 			Document document = XML.readDocument(path);
 			

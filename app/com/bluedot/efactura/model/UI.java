@@ -11,6 +11,8 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
+
+import play.db.jpa.JPAApi;
 @Entity
 public class UI extends Model<UI>{
 	
@@ -39,21 +41,21 @@ public class UI extends Model<UI>{
 	
 	private static Finder<Integer, UI> find = new Finder<Integer, UI>(Integer.class, UI.class);
 	
-	public static UI findById(Integer id) {
-		return find.byId(id);
+	public static UI findById(JPAApi jpaApi, Integer id) {
+		return find.byId(jpaApi, id);
 	}
 
-	public static UI findById(Integer id, boolean throwExceptionWhenMissing) throws APIException {
-		UI ui = find.byId(id);
+	public static UI findById(JPAApi jpaApi, Integer id, boolean throwExceptionWhenMissing) throws APIException {
+		UI ui = find.byId(jpaApi, id);
 
 		if (ui == null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.UI_NO_ENCONTRADA.withParams("id", id));
 		return ui;
 	}
 	
-	public static UI findByAnio(int anio, boolean throwExceptionWhenMissing) throws APIException
+	public static UI findByAnio(JPAApi jpaApi, int anio, boolean throwExceptionWhenMissing) throws APIException
 	{
-		DefaultQuery<UI> q = (DefaultQuery<UI>) find.query();
+		DefaultQuery<UI> q = (DefaultQuery<UI>) find.query(jpaApi);
 		
 			
 			q.getCriteria().add(Restrictions.and

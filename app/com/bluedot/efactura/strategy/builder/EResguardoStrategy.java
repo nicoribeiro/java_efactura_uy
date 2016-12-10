@@ -12,18 +12,19 @@ import org.json.JSONException;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroControllerFactory;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.Pais;
-import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.TipoDocumento;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.EResg.Detalle;
 import dgi.classes.recepcion.CFEDefType.EResg.Encabezado;
 import dgi.classes.recepcion.Emisor;
-import dgi.classes.recepcion.IdDocFact;
 import dgi.classes.recepcion.IdDocResg;
 import dgi.classes.recepcion.ItemResg;
 import dgi.classes.recepcion.ReceptorResg;
@@ -37,11 +38,13 @@ import dgi.classes.recepcion.wrappers.ReceptorInterface;
 import dgi.classes.recepcion.wrappers.ReceptorResgWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 import dgi.classes.recepcion.wrappers.TotalesResguardoWrrapper;
+import play.db.jpa.JPAApi;
 
 public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 
-	public EResguardoStrategy(CFE cfe, CAEMicroController caeMicroController) throws APIException {
-		super(cfe, caeMicroController);
+	@Inject
+	public EResguardoStrategy(@Assisted CFE cfe, @Assisted Empresa empresa, JPAApi jpaApi, CAEMicroControllerFactory caeMicroControllerFactory) throws APIException {
+		super(cfe, caeMicroControllerFactory.create(empresa), jpaApi);
 		if (cfe.getEresguardo() == null)
 			this.cfe.setEresguardo(new EResg());
 
@@ -180,7 +183,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 
 		if (codPaisRecep != null && docRecep != null && codPaisRecep != null)
 			if (tipoDocRecep == TipoDocumento.CI) {
-				Pais pais = Pais.findByCodigo(codPaisRecep, true);
+				Pais pais = Pais.findByCodigo(jpaApi, codPaisRecep, true);
 				cfe.setTitular(getOrCreateTitular(pais, tipoDocRecep, docRecep));
 			} else {
 				if (rznSocRecep != null && dirRecep != null && ciudadRecep != null && deptoRecep != null)

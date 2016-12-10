@@ -30,6 +30,7 @@ import dgi.classes.reporte.RngDocsAnulados;
 import dgi.classes.reporte.RngDocsAnulados.RDAItem;
 import dgi.classes.reporte.RngDocsUtil;
 import dgi.classes.reporte.RngDocsUtil.RDUItem;
+import play.db.jpa.JPAApi;
 
 public interface SummaryStrategy {
 
@@ -112,19 +113,20 @@ public interface SummaryStrategy {
 	}
 
 	public class SummaryDatatype {
+		
 		protected Date fecha = null;
 		int cantDocUtilizados = 0;
 		int cantDocRechazados = 0;
 		int cantDocSinRespuesta = 0;
 		int cantDocEmitidos = 0;
 		int mayor10000UI = 0;
-		Monto monto = new Monto();
+		Monto monto; 
 		RngDocsAnulados rngDocsAnulados = new RngDocsAnulados();
 		RngDocsUtil rngDocsUtil = new RngDocsUtil();
 	}
 
 	public class Monto {
-
+		
 		protected BigDecimal totMntNoGrv = new BigDecimal("0");
 		protected BigDecimal totMntExpyAsim = new BigDecimal("0");
 		protected BigDecimal totMntImpPerc = new BigDecimal("0");
@@ -135,15 +137,21 @@ public interface SummaryStrategy {
 		protected BigDecimal mntIVATasaMin = new BigDecimal("0");
 		protected BigDecimal mntIVATasaBas = new BigDecimal("0");
 		protected BigDecimal mntIVAOtra = new BigDecimal("0");
-		protected BigDecimal ivaTasaMin = new BigDecimal(String
-				.valueOf(IVA.findByIndicadorFacturacion(IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_MINIMA)
-						.getPorcentajeIVA()));
-		protected BigDecimal ivaTasaBas = new BigDecimal(String
-				.valueOf(IVA.findByIndicadorFacturacion(IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_BASICA)
-						.getPorcentajeIVA()));
+//		protected BigDecimal ivaTasaMin = new BigDecimal(String
+//				.valueOf(IVA.findByIndicadorFacturacion(jpaApi, IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_MINIMA)
+//						.getPorcentajeIVA()));
+//		protected BigDecimal ivaTasaBas = new BigDecimal(String
+//				.valueOf(IVA.findByIndicadorFacturacion(jpaApi, IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_BASICA)
+//						.getPorcentajeIVA()));
+		
+		//TODO revisar esto
+		protected BigDecimal ivaTasaMin = new BigDecimal(String.valueOf(10));
+		protected BigDecimal ivaTasaBas = new BigDecimal(String.valueOf(22));
+		
 		protected BigDecimal totMntTotal = new BigDecimal("0");
 		protected BigDecimal totMntRetenido = new BigDecimal("0");
 		protected BigDecimal totValRetPerc = new BigDecimal("0");
+		
 	}
 
 	static SummaryDatatype getSummary(Empresa empresa, TipoDoc tipo, Date date, List<SobreEmitido> sobres) throws APIException {

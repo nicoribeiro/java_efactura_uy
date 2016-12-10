@@ -13,6 +13,8 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.security.Account;
 import com.bluedot.commons.security.User;
 
+import play.db.jpa.JPAApi;
+
 
 
 public class MessageHelper
@@ -23,14 +25,14 @@ public class MessageHelper
 	 * @param URNs a list of URN. URN format is: "class_name":"id"
 	 * @return a list of MessageReceivers that map those URN
 	 */
-	public static List<MessageReceiver> getMessageReceivers(List<String> urns)
+	public static List<MessageReceiver> getMessageReceivers(JPAApi jpaApi, List<String> urns)
 	{
 		List<MessageReceiver> result = new LinkedList<MessageReceiver>();
 
 		for (Iterator<String> iterator = urns.iterator(); iterator.hasNext();)
 		{
 			String converseId = iterator.next();
-			MessageReceiver receiver = getMessageReceiver(converseId);
+			MessageReceiver receiver = getMessageReceiver(jpaApi, converseId);
 			
 			if (receiver!=null){
 				result.add(receiver);
@@ -45,13 +47,13 @@ public class MessageHelper
 	 * @param urn MessageReceiver identifier: "class_name":"id"
 	 * @return A MeesageReceiver instance witch id == "id" && class == "class_name"
 	 */
-	public static MessageReceiver getMessageReceiver(String urn)
+	public static MessageReceiver getMessageReceiver(JPAApi jpaApi, String urn)
 	{
 		String id = urn.split(":")[1];
 		if (urn.startsWith("account"))
-			return Account.findById(Integer.parseInt(id));
+			return Account.findById(jpaApi, Integer.parseInt(id));
 		if (urn.startsWith("user"))
-			return User.findById(Integer.parseInt(id));
+			return User.findById(jpaApi, Integer.parseInt(id));
 //		if (urn.startsWith("reservation"))
 //			return Reservation.findById(Long.parseLong(id));
 //		if (urn.startsWith("guest"))
@@ -61,7 +63,7 @@ public class MessageHelper
 	}
 	
 
-	public static List<MessageReceiver> getMessageReceivers(JSONArray receivers) throws JSONException
+	public static List<MessageReceiver> getMessageReceivers(JPAApi jpaApi, JSONArray receivers) throws JSONException
 	{
 		List<MessageReceiver> result = new LinkedList<MessageReceiver>();
 
@@ -74,7 +76,7 @@ public class MessageHelper
 			String dest = name + ":" + value;
 			
 			
-			MessageReceiver receiver = getMessageReceiver(dest);
+			MessageReceiver receiver = getMessageReceiver(jpaApi, dest);
 			
 			if (receiver!=null){
 				result.add(receiver);

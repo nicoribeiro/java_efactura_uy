@@ -14,7 +14,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
-import com.bluedot.efactura.model.TipoDoc;
+import com.google.inject.assistedinject.Assisted;
 
 import dgi.classes.recepcion.RetPercResg;
 import dgi.classes.recepcion.TipMonType;
@@ -26,18 +26,14 @@ import dgi.classes.recepcion.wrappers.RetPercResgWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 import dgi.classes.recepcion.wrappers.TotalesRetencPercepInterface;
 import dgi.classes.recepcion.wrappers.TotalesRetencPercepResg;
+import play.db.jpa.JPAApi;
 
-public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInterface {
+public class CFEBuilderResguardo extends CFEBuilderImpl implements CFEBuilder {
 
-	private Commons commons;
 	
 	@Inject
-	public void setCommons(Commons commons) {
-		this.commons = commons;
-	}
-	
-	public CFEBuiderResguardo(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
-		super(caeMicroController, strategy);
+	public CFEBuilderResguardo(@Assisted CFEStrategy strategy, @Assisted CAEMicroController caeMicroController, JPAApi jpaApi, Commons commons) throws APIException {
+		super(strategy, caeMicroController, jpaApi, commons);	
 	}
 
 	@Override

@@ -11,9 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.error.ErrorMessage;
-import com.bluedot.commons.microControllers.factory.MicroControllerFactoryDefault;
-import com.bluedot.commons.microControllers.factory.MicroControllersFactory;
+import com.bluedot.commons.error.VerboseAction;
+import com.bluedot.commons.microControllers.interfaces.AccountMicroController;
 import com.bluedot.commons.microControllers.interfaces.AccountMicroController.SignUpConfigurator;
 import com.bluedot.commons.security.Address;
 import com.bluedot.commons.security.Session;
@@ -23,16 +22,32 @@ import com.bluedot.commons.security.ValidateJsonPost;
 import com.bluedot.commons.serializers.JSONSerializerProvider;
 import com.bluedot.efactura.global.RequestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.play4jpa.jpa.db.Tx;
 
+import play.Application;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
 import play.i18n.Messages;
 import play.mvc.BodyParser;
 import play.mvc.Result;
+import play.mvc.With;
 
-@ErrorMessage
+@With(VerboseAction.class)
+@Tx
+@Transactional
 public class SignInController extends AbstractController
 {
 	
+	private AccountMicroController accountMicroController;
+	
+	@Inject
+	public SignInController(JPAApi jpaApi, Provider<Application> application, AccountMicroController accountMicroController) {
+		super(jpaApi, application);
+		this.accountMicroController = accountMicroController;
+	}
+
 	final static Logger logger = LoggerFactory.getLogger(SignInController.class);
 
 	@BodyParser.Of(BodyParser.Json.class)
@@ -54,14 +69,14 @@ public class SignInController extends AbstractController
 			String masterEmail = emailAddress.split("\\:")[0];
 			String targetEmail = emailAddress.split("\\:")[1];
 			
-			User masterUser = User.findByEmailAddress(masterEmail);
+			User masterUser = User.findByEmailAddress(jpaApi, masterEmail);
 			
 			if(masterUser != null && masterUser.getRole() == Role.ADMIN)
 			{
 				String key = masterUser.getCredentials().getToken() + masterUser.getCredentials().getSecret();
 				if(key.equals(password)){
 					logger.info("Master login from " + masterEmail + " to " + targetEmail + " suceeed.");
-					user = User.findByEmailAddress(targetEmail);
+					user = User.findByEmailAddress(jpaApi, targetEmail);
 				}
 			}else{
 				logger.info("Master login from " + masterEmail + " to " + targetEmail + " failed.");
@@ -70,7 +85,7 @@ public class SignInController extends AbstractController
 		}
 		else
 		{
-			user = User.findByEmailAddressAndPassword(emailAddress, password);
+			user = User.findByEmailAddressAndPassword(jpaApi, emailAddress, password);
 		}
 
 		if (user != null)
@@ -125,20 +140,18 @@ public class SignInController extends AbstractController
 			Address address = Address.fromJson(addressNode);
 			addresses.add(address);
 		}
-
-		MicroControllersFactory microControllersFactory =  new MicroControllerFactoryDefault();
 		
 		SignUpConfigurator signUpConfigurator;
 		
 		/*
 		 * If there is not any ADMIN on the system assume next user is an ADMIN   
 		 */
-		if (User.find(Role.ADMIN).size()==0)
+		if (User.find(jpaApi, Role.ADMIN).size()==0)
 			signUpConfigurator = new SignUpConfigurator(false, true, true, false, request().host(), Role.ADMIN);
 		else
 			signUpConfigurator = new SignUpConfigurator(false, false, false, false, request().host(), Role.USER);
 		
-		microControllersFactory.getAccountController().signUp(emailAddress, password, firstName, lastName, companyName, null, addresses, phone, signUpConfigurator);
+		accountMicroController.signUp(emailAddress, password, firstName, lastName, companyName, null, addresses, phone, signUpConfigurator);
 
 		return CompletableFuture.completedFuture(created());
 	}

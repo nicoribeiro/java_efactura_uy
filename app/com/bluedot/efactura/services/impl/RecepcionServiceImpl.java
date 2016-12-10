@@ -60,6 +60,7 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTEResponse;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBREResponse;
 import play.Application;
+import play.db.jpa.JPAApi;
 
 
 public class RecepcionServiceImpl implements RecepcionService {
@@ -72,19 +73,17 @@ public class RecepcionServiceImpl implements RecepcionService {
 	
 	private WSRecepcionPool wsRecepcionPool;
 	
-	@Inject
-	public void setApplication(Application application) {
-		this.application = application;
-	}
+	private JPAApi jpaApi;
+	
+	private MessagingHelper messagingHelper;
 	
 	@Inject
-	public void setCommons(Commons commons) {
+	public RecepcionServiceImpl(Commons commons, Application application, WSRecepcionPool wsRecepcionPool, JPAApi jpaApi, MessagingHelper messagingHelper) {
 		this.commons = commons;
-	}
-	
-	@Inject
-	public void setWsRecepcionPool(WSRecepcionPool wsRecepcionPool) {
+		this.application = application;
 		this.wsRecepcionPool = wsRecepcionPool;
+		this.jpaApi = jpaApi;
+		this.messagingHelper = messagingHelper;
 	}
 	
 	@Override
@@ -484,7 +483,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 					.replace("<mail>", empresa.getMailNotificaciones()).replace("<tel>", empresa.getTelefono())
 					.replace("<nl>", "\n");
 
-			new MessagingHelper()
+			messagingHelper
 					.withCustomConfig(empresa.getFromEnvio(), empresa.getHostRecepcion(), Integer.parseInt(empresa.getPuertoRecepcion()),
 							empresa.getUserRecepcion(), empresa.getPassRecepcion())
 					.withAttachment(attachments)
@@ -591,7 +590,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			/*
 			 * Chequeo que todos los CFE tengan respuesta o esten anulados
 			 */
-			List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, fecha);
+			List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(jpaApi, empresa, fecha);
 			for (SobreEmitido sobreEmitido : sobres) {
 				List<CFE> cfes = sobreEmitido.getCfes();
 				for (CFE cfe : cfes) {
@@ -605,7 +604,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			 * Creo el Reporte Diario
 			 */
 			ReporteDefType reporte = new ReporteDefType();
-			ReporteDiario reporteDiario = new ReporteDiario(empresa, fecha);
+			ReporteDiario reporteDiario = new ReporteDiario(jpaApi, empresa, fecha);
 			reporteDiario.save();
 			reporteDiario.setReporteDefType(reporte);
 
@@ -711,7 +710,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 	@Override
 	public void consultarResultados(Date date, Empresa empresa) throws APIException {
 
-		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, date);
+		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(jpaApi, empresa, date);
 
 		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
 			SobreEmitido sobre = iterator.next();

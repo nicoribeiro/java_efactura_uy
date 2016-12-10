@@ -13,7 +13,6 @@ import com.bluedot.commons.utils.Email;
 import com.bluedot.commons.utils.EmailAttachmentReceiver;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
-import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
@@ -23,33 +22,43 @@ import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.services.IntercambioService;
 import com.bluedot.efactura.services.RecepcionService;
-import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
-import com.bluedot.efactura.strategy.builder.CFEBuiderInterface;
-import com.bluedot.efactura.strategy.builder.CFEBuilderFactory;
+import com.bluedot.efactura.strategy.builder.CFEBuilder;
+import com.bluedot.efactura.strategy.builder.CFEBuilderProvider;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.respuestas.cfe.ACKCFEdefType;
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
+import play.db.jpa.JPAApi;
 
 public class ServiceMicroControllerDefault extends MicroControllerDefault implements ServiceMicroController {
 
 	final static Logger logger = LoggerFactory.getLogger(ServiceMicroControllerDefault.class);
 	
 	private RecepcionService recepcionService;
-	private CAEMicroController caeMicroController;
+	private CFEBuilderProvider cfeBuilderProvider;
+	private IntercambioService intercambioService;
+	private JPAApi jpaApi;
 
-	public ServiceMicroControllerDefault(RecepcionService recepcionService, Empresa empresa, CAEMicroController caeMicroController) {
+	@Inject
+	public ServiceMicroControllerDefault(@Assisted Empresa empresa, RecepcionService recepcionService, CFEBuilderProvider cfeBuilderProvider, JPAApi jpaApi, IntercambioService intercambioService) {
 		super(empresa);
 		this.recepcionService = recepcionService;
-		this.caeMicroController = caeMicroController;
+		this.cfeBuilderProvider = cfeBuilderProvider;
+		this.intercambioService = intercambioService;
+		this.jpaApi = jpaApi;
 	}	
 
 	@Override
 	public void enviar(CFE cfe) throws APIException {
 
-		CFEBuiderInterface builder = CFEBuilderFactory.getCFEBuilder(cfe, caeMicroController);
+		cfeBuilderProvider.setCfe(cfe);
+		cfeBuilderProvider.setEmpresa(empresa);
+		
+		CFEBuilder builder = cfeBuilderProvider.get();
 		//TODO mutex
 		builder.asignarId();
 		
@@ -112,7 +121,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		//TODO terminar
 		// TODO mutex
 
-		IntercambioService service = new IntercambioServiceImpl();
+		
 
 		EmailAttachmentReceiver receiver = new EmailAttachmentReceiver();
 		List<Email> emails = receiver.downloadEmail(empresa.getHostRecepcion(),
@@ -136,7 +145,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 					if (attachmentName.substring(0, 3).equalsIgnoreCase("ME_")){
 						ACKCFEdefType ackCFEdefType = (ACKCFEdefType) XML.unMarshall(document,
 								ACKCFEdefType.class);
-						Sobre sobre = SobreEmitido.findById(ackCFEdefType.getCaratula().getIDEmisor().longValue(), true);
+						Sobre sobre = SobreEmitido.findById(jpaApi, ackCFEdefType.getCaratula().getIDEmisor().longValue(), true);
 						
 						if (sobre instanceof SobreEmitido){
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
@@ -151,7 +160,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 					if (attachmentName.substring(0, 2).equalsIgnoreCase("M_")){
 						ACKSobredefType ackSobredefType = (ACKSobredefType) XML.unMarshall(document,
 								ACKSobredefType.class);
-						Sobre sobre = SobreEmitido.findById(ackSobredefType.getCaratula().getIDEmisor().longValue(), true);
+						Sobre sobre = SobreEmitido.findById(jpaApi, ackSobredefType.getCaratula().getIDEmisor().longValue(), true);
 						
 						if (sobre instanceof SobreEmitido){
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
@@ -170,7 +179,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 								EnvioCFEEntreEmpresas.class);
 
 						Empresa empresaReceptoraCandidata = Empresa
-								.findByRUT(envioCFEEntreEmpresas.getCaratula().getRutReceptor(), true);
+								.findByRUT(jpaApi, envioCFEEntreEmpresas.getCaratula().getRutReceptor(), true);
 
 						if (empresaReceptoraCandidata.getId() != empresa.getId())
 							break;
@@ -180,7 +189,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						 */
 						SobreRecibido sobreRecibido = new SobreRecibido();
 						sobreRecibido.setEmpresaReceptora(empresa);
-						Empresa empresaEmisora = Empresa.findByRUT(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
+						Empresa empresaEmisora = Empresa.findByRUT(jpaApi, envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
 						if (empresaEmisora == null) {
 							empresaEmisora = new Empresa(envioCFEEntreEmpresas.getCaratula().getRUCEmisor(), null, null, null, null, null, 0, null);
 							empresaEmisora.save();
@@ -195,14 +204,14 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						/*
 						 * PROCESO SOBRE
 						 */
-						service.procesarSobre(empresa, sobreRecibido);
+						intercambioService.procesarSobre(empresa, sobreRecibido);
 						sobreRecibido.update();
 						ThreadMan.forceTransactionFlush();
 
 						/*
 						 * PROCESO CFE DENTRO DE SOBRE
 						 */
-						service.procesarCFESobre(empresa, sobreRecibido);
+						intercambioService.procesarCFESobre(empresa, sobreRecibido);
 						sobreRecibido.update();
 						ThreadMan.forceTransactionFlush();
 					}

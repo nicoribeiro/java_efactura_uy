@@ -27,7 +27,7 @@ public class Email extends NotificationChannel
 	}
 
 	@Override
-	public void sendNotification(Alert alert)
+	public void sendNotification(MessagingHelper messagingHelper, Alert alert)
 	{
 		if (getValidated() && getEnabled())
 		{
@@ -36,24 +36,24 @@ public class Email extends NotificationChannel
 			String subject = alert.getSubject();
 			HashMap<String,String> attachments = new HashMap<String,String>();
 			attachments.put("attachment", alert.getAttachment());
-			new MessagingHelper().withPlayConfig().withAttachment(attachments).sendEmail(email, mailBody.toString(), mailBody.toString().replace("\n", "<br>"), subject, true);
+			messagingHelper.withPlayConfig().withAttachment(attachments).sendEmail(email, mailBody.toString(), mailBody.toString().replace("\n", "<br>"), subject, true);
 		}
 	}
 
 	@Override
-	public void test()
+	public void test(MessagingHelper messagingHelper)
 	{
 		if (getValidated() && getEnabled())
 		{ 
 			StringBuilder mailBody = new StringBuilder(Messages.get("test_mail"));
 			String subject = "Mail Test";
-			new MessagingHelper().withPlayConfig().sendEmail(email, mailBody.toString(), mailBody.toString(), subject, false);
+			messagingHelper.withPlayConfig().sendEmail(email, mailBody.toString(), mailBody.toString(), subject, false);
 		}
 		
 	}
 
 	@Override
-	public void sendValidationKey(String host)
+	public void sendValidationKey(MessagingHelper messagingHelper, String host)
 	{
 		String activationLink = host+"/api/v1/notificationChannels/"+getId()+"/validate/"+getValidationKey();
 		
@@ -71,7 +71,7 @@ public class Email extends NotificationChannel
 		textEmailBody.append("Validate this Channel by accessing this URL: "+activationLink);
 		
 		String subject = "Mail Test";
-		new MessagingHelper().withPlayConfig().sendEmail(email, textEmailBody.toString(), htmlEmailBody.toString(), subject, true);
+		messagingHelper.withPlayConfig().sendEmail(email, textEmailBody.toString(), htmlEmailBody.toString(), subject, true);
 		
 	}
 
@@ -92,12 +92,12 @@ public class Email extends NotificationChannel
 	}
 
 	@Override
-	public void sendMessage(Message message)
+	public void sendMessage(MessagingHelper messagingHelper, Message message)
 	{
 		if (getValidated() && getEnabled())
 		{
 			String subject = Messages.get("messages_new_message_title");
-			new MessagingHelper().withPlayConfig().sendEmail(email, message.getMessage(), message.getMessage().replace("\n", "<br>"), subject, true);
+			messagingHelper.withPlayConfig().sendEmail(email, message.getMessage(), message.getMessage().replace("\n", "<br>"), subject, true);
 		}
 		
 	}

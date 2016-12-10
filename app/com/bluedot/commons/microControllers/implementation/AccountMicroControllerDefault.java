@@ -19,7 +19,9 @@ import com.bluedot.commons.security.Address;
 import com.bluedot.commons.security.Permission;
 import com.bluedot.commons.security.PermissionNames;
 import com.bluedot.commons.security.User;
+import com.google.inject.Inject;
 
+import play.db.jpa.JPAApi;
 import play.i18n.Messages;
 
 
@@ -28,13 +30,24 @@ import play.i18n.Messages;
 public class AccountMicroControllerDefault implements AccountMicroController
 {
 
+	private JPAApi jpaApi;
+	private MessagingHelper messagingHelper;
+	
+	@Inject
+	public AccountMicroControllerDefault(JPAApi jpaApi, MessagingHelper messagingHelper) {
+		super();
+		this.jpaApi = jpaApi;
+		this.messagingHelper = messagingHelper;
+	}
+	
+	
 	@Override
 	public User signUp(String emailAddress, String password, String firstName, String lastName, String companyName, AccountType accountType, List<Address> addresses, String phone, SignUpConfigurator signUpConfigurator) throws APIException
 	{
 		if (signUpConfigurator.autogenEmail && (emailAddress==null || emailAddress.equals("")))
 			emailAddress = "auto-generated-"+UUID.randomUUID().toString().substring(0, 8)+"@somemail.com";
 		
-		if (User.findByEmailAddress(emailAddress) != null)
+		if (User.findByEmailAddress(jpaApi, emailAddress) != null)
 			throw APIException.raise(APIErrors.USER_ALREADY_EXISTS.withParams("emailAddress", emailAddress));
 		
 		/*
@@ -62,7 +75,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 				phoneNotificationChannel.validate(phoneNotificationChannel.getValidationKey());
 			
 			if (signUpConfigurator.sendValidationToNotificationChannels)
-				phoneNotificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(signUpConfigurator.hostForValidationsLinks));
+				phoneNotificationChannel.sendValidationKey(messagingHelper, messagingHelper.getValidationHost(signUpConfigurator.hostForValidationsLinks));
 		}
 		
 		/*
@@ -74,7 +87,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 			emailNotificationChannel.validate(emailNotificationChannel.getValidationKey());
 		
 		if (signUpConfigurator.sendValidationToNotificationChannels)
-			emailNotificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(signUpConfigurator.hostForValidationsLinks));
+			emailNotificationChannel.sendValidationKey(messagingHelper, messagingHelper.getValidationHost(signUpConfigurator.hostForValidationsLinks));
 		
 		user.save();
 
@@ -121,7 +134,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 	
 	private boolean sendAccountValidationEmail(String to, Account account, String host)
 	{
-		String activationLink = new MessagingHelper().getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/validate";
+		String activationLink = messagingHelper.getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/validate";
 
 		StringBuilder htmlEmailBody = new StringBuilder();
 
@@ -133,13 +146,13 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		textEmailBody.append("Thank you for join");
 		textEmailBody.append("\nValidate your account by accessing this URL: " + activationLink);
 
-		return new MessagingHelper().withPlayConfig().sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Welcome!", true);
+		return messagingHelper.withPlayConfig().sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Welcome!", true);
 	}
 	
 	@Override
 	public boolean sendPasswordResetEmail(String to, Account account, String resetKey, String host)
 	{
-		String resetLink = new MessagingHelper().getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/reset?key=" + resetKey;
+		String resetLink = messagingHelper.getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/reset?key=" + resetKey;
 
 		StringBuilder htmlEmailBody = new StringBuilder();
 
@@ -151,10 +164,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		textEmailBody.append("Password recovery");
 		textEmailBody.append("\nReset your password by accessing this URL: " + resetLink);
 
-		return new MessagingHelper().withPlayConfig().sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Reset your password", true);
+		return messagingHelper.withPlayConfig().sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Reset your password", true);
 	}
-	
-	
 
-	
 }

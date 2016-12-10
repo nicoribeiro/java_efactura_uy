@@ -21,13 +21,13 @@ public class ConsultaPorRUTTest {
     
 
     public static void main(String[] args) {
-
-        ConsultaRutService service = new ConsultaRutServiceImpl();
-     
-        // Call the service
-        String response = service.getRutData("219000090011");
-
-        
-        System.out.println("Output data:\n" + response);
+//TODO usar guice para injectar el Service
+//        ConsultaRutService service = new ConsultaRutServiceImpl();
+//     
+//        // Call the service
+//        String response = service.getRutData("219000090011");
+//
+//        
+//        System.out.println("Output data:\n" + response);
     }
 }

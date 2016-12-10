@@ -13,9 +13,6 @@ import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -24,47 +21,60 @@ import org.slf4j.LoggerFactory;
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
+import com.bluedot.commons.error.VerboseAction;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.Print;
 import com.bluedot.efactura.GenerateInvoice;
 import com.bluedot.efactura.MODO_SISTEMA;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
+import com.bluedot.efactura.microControllers.interfaces.CFEMicroControllerFactory;
+import com.bluedot.efactura.microControllers.interfaces.ServiceMicroControllerFactory;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.play4jpa.jpa.db.Tx;
 
 import play.Application;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
+import play.mvc.With;
 
+@With(VerboseAction.class)
 @Tx
-@ErrorMessage
+@Transactional
 @Security.Authenticated(Secured.class)
 public class DocumentController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(DocumentController.class);
-
+	
+	private ServiceMicroControllerFactory serviceMicroControllerFactory;
+	private CFEMicroControllerFactory cfeMicroControllerFactory;
+	
 	@Inject
-	private Provider<Application> application;
+	public DocumentController(JPAApi jpaApi, Provider<Application> application, ServiceMicroControllerFactory serviceMicroControllerFactory, CFEMicroControllerFactory cfeMicroControllerFactory) {
+		super(jpaApi,application);
+		this.serviceMicroControllerFactory =  serviceMicroControllerFactory;
+		this.cfeMicroControllerFactory = cfeMicroControllerFactory;
+		
+	}
+
 	
 	public CompletionStage<Result> cambiarModo(String modo) throws APIException {
 		MODO_SISTEMA modoEnum = MODO_SISTEMA.valueOf(modo);
 		if (modoEnum == null)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("modo"));
 
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
-
-		factory.setModo(modoEnum);
+		//TODO terminar este metodo, ver cfeMicroControllerFactory que acepta el MODO como parametro
+//		algo.setModo(modoEnum);
 
 		return json(OK);
 	}
@@ -72,13 +82,10 @@ public class DocumentController extends AbstractController {
 	@BodyParser.Of(BodyParser.Json.class)
 	public CompletionStage<Result> aceptarDocumento(String rut) throws APIException {
 		// TODO meter mutex
-		Empresa empresa = Empresa.findByRUT(rut, true);
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 
 		JsonNode jsonNode = request().body().asJson();
 		JSONObject document = new JSONObject(jsonNode.toString());
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
 
 		// TODO estos controles se pueden mover a una annotation
 		if (!document.has("Encabezado"))
@@ -101,7 +108,7 @@ public class DocumentController extends AbstractController {
 
 		String id = document.getJSONObject("Encabezado").getJSONObject("Identificacion").getString("id");
 
-		CFE cfe = CFE.findByGeneradorId(empresa, id);
+		CFE cfe = CFE.findByGeneradorId(jpaApi, empresa, id);
 
 		if (cfe != null)
 			throw APIException.raise(APIErrors.EXISTE_CFE.withParams("generadorId", id));
@@ -110,7 +117,7 @@ public class DocumentController extends AbstractController {
 		case eFactura:
 		case eTicket:
 		case eResguardo:
-			cfe = factory.getCFEMicroController(empresa).create(tipo, document);
+			cfe = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa).create(tipo, document);
 			break;
 		case Nota_de_Credito_de_eFactura:
 		case Nota_de_Credito_de_eTicket:
@@ -118,7 +125,7 @@ public class DocumentController extends AbstractController {
 		case Nota_de_Debito_de_eTicket:
 			if (!document.getJSONObject("Encabezado").has("Referencia"))
 				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Referencia"));
-			cfe = factory.getCFEMicroController(empresa).create(tipo, document,
+			cfe = cfeMicroControllerFactory.create(MODO_SISTEMA.NORMAL, empresa).create(tipo, document,
 					document.getJSONObject("Encabezado").getJSONObject("Referencia"));
 			break;
 
@@ -162,7 +169,7 @@ public class DocumentController extends AbstractController {
 			JSONObject error = null;
 
 			try {
-				factory.getServiceMicroController(empresa).enviar(cfe);
+				serviceMicroControllerFactory.create(empresa).enviar(cfe);
 			} catch (APIException e) {
 				logger.error("APIException:", e);
 				error = e.getJSONObject();
@@ -188,20 +195,17 @@ public class DocumentController extends AbstractController {
 	@BodyParser.Of(BodyParser.Json.class)
 	public CompletionStage<Result> reenviarDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 		// TODO meter mutex
-		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		CFE cfe = CFE.findById(jpaApi, empresa, tipo, serie, nro, true);
 
 		JSONObject error = null;
 
 		try {
 			if (cfe.getEstado() == null)
-				factory.getServiceMicroController(empresa).reenviar(cfe.getSobre());
+				serviceMicroControllerFactory.create(empresa).reenviar(cfe.getSobre());
 		} catch (APIException e) {
 			logger.error("APIException:", e);
 			error = e.getJSONObject();
@@ -224,30 +228,24 @@ public class DocumentController extends AbstractController {
 
 	public CompletionStage<Result> anularDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
-		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		CFE cfe = CFE.findById(jpaApi, empresa, tipo, serie, nro, true);
 
-		factory.getServiceMicroController(empresa).anularDocumento(cfe);
+		serviceMicroControllerFactory.create(empresa).anularDocumento(cfe);
 
 		return json(OK);
 	}
 
 	public CompletionStage<Result> resultadoDocumentosFecha(String rut, String fecha) throws APIException {
 
-		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 
 		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
 
-		factory.getServiceMicroController(empresa).consultarResultados(date);
+		serviceMicroControllerFactory.create(empresa).consultarResultados(date);
 
 		return json(OK);
 
@@ -255,23 +253,20 @@ public class DocumentController extends AbstractController {
 
 	public CompletionStage<Result> resultadoDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
-		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
 		if (tipo == null)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoDoc", idTipoDoc));
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		CFE cfe = CFE.findById(jpaApi, empresa, tipo, serie, nro, true);
 
 		JSONObject error = null;
 
 		try {
 			if (cfe.getEstado() == null)
-				factory.getServiceMicroController(empresa).consultaResultado(cfe.getSobre());
+				serviceMicroControllerFactory.create(empresa).consultaResultado(cfe.getSobre());
 		} catch (APIException e) {
 			logger.error("APIException:", e);
 			error = e.getJSONObject();
@@ -290,22 +285,19 @@ public class DocumentController extends AbstractController {
 	
 	public CompletionStage<Result> enviarMailEmpresa(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
-		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
 		if (tipo == null)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoDoc", idTipoDoc));
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		CFE cfe = CFE.findById(jpaApi, empresa, tipo, serie, nro, true);
 
 		JSONObject error = null;
 
 		try {
-			factory.getServiceMicroController(empresa).enviarMailEmpresa(cfe);
+			serviceMicroControllerFactory.create(empresa).enviarMailEmpresa(cfe);
 		} catch (APIException e) {
 			logger.error("APIException:", e);
 			error = e.getJSONObject();
@@ -319,15 +311,12 @@ public class DocumentController extends AbstractController {
 	}
 
 	public CompletionStage<Result> procesarEmailEntrantes(String rut) throws APIException {
-		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
+		Empresa empresaReceptora = Empresa.findByRUT(jpaApi, rut, true);
 
 		JSONObject error = null;
 
 		try {
-				factory.getServiceMicroController(empresaReceptora).getDocumentosEntrantes();
+			serviceMicroControllerFactory.create(empresaReceptora).getDocumentosEntrantes();
 		} catch (APIException e) {
 			logger.error("APIException:", e);
 			error = e.getJSONObject();
@@ -338,7 +327,7 @@ public class DocumentController extends AbstractController {
 	}
 	
 	public CompletionStage<Result> getDocumentosEntrantes(String rut, String fecha) throws APIException {
-		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
+		Empresa empresaReceptora = Empresa.findByRUT(jpaApi, rut, true);
 		
 		//TODO serializar los Sobres_recibidos y devolver
 		return json(OK);
@@ -350,10 +339,7 @@ public class DocumentController extends AbstractController {
 		if (cantReportes < 1)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("cantReportes", cantReportes));
 
-		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 
 		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
 
@@ -364,7 +350,7 @@ public class DocumentController extends AbstractController {
 			ReporteDiario reporte = null;
 			try {
 
-				reporte = factory.getServiceMicroController(empresa)
+				reporte = serviceMicroControllerFactory.create(empresa)
 						.generarReporteDiario(DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
 
 			} catch (APIException e) {
@@ -390,11 +376,11 @@ public class DocumentController extends AbstractController {
 	public CompletionStage<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print)
 			throws APIException {
 
-		Empresa empresa = Empresa.findByRUT(rut, true);
+		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		CFE cfe = CFE.findById(jpaApi, empresa, tipo, serie, nro, true);
 
 		try {
 			File pdf = generarPDF(empresa, cfe);

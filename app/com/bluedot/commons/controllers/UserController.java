@@ -8,7 +8,7 @@ import java.util.concurrent.CompletionStage;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.error.VerboseAction;
 import com.bluedot.commons.notificationChannels.NotificationChannel;
 import com.bluedot.commons.notificationChannels.NotificationRecord;
 import com.bluedot.commons.notificationChannels.SMS;
@@ -24,28 +24,40 @@ import com.bluedot.commons.security.User;
 import com.bluedot.commons.security.User.Role;
 import com.bluedot.commons.security.ValidateJsonPost;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.play4jpa.jpa.db.Tx;
 
 import flexjson.JSONSerializer;
+import play.Application;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
+import play.mvc.With;
 
+@With(VerboseAction.class)
 @Tx
-@ErrorMessage
+@Transactional
 @Security.Authenticated(Secured.class)
 public class UserController extends AbstractController
 {
 
+	@Inject
+	public UserController(JPAApi jpaApi, Provider<Application> application) {
+		super(jpaApi, application);
+	}
+
 	public  CompletionStage<Result> listUsers() throws APIException
 	{
-		return PermissionValidator.runIfHasRole(ctx(), new PromiseCallback() {
+		return PermissionValidator.runIfHasRole(jpaApi, ctx(), new PromiseCallback() {
 
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
 
-				List<User> users = User.findAll();
+				List<User> users = User.findAll(jpaApi);
 
 				JSONSerializer serializer = new JSONSerializer().include("emailAddress", "firstName", "lastName", "gender", "addresses", "id").exclude("*").prettyPrint(true);
 
@@ -70,7 +82,7 @@ public class UserController extends AbstractController
 
 				JsonNode userJson = request().body().asJson();
 
-				Account account = Account.findById(accountId, true);
+				Account account = Account.findById(jpaApi, accountId, true);
 
 				String emailAddress = userJson.findPath("emailAddress").textValue();
 				String password = userJson.findPath("password").textValue();
@@ -192,11 +204,11 @@ public class UserController extends AbstractController
 	
 	public  CompletionStage<Result> changePassword(final int accountId, final int userId) throws APIException
 	{
-		Account sessionUserAccount = Account.findById(accountId, true);
+		Account sessionUserAccount = Account.findById(jpaApi, accountId, true);
 		
-		final User user = User.findById(userId);
+		final User user = User.findById(jpaApi, userId);
 		
-		if(PermissionValidator.getSessionUser(ctx()).getRole() != Role.ADMIN && !sessionUserAccount.isUserInAccount(user))
+		if(PermissionValidator.getSessionUser(jpaApi, ctx()).getRole() != Role.ADMIN && !sessionUserAccount.isUserInAccount(user))
 			throw APIException.raise(APIErrors.USER_NOT_PART_OF_ACCOUNT);
 		
 		return accountAction(sessionUserAccount.getId(), new PromiseCallback() {
@@ -208,7 +220,7 @@ public class UserController extends AbstractController
 
 				String password = userJson.findPath("password").asText();
 				
-				User user = User.findById(userId, true);
+				User user = User.findById(jpaApi, userId, true);
 				
 				
 //				if(user.getMasterAccount().getAccountType() != AccountType.ACCOUNT_USER)
@@ -224,7 +236,7 @@ public class UserController extends AbstractController
 	
 	public  CompletionStage<Result> getAccessLevels(int userId) throws APIException
 	{
-		final User u = User.findById(userId, true);
+		final User u = User.findById(jpaApi, userId, true);
 
 		return userAction(u.getId(), new PromiseCallback() {
 			@Override
@@ -252,7 +264,7 @@ public class UserController extends AbstractController
 
 	public  CompletionStage<Result> getUser(String emailAddress) throws APIException
 	{
-		final User u = User.findByEmailAddress(emailAddress, true);
+		final User u = User.findByEmailAddress(jpaApi, emailAddress, true);
 
 		return userAction(u.getId(), new PromiseCallback() {
 			@Override
@@ -275,7 +287,7 @@ public class UserController extends AbstractController
 	@BodyParser.Of(BodyParser.Json.class)
 	public  CompletionStage<Result> updateUser(int userId) throws APIException
 	{
-		final User u = User.findById(userId, true);
+		final User u = User.findById(jpaApi, userId, true);
 
 		return userAction(u.getId(), new PromiseCallback() {
 			@Override
@@ -360,9 +372,9 @@ public class UserController extends AbstractController
 	public  CompletionStage<Result> deleteUser(int userId) throws APIException
 	{
 
-		final User u = User.findById(userId, true);
+		final User u = User.findById(jpaApi, userId, true);
 		
-		return PermissionValidator.runIfHasRole(ctx(), new PromiseCallback() {
+		return PermissionValidator.runIfHasRole(jpaApi, ctx(), new PromiseCallback() {
 
 			@Override
 			public CompletionStage<Result> execute() throws APIException
@@ -376,7 +388,7 @@ public class UserController extends AbstractController
 
 	public  CompletionStage<Result> regenerateCredentials(int userId) throws APIException
 	{
-		final User u = User.findById(userId, true);
+		final User u = User.findById(jpaApi, userId, true);
 
 		return userAction(u.getId(), new PromiseCallback() {
 			@Override

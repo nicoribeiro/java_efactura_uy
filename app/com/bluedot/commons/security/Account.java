@@ -35,6 +35,7 @@ import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 import com.play4jpa.jpa.query.Query;
 
+import play.db.jpa.JPAApi;
 import play.i18n.Messages;
 
 
@@ -89,14 +90,14 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 		accountType = AccountType.EMISOR_ELECTRONICO;
 	}
 	
-	public static Account findById(Integer id)
+	public static Account findById(JPAApi jpaApi, Integer id)
 	{
-		return find.byId(id);
+		return find.byId(jpaApi, id);
 	}
 	
-	public static Account findById(Integer id, boolean throwExceptionWhenMissing) throws APIException
+	public static Account findById(JPAApi jpaApi, Integer id, boolean throwExceptionWhenMissing) throws APIException
 	{
-		Account account = find.byId(id);
+		Account account = find.byId(jpaApi, id);
 		
 		if (account==null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.ACCOUNT_NOT_FOUND.withParams("id", id));
@@ -104,14 +105,14 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 		return account;
 	}
 	
-	public static List<Account> findAll()
+	public static List<Account> findAll(JPAApi jpaApi)
 	{
-		return find.all();
+		return find.all(jpaApi);
 	}
 	
-	public static List<Account> find(String keyword)
+	public static List<Account> find(JPAApi jpaApi, String keyword)
 	{
-		DefaultQuery<Account> q = (DefaultQuery<Account>) find.query();
+		DefaultQuery<Account> q = (DefaultQuery<Account>) find.query(jpaApi);
 		
 		if(keyword != null)
 		{
@@ -128,14 +129,14 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 		return q.findList();
 	}
 	
-	public static Account findByUUID(String uuid)
+	public static Account findByUUID(JPAApi jpaApi, String uuid)
 	{
-		return Account.query().eq("uuid", uuid).findUnique();
+		return Account.query(jpaApi).eq("uuid", uuid).findUnique();
 	}
 
-	public static Query<Account> query()
+	public static Query<Account> query(JPAApi jpaApi)
 	{
-		return find.query();
+		return find.query(jpaApi);
 	}
 
 //	public static Account findByOwnerId(int ownerId)
@@ -143,9 +144,9 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 //		return Account.query().join("owner").eq("owner.id", ownerId).findUnique();
 //	}
 	
-	public static List<Account> findByOEM(Long oem_id)
+	public static List<Account> findByOEM(JPAApi jpaApi, Long oem_id)
 	{
-		return Account.query().join("oem").eq("oem.id", oem_id).findList();
+		return Account.query(jpaApi).join("oem").eq("oem.id", oem_id).findList();
 	}
 	
 //	public String waitForPasswordReset()
@@ -158,9 +159,9 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 //		return key;
 //	}
 	
-	public static List<Alert> queryAlerts(int accountId, int deviceId, Date fromTimestamp, Date toTimestamp, int perPage, int page)
+	public static List<Alert> queryAlerts(JPAApi jpaApi, int accountId, int deviceId, Date fromTimestamp, Date toTimestamp, int perPage, int page)
 	{
-		Query<Alert> q = alertFinder.query().join("account").eq("account.id", accountId);
+		Query<Alert> q = alertFinder.query(jpaApi).join("account").eq("account.id", accountId);
 		
 		if(fromTimestamp != null)
 			q.ge("creationTimestamp", fromTimestamp);

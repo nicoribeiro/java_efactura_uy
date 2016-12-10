@@ -12,12 +12,13 @@ import org.json.JSONException;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroControllerFactory;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.TipoDocumento;
-import com.bluedot.efactura.model.Titular;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType.ETck;
@@ -37,11 +38,13 @@ import dgi.classes.recepcion.wrappers.ReceptorInterface;
 import dgi.classes.recepcion.wrappers.ReceptorTickWrapper;
 import dgi.classes.recepcion.wrappers.TotalesFactTickWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
+import play.db.jpa.JPAApi;
 
 public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 
-	public EticketStrategy(CFE cfe, CAEMicroController caeMicroController) throws APIException {
-		super(cfe, caeMicroController);
+	@Inject
+	public EticketStrategy(@Assisted CFE cfe, @Assisted Empresa empresa, JPAApi jpaApi, CAEMicroControllerFactory caeMicroControllerFactory) throws APIException {
+		super(cfe, caeMicroControllerFactory.create(empresa), jpaApi);
 		if (cfe.getEticket()==null)
 			this.cfe.setEticket(new ETck());
 
@@ -211,7 +214,7 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 			receptor.setDeptoRecep(deptoRecep);
 		
 		if (codPaisRecep != null && docRecep != null && codPaisRecep!=null){
-			Pais pais = Pais.findByCodigo(codPaisRecep, true);
+			Pais pais = Pais.findByCodigo(jpaApi, codPaisRecep, true);
 			cfe.setTitular(getOrCreateTitular(pais,tipoDocRecep,docRecep));
 		}
 	}

@@ -21,6 +21,8 @@ import com.bluedot.commons.messages.Message;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPAApi;
+
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -57,7 +59,7 @@ public abstract class NotificationChannel extends Model<NotificationChannel>
 
 	private static Finder<Integer, NotificationChannel> find = new Finder<Integer, NotificationChannel>(Integer.class, NotificationChannel.class);
 
-	public void sendAlert(Alert alert)
+	public void sendAlert(MessagingHelper messagingHelper, Alert alert)
 	{
 		// TODO filter by severity
 		// if (severities.contains(alert.getSeverity()) && validated && enabled)
@@ -67,26 +69,26 @@ public abstract class NotificationChannel extends Model<NotificationChannel>
 			NotificationRecord notificationRecord = new NotificationRecord(this);
 			getNotificationRecords().add(notificationRecord);
 			alert.getNotificationRecords().add(notificationRecord);
-			sendNotification(alert);
+			sendNotification(messagingHelper, alert);
 			notificationRecord.save();
 			this.update();
 			alert.update();
 		}
 	}
 
-	public abstract void sendNotification(Alert alert);
+	public abstract void sendNotification(MessagingHelper messagingHelper, Alert alert);
 	
-	public abstract void sendMessage(Message message);
+	public abstract void sendMessage(MessagingHelper messagingHelper, Message message);
 
-	public abstract void test();
+	public abstract void test(MessagingHelper messagingHelper);
 
-	public abstract void sendValidationKey(String arg);
+	public abstract void sendValidationKey(MessagingHelper messagingHelper, String arg);
 
 	protected abstract String generateValidationKey();
 
-	public static NotificationChannel findById(int notificationChannelId)
+	public static NotificationChannel findById(JPAApi jpaApi, int notificationChannelId)
 	{
-		return find.byId(notificationChannelId);
+		return find.byId(jpaApi, notificationChannelId);
 	}
 
 	public boolean validate(String key)

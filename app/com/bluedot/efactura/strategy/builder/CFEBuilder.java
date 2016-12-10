@@ -7,7 +7,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 
-public interface CFEBuiderInterface {
+public interface CFEBuilder {
 	
 	void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws APIException;
 

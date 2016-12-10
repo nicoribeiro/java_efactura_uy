@@ -32,6 +32,7 @@ import com.play4jpa.jpa.models.Model;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
+import play.db.jpa.JPAApi;
 
 
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -165,12 +166,12 @@ public class Sobre extends Model<Sobre> {
 	
 	protected static Finder<Long, Sobre> find = new Finder<Long, Sobre>(Long.class, Sobre.class);
 	
-	public static Sobre findById(Long id) {
-		return find.byId(id);
+	public static Sobre findById(JPAApi jpaApi, Long id) {
+		return find.byId(jpaApi, id);
 	}
 
-	public static Sobre findById(Long id, boolean throwExceptionWhenMissing) throws APIException {
-		Sobre sobre = find.byId(id);
+	public static Sobre findById(JPAApi jpaApi, Long id, boolean throwExceptionWhenMissing) throws APIException {
+		Sobre sobre = find.byId(jpaApi, id);
 
 		if (sobre == null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.SOBRE_NO_ENCONTRADO.withParams("id", id));

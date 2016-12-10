@@ -35,13 +35,14 @@ import com.bluedot.commons.messages.Message;
 import com.bluedot.commons.messages.MessageReceiver;
 import com.bluedot.commons.messages.MessageSender;
 import com.bluedot.commons.notificationChannels.Email;
+import com.bluedot.commons.notificationChannels.MessagingHelper;
 import com.bluedot.commons.notificationChannels.NotificationChannel;
 import com.bluedot.commons.notificationChannels.SMS;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
-
+import play.db.jpa.JPAApi;
 import play.i18n.Messages;
 
 @Entity
@@ -139,19 +140,19 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	 */
 	private static Finder<Integer, User> find = new Finder<Integer, User>(Integer.class, User.class);
 
-	public static User findByEmailAddressAndPassword(String emailAddress, String password)
+	public static User findByEmailAddressAndPassword(JPAApi jpaApi, String emailAddress, String password)
 	{
-		return find.query().ieq("emailAddress", emailAddress).eq("shaPassword", getSha512(password)).findUnique();
+		return find.query(jpaApi).ieq("emailAddress", emailAddress).eq("shaPassword", getSha512(password)).findUnique();
 	}
 
-	public static User findByEmailAddress(String emailAddress) throws APIException
+	public static User findByEmailAddress(JPAApi jpaApi, String emailAddress) throws APIException
 	{
-		return findByEmailAddress(emailAddress, false);
+		return findByEmailAddress(jpaApi, emailAddress, false);
 	}
 	
-	public static User findByEmailAddress(String emailAddress, boolean throwExceptionWhenMissing) throws APIException
+	public static User findByEmailAddress(JPAApi jpaApi, String emailAddress, boolean throwExceptionWhenMissing) throws APIException
 	{
-		User user = find.query().ieq("emailAddress", emailAddress).findUnique();
+		User user = find.query(jpaApi).ieq("emailAddress", emailAddress).findUnique();
 		
 		if (user==null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.USER_NOT_FOUND.withParams("emailAddress", emailAddress));
@@ -161,24 +162,24 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	
 	
 
-	public static Collection<User> find(Role role)
+	public static Collection<User> find(JPAApi jpaApi, Role role)
 	{
-		return find.query().eq("role", role).findList();
+		return find.query(jpaApi).eq("role", role).findList();
 	}
 
-	public static List<User> findAll()
+	public static List<User> findAll(JPAApi jpaApi)
 	{
-		return find.all();
+		return find.all(jpaApi);
 	}
 
-	public static List<User> findWithPermissionId(String permissionId)
+	public static List<User> findWithPermissionId(JPAApi jpaApi, String permissionId)
 	{
-		return find.query().join("permissions").ilike("permissions.permissionId", permissionId + '%').findList();
+		return find.query(jpaApi).join("permissions").ilike("permissions.permissionId", permissionId + '%').findList();
 	}
 	
-	public static User findBySMSAccessToken(String token)
+	public static User findBySMSAccessToken(JPAApi jpaApi, String token)
 	{
-		return find.query().join("settings").ilike("settings.jsonSettings", '%' + token + '%').findUnique();
+		return find.query(jpaApi).join("settings").ilike("settings.jsonSettings", '%' + token + '%').findUnique();
 	}
 
 	/*
@@ -366,14 +367,14 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		return notificationChannels;
 	}
 
-	public static User findById(int userId)
+	public static User findById(JPAApi jpaApi, int userId)
 	{
-		return find.byId(userId);
+		return find.byId(jpaApi, userId);
 	}
 
-	public static User findById(int id, boolean throwExceptionWhenMissing) throws APIException
+	public static User findById(JPAApi jpaApi, int id, boolean throwExceptionWhenMissing) throws APIException
 	{
-		User user = find.byId(id);
+		User user = find.byId(jpaApi, id);
 
 		if (user == null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.USER_NOT_FOUND.withParams("id", id));
@@ -470,7 +471,7 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	 * @see models.AlertReciver#sendAlert(models.Alert)
 	 */
 	@Override
-	public void receiveAlert(Alert alert)
+	public void receiveAlert(MessagingHelper messagingHelper, Alert alert)
 	{
 		logger.info("User {} receiveing alert ", getId());
 		
@@ -482,16 +483,16 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		
 		for (NotificationChannel notificationChannel : notificationChannels)
 		{
-			notificationChannel.sendAlert(alert);
+			notificationChannel.sendAlert(messagingHelper, alert);
 		}
 
 	}
 
-	public void receiveAlertByEmail(Alert alert)
+	public void receiveAlertByEmail(MessagingHelper messagingHelper, Alert alert)
 	{
 		NotificationChannel email = getEmailNotificationChannel();
 		if (email != null && allowAlertDelivery(alert))
-			email.sendAlert(alert);
+			email.sendAlert(messagingHelper, alert);
 	}
 	
 	private boolean allowAlertDelivery(Alert alert)

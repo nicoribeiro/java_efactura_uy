@@ -6,7 +6,7 @@ import java.util.concurrent.CompletionStage;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.error.VerboseAction;
 import com.bluedot.commons.notificationChannels.Email;
 import com.bluedot.commons.notificationChannels.MessagingHelper;
 import com.bluedot.commons.notificationChannels.NotificationChannel;
@@ -18,20 +18,35 @@ import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.security.User;
 import com.bluedot.commons.security.ValidateJsonPost;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.play4jpa.jpa.db.Tx;
 
 import flexjson.JSONSerializer;
+import play.Application;
+import play.db.jpa.JPAApi;
+import play.db.jpa.Transactional;
 import play.mvc.BodyParser;
 import play.mvc.Http.Context;
 import play.mvc.Result;
 import play.mvc.Security;
+import play.mvc.With;
 
 
-@ErrorMessage
+@With(VerboseAction.class)
 @Tx
+@Transactional
 @Security.Authenticated(Secured.class)
 public class NotificationChannelController extends AbstractController
 {
+	
+	private MessagingHelper messagingHelper;
+	
+	@Inject
+	public NotificationChannelController(JPAApi jpaApi, Provider<Application> application, MessagingHelper messagingHelper) {
+		super(jpaApi, application);
+		this.messagingHelper = messagingHelper;
+	}
 
 	private enum NotificationChannelType {
 		SMS, MAIL
@@ -40,11 +55,11 @@ public class NotificationChannelController extends AbstractController
 	public  CompletionStage<Result> listNotificationChannel(final int userId) throws Throwable
 	{
 
-		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, Context.current(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
-				User user = User.findById(userId, true);
+				User user = User.findById(jpaApi, userId, true);
 
 				Collection<NotificationChannel> notificationsChannels = user.getNotificationChannels();
 
@@ -60,13 +75,13 @@ public class NotificationChannelController extends AbstractController
 	public  CompletionStage<Result> createNotificationChannel(final int userId) throws Throwable
 	{
 
-		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, Context.current(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
 				JsonNode notificationChannelJson = request().body().asJson();
 
-				User user = User.findById(userId, true);
+				User user = User.findById(jpaApi, userId, true);
 
 				String description = notificationChannelJson.get("description").asText();
 
@@ -123,7 +138,7 @@ public class NotificationChannelController extends AbstractController
 
 				notificationChannel.save();
 
-				notificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(request().host()));
+				notificationChannel.sendValidationKey(messagingHelper, messagingHelper.getValidationHost(request().host()));
 				
 				return CompletableFuture.completedFuture(created());
 			}
@@ -133,14 +148,14 @@ public class NotificationChannelController extends AbstractController
 	public  CompletionStage<Result> editNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
 	{
 
-		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, Context.current(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
 				JsonNode body = request().body().asJson();
-				User user = User.findById(userId, true);
+				User user = User.findById(jpaApi, userId, true);
 
-				NotificationChannel notificationChannel = NotificationChannel.findById(notificationChannelId);
+				NotificationChannel notificationChannel = NotificationChannel.findById(jpaApi, notificationChannelId);
 
 				if (!user.getNotificationChannels().contains(notificationChannel))
 					throw APIException.raise(APIErrors.UNAUTHORIZED).setDetailMessage("Notification Channel does not belog to you");
@@ -160,14 +175,14 @@ public class NotificationChannelController extends AbstractController
 	public  CompletionStage<Result> deleteNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
 	{
 
-		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, Context.current(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
 
-				User user = User.findById(userId, true);
+				User user = User.findById(jpaApi, userId, true);
 
-				NotificationChannel notificationChannel = NotificationChannel.findById(notificationChannelId);
+				NotificationChannel notificationChannel = NotificationChannel.findById(jpaApi, notificationChannelId);
 
 				if (!user.getNotificationChannels().contains(notificationChannel))
 					throw APIException.raise(APIErrors.UNAUTHORIZED).setDetailMessage("Notification Channel does not belog to you");
@@ -185,19 +200,19 @@ public class NotificationChannelController extends AbstractController
 	public  CompletionStage<Result> sendKeyNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
 	{
 
-		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, Context.current(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
 
-				User user = User.findById(userId, true);
+				User user = User.findById(jpaApi, userId, true);
 
-				NotificationChannel notificationChannel = NotificationChannel.findById(notificationChannelId);
+				NotificationChannel notificationChannel = NotificationChannel.findById(jpaApi, notificationChannelId);
 
 				if (!user.getNotificationChannels().contains(notificationChannel))
 					throw APIException.raise(APIErrors.UNAUTHORIZED).setDetailMessage("Notification Channel does not belog to you");
 
-				notificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(request().host()));
+				notificationChannel.sendValidationKey(messagingHelper, messagingHelper.getValidationHost(request().host()));
 
 				return CompletableFuture.completedFuture(ok());
 
@@ -208,12 +223,12 @@ public class NotificationChannelController extends AbstractController
 	public  CompletionStage<Result> validateNotificationChannel(final int notificationChannelId, final String key) throws Throwable
 	{
 
-		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, Context.current(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
 
-				NotificationChannel notificationChannel = NotificationChannel.findById(notificationChannelId);
+				NotificationChannel notificationChannel = NotificationChannel.findById(jpaApi, notificationChannelId);
 
 				boolean validated = notificationChannel.validate(key);
 				
@@ -231,19 +246,19 @@ public class NotificationChannelController extends AbstractController
 	public  CompletionStage<Result> testNotificationChannel(final int userId, final int notificationChannelId) throws Throwable
 	{
 
-		return PermissionValidator.runWithValidation(Context.current(), new PromiseCallback() {
+		return PermissionValidator.runWithValidation(jpaApi, Context.current(), new PromiseCallback() {
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
 
-				User user = User.findById(userId, true);
+				User user = User.findById(jpaApi, userId, true);
 
-				NotificationChannel notificationChannel = NotificationChannel.findById(notificationChannelId);
+				NotificationChannel notificationChannel = NotificationChannel.findById(jpaApi, notificationChannelId);
 
 				if (!user.getNotificationChannels().contains(notificationChannel))
 					throw APIException.raise(APIErrors.UNAUTHORIZED).setDetailMessage("Notification Channel does not belog to you");
 
-				notificationChannel.test();
+				notificationChannel.test(messagingHelper);
 
 				return CompletableFuture.completedFuture(ok());
 			}

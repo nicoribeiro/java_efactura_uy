@@ -37,7 +37,7 @@ public interface AccountMicroController
 	User signUp(String emailAddress, String password, String firstName, String lastName, String companyName, AccountType accountType, List<Address> addresses, String phone,
 			SignUpConfigurator signUpConfigurator) throws APIException;
 
-	boolean sendPasswordResetEmail(String to, Account account, String resetKey, String host);
+	boolean sendPasswordResetEmail(String to, Account account, String resetKey, String host)throws APIException;
 
 	void addPermissionsToUser(User user, PermissionNames[] permissions, String pattern, String id, String value);
 

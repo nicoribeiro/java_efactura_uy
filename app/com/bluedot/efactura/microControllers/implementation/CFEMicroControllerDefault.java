@@ -9,33 +9,31 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.MODO_SISTEMA;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroControllerFactory;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
-import com.bluedot.efactura.strategy.builder.CFEBuiderInterface;
-import com.bluedot.efactura.strategy.builder.CFEBuilderFactory;
+import com.bluedot.efactura.strategy.builder.CFEBuilder;
+import com.bluedot.efactura.strategy.builder.CFEBuilderProvider;
+import com.google.inject.assistedinject.Assisted;
 
 public class CFEMicroControllerDefault extends MicroControllerDefault implements CFEMicroController {
 
 	private MODO_SISTEMA modo;
 	
-	private CAEMicroController caeMicroController;
+	private CFEBuilderProvider cfeBuilderProvider;
 	
 	private Commons commons;
 	
 	@Inject
-	public void setCommons(Commons commons) {
-		this.commons = commons;
-	}
-	
-	public CFEMicroControllerDefault(MODO_SISTEMA modo, Empresa empresa, CAEMicroController caeMicroController) {
+	public CFEMicroControllerDefault(@Assisted MODO_SISTEMA modo, @Assisted Empresa empresa, Commons commons, CFEBuilderProvider cfeBuilderProvider) {
 		super(empresa);
 		this.modo = modo;
-		this.caeMicroController = caeMicroController;
+		this.cfeBuilderProvider = cfeBuilderProvider;
 	}
 
-	private CFE buildTemplate(JSONObject docJSON, CFEBuiderInterface cfeBuilder, JSONObject referencia)
+	private CFE buildTemplate(JSONObject docJSON, CFEBuilder cfeBuilder, JSONObject referencia)
 			throws APIException {
 		
 		cfeBuilder.buildTimestampFirma();
@@ -101,7 +99,10 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 
 	@Override
 	public CFE create(TipoDoc tipo, JSONObject factura) throws APIException {
-		return buildTemplate(factura, CFEBuilderFactory.getCFEBuilder(getTipoDoc(modo, tipo), caeMicroController), null);
+		cfeBuilderProvider.setEmpresa(empresa);
+		cfeBuilderProvider.setTipoDoc(tipo);
+		
+		return buildTemplate(factura, cfeBuilderProvider.get(), null);
 	}
 
 
@@ -110,8 +111,10 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		if (referencia == null)
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Referencia"));
 
-		return buildTemplate(jsonObject, CFEBuilderFactory.getCFEBuilder(getTipoDoc(modo, tipo), caeMicroController),
-				referencia);
+		cfeBuilderProvider.setEmpresa(empresa);
+		cfeBuilderProvider.setTipoDoc(tipo);
+		
+		return buildTemplate(jsonObject, cfeBuilderProvider.get(),referencia);
 
 	}
 
@@ -129,6 +132,11 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 			return TipoDoc.fromInt(tipo.value+100);
 		
 		return null;
+	}
+
+	@Override
+	public void setModo(MODO_SISTEMA modo) {
+		this.modo = modo;
 	}
 
 }

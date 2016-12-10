@@ -13,6 +13,9 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPA;
+import play.db.jpa.JPAApi;
+
 @Entity
 public class Session extends Model<Session>
 {
@@ -49,7 +52,7 @@ public class Session extends Model<Session>
 
 	public static Finder<String, Session> find = new Finder<String, Session>(String.class, Session.class);
 
-	public static User findUserByAuthToken(String authToken)
+	public static User findUserByAuthToken(JPAApi jpaApi, String authToken)
 	{
 		if (authToken == null)
 		{
@@ -58,14 +61,14 @@ public class Session extends Model<Session>
 
 		try
 		{
-			return find.query().eq("token", authToken).findUnique().user;
+			return find.query(jpaApi).eq("token", authToken).findUnique().user;
 		} catch (Exception e)
 		{
 			return null;
 		}
 	}
 
-	public static Session findByAuthToken(String authToken)
+	public static Session findByAuthToken(JPAApi jpaApi, String authToken)
 	{
 		if (authToken == null)
 		{
@@ -74,16 +77,16 @@ public class Session extends Model<Session>
 
 		try
 		{
-			return find.query().eq("token", authToken).findUnique();
+			return find.query(jpaApi).eq("token", authToken).findUnique();
 		} catch (Exception e)
 		{
 			return null;
 		}
 	}
 	
-	public static Session findByAuthToken(String authToken, boolean throwExceptionWhenMissing) throws APIException
+	public static Session findByAuthToken(JPAApi jpaApi, String authToken, boolean throwExceptionWhenMissing) throws APIException
 	{
-		Session session = findByAuthToken(authToken);
+		Session session = findByAuthToken(jpaApi, authToken);
 		
 		if (session==null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.SESSION_NOT_FOUND.withParams("authToken", authToken));

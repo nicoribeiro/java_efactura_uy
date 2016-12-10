@@ -40,6 +40,7 @@ import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
+import play.db.jpa.JPAApi;
 
 @Entity
 public class CFE extends Model<CFE>{
@@ -244,12 +245,12 @@ public class CFE extends Model<CFE>{
 	
 	private static Finder<Integer, CFE> find = new Finder<Integer, CFE>(Integer.class, CFE.class);
 	
-	public static CFE findById(Integer id) {
-		return find.byId(id);
+	public static CFE findById(JPAApi jpaApi, Integer id) {
+		return find.byId(jpaApi, id);
 	}
 
-	public static CFE findById(Integer id, boolean throwExceptionWhenMissing) throws APIException {
-		CFE cfe = find.byId(id);
+	public static CFE findById(JPAApi jpaApi, Integer id, boolean throwExceptionWhenMissing) throws APIException {
+		CFE cfe = find.byId(jpaApi, id);
 
 		if (cfe == null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO.withParams("id", id));
@@ -257,9 +258,9 @@ public class CFE extends Model<CFE>{
 	}
 
 	
-	public static CFE findById(Empresa empresa, TipoDoc tipo, String serie, long nro, boolean throwExceptionWhenMissing) throws APIException
+	public static CFE findById(JPAApi jpaApi, Empresa empresa, TipoDoc tipo, String serie, long nro, boolean throwExceptionWhenMissing) throws APIException
 	{
-		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query(jpaApi);
 		
 			
 			q.getCriteria().createAlias("empresaEmisora", "empresa", JoinType.LEFT_OUTER_JOIN);
@@ -278,8 +279,8 @@ public class CFE extends Model<CFE>{
 		return cfe;
 	}
 	
-	public static CFE findByGeneradorId(Empresa empresa, String id) {
-		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+	public static CFE findByGeneradorId(JPAApi jpaApi, Empresa empresa, String id) {
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query(jpaApi);
 
 		q.getCriteria().add(Restrictions.eq("generadorId", id));
 
