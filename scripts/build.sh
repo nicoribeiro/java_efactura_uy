@@ -10,12 +10,15 @@ BUILDS=$BASE/builds
 MINOR=$(cat $CONFIG/minor.conf)
 MAJOR=$(cat $CONFIG/major.conf)
 INCREMENT=1
-VERSION=$MAJOR.$(($MINOR + $INCREMENT))
+# comento esto para acelerar el proceso de deploy (no cambia la version del software), ver mas abajo en minor.conf tambien
+#VERSION=$MAJOR.$(($MINOR + $INCREMENT))
+VERSION=$MAJOR.$MINOR
 BUILD_LOG=$BUILDS/build.log
 BUILD_NAME=java_efactura_uy-$VERSION.zip
 
 # Increment minor version
-echo $(($MINOR + $INCREMENT)) > $CONFIG/minor.conf
+# comento esto para acelerar el proceso de deploy (no cambia la version del software)
+#echo $(($MINOR + $INCREMENT)) > $CONFIG/minor.conf
 
 # CHANGE VERSION
 sed 's/version.*:=.*\".*\"/version\ :=\ \"'$VERSION'\"/' $PROYECT_DIR/build.sbt > $PROYECT_DIR/build.sbt.new

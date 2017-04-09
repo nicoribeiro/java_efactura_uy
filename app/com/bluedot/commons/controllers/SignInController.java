@@ -91,7 +91,7 @@ public class SignInController extends AbstractController
 		if (user != null)
 		{
 			Session session = new Session(user, RequestUtils.requestAddress(request()), request().getHeader("User-Agent"));
-			session.save();
+			session.save(jpaApi);
 
 			//TODO hacer db flush antes de responder con la session
 			
@@ -109,7 +109,7 @@ public class SignInController extends AbstractController
 //					.include("user.masterAccount", "user.masterAccount.users", "user.masterAccount.tags", "user.masterAccount.invites", "user.masterAccount.gateways.name",
 //							"user.masterAccount.gateways.gatewayId", "user.permissions", "user.addresses", "user.accounts.id", "user.accounts.owner.firstName", "user.accounts.owner.lastName",
 //							"user.accounts.companyName").exclude("user.masterAccount.gateways.*", "user.masterAccount.users.masterAccount", "user.accounts.*", "*.class").prettyPrint(true);
-			JSONObject result = JSONSerializerProvider.getSessionSerializer().objectToJson(session);
+			JSONObject result = JSONSerializerProvider.getSessionSerializer().objectToJson(jpaApi, session);
 			
 			
 			return json(result.toString());

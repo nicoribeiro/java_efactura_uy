@@ -33,18 +33,14 @@ public class HazelcastFactory {
 
 	final static Logger logger = LoggerFactory.getLogger(HazelcastFactory.class);
 
-	@Inject
 	private Provider<Application> application;
 	
 	private Environment environment;
 	
 	@Inject
-	public void setEnvironment(Environment environment) {
+    public HazelcastFactory(ApplicationLifecycle lifecycle, Provider<Application> application, Environment environment) {
 		this.environment = environment;
-	}
-	
-	@Inject
-    public HazelcastFactory(ApplicationLifecycle lifecycle) {
+		this.application = application;
 		
 		if (hazelcastInstance==null){
 		

@@ -6,6 +6,8 @@ import org.json.JSONObject;
 import com.bluedot.commons.security.AccountAccessLevel;
 import com.bluedot.commons.security.Settings;
 
+import play.db.jpa.JPAApi;
+
 
 
 public class SettingsSerializer<T> extends JSONSerializer<Settings>
@@ -32,22 +34,22 @@ public class SettingsSerializer<T> extends JSONSerializer<Settings>
 	}
 
 	@Override
-	public JSONObject objectToJson(Settings settings) throws JSONException
+	public JSONObject objectToJson(JPAApi jpaApi, Settings settings) throws JSONException
 	{
 		if (accountACL != null)
 			switch (accountACL)
 			{
 			case ADMIN:
 			case VIEWER:
-				return settings.getJsonSettingsObject();
+				return settings.getJsonSettingsObject(jpaApi);
 			default:
 				break;
 			}
 		
 		if(namespace != null)
-			return settings.getJsonSettingsObject(namespace);
+			return settings.getJsonSettingsObject(jpaApi, namespace);
 		
-		return settings.getJsonSettingsObject();
+		return settings.getJsonSettingsObject(jpaApi);
 	}
 
 }

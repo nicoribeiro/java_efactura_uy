@@ -5,10 +5,12 @@ import org.json.JSONObject;
 
 import com.bluedot.commons.security.Session;
 
+import play.db.jpa.JPAApi;
+
 public class SessionSerializer<T> extends JSONSerializer<Session> {
 
 	@Override
-	public JSONObject objectToJson(Session session) throws JSONException {
+	public JSONObject objectToJson(JPAApi jpaApi, Session session) throws JSONException {
 		JSONObject sessionJSON = new JSONObject();
 
 		sessionJSON.put("creationTimestamp", session.getCreationTimestamp());

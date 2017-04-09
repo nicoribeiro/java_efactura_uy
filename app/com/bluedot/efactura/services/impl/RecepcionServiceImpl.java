@@ -39,6 +39,7 @@ import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.strategy.report.SummaryStrategy;
 import com.sun.istack.logging.Logger;
 
+import ch.qos.logback.classic.Level;
 import dgi.classes.entreEmpresas.CFEEmpresasType;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.recepcion.CFEDefType;
@@ -151,7 +152,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 		sobre.getCfes().add(cfe);
 		sobre.setFecha(new Date());
 		cfe.setSobre(sobre);
-		sobre.save();
+		sobre.save(jpaApi);
 
 		/*
 		 * Se necesita el id del sobre para generar el nombre de archivo, y el
@@ -426,6 +427,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 				
 				wsRecepcionPool.checkIn(portWrapper);
 			} catch (Throwable e) {
+				e.printStackTrace();
 				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
 			}
 
@@ -471,7 +473,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			Map<String, String> attachments = new TreeMap<String, String>();
 
 			attachments.put(sobre.getNombreArchivo(), sobre.getXmlEmpresa());
-			sobre.update();
+			sobre.update(jpaApi);
 
 			Empresa empresa = sobre.getEmpresaEmisora();
 
@@ -536,7 +538,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			Data result = consultaResultadoSobre(sobre.getToken(), sobre.getIdReceptor());
 
 			sobre.setResultado_dgi(result.getXmlData());
-			sobre.update();
+			sobre.update(jpaApi);
 
 			ACKCFEdefType ACKcfe = (ACKCFEdefType) XML.unMarshall(XML.loadXMLFromString(result.getXmlData()),
 					ACKCFEdefType.class);
@@ -547,7 +549,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 						TipoDoc.fromInt(ACKcfeDet.getTipoCFE().intValue()));
 				if (cfe != null) {
 					cfe.setEstado(ACKcfeDet.getEstado());
-					cfe.update();
+					cfe.update(jpaApi);
 					if (cfe.getEstado() == EstadoACKCFEType.AE){ 
 						/*
 						 * Envio a la empresa
@@ -605,7 +607,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			 */
 			ReporteDefType reporte = new ReporteDefType();
 			ReporteDiario reporteDiario = new ReporteDiario(jpaApi, empresa, fecha);
-			reporteDiario.save();
+			reporteDiario.save(jpaApi);
 			reporteDiario.setReporteDefType(reporte);
 
 			/*
@@ -723,7 +725,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 	@Override
 	public void reenviarSobre(SobreEmitido sobre) throws APIException {
 		sobre.setReenvio(true);
-		sobre.update();
+		sobre.update(jpaApi);
 		this.enviarSobreDGI(sobre, sobre.getXmlDgi());
 	}
 

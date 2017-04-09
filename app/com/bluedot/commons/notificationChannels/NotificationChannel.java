@@ -59,7 +59,7 @@ public abstract class NotificationChannel extends Model<NotificationChannel>
 
 	private static Finder<Integer, NotificationChannel> find = new Finder<Integer, NotificationChannel>(Integer.class, NotificationChannel.class);
 
-	public void sendAlert(MessagingHelper messagingHelper, Alert alert)
+	public void sendAlert(JPAApi jpaApi, MessagingHelper messagingHelper, Alert alert)
 	{
 		// TODO filter by severity
 		// if (severities.contains(alert.getSeverity()) && validated && enabled)
@@ -70,9 +70,9 @@ public abstract class NotificationChannel extends Model<NotificationChannel>
 			getNotificationRecords().add(notificationRecord);
 			alert.getNotificationRecords().add(notificationRecord);
 			sendNotification(messagingHelper, alert);
-			notificationRecord.save();
-			this.update();
-			alert.update();
+			notificationRecord.save(jpaApi);
+			this.update(jpaApi);
+			alert.update(jpaApi);
 		}
 	}
 

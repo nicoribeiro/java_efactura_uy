@@ -56,6 +56,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	public void enviar(CFE cfe) throws APIException {
 
 		cfeBuilderProvider.setCfe(cfe);
+		cfeBuilderProvider.setTipoDoc(cfe.getTipo());
 		cfeBuilderProvider.setEmpresa(empresa);
 		
 		CFEBuilder builder = cfeBuilderProvider.get();
@@ -108,7 +109,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 				throw APIException.raise(APIErrors.CFE_YA_FUE_ANULADO);
 			}else{
 				cfe.setGeneradorId(null);
-				cfe.update();
+				cfe.update(jpaApi);
 			}
 		}else
 			throw APIException.raise(APIErrors.CFE_NO_SE_PUEDE_ANULAR);
@@ -150,7 +151,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						if (sobre instanceof SobreEmitido){
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
 							sobreEmitido.setResultado_empresa(attachment);
-							sobreEmitido.update();
+							sobreEmitido.update(jpaApi);
 						}
 					}
 					
@@ -165,7 +166,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						if (sobre instanceof SobreEmitido){
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
 							sobreEmitido.setRespuesta_empresa(attachment);
-							sobreEmitido.update();
+							sobreEmitido.update(jpaApi);
 						}
 						
 					}
@@ -192,27 +193,27 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						Empresa empresaEmisora = Empresa.findByRUT(jpaApi, envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
 						if (empresaEmisora == null) {
 							empresaEmisora = new Empresa(envioCFEEntreEmpresas.getCaratula().getRUCEmisor(), null, null, null, null, null, 0, null);
-							empresaEmisora.save();
+							empresaEmisora.save(jpaApi);
 						}
 						sobreRecibido.setEmpresaEmisora(empresaEmisora);
 						sobreRecibido.setEnvioCFEEntreEmpresas(envioCFEEntreEmpresas);
 						sobreRecibido.setNombreArchivo(attachmentName);
 						sobreRecibido.setXmlEmpresa(attachment);
-						sobreRecibido.save();
+						sobreRecibido.save(jpaApi);
 						ThreadMan.forceTransactionFlush();
 
 						/*
 						 * PROCESO SOBRE
 						 */
 						intercambioService.procesarSobre(empresa, sobreRecibido);
-						sobreRecibido.update();
+						sobreRecibido.update(jpaApi);
 						ThreadMan.forceTransactionFlush();
 
 						/*
 						 * PROCESO CFE DENTRO DE SOBRE
 						 */
 						intercambioService.procesarCFESobre(empresa, sobreRecibido);
-						sobreRecibido.update();
+						sobreRecibido.update(jpaApi);
 						ThreadMan.forceTransactionFlush();
 					}
 					

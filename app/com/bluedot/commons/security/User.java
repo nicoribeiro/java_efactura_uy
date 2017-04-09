@@ -47,7 +47,7 @@ import play.i18n.Messages;
 
 @Entity
 @Table(name = "Users")
-public class User extends Model<User> implements Comparable<User>, AlertReceiver, MessageReceiver, MessageSender
+public class User extends Model<User> implements Comparable<User>, AlertReceiver, MessageReceiver, MessageSender, SettingsPrototype
 {
 	
 	final static Logger logger = LoggerFactory.getLogger(User.class);
@@ -208,7 +208,7 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		return sb.toString();
 	}
 
-	public String resetPassword()
+	public String resetPassword(JPAApi jpaApi)
 	{
 		String newPassword = generateRandomPassword();
 
@@ -216,7 +216,7 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 
 //		getMasterAccount().setWaitingForReset(false);
 
-		this.update();
+		this.update(jpaApi);
 
 		return newPassword;
 	}
@@ -413,12 +413,13 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		this.accounts = accounts;
 	}
 
-	public Settings getSettings()
+	@Override
+	public Settings getSettings(JPAApi jpaApi)
 	{
 		if (settings == null)
 		{
 			settings = new Settings();
-			settings.save();
+			settings.save(jpaApi);
 		}
 		return settings;
 	}
@@ -471,7 +472,7 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	 * @see models.AlertReciver#sendAlert(models.Alert)
 	 */
 	@Override
-	public void receiveAlert(MessagingHelper messagingHelper, Alert alert)
+	public void receiveAlert(JPAApi jpaApi, MessagingHelper messagingHelper, Alert alert)
 	{
 		logger.info("User {} receiveing alert ", getId());
 		
@@ -483,16 +484,16 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		
 		for (NotificationChannel notificationChannel : notificationChannels)
 		{
-			notificationChannel.sendAlert(messagingHelper, alert);
+			notificationChannel.sendAlert(jpaApi, messagingHelper, alert);
 		}
 
 	}
 
-	public void receiveAlertByEmail(MessagingHelper messagingHelper, Alert alert)
+	public void receiveAlertByEmail(JPAApi jpaApi, MessagingHelper messagingHelper, Alert alert)
 	{
 		NotificationChannel email = getEmailNotificationChannel();
 		if (email != null && allowAlertDelivery(alert))
-			email.sendAlert(messagingHelper, alert);
+			email.sendAlert(jpaApi, messagingHelper, alert);
 	}
 	
 	private boolean allowAlertDelivery(Alert alert)
@@ -554,9 +555,9 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	
 
 	@Override
-	public boolean appliesCustomRulesToAlert(Alert alert)
+	public boolean appliesCustomRulesToAlert(JPAApi jpaApi, Alert alert)
 	{
-		return getSettings().getBool(Constants.SMS_STATUS_MANAGEMENT_ENABLED);
+		return getSettings(jpaApi).getBool(jpaApi, Constants.SMS_STATUS_MANAGEMENT_ENABLED);
 	}
 	
 

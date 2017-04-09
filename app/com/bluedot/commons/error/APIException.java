@@ -6,7 +6,11 @@ import java.util.List;
 
 import org.json.JSONObject;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import play.i18n.Messages;
+import play.libs.Json;
 
 
 
@@ -234,6 +238,15 @@ public class APIException extends Throwable
 		jsonError.put("result_message", error.name());
 		jsonError.put("result_detail", getMessage());
 		
+		return jsonError;
+	}
+	
+	public JsonNode getJsonNode()
+	{
+		ObjectNode jsonError = Json.newObject();
+		jsonError.put("result_code", error.code);
+		jsonError.put("result_message", error.name());
+		jsonError.put("result_detail",  getMessage());
 		return jsonError;
 	}
 }

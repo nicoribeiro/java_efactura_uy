@@ -57,7 +57,7 @@ public class CommonStrategy {
 		 */
 		if (titular == null) {
 			titular = new Titular(paisEmisorDocumento, tipoDocumento, documento);
-			titular.save();
+			titular.save(jpaApi);
 		}
 
 		return titular;
@@ -73,7 +73,7 @@ public class CommonStrategy {
 			 * Si la empresa no existe la registro como nueva en el sistema
 			 */
 			empresa = new Empresa(docRecep, rznSocRecep, null, dirRecep, ciudadRecep, deptoRecep, 0, null);
-			empresa.save();
+			empresa.save(jpaApi);
 		}else{
 			/*
 			 * Si la empresa existe veo si puedo actualizar algun dato
@@ -86,7 +86,7 @@ public class CommonStrategy {
 				empresa.setDireccion(dirRecep);
 			if (empresa.getRazon()==null)
 				empresa.setRazon(rznSocRecep);
-			empresa.update();
+			empresa.update(jpaApi);
 		}
 			
 		

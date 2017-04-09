@@ -170,7 +170,7 @@ public class Secured extends Security.Authenticator
 			if (signatureMatches)
 			{
 				credential.setNonce(nonce);
-				credential.update();
+				credential.update(jpaApi);
 				
 //				Account account = credential.getUser().getMasterAccount();
 //				if(account.getValidated()==null || !account.getValidated())

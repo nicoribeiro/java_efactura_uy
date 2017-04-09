@@ -38,27 +38,23 @@ public class SoapEnvelopeLoggingOutInterceptor extends AbstractLoggingIntercepto
 
 	private Commons commons;
 	
-	@Inject
-	public void setCommons(Commons commons) {
-		this.commons = commons;
-	}
-	
-	public SoapEnvelopeLoggingOutInterceptor(String phase) {
+	public SoapEnvelopeLoggingOutInterceptor(String phase, Commons commons) {
 		super(phase);
+		this.commons = commons;
 		addBefore(StaxOutInterceptor.class.getName());
 	}
 
-	public SoapEnvelopeLoggingOutInterceptor() {
-		this(Phase.PRE_STREAM);
+	public SoapEnvelopeLoggingOutInterceptor(Commons commons) {
+		this(Phase.PRE_STREAM,commons);
 	}
 
-	public SoapEnvelopeLoggingOutInterceptor(int lim) {
-		this();
+	public SoapEnvelopeLoggingOutInterceptor(int lim, Commons commons) {
+		this(commons);
 		limit = lim;
 	}
 
-	public SoapEnvelopeLoggingOutInterceptor(PrintWriter w) {
-		this();
+	public SoapEnvelopeLoggingOutInterceptor(PrintWriter w, Commons commons) {
+		this(commons);
 		this.writer = w;
 	}
 

@@ -63,7 +63,7 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 	protected WSEFacturaSoapPortWrapper create() {
 		try {
 			JaxWsProxyFactoryBean factory = new JaxWsProxyFactoryBean();
-			factory.setAddress(serviceURL);
+			factory.setAddress(getServiceURL());
 			WSEFacturaSoapPort port = factory.create(WSEFacturaSoapPort.class);
 
 			Endpoint cxfEndpoint = ClientProxy.getClient(port).getEndpoint();
@@ -81,7 +81,7 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 			// Note: uncomment this if you need to log outgoing soap signed request
 			//cxfEndpoint.getOutInterceptors().add(new SoapEnvelopeLoggingOutInterceptor());
 
-			SignatureInterceptor signatureInterceptor = new SignatureInterceptor();
+			SignatureInterceptor signatureInterceptor = new SignatureInterceptor(commons);
 			cxfEndpoint.getOutInterceptors().add(signatureInterceptor);
 
 			NamespacesInterceptor interceptor = new NamespacesInterceptor();

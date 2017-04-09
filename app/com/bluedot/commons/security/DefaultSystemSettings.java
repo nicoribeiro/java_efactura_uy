@@ -1,5 +1,7 @@
 package com.bluedot.commons.security;
 
+import play.db.jpa.JPAApi;
+
 public class DefaultSystemSettings implements SettingsPrototype
 {
 
@@ -14,12 +16,12 @@ public class DefaultSystemSettings implements SettingsPrototype
 	}
 
 	@Override
-	public Settings getSettings()
+	public Settings getSettings(JPAApi jpaApi)
 	{
 		if (settings == null)
 		{
 			settings = new Settings();
-			settings.save();
+			settings.save(jpaApi);
 		}
 		settings.setParent(null);
 		return settings;

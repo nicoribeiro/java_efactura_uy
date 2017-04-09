@@ -6,10 +6,12 @@ import org.json.JSONObject;
 import com.bluedot.commons.serializers.JSONSerializer;
 import com.bluedot.efactura.model.Detalle;
 
+import play.db.jpa.JPAApi;
+
 public class DetalleSerializer<T> extends JSONSerializer<Detalle> {
 
 	@Override
-	public JSONObject objectToJson(Detalle detalle) throws JSONException
+	public JSONObject objectToJson(JPAApi jpaApi, Detalle detalle) throws JSONException
 	{
 		
 		JSONObject cfeJson = new JSONObject();

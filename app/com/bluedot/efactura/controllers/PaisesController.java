@@ -36,7 +36,7 @@ public class PaisesController extends AbstractController {
 		
 		Pais pais = Pais.findById(jpaApi, id, true);
 		
-		JSONObject json = EfacturaJSONSerializerProvider.getPaisSerializer().objectToJson(pais);
+		JSONObject json = EfacturaJSONSerializerProvider.getPaisSerializer().objectToJson(jpaApi, pais);
 		
 		return json(json.toString());
 	}

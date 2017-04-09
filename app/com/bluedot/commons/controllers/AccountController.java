@@ -54,11 +54,6 @@ import play.mvc.With;
 public class AccountController extends AbstractController
 {
 
-//	private static String KEY = Play.application().configuration().getString("product.digest.key", "");
-//	private static String IV = Play.application().configuration().getString("product.digest.iv", "");
-//
-//	private static String SALT = Play.application().configuration().getString("product.digest.salt", "");
-
 	private AccountMicroController accountMicroController;
 	
 	@Inject
@@ -122,9 +117,9 @@ public class AccountController extends AbstractController
 		removeAllAccountPermissions(u, a);
 		
 		a.getUsers().remove(u);
-		a.update();
+		a.update(jpaApi);
 		
-		u.update();
+		u.update(jpaApi);
 
 		return CompletableFuture.completedFuture(ok());
 	}
@@ -164,10 +159,10 @@ public class AccountController extends AbstractController
 					permission.setPermissionId(MessageFormat.format("access-level-account_{0}:{1}", String.valueOf(a.getId()), AccountAccessLevel.VIEWER.toString()));
 					u.getPermissions().add(permission);
 	
-					u.update();
+					u.update(jpaApi);
 				}
 
-				a.update();
+				a.update(jpaApi);
 				
 				return CompletableFuture.completedFuture(ok());
 			}
@@ -199,10 +194,10 @@ public class AccountController extends AbstractController
 					
 					removeAllAccountPermissions(u, a);
 					
-					u.update();
+					u.update(jpaApi);
 				}
 
-				a.update();
+				a.update(jpaApi);
 				
 				return CompletableFuture.completedFuture(ok());
 			}
@@ -225,7 +220,7 @@ public class AccountController extends AbstractController
 		for(Permission p : toRemove)
 		{
 			u.getPermissions().remove(p);
-			p.delete();
+			p.delete(jpaApi);
 		}
 		
 	}
@@ -289,7 +284,7 @@ public class AccountController extends AbstractController
 
 		}
 
-		user.update();
+		user.update(jpaApi);
 
 		return CompletableFuture.completedFuture(ok());
 	}
@@ -315,7 +310,7 @@ public class AccountController extends AbstractController
 		{
 			if (permission.getPermissionId().contains("account_" + String.valueOf(account.getId())))
 			{
-				permission.delete();
+				permission.delete(jpaApi);
 				toRemove.add(permission);
 			}
 		}
@@ -344,7 +339,7 @@ public class AccountController extends AbstractController
 				try
 				{
 
-					result = JSONSerializerProvider.getSettingsSerializer().objectToJson(account.getSettings());
+					result = JSONSerializerProvider.getSettingsSerializer().objectToJson(jpaApi, account.getSettings(jpaApi));
 				} catch (JSONException e)
 				{
 					throw APIException.raise(APIErrors.BAD_JSON).setDetailMessage("Converting Settings into JSON");
@@ -373,7 +368,7 @@ public class AccountController extends AbstractController
 				try
 				{
 
-					result = JSONSerializerProvider.getSettingsSerializer().objectToJson(user.getSettings());
+					result = JSONSerializerProvider.getSettingsSerializer().objectToJson(jpaApi, user.getSettings(jpaApi));
 				} catch (JSONException e)
 				{
 					throw APIException.raise(APIErrors.BAD_JSON).setDetailMessage("Converting Settings into JSON");
@@ -395,8 +390,8 @@ public class AccountController extends AbstractController
 				JsonNode settings = request().body().asJson();
 				try
 				{
-					account.getSettings().updateSettings(new JSONObject(settings.toString()));
-					account.update();
+					account.getSettings(jpaApi).updateSettings(new JSONObject(settings.toString()));
+					account.update(jpaApi);
 					return CompletableFuture.completedFuture(ok());
 				} catch (Throwable e)
 				{
@@ -532,8 +527,8 @@ public class AccountController extends AbstractController
 					
 					user.setPermissions(new ArrayList<Permission>());
 					
-					user.save();
-					account.save();
+					user.save(jpaApi);
+					account.save(jpaApi);
 					
 					ThreadMan.forceTransactionFlush();
 				}
@@ -551,8 +546,8 @@ public class AccountController extends AbstractController
 				permission.setPermissionId(MessageFormat.format("access-level-account_{0}:{1}", String.valueOf(parentAccount.getId()), AccountAccessLevel.VIEWER.toString()));
 				user.getPermissions().add(permission);
 
-				user.update();
-				parentAccount.update();
+				user.update(jpaApi);
+				parentAccount.update(jpaApi);
 
 				return CompletableFuture.completedFuture(created());
 			}
@@ -591,7 +586,7 @@ public class AccountController extends AbstractController
 //				if(accountType != null)
 //					a.setAccountType(AccountType.valueOf(accountType));
 				
-				a.update();
+				a.update(jpaApi);
 
 				return CompletableFuture.completedFuture(ok());
 			}
@@ -606,7 +601,7 @@ public class AccountController extends AbstractController
 			{
 				Account a = Account.findById(jpaApi, accountId, true);
 
-				a.delete();
+				a.delete(jpaApi);
 
 				return CompletableFuture.completedFuture(ok());
 			}

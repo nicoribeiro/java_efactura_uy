@@ -21,6 +21,9 @@ public class CFEBuilderProvider implements Provider<CFEBuilder> {
 	@Inject
 	public CFEBuilderProvider(CFEStrategyProvider cfeStrategyProvider, CFEBuilderImplFactory cfeBuilderImplFactory, CFEBuilderResguardoFactory cfeBuilderResguardoFactory, CAEMicroControllerFactory caeMicroControllerFactory){
 		this.cfeStrategyProvider = cfeStrategyProvider;
+		this.cfeBuilderImplFactory = cfeBuilderImplFactory;
+		this.cfeBuilderResguardoFactory = cfeBuilderResguardoFactory;
+		this.caeMicroControllerFactory = caeMicroControllerFactory;
 	}
 
 	

@@ -114,9 +114,9 @@ public class EmpresasController extends AbstractController {
 					Empresa empresa = Empresa.findByRUT(jpaApi, rut);
 					if ( empresa == null) {
 						empresa = new Empresa(rut, null, null, null, null, null, 0, null);
-						empresa.save();
+						empresa.save(jpaApi);
 					}else{
-						empresa.update();
+						empresa.update(jpaApi);
 					}
 					
 					empresa.setEmisorElectronico(true);
@@ -136,7 +136,7 @@ public class EmpresasController extends AbstractController {
 		
 		Empresa empresa = Empresa.findById(jpaApi, id, true);
 		
-		JSONObject json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresa);
+		JSONObject json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(jpaApi, empresa);
 		
 		return json(json.toString());
 	}
@@ -145,7 +145,7 @@ public class EmpresasController extends AbstractController {
 		
 		Empresa empresa = Empresa.findByRUT(jpaApi, rut, true);
 		
-		JSONObject json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresa);
+		JSONObject json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(jpaApi, empresa);
 		
 		return json(json.toString());
 	}
@@ -154,7 +154,7 @@ public class EmpresasController extends AbstractController {
 		
 		List<Empresa> empresas = Empresa.findAll(jpaApi);
 		
-		JSONArray json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresas);
+		JSONArray json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(jpaApi, empresas);
 		
 		return json(json.toString());
 	}
@@ -271,7 +271,7 @@ public class EmpresasController extends AbstractController {
 		}
 			
 		
-		empresa.update();
+		empresa.update(jpaApi);
 		
 		return json(OK);
 	}

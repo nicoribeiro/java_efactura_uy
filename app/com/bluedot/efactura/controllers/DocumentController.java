@@ -175,7 +175,7 @@ public class DocumentController extends AbstractController {
 				error = e.getJSONObject();
 			}
 
-			JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+			JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(jpaApi, cfe);
 
 			if (error != null)
 				cfeJson = JSONUtils.merge(cfeJson, error);
@@ -211,7 +211,7 @@ public class DocumentController extends AbstractController {
 			error = e.getJSONObject();
 		}
 
-		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(jpaApi, cfe);
 
 		if (error != null)
 			cfeJson = JSONUtils.merge(cfeJson, error);
@@ -272,7 +272,7 @@ public class DocumentController extends AbstractController {
 			error = e.getJSONObject();
 		}
 
-		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(jpaApi, cfe);
 
 		if (error != null)
 			cfeJson = JSONUtils.merge(cfeJson, error);
@@ -361,7 +361,7 @@ public class DocumentController extends AbstractController {
 			JSONObject reporteJSON = new JSONObject();
 
 			if (reporte != null)
-				reporteJSON = EfacturaJSONSerializerProvider.getReporteDiarioSerializer().objectToJson(reporte);
+				reporteJSON = EfacturaJSONSerializerProvider.getReporteDiarioSerializer().objectToJson(jpaApi, reporte);
 
 			if (error != null)
 				reportes.put(JSONUtils.merge(reporteJSON, error));

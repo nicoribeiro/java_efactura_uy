@@ -236,11 +236,12 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 	}
 	
 
-	public List<AlertReceiver> getAlertRecivers(Alert alert)
+	@Override
+	public List<AlertReceiver> getAlertRecivers(JPAApi jpaApi, Alert alert)
 	{
 		alerts.add(alert);
 
-		update();
+		update(jpaApi);
 		
 		List<AlertReceiver> list = new LinkedList<AlertReceiver>(users);
 		
@@ -371,11 +372,11 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 //	}
 	
 	@Override
-	public Settings getSettings()
+	public Settings getSettings(JPAApi jpaApi)
 	{
 		if (settings == null){
 			settings = new Settings();
-			settings.save();
+			settings.save(jpaApi);
 		}
 		settings.setParent(new DefaultSystemSettings());
 		return settings;

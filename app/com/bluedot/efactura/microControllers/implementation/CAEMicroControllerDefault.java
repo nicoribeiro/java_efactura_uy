@@ -30,10 +30,11 @@ import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
 import dgi.classes.recepcion.IdDocResg;
 import dgi.classes.recepcion.IdDocTck;
+import play.db.jpa.JPAApi;
 
 public class CAEMicroControllerDefault extends MicroControllerDefault implements CAEMicroController 
 {
-	
+	private JPAApi jpaApi;
 
 	//TODO se podria hacer un cache de esta info en hazelcast
 	
@@ -50,8 +51,9 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	
 	//TODO revisar que todas las llamadas a este constructor eesten con mutex
 	@Inject
-	public CAEMicroControllerDefault(@Assisted Empresa empresa){
+	public CAEMicroControllerDefault(@Assisted Empresa empresa, JPAApi jpaApi){
 		super(empresa);
+		this.jpaApi = jpaApi;
 		caesMap = new HashMap<TipoDoc, CAE>();
 		for (Iterator<CAE> iterator = empresa.getCAEs().iterator(); iterator.hasNext();) {
 			CAE cae = iterator.next();
@@ -68,7 +70,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 
 		long siguiente = cae.getSiguiente();
 		cae.setSiguiente(siguiente+1);
-		cae.update();
+		cae.update(jpaApi);
 		return siguiente;
 	}
 
@@ -194,7 +196,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 			anularCAE(caesMap.get(cae.getTipo()));
 		}
 		
-		cae.save();
+		cae.save(jpaApi);
 		empresa.getCAEs().add(cae);
 		caesMap.put(cae.getTipo(), cae);
 		
@@ -205,7 +207,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		
 		//TODO ver como marco para notificar a la DGI de los ids anulados
 		cae.setFechaAnulado(new Date());
-		cae.update();
+		cae.update(jpaApi);
 		caesMap.remove(cae.getTipo());
 		
 	}

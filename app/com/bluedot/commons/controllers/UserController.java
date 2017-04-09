@@ -92,7 +92,7 @@ public class UserController extends AbstractController
 				User user = new User(emailAddress, password, firstName, lastName);
 
 				account.getUsers().add(user);
-				account.update();
+				account.update(jpaApi);
 
 				return CompletableFuture.completedFuture(created());
 			}
@@ -227,7 +227,7 @@ public class UserController extends AbstractController
 //					throw APIException.raise(APIErrors.AUTHORIZATION_FAILED).setDetailMessage("You don't have rights to change the email address of this account");
 				
 				user.setPassword(password);
-				user.update();
+				user.update(jpaApi);
 				
 				return CompletableFuture.completedFuture(ok());
 			}
@@ -328,11 +328,11 @@ public class UserController extends AbstractController
 						for (NotificationRecord nr : n.getNotificationRecords())
 						{
 							nr.setNotificationChannel(null);
-							nr.update();
+							nr.update(jpaApi);
 						}
 
 						u.getNotificationChannels().remove(n);
-						n.delete();
+						n.delete(jpaApi);
 					}
 
 					u.getNotificationChannels().add(nc);
@@ -361,7 +361,7 @@ public class UserController extends AbstractController
 						u.getAddresses().add(a);
 				}
 
-				u.update();
+				u.update(jpaApi);
 
 				return CompletableFuture.completedFuture(ok());
 			}
@@ -379,7 +379,7 @@ public class UserController extends AbstractController
 			@Override
 			public CompletionStage<Result> execute() throws APIException
 			{
-				u.delete();
+				u.delete(jpaApi);
 
 				return CompletableFuture.completedFuture(ok());
 			}
@@ -397,7 +397,7 @@ public class UserController extends AbstractController
 
 				u.getCredentials().revoke();
 				u.setCredentials(Credential.generateCredential());
-				u.update();
+				u.update(jpaApi);
 
 				JSONSerializer serializer = new JSONSerializer().exclude("*.class").prettyPrint(true);
 

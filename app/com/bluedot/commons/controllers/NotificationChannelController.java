@@ -136,7 +136,7 @@ public class NotificationChannelController extends AbstractController
 
 				user.getNotificationChannels().add(notificationChannel);
 
-				notificationChannel.save();
+				notificationChannel.save(jpaApi);
 
 				notificationChannel.sendValidationKey(messagingHelper, messagingHelper.getValidationHost(request().host()));
 				
@@ -163,7 +163,7 @@ public class NotificationChannelController extends AbstractController
 				if(body.has("enabled"))
 				{
 					notificationChannel.setEnabled(body.get("enabled").asBoolean());
-					notificationChannel.update();
+					notificationChannel.update(jpaApi);
 				}
 				
 				return CompletableFuture.completedFuture(ok());
@@ -189,7 +189,7 @@ public class NotificationChannelController extends AbstractController
 
 				user.getNotificationChannels().remove(notificationChannel);
 
-				notificationChannel.delete();
+				notificationChannel.delete(jpaApi);
 
 				return CompletableFuture.completedFuture(ok());
 
@@ -232,7 +232,7 @@ public class NotificationChannelController extends AbstractController
 
 				boolean validated = notificationChannel.validate(key);
 				
-				notificationChannel.update();
+				notificationChannel.update(jpaApi);
 
 				if (validated)
 					return CompletableFuture.completedFuture(ok());

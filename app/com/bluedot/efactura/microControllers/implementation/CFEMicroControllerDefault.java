@@ -31,6 +31,7 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		super(empresa);
 		this.modo = modo;
 		this.cfeBuilderProvider = cfeBuilderProvider;
+		this.commons = commons;
 	}
 
 	private CFE buildTemplate(JSONObject docJSON, CFEBuilder cfeBuilder, JSONObject referencia)

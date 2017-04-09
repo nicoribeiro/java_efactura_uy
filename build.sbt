@@ -1,6 +1,6 @@
 name := """java_efactura_uy"""
 
-version := "0.63"
+version := "0.67"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
@@ -73,3 +73,6 @@ routesGenerator := InjectedRoutesGenerator
 
 
 //fork in run := true
+
+
+fork in run := true

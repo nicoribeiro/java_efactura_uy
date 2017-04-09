@@ -11,6 +11,8 @@ import javax.persistence.ManyToOne;
 
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPAApi;
+
 @Entity
 public class NotificationRecord extends Model<NotificationRecord>
 {
@@ -34,11 +36,11 @@ public class NotificationRecord extends Model<NotificationRecord>
 	}
 	
 	@Override
-	protected void preDelete()
+	protected void preDelete(JPAApi jpaApi)
 	{
-		super.preDelete();
+		super.preDelete(jpaApi);
 		this.notificationChannel = null;
-		this.update();
+		this.update(jpaApi);
 	}
 	
 	@Override

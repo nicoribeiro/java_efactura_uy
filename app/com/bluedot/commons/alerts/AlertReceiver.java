@@ -2,12 +2,14 @@ package com.bluedot.commons.alerts;
 
 import com.bluedot.commons.notificationChannels.MessagingHelper;
 
+import play.db.jpa.JPAApi;
+
 public interface AlertReceiver
 {
 
-	public abstract void receiveAlert(MessagingHelper messagingHelper, Alert alert);
+	void receiveAlert(JPAApi jpaApi, MessagingHelper messagingHelper, Alert alert);
 	
-	public abstract boolean appliesCustomRulesToAlert(Alert alert);
+	boolean appliesCustomRulesToAlert(JPAApi jpaApi, Alert alert);
 	
 
 }

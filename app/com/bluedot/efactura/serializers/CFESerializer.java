@@ -10,6 +10,8 @@ import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Detalle;
 import com.bluedot.efactura.model.Empresa;
 
+import play.db.jpa.JPAApi;
+
 public class CFESerializer<T> extends JSONSerializer<CFE> {
 	
 	JSONSerializer<Empresa> empresaSerializer;
@@ -23,7 +25,7 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 	}
 
 	@Override
-	public JSONObject objectToJson(CFE cfe) throws JSONException
+	public JSONObject objectToJson(JPAApi jpaApi, CFE cfe) throws JSONException
 	{
 		
 		JSONObject cfeJson = new JSONObject();
@@ -31,9 +33,9 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 		cfeJson.put("id", cfe.getId());
 		cfeJson.put("nro", cfe.getNro());
 		cfeJson.put("serie", cfe.getSerie());
-		cfeJson.put("emresaReceptora", cfe.getEmpresaReceptora()!=null? empresaSerializer.objectToJson(cfe.getEmpresaReceptora()): JSONObject.NULL);
-		cfeJson.put("emresaEmisora", cfe.getEmpresaEmisora()!=null? empresaSerializer.objectToJson(cfe.getEmpresaEmisora()): JSONObject.NULL);
-		cfeJson.put("detalle", cfe.getDetalle()!=null? detalleSerializer.objectToJson(cfe.getDetalle()): JSONObject.NULL);
+		cfeJson.put("emresaReceptora", cfe.getEmpresaReceptora()!=null? empresaSerializer.objectToJson(jpaApi, cfe.getEmpresaReceptora()): JSONObject.NULL);
+		cfeJson.put("emresaEmisora", cfe.getEmpresaEmisora()!=null? empresaSerializer.objectToJson(jpaApi, cfe.getEmpresaEmisora()): JSONObject.NULL);
+		cfeJson.put("detalle", cfe.getDetalle()!=null? detalleSerializer.objectToJson(jpaApi, cfe.getDetalle()): JSONObject.NULL);
 		cfeJson.put("xml", cfe.getXml());
 		cfeJson.put("estado", cfe.getEstado());
 		if (cfe.getSobre()!=null && cfe.getSobre().getFechaConsulta()!=null)

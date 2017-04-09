@@ -14,6 +14,8 @@ import javax.persistence.OneToMany;
 import com.bluedot.commons.security.User;
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPAApi;
+
 
 @Entity
 public class AlertMap extends Model<AlertMap> implements AlertAccept
@@ -38,7 +40,7 @@ public class AlertMap extends Model<AlertMap> implements AlertAccept
 	}
 
 	@Override
-	public List<AlertReceiver> getAlertRecivers(Alert alert)
+	public List<AlertReceiver> getAlertRecivers(JPAApi jpaApi, Alert alert)
 	{
 		List<AlertReceiver> list = new LinkedList<AlertReceiver>();
 		
@@ -57,7 +59,7 @@ public class AlertMap extends Model<AlertMap> implements AlertAccept
 		return null;
 	}
 
-	public void addMapping(User user, AlertMetadata alertMetadata)
+	public void addMapping(JPAApi jpaApi, User user, AlertMetadata alertMetadata)
 	{
 		boolean finded = false;
 		for (AlertGroup alertGroup : getAlertGroups())	
@@ -71,20 +73,20 @@ public class AlertMap extends Model<AlertMap> implements AlertAccept
 		
 		if (!finded){
 			AlertGroup alertGroup = new AlertGroup(user, alertMetadata);
-			alertGroup.save();
+			alertGroup.save(jpaApi);
 			getAlertGroups().add(alertGroup);
-			this.update();
+			this.update(jpaApi);
 		}
 	}
 
-	public void deleteAllMappings()
+	public void deleteAllMappings(JPAApi jpaApi)
 	{
 //		Collection<AlertGroup> tempAlertGroups = new LinkedList<AlertGroup>();
 		
 //		tempAlertGroups.addAll(alertGroups);
 		
 		alertGroups.clear();
-		this.update();
+		this.update(jpaApi);
 		
 //		this.refresh();
 
@@ -94,17 +96,17 @@ public class AlertMap extends Model<AlertMap> implements AlertAccept
 //		}
 	}
 	
-	public void deleteMapping(User user, AlertMetadata alertMetadata){
-		deleteMapping(user, alertMetadata.getId());
+	public void deleteMapping(JPAApi jpaApi, User user, AlertMetadata alertMetadata){
+		deleteMapping(jpaApi, user, alertMetadata.getId());
 	}
 	
-	public void deleteMapping(User user, int alertMetadataId){
+	public void deleteMapping(JPAApi jpaApi, User user, int alertMetadataId){
 		for (AlertGroup alertGroup : getAlertGroups())	
 		{
 			if (alertGroup.getAlertMetadata().getId()==alertMetadataId && alertGroup.getUser().getId()==user.getId()){
 				//alertGroup.delete();
 				alertGroups.remove(alertGroup);
-				this.update();
+				this.update(jpaApi);
 				break;
 			}
 		}

@@ -17,6 +17,8 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.play4jpa.jpa.models.Model;
 
+import play.db.jpa.JPAApi;
+
 
 
 
@@ -128,12 +130,12 @@ public class Settings extends Model<Settings>
 		this.id = id;
 	}
 
-	public JSONObject getJsonSettingsObject()
+	public JSONObject getJsonSettingsObject(JPAApi jpaApi)
 	{
-		return this.getJsonSettingsObject(null);
+		return this.getJsonSettingsObject(jpaApi, null);
 	}
 	
-	public JSONObject getJsonSettingsObject(String schema)
+	public JSONObject getJsonSettingsObject(JPAApi jpaApi, String schema)
 	{
 		JSONObject Obj1;
 
@@ -146,7 +148,7 @@ public class Settings extends Model<Settings>
 				merged = new JSONObject();
 			} else
 			{
-				Obj1 = parent.getSettings().getJsonSettingsObject(schema);
+				Obj1 = parent.getSettings(jpaApi).getJsonSettingsObject(jpaApi, schema);
 				if(Obj1 != null)
 				{
 					String[] names = JSONObject.getNames(Obj1);
@@ -176,7 +178,7 @@ public class Settings extends Model<Settings>
 
 	}
 	
-	public String getJsonSettings(String schema)
+	public String getJsonSettings(JPAApi jpaApi, String schema)
 	{
 		JSONObject Obj1;
 
@@ -189,7 +191,7 @@ public class Settings extends Model<Settings>
 				merged = new JSONObject();
 			} else
 			{
-				Obj1 = parent.getSettings().getJsonSettingsObject(schema);
+				Obj1 = parent.getSettings(jpaApi).getJsonSettingsObject(jpaApi, schema);
 				if(Obj1 != null)
 				{
 					String[] names = JSONObject.getNames(Obj1);
@@ -267,22 +269,22 @@ public class Settings extends Model<Settings>
 		}
 	}
 
-	public int getInt(String key)
+	public int getInt(JPAApi jpaApi, String key)
 	{
-		return Integer.parseInt(getSetting(key));
+		return Integer.parseInt(getSetting(jpaApi, key));
 
 	}
 	
-	public double getDouble(String key)
+	public double getDouble(JPAApi jpaApi, String key)
 	{
-		return Double.parseDouble(getSetting(key));
+		return Double.parseDouble(getSetting(jpaApi, key));
 
 	}
 
-	public String getString(String key)
+	public String getString(JPAApi jpaApi, String key)
 	{
 
-		return StringEscapeUtils.unescapeHtml4(getSetting(key));
+		return StringEscapeUtils.unescapeHtml4(getSetting(jpaApi, key));
 
 	}
 
@@ -377,9 +379,9 @@ public class Settings extends Model<Settings>
 		}
 	}
 
-	public boolean getBool(String key)
+	public boolean getBool(JPAApi jpaApi, String key)
 	{
-		return Boolean.parseBoolean(getSetting(key, "false"));
+		return Boolean.parseBoolean(getSetting(jpaApi, key, "false"));
 	}
 
 	public void setBool(String key, boolean value)
@@ -393,11 +395,11 @@ public class Settings extends Model<Settings>
 		}
 	}
 
-	public JSONArray getArray(String key)
+	public JSONArray getArray(JPAApi jpaApi, String key)
 	{
 		try
 		{
-			return new JSONArray(getSetting(key));
+			return new JSONArray(getSetting(jpaApi, key));
 		} catch (JSONException e)
 		{
 			e.printStackTrace();
@@ -405,11 +407,11 @@ public class Settings extends Model<Settings>
 		return null;
 	}
 
-	public JSONObject getObject(String key)
+	public JSONObject getObject(JPAApi jpaApi, String key)
 	{
 		try
 		{
-			return new JSONObject(getSetting(key));
+			return new JSONObject(getSetting(jpaApi, key));
 		} catch (JSONException e)
 		{
 			e.printStackTrace();
@@ -417,20 +419,20 @@ public class Settings extends Model<Settings>
 		return null;
 	}
 
-	public boolean has(String key)
+	public boolean has(JPAApi jpaApi, String key)
 	{
 		if (parent == null)
 			return getJsonObject().has(key);
 		else
-			return getJsonObject().has(key) || parent.getSettings().has(key);
+			return getJsonObject().has(key) || parent.getSettings(jpaApi).has(jpaApi, key);
 	}
 
-	private String getSetting(String key)
+	private String getSetting(JPAApi jpaApi, String key)
 	{
-		return getSetting(key, null);
+		return getSetting(jpaApi, key, null);
 	}
 
-	private String getSetting(String key, String defaultValue)
+	private String getSetting(JPAApi jpaApi, String key, String defaultValue)
 	{
 		try
 		{
@@ -440,7 +442,7 @@ public class Settings extends Model<Settings>
 				else
 					return getJsonObject().get(key).toString();
 			else
-				return getJsonObject().has(key) ? getJsonObject().get(key).toString() : parent.getSettings().getSetting(key, defaultValue);
+				return getJsonObject().has(key) ? getJsonObject().get(key).toString() : parent.getSettings(jpaApi).getSetting(jpaApi, key, defaultValue);
 		} catch (JSONException e)
 		{
 			e.printStackTrace();

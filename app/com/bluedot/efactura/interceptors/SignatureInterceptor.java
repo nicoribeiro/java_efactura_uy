@@ -44,13 +44,9 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 
 	private Commons commons;
 	
-	@Inject
-	public void setCommons(Commons commons) {
-		this.commons = commons;
-	}
-	
-	public SignatureInterceptor() {
+	public SignatureInterceptor(Commons commons) {
 		super(Phase.MARSHAL);
+		this.commons = commons;
 		addAfter(NamespacesInterceptor.class.getName());
 	}
 

@@ -41,21 +41,21 @@ public class Application extends Controller {
 						 */
 
 						Pais pais = new Pais("UY", "Uruguay");
-						pais.save();
+						pais.save(jpaApi);
 						pais = new Pais("AR", "Argentina");
-						pais.save();
+						pais.save(jpaApi);
 						pais = new Pais("BR", "Brasil");
-						pais.save();
+						pais.save(jpaApi);
 						pais = new Pais("PY", "Paraguay");
-						pais.save();
+						pais.save(jpaApi);
 						
 					}
 					
 					if (IVA.count(jpaApi) == 0){
 						IVA iva = new IVA(IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_BASICA, 22);
-						iva.save();
+						iva.save(jpaApi);
 						iva = new IVA(IndicadorFacturacion.INDICADOR_FACTURACION_IVA_TASA_MINIMA, 10);
-						iva.save();
+						iva.save(jpaApi);
 					}
 					
 					

@@ -1,8 +1,10 @@
 package com.bluedot.commons.security;
 
+import play.db.jpa.JPAApi;
+
 public interface SettingsPrototype
 {
 
-	Settings getSettings();
+	Settings getSettings(JPAApi jpaApi);
 	
 }

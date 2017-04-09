@@ -89,7 +89,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		if (signUpConfigurator.sendValidationToNotificationChannels)
 			emailNotificationChannel.sendValidationKey(messagingHelper, messagingHelper.getValidationHost(signUpConfigurator.hostForValidationsLinks));
 		
-		user.save();
+		user.save(jpaApi);
 
 		
 		/*
@@ -112,7 +112,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		}else
 			sendAccountValidationEmail(emailAddress, account, signUpConfigurator.hostForValidationsLinks);
 		
-		account.save();
+		account.save(jpaApi);
 		
 		return user;
 	}
