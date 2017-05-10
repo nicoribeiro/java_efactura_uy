@@ -2,8 +2,6 @@ package dgi.classes.recepcion.wrappers;
 
 import java.math.BigDecimal;
 
-import dgi.classes.recepcion.TotalesResg.RetencPercep;
-
 public interface TotalesRetencPercepInterface {
 
 	/**

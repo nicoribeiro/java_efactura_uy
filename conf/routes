@@ -3,25 +3,157 @@
 # ~~~~
 
 # Home page
-GET      /                                        com.bluedot.efactura.controllers.Application.index()
+GET      /                                                       com.bluedot.efactura.controllers.Application.index()
 
 # Map static resources from the /public folder to the /assets URL path
-GET      /assets/*file                            controllers.Assets.versioned(path="/public", file: Asset)
+GET      /assets/*file                                           controllers.Assets.versioned(path="/public", file: Asset)
 
 
 # API
-GET      /api/rut/:idrut                          com.bluedot.efactura.controllers.RutController.darInformacionRut(idrut:String)
 
-POST     /api/documentos                          com.bluedot.efactura.controllers.DocumentController.aceptarDocumento()
-DELETE   /api/documentos/:idTipoDoc/:serie/:nro   com.bluedot.efactura.controllers.DocumentController.anularDocumento(idTipoDoc:Integer, serie:String, nro:Integer, fecha:String)
 
-GET      /api/resultado                           com.bluedot.efactura.controllers.DocumentController.resultadoDocumento(nro:Integer, serie:String , fecha:String , idTipoDoc:Integer)
-GET      /api/resultados/:fecha                   com.bluedot.efactura.controllers.DocumentController.resultadoDocumentosFecha(fecha: String)
+GET      /api/v1/empresa/:rut/resultados/:fecha                  com.bluedot.efactura.controllers.DocumentController.resultadoDocumentosFecha(rut:String, fecha: String)
 
-POST     /api/reporteDiario/:fecha                com.bluedot.efactura.controllers.DocumentController.generarReporteDiario(fecha: String)
+POST     /api/v1/empresa/:rut/reporteDiario/:fecha               com.bluedot.efactura.controllers.DocumentController.generarReporteDiario(rut:String, fecha: String, cantReportes:Integer?=1)
 
-POST     /api/modo/:modo                          com.bluedot.efactura.controllers.DocumentController.cambiarModo(modo:String)
+# Cambia el Modo de Ejecucion del Sistema
+# Modos Validos: NORMAL, CONTINGENCIA 
+POST     /api/v1/modo/:modo                                      com.bluedot.efactura.controllers.DocumentController.cambiarModo(modo:String)
 
-POST     /api/pruebas/testing                     com.bluedot.efactura.controllers.TestingController.generarPrueba()
-POST     /api/pruebas/homologacion                com.bluedot.efactura.controllers.HomologacionController.generarPrueba()
-POST     /api/pruebas/intercambio                 com.bluedot.efactura.controllers.HomologacionController_Intercambio.ingresoSobre()	
+# Ejecuta el Set de pruebas de testing
+POST     /api/v1/pruebas/testing                                 com.bluedot.efactura.controllers.TestingController.generarPrueba()
+# Ejecuta el Set de pruebas de homologacion
+POST     /api/v1/pruebas/homologacion                            com.bluedot.efactura.controllers.HomologacionController.generarPrueba()
+# Ejecuta el Set de pruebas de intercambio
+POST     /api/v1/pruebas/intercambio                             com.bluedot.efactura.controllers.HomologacionController_Intercambio.ingresoSobre()	
+
+
+
+# Retorna el Pais
+GET      /api/v1/pais/:id                                        com.bluedot.efactura.controllers.PaisesController.getPais(id:Integer)
+
+
+
+# Pregunta a la DGI por el rut
+GET      /api/v1/rut/:rut                                        com.bluedot.efactura.controllers.EmpresasController.darInformacionRut(rut:String)
+
+# Obtiene la informacion de una Empresa
+GET      /api/v1/empresa/:rut                                    com.bluedot.efactura.controllers.EmpresasController.getEmpresaByRut(rut:String)
+
+# Retorna la informacion de todas las Empresas
+GET      /api/v1/empresa                                         com.bluedot.efactura.controllers.EmpresasController.getEmpresas()
+
+# Carga/Actualiza la informacion de las Empresas a partir el XML provisto por DGI
+POST     /api/v1/empresa/cargar                                  com.bluedot.efactura.controllers.EmpresasController.cargarEmpresas(path:String)
+
+# Agrega un CAE a la empresa
+POST     /api/v1/empresa/:rut/cae                                com.bluedot.efactura.controllers.EmpresasController.addCAE(rut:String)
+
+# Edita una Empresa
+PUT      /api/v1/empresa/:rut                                    com.bluedot.efactura.controllers.EmpresasController.editarEmpresa(rut:String)	
+
+# Crea, registra y envia un nuevo Documento
+POST     /api/v1/empresa/:rut/documentos                         com.bluedot.efactura.controllers.DocumentController.aceptarDocumento(rut:String)
+
+# Reenvia Documento existente
+PUT      /api/v1/empresa/:rut/documentos                         com.bluedot.efactura.controllers.DocumentController.reenviarDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+
+# Consulta el resultado de un documento
+GET      /api/v1/empresa/:rut/documentos/resultado               com.bluedot.efactura.controllers.DocumentController.resultadoDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+
+# Obtiene la representacion en PDF del documento
+GET      /api/v1/empresa/:rut/documentos/pdf                     com.bluedot.efactura.controllers.DocumentController.pdfDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer, print:Boolean?=false)
+
+# Anula un documento
+DELETE   /api/v1/empresa/:rut/documentos                         com.bluedot.efactura.controllers.DocumentController.anularDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+
+# Retorna los documentos entrantes para una empresa
+GET      /api/v1/empresa/:rut/documentos/entrantes               com.bluedot.efactura.controllers.DocumentController.getDocumentosEntrantes(rut:String, fecha:String)
+
+# Retorna los documentos entrantes para una empresa
+GET      /api/v1/empresa/:rut/procesarEmailEntrantes               com.bluedot.efactura.controllers.DocumentController.procesarEmailEntrantes(rut:String)
+
+
+# Envia por correo el documento a la empresa
+GET      /api/v1/empresa/:rut/documentos/enviarMailEmpresa       com.bluedot.efactura.controllers.DocumentController.enviarMailEmpresa(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+
+
+# Session management
+POST     /api/v1/signin                                          com.bluedot.commons.controllers.SignInController.signIn()
+POST     /api/v1/signup                                          com.bluedot.commons.controllers.SignInController.signUp()
+#POST     /api/v1/forgot                                          com.bluedot.commons.controllers.SignInController.forgotPassword()
+
+# Accounts
+GET      /api/v1/accounts                                        com.bluedot.commons.controllers.AccountController.listAccounts()
+# Used by Service Providers to create new PMs
+POST     /api/v1/accounts                                        com.bluedot.commons.controllers.AccountController.createAccount()
+POST     /api/v1/accounts/:aid/users                             com.bluedot.commons.controllers.AccountController.createSubAccount(aid: Int)
+PUT      /api/v1/accounts/:aid                                   com.bluedot.commons.controllers.AccountController.editAccount(aid: Int)
+DELETE   /api/v1/accounts/:aid                                   com.bluedot.commons.controllers.AccountController.deleteAccount(aid: Int)
+#GET      /api/v1/accounts/:uuid/validate                         com.bluedot.commons.controllers.AccountController.validateAccount(uuid: String)
+#GET      /api/v1/accounts/:aid/admin/validate                    com.bluedot.commons.controllers.AccountController.adminValidateAccount(aid: Int)
+#GET      /api/v1/accounts/:uuid/reset                            com.bluedot.commons.controllers.AccountController.resetOwnerPassword(uuid: String)
+#POST     /api/v1/accounts/:aid/invites/:email                    com.bluedot.commons.controllers.AccountController.inviteUser(aid: Int, email: String)
+#GET      /api/v1/accounts/:aid/invites/:token/accept             com.bluedot.commons.controllers.AccountController.acceptInvite(aid: Int, token: String)
+DELETE   /api/v1/accounts/:aid/users/:uid                        com.bluedot.commons.controllers.AccountController.removeUser(aid: Int, uid: Int)
+#DELETE   /api/v1/accounts/:aid/invites/:token                    com.bluedot.commons.controllers.AccountController.discardInvite(aid: Int, token: String)
+#PUT      /api/v1/accounts/:aid/invites/:token                    com.bluedot.commons.controllers.AccountController.resendInvite(aid: Int, token: String)
+#POST     /api/v1/products/keys                                   com.bluedot.commons.controllers.AccountController.generateProductKey()
+# Doc by nribeiro
+GET      /api/v1/accounts/:aid/settings                          com.bluedot.commons.controllers.AccountController.getSettings(aid: Int)
+# Doc by nribeiro
+PUT      /api/v1/accounts/:aid/settings                          com.bluedot.commons.controllers.AccountController.setSettings(aid: Int)
+#PUT      /api/v1/accounts/:aid/gateways                          com.bluedot.commons.controllers.AccountController.assignGateways(aid: Int)
+#PUT      /api/v1/accounts/gateways/unassign                      com.bluedot.commons.controllers.AccountController.unassignGateways()
+PUT      /api/v1/accounts/:aid/users/link                        com.bluedot.commons.controllers.AccountController.addUsersToAccount(aid:Int)
+PUT      /api/v1/accounts/:aid/users/unlink                      com.bluedot.commons.controllers.AccountController.removeUsersFromAccount(aid:Int)
+
+
+# Account Tags
+#GET      /api/v1/accounts/:aid/tags                              com.bluedot.commons.controllers.AccountController.listTags(aid: Int)
+#POST     /api/v1/accounts/:aid/tags                              com.bluedot.commons.controllers.AccountController.createTag(aid: Int)
+#PUT      /api/v1/accounts/:aid/tags/:tid                         com.bluedot.commons.controllers.AccountController.updateTag(aid: Int, tid:Int)
+#DELETE   /api/v1/accounts/:aid/tags/:tid                         com.bluedot.commons.controllers.AccountController.deleteTag(aid: Int, tid:Int)
+
+# Users
+GET      /api/v1/users                                           com.bluedot.commons.controllers.UserController.listUsers()
+POST     /api/v1/users                                           com.bluedot.commons.controllers.UserController.createUser()
+GET      /api/v1/users/:email                                    com.bluedot.commons.controllers.UserController.getUser(email: String)
+PUT      /api/v1/users/:uid                                      com.bluedot.commons.controllers.UserController.updateUser(uid: Int)
+#DELETE   /api/v1/users/:uid                                                com.bluedot.commons.controllers.UserController.deleteUser(uid: Int)
+GET      /api/v1/users/:uid/acl                                  com.bluedot.commons.controllers.UserController.getAccessLevels(uid: Int)
+GET      /api/v1/users/:uid/credentials/regenerate               com.bluedot.commons.controllers.UserController.regenerateCredentials(uid: Int)
+#PUT		 /api/v1/users/:email/contact									   com.bluedot.commons.controllers.UserController.addContactInfo(email: String)
+#POST     /api/v1/users/:email/contact                            com.bluedot.commons.controllers.UserController.overrideContactInfo(email: String)
+#POST     /api/v1/users/:uid/email                                com.bluedot.commons.controllers.UserController.overrideEmail(uid: Int)
+POST     /api/v1/accounts/:aid/users/:uid/password               com.bluedot.commons.controllers.UserController.changePassword(aid:Int, uid: Int)
+
+
+# Notification Channel Management
+GET      /api/v1/users/:uid/notificationChannels                 com.bluedot.commons.controllers.NotificationChannelController.listNotificationChannel(uid: Int)
+POST     /api/v1/users/:uid/notificationChannels                 com.bluedot.commons.controllers.NotificationChannelController.createNotificationChannel(uid: Int)
+PUT      /api/v1/users/:uid/notificationChannels/:ncid           com.bluedot.commons.controllers.NotificationChannelController.editNotificationChannel(uid: Int, ncid: Int)
+DELETE   /api/v1/users/:uid/notificationChannels/:ncid           com.bluedot.commons.controllers.NotificationChannelController.deleteNotificationChannel(uid: Int, ncid: Int)
+GET      /api/v1/notificationChannels/:ncid/validate/:key        com.bluedot.commons.controllers.NotificationChannelController.validateNotificationChannel(ncid: Int, key: String)
+GET      /api/v1/users/:uid/notificationChannels/:ncid/sendKey   com.bluedot.commons.controllers.NotificationChannelController.sendKeyNotificationChannel(uid: Int, ncid: Int)
+GET      /api/v1/users/:uid/notificationChannels/:ncid/test      com.bluedot.commons.controllers.NotificationChannelController.testNotificationChannel(uid: Int, ncid: Int)
+
+
+#############################
+###### EVENTS & ALERTS ######
+#############################
+
+# Account Alerts
+#GET      /api/v1/accounts/:aid/alerts                            com.bluedot.commons.controllers.AccountController.getAlerts(aid: Int)
+#POST     /api/v1/accounts/:aid/alerts                            com.bluedot.commons.controllers.AccountController.alertAction(aid: Int)
+#GET      /api/v1/accounts/:aid/alerts/count                      com.bluedot.commons.controllers.AccountController.getAlertCount(aid: Int)
+
+# Access Levels
+#GET      /api/v1/properties/acl                                  com.bluedot.commons.controllers.AccessLevelsController.getAvailablePropertyAccessLevels()
+#GET      /api/v1/tags/acl                                        com.bluedot.commons.controllers.AccessLevelsController.getAvailableTagAccessLevels()
+#GET      /api/v1/accounts/acl                                    com.bluedot.commons.controllers.AccessLevelsController.getAvailableAccountAccessLevels()
+PUT      /api/v1/accounts/:aid/users/:uid/acl                    com.bluedot.commons.controllers.AccountController.setAcl(aid: Int, uid: Int)
+
+# Dashboard
+GET      /api/v1/accounts/:aid                                   com.bluedot.commons.controllers.AccountController.getAccount(aid: Int)
+

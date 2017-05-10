@@ -1,5 +1,7 @@
 package com.bluedot.efactura.global;
 
+import com.bluedot.commons.security.Secured;
+
 import play.mvc.Http.Request;
 import play.mvc.Http.RequestHeader;
 
@@ -20,6 +22,13 @@ public class RequestUtils
 	public static boolean isHTTP(Request request)
 	{
 		return request.host().contains(":9000");
+	}
+	
+	public static boolean isHMACSHA256Request(Request request)
+	{
+		return request.headers().containsKey(Secured.HMAC_KEY_HEADER) && 
+				request.headers().containsKey(Secured.HMAC_SIGNATURE_HEADER) && 
+				request.headers().containsKey(Secured.HMAC_NONCE_HEADER);
 	}
 	
 }

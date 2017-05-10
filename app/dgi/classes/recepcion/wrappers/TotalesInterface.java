@@ -136,7 +136,7 @@ public interface TotalesInterface {
 	 *     {@link BigDecimal }
 	 *     
 	 */
-	BigDecimal getMntNetoIvaTasaMin();
+	BigDecimal getMntNetoIVATasaMin();
 
 	/**
 	 * Sets the value of the mntNetoIvaTasaMin property.

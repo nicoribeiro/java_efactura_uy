@@ -78,7 +78,7 @@ public class TotalesResguardoWrrapper implements TotalesInterface {
 	}
 
 	@Override
-	public BigDecimal getMntNetoIvaTasaMin() {
+	public BigDecimal getMntNetoIVATasaMin() {
 		return null;
 	}
 

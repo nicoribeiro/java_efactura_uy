@@ -1,217 +1,494 @@
 package com.bluedot.efactura.controllers;
 
+import java.awt.print.PrinterException;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 
-import com.bluedot.commons.DateHandler;
-import com.bluedot.efactura.EFacturaFactory;
-import com.bluedot.efactura.EFacturaFactory.MODO;
-import com.bluedot.efactura.global.EFacturaException;
-import com.bluedot.efactura.global.EFacturaException.EFacturaErrors;
-import com.bluedot.efactura.global.ErrorMessage;
-import com.bluedot.efactura.global.Secured;
-import com.bluedot.efactura.impl.CAEManagerImpl.TipoDoc;
-import com.bluedot.efactura.impl.EFacturaFactoryImpl;
-import com.bluedot.efactura.services.RecepcionService;
-import com.bluedot.efactura.services.RecepcionService.ResultadoConsulta;
-import com.bluedot.efactura.services.impl.RecepcionServiceImpl;
+import com.bluedot.commons.controllers.AbstractController;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.security.Secured;
+import com.bluedot.commons.utils.DateHandler;
+import com.bluedot.commons.utils.Email;
+import com.bluedot.commons.utils.EmailAttachmentReceiver;
+import com.bluedot.commons.utils.JSONUtils;
+import com.bluedot.commons.utils.Print;
+import com.bluedot.commons.utils.ThreadMan;
+import com.bluedot.commons.utils.XML;
+import com.bluedot.efactura.GenerateInvoice;
+import com.bluedot.efactura.MODO_SISTEMA;
+import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
+import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
+import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.ReporteDiario;
+import com.bluedot.efactura.model.SobreRecibido;
+import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
+import com.bluedot.efactura.services.IntercambioService;
+import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.play4jpa.jpa.db.Tx;
 
-import dgi.classes.recepcion.CFEDefType.EFact;
-import dgi.classes.recepcion.CFEDefType.ETck;
-import dgi.soap.recepcion.Data;
-import flexjson.JSONSerializer;
+import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
+import play.Play;
+import play.libs.F.Promise;
 import play.mvc.BodyParser;
-import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
 
+@Tx
 @ErrorMessage
 @Security.Authenticated(Secured.class)
-public class DocumentController extends Controller {
+public class DocumentController extends AbstractController {
 
-	public Result cambiarModo(String modo) throws EFacturaException {
-		MODO modoEnum = MODO.valueOf(modo);
-		if (modoEnum==null)
-			throw EFacturaException.raise(EFacturaErrors.BAD_PARAMETER_VALUE).setDetailMessage("modo");
-		
-		EFacturaFactoryImpl.getInstance().setModo(modoEnum);
-		
-		return ok();
+	final static Logger logger = LoggerFactory.getLogger(DocumentController.class);
+
+	public Promise<Result> cambiarModo(String modo) throws APIException {
+		MODO_SISTEMA modoEnum = MODO_SISTEMA.valueOf(modo);
+		if (modoEnum == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("modo"));
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+
+		factory.setModo(modoEnum);
+
+		return json(OK);
 	}
-	
+
 	@BodyParser.Of(BodyParser.Json.class)
-	public Result aceptarDocumento() throws EFacturaException {
+	public Promise<Result> aceptarDocumento(String rut) throws APIException {
+		// TODO meter mutex
+		Empresa empresa = Empresa.findByRUT(rut, true);
 
 		JsonNode jsonNode = request().body().asJson();
 		JSONObject document = new JSONObject(jsonNode.toString());
 
-		EFacturaFactory factory = EFacturaFactoryImpl.getInstance();
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
 
-		RecepcionService service = new RecepcionServiceImpl();
+		// TODO estos controles se pueden mover a una annotation
+		if (!document.has("Encabezado"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Encabezado"));
+
+		if (!document.getJSONObject("Encabezado").has("Identificacion"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Identificacion"));
+
+		if (!document.getJSONObject("Encabezado").getJSONObject("Identificacion").has("tipo"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("tipo"));
+
+		if (!document.getJSONObject("Encabezado").getJSONObject("Identificacion").has("id"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("id"));
 
 		TipoDoc tipo = TipoDoc
-				.fromInt(document.getInt("tipoDoc"));
+				.fromInt(document.getJSONObject("Encabezado").getJSONObject("Identificacion").getInt("tipo"));
 
-		Data response = null;
+		if (tipo == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("tipo"));
+
+		String id = document.getJSONObject("Encabezado").getJSONObject("Identificacion").getString("id");
+
+		CFE cfe = CFE.findByGeneradorId(empresa, id);
+
+		if (cfe != null)
+			throw APIException.raise(APIErrors.EXISTE_CFE.withParams("generadorId", id));
 
 		switch (tipo) {
-		case Nota_de_Credito_de_eFactura:
-			break;
-		case Nota_de_Credito_de_eFactura_Contingencia:
-			break;
-		case Nota_de_Credito_de_eFactura_Exportacion:
-			break;
-		case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
-			break;
-		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
-			break;
-		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-			break;
-		case Nota_de_Credito_de_eTicket:
-			break;
-		case Nota_de_Credito_de_eTicket_Contingencia:
-			break;
-		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
-			break;
-		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-			break;
-		case Nota_de_Debito_de_eFactura:
-			break;
-		case Nota_de_Debito_de_eFactura_Contingencia:
-			break;
-		case Nota_de_Debito_de_eFactura_Exportacion:
-			break;
-		case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
-			break;
-		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
-			break;
-		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-			break;
-		case Nota_de_Debito_de_eTicket:
-			break;
-		case Nota_de_Debito_de_eTicket_Contingencia:
-			break;
-		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
-			break;
-		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-			break;
 		case eFactura:
-			EFact eFactura = factory.getCFEController().createEfactura(document);
-			response = service.sendCFE(eFactura,null);
-			break;
-		case eFactura_Contingencia:
-			break;
-		case eFactura_Exportacion:
-			break;
-		case eFactura_Exportacion_Contingencia:
-			break;
-		case eFactura_Venta_por_Cuenta_Ajena:
-			break;
-		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-			break;
-		case eRemito:
-			break;
-		case eRemito_Contingencia:
-			break;
-		case eRemito_de_Exportacion:
-			break;
-		case eRemito_de_Exportacion_Contingencia:
-			break;
-		case eResguardo:
-			break;
-		case eResguardo_Contingencia:
-			break;
 		case eTicket:
-			ETck eticket = factory.getCFEController().createETicket(document);
-			response = service.sendCFE(eticket,null);
+		case eResguardo:
+			cfe = factory.getCFEMicroController(empresa).create(tipo, document);
 			break;
-		case eTicket_Contingencia:
-			break;
-		case eTicket_Venta_por_Cuenta_Ajena:
-			break;
-		case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-			break;
-		default:
+		case Nota_de_Credito_de_eFactura:
+		case Nota_de_Credito_de_eTicket:
+		case Nota_de_Debito_de_eFactura:
+		case Nota_de_Debito_de_eTicket:
+			if (!document.getJSONObject("Encabezado").has("Referencia"))
+				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Referencia"));
+			cfe = factory.getCFEMicroController(empresa).create(tipo, document,
+					document.getJSONObject("Encabezado").getJSONObject("Referencia"));
 			break;
 
+		case eFactura_Contingencia:
+		case eFactura_Exportacion:
+		case eFactura_Exportacion_Contingencia:
+		case eFactura_Venta_por_Cuenta_Ajena:
+		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+		case eRemito:
+		case eRemito_Contingencia:
+		case eRemito_de_Exportacion:
+		case eRemito_de_Exportacion_Contingencia:
+		case eResguardo_Contingencia:
+		case Nota_de_Credito_de_eFactura_Contingencia:
+		case Nota_de_Credito_de_eFactura_Exportacion:
+		case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
+		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
+		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+		case Nota_de_Credito_de_eTicket_Contingencia:
+		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
+		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+		case Nota_de_Debito_de_eFactura_Contingencia:
+		case Nota_de_Debito_de_eFactura_Exportacion:
+		case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
+		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
+		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+		case Nota_de_Debito_de_eTicket_Contingencia:
+		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
+		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+		case eTicket_Contingencia:
+		case eTicket_Venta_por_Cuenta_Ajena:
+		case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage(tipo.toString());
 		}
 
-		JSONObject jsonResponse = new JSONObject();
+		if (cfe != null) {
 
-		if (response != null) {
-			jsonResponse.put("xmlResponse", response.getXmlData());
-			return ok(jsonResponse.toString()).as("application/json");
+			if (document.has("Adenda"))
+				cfe.setAdenda(document.getJSONArray("Adenda").toString());
+
+			JSONObject error = null;
+
+			try {
+				factory.getServiceMicroController(empresa).enviar(cfe);
+			} catch (APIException e) {
+				logger.error("APIException:", e);
+				error = e.getJSONObject();
+			}
+
+			JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+
+			if (error != null)
+				cfeJson = JSONUtils.merge(cfeJson, error);
+			else
+				cfeJson = JSONUtils.merge(cfeJson, new JSONObject(OK));
+
+			try {
+				generarPDF(empresa, cfe);
+			} catch (Throwable e) {
+			}
+
+			return json(cfeJson.toString());
 		} else
-			throw EFacturaException.raise(EFacturaErrors.INTERNAL_SERVER_ERROR);
+			throw APIException.raise(APIErrors.NO_CFE_CREATED);
+	}
+
+	@BodyParser.Of(BodyParser.Json.class)
+	public Promise<Result> reenviarDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+		// TODO meter mutex
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+
+		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+
+		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+
+		JSONObject error = null;
+
+		try {
+			if (cfe.getEstado() == null)
+				factory.getServiceMicroController(empresa).reenviar(cfe.getSobre());
+		} catch (APIException e) {
+			logger.error("APIException:", e);
+			error = e.getJSONObject();
+		}
+
+		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+
+		if (error != null)
+			cfeJson = JSONUtils.merge(cfeJson, error);
+		else
+			cfeJson = JSONUtils.merge(cfeJson, new JSONObject(OK));
+
+		try {
+			generarPDF(empresa, cfe);
+		} catch (Throwable e) {
+		}
+
+		return json(cfeJson.toString());
+	}
+
+	public Promise<Result> anularDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+
+		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+
+		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+
+		factory.getServiceMicroController(empresa).anularDocumento(cfe);
+
+		return json(OK);
+	}
+
+	public Promise<Result> resultadoDocumentosFecha(String rut, String fecha) throws APIException {
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+
+		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
+
+		factory.getServiceMicroController(empresa).consultarResultados(date);
+
+		return json(OK);
+
+	}
+
+	public Promise<Result> resultadoDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+
+		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+
+		if (tipo == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoDoc", idTipoDoc));
+
+		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+
+		JSONObject error = null;
+
+		try {
+			if (cfe.getEstado() == null)
+				factory.getServiceMicroController(empresa).consultaResultado(cfe.getSobre());
+		} catch (APIException e) {
+			logger.error("APIException:", e);
+			error = e.getJSONObject();
+		}
+
+		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+
+		if (error != null)
+			cfeJson = JSONUtils.merge(cfeJson, error);
+		else
+			cfeJson = JSONUtils.merge(cfeJson, new JSONObject(OK));
+
+		return json(cfeJson.toString());
+
 	}
 	
-	public Result anularDocumento(int idTipoDoc, String serie, int nro, String fecha) throws EFacturaException {
-		RecepcionService service = new RecepcionServiceImpl();
-		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
+	public Promise<Result> enviarMailEmpresa(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
-		service.anularDocumento(tipo, serie, nro, date);
-		return ok();
-	}
 
-	public Result resultadoDocumentosFecha(String fecha) throws EFacturaException {
-		RecepcionService service = new RecepcionServiceImpl();
+		if (tipo == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoDoc", idTipoDoc));
 
-		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
+		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
 
-		List<ResultadoConsulta> result = service.consultarResultados(date);
+		JSONObject error = null;
 
-		JSONArray array = new JSONArray();
-
-		JSONSerializer serializer = new JSONSerializer().exclude("class").include("*");
-
-		for (Iterator<ResultadoConsulta> iterator = result.iterator(); iterator.hasNext();) {
-			ResultadoConsulta resultadoConsulta = iterator.next();
-
-			array.put(new JSONObject(serializer.serialize(resultadoConsulta)));
+		try {
+			factory.getServiceMicroController(empresa).enviarMailEmpresa(cfe);
+		} catch (APIException e) {
+			logger.error("APIException:", e);
+			error = e.getJSONObject();
 		}
 
-		return ok(array.toString()).as("application/json");
+		if (error == null)
+			error =  new JSONObject(OK);
+
+		return json(error.toString());
 
 	}
 
-	public Result resultadoDocumento(int nro, String serie, String fecha, int idTipoDoc) throws EFacturaException {
-		RecepcionService service = new RecepcionServiceImpl();
+	public Promise<Result> procesarEmailEntrantes(String rut) throws APIException {
+		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+
+		JSONObject error = null;
+
+		try {
+				factory.getServiceMicroController(empresaReceptora).getDocumentosEntrantes();
+		} catch (APIException e) {
+			logger.error("APIException:", e);
+			error = e.getJSONObject();
+		}
+		
+		return json(OK);
+
+	}
+	
+	public Promise<Result> getDocumentosEntrantes(String rut, String fecha) throws APIException {
+		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
+		
+		//TODO serializar los Sobres_recibidos y devolver
+		return json(OK);
+
+	}
+
+	public Promise<Result> generarReporteDiario(String rut, String fecha, int cantReportes) throws APIException {
+
+		if (cantReportes < 1)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("cantReportes", cantReportes));
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+
+		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
+
+		JSONArray reportes = new JSONArray();
+
+		for (int i = 0; i < cantReportes; i++) {
+			JSONObject error = null;
+			ReporteDiario reporte = null;
+			try {
+
+				reporte = factory.getServiceMicroController(empresa)
+						.generarReporteDiario(DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
+
+			} catch (APIException e) {
+				logger.error("APIException:", e);
+				error = e.getJSONObject();
+			}
+
+			JSONObject reporteJSON = new JSONObject();
+
+			if (reporte != null)
+				reporteJSON = EfacturaJSONSerializerProvider.getReporteDiarioSerializer().objectToJson(reporte);
+
+			if (error != null)
+				reportes.put(JSONUtils.merge(reporteJSON, error));
+			else
+				reportes.put(JSONUtils.merge(reporteJSON, new JSONObject(OK)));
+
+		}
+
+		return json(reportes.toString());
+	}
+
+	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print)
+			throws APIException {
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
+		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
 
-		Data response = service.consultaResultado(tipo, serie, nro, date);
+		try {
+			File pdf = generarPDF(empresa, cfe);
 
-		JSONObject jsonResponse = new JSONObject();
+			if (print)
+				Print.print(null, pdf);
 
-		if (response != null) {
-			jsonResponse.put("xmlResponse", response.getXmlData());
-			return ok(jsonResponse.toString()).as("application/json");
-		} else
-			throw EFacturaException.raise(EFacturaErrors.INTERNAL_SERVER_ERROR);
+			return Promise.<Result>pure(ok(pdf));
+
+		} catch (IOException | PrinterException e) {
+			throw APIException.raise(e);
+		}
+
 	}
 
-	public Result generarReporteDiario(String fecha) throws EFacturaException {
-		RecepcionService service = new RecepcionServiceImpl();
+	/**
+	 * @param nro
+	 * @param serie
+	 * @param idTipoDoc
+	 * @param empresa
+	 * @param cfe
+	 * @return
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	private File generarPDF(Empresa empresa, CFE cfe) throws IOException, FileNotFoundException {
 
-		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
+		logger.info("Generando PDF tipoDoc:{} - serie:{} - nro:{}", cfe.getTipo().value, cfe.getSerie(), cfe.getNro());
 
-		Data response = service.generarReporteDiario(date);
+		GenerateInvoice generateInvoice = new GenerateInvoice(cfe, empresa);
 
-		JSONObject jsonResponse = new JSONObject();
+		String filename = cfe.getTipo().value + "-" + cfe.getSerie() + "-" + cfe.getNro() + ".pdf";
 
-		if (response != null) {
-			jsonResponse.put("xmlResponse", response.getXmlData());
-			return ok(jsonResponse.toString()).as("application/json");
-		} else
-			throw EFacturaException.raise(EFacturaErrors.INTERNAL_SERVER_ERROR);
+		String path = Play.application().configuration().getString("documentos.pdf.path", "/mnt/efacturas");
+
+		File pdf = new File(path + File.separator + filename);
+
+		ByteArrayOutputStream byteArrayOutputStream = generateInvoice.createPDF();
+
+		try (OutputStream outputStream = new FileOutputStream(pdf)) {
+			byteArrayOutputStream.writeTo(outputStream);
+		}
+		return pdf;
 	}
+
+	// public Promise<Result> printDocumento(String rut, int nro, String serie,
+	// int idTipoDoc, boolean print)
+	// throws APIException {
+	//
+	// Empresa empresa = Empresa.findByRUT(rut, true);
+	//
+	// TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+	//
+	// CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+	//
+	// GenerateInvoice generateInvoice = new GenerateInvoice(cfe, new
+	// JSONObject(), empresa);
+	//
+	// try {
+	// File tempFile = File.createTempFile("345", ".pdf");
+	//
+	// ByteArrayOutputStream byteArrayOutputStream =
+	// generateInvoice.createPDF();
+	//
+	// try (OutputStream outputStream = new FileOutputStream(tempFile)) {
+	// byteArrayOutputStream.writeTo(outputStream);
+	// }
+	//
+	//// https://pdfbox.apache.org/index.html
+	// http://stackoverflow.com/questions/29755305/itext-direct-printing
+	// http://stackoverflow.com/questions/18636622/pdfbox-how-to-print-pdf-with-specified-printer
+	//// byte[] pdfbyte = byteArrayOutputStream.toByteArray();
+	//// //System.out.println(pdf);
+	//// InputStream bis = new ByteArrayInputStream(pdfbyte);
+	//// SimpleDoc pdfp = new SimpleDoc(bis, DocFlavor.BYTE_ARRAY.AUTOSENSE,
+	// null);
+	//// DocPrintJob printjob= printService.createPrintJob();
+	//// printjob.print(pdfp, new HashPrintRequestAttributeSet());
+	//// bis.close();
+	//
+	// return Promise.<Result>pure(ok());
+	//
+	// } catch (IOException | PrinterException e) {
+	// throw APIException.raise(e);
+	// }
+	//
+	// }
+	//
+	// private void print(){
+	//
+	// }
 
 }

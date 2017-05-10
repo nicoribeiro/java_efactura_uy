@@ -33,6 +33,11 @@ import javax.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum EstadoACKSobreType {
 
+	/*
+	 * AS - Sobre Recibido 
+	 * BS - Sobre Rechazado
+	 */
+	
     AS,
     BA,
     BS;

@@ -362,6 +362,8 @@ public interface ItemInterface {
 
 	List<CodItemInterface> getGenericCodItem();
 	
+	void addCodItem(TpoCod TpoCod, String Cod);
+	
 	void setRetencPerceps(List<RetPercInterface> list);
 
 }

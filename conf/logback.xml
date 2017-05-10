@@ -1,27 +1,23 @@
-<!--
-  ~ Copyright (C) 2009-2016 Lightbend Inc. <https://www.lightbend.com>
-  -->
-<!-- The default logback configuration that Play uses if no other configuration is provided -->
 <configuration>
     
-<!--   <conversionRule conversionWord="coloredLevel" converterClass="play.api.libs.logback.ColoredLevel" /> -->
+  <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
 
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-     <file>${application.home:-.}/logs/application.log</file>
-     <encoder>
-       <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
-     </encoder>
-  </appender>
+<!--   <appender name="FILE" class="ch.qos.logback.core.FileAppender"> -->
+<!--      <file>${application.home:-.}/logs/application.log</file> -->
+<!--      <encoder> -->
+<!--        <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern> -->
+<!--      </encoder> -->
+<!--   </appender> -->
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
+      <pattern>%date %coloredLevel from %logger in %thread - %message%n%xException</pattern>
     </encoder>
   </appender>
 
-  <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
-    <appender-ref ref="FILE" />
-  </appender>
+<!--   <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender"> -->
+<!--     <appender-ref ref="FILE" /> -->
+<!--   </appender> -->
 
   <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
     <appender-ref ref="STDOUT" />
@@ -29,13 +25,11 @@
 
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
-  
   <logger name="org.apache.cxf" level="INFO"/>
-  
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
 
-  <root level="WARN">
-    <appender-ref ref="ASYNCFILE" />
+  <root level="INFO">
+	<!--     <appender-ref ref="ASYNCFILE" /> -->
     <appender-ref ref="ASYNCSTDOUT" />
   </root>
   

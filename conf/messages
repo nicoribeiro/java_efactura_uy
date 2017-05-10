@@ -1,0 +1,61 @@
+#
+# General Error Messages
+#
+BAD_PARAMETER_VALUE = Valor incorrecto en el parametro ''{0}''
+MISSING_PARAMETER = Falta el parametro ''{0}''
+NOT_SUPPORTED=No soportado 
+INTERNAL_SERVER_ERROR=Error interno del servidor
+NOT_IMPLEMENTED=No esta implementado 
+UNAUTHORIZED=No tiene permiso
+BAD_JSON= Error manipulando JSON
+
+#
+# Wrraped Error Message
+#
+WRAPPED_EXCEPTION= Envoltorio para otra Exception
+ 
+
+
+
+
+#
+# Common Error Messages
+#
+ACCOUNT_NOT_FOUND= Account with {0}:{1} not found
+USER_NOT_FOUND= User with {0}:{1} not found
+ALERT_NOT_FOUND= Alert with {0}:{1} not found
+CREDENTIAL_NOT_FOUND= Credential with {0}:{1} not found 
+SESSION_NOT_FOUND= Session with {0}:{1} not found 
+INVALID_VALIDATION_KEY = Key is not valid
+NO_AUTH_METHOD_DEFINED= No authentication method defined
+HAZELCAST= Hazelcast error 
+USER_NOT_PART_OF_ACCOUNT= User not part of account
+USER_ALREADY_EXISTS= User with {0}:{1} already exists
+EMAIL_EXISTS= Email {0} exists
+PHONE_EXISTS= Phone {0} exists
+SETTING_SCHEMA_ERROR= Error with settings schema
+
+
+
+
+
+
+
+
+
+
+
+#
+# Mensajes de Error de facturacion Electronica
+#
+CAE_DATA_NOT_FOUND= No existe un CAE valido para el tipo ''{0}'' (tipoDoc:{1}) de CFE
+CAE_NOT_AVAILABLE_ID=No hay mas identificadores electronicos disponibles en el CAE con nro:{0} para el tipo de CFE tipoDoc:{1} 
+MALFORMED_CFE=CFE malformado
+PAIS_NO_ENCONTRADO=No se encontro el pais con {0}:{1}
+EMPRESA_NO_ENCONTRADA=No se encontro la empresa con {0}:{1}
+ERROR_COMUNICACION_DGI= Hubo un error en la comunicacion con DGI 
+REPORTE_DIARIO_NO_ENCONTRADO= No se encontro el Reporte diario con {0}:{1}
+NO_CFE_CREATED=No se creo un CFE
+CFE_NO_ENCONTRADO= No se encontro un CFE con {0}:{1}
+SOBRE_NO_ENCONTRADO= No se encontro un sobre con {0}:{1}
+UI_NO_ENCONTRADA= No se encontro la UI con {0}:{1}

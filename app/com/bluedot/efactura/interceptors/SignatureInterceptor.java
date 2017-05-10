@@ -1,7 +1,6 @@
 package com.bluedot.efactura.interceptors;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,14 +8,11 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.text.SimpleDateFormat;
+import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.apache.cxf.interceptor.Fault;
@@ -25,13 +21,20 @@ import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
 
-import com.bluedot.commons.XML;
-import com.bluedot.commons.XmlSignature;
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.utils.XML;
+import com.bluedot.commons.utils.XmlSignature;
 import com.bluedot.efactura.commons.Commons;
-import com.bluedot.efactura.global.EFacturaException;
+import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.SobreEmitido;
+import com.bluedot.efactura.model.TipoDoc;
 
+import dgi.classes.recepcion.CFEDefType;
+import dgi.classes.recepcion.EnvioCFE;
+import dgi.classes.recepcion.IdDocFact;
+import dgi.classes.recepcion.IdDocResg;
+import dgi.classes.recepcion.IdDocTck;
 import dgi.soap.recepcion.Data;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
@@ -51,16 +54,19 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 				 * Get the XMLData from the WSEFacturaEFACRECEPCIONSOBRE
 				 */
 				List list = message.getContent(java.util.List.class);
-				if (list.get(0) instanceof WSEFacturaEFACRECEPCIONSOBRE)
-					signSobre(message);
+				if (list.get(0) instanceof WSEFacturaEFACRECEPCIONSOBRE){
+					SobreEmitido sobre = InterceptorContextHolder.getSobreEmitido();
+					if (sobre.isReenvio())
+						return;
+					signSobre(sobre, message);
+				}
 				
 				if (list.get(0) instanceof WSEFacturaEFACRECEPCIONREPORTE)
 					signReporte(message);
 				
 				
 				
-				
-			} catch (TransformerFactoryConfigurationError | Exception | EFacturaException  e) {
+			} catch (TransformerFactoryConfigurationError | Exception | APIException  e) {
 				e.printStackTrace();
 				throw new Fault(e);
 			}
@@ -68,32 +74,22 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 
 	}
 
-	private  void signReporte(Message message) throws TransformerFactoryConfigurationError, EFacturaException, Exception{
+	private  void signReporte(Message message) throws TransformerFactoryConfigurationError, APIException, Exception{
 		List list = message.getContent(java.util.List.class);
 		
 		WSEFacturaEFACRECEPCIONREPORTE sobre = (WSEFacturaEFACRECEPCIONREPORTE) list.get(0);
 		
 		Data data = sobre.getDatain();
-		String docString = data.getXmlData();
-		
-		/*
-		 * Instantiate the DocumentBuilderFactory.
-		 * IMPORTANT: NamespaceAwerness=true!!
-		 */
-		//TODO usar los metodos de la clase XML
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		dbf.setNamespaceAware(true);
 		
 		/*
 		 * Instantiate the document (Caratula + CFE)
 		 */
-		InputStream stream = new ByteArrayInputStream(docString.getBytes());			
-		Document allDocument= dbf.newDocumentBuilder().parse(stream);
+		Document allDocument= XML.loadXMLFromString(data.getXmlData());
 		
 		/*
 		 * Isolate the CFE 
 		 */
-		Document cfeDocument = dbf.newDocumentBuilder().newDocument();
+		Document cfeDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Node unsignedNode = allDocument.getElementsByTagName("Reporte").item(0);
 		cfeDocument.adoptNode(unsignedNode);
 		cfeDocument.appendChild(unsignedNode);
@@ -113,6 +109,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		xmlSignature.sign(cfeDocument);
 		
 		
+		
 		/*
 		 *  Build the message again 
 		 */
@@ -121,12 +118,13 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		data.setXmlData(XML.documentToString(signedNode));
 		message.setContent(List.class, list);
 
-		String filenamePrefix = Commons.getFilenamePrefix(signedNode);
 		
-		Commons.dumpNodeToFile(signedNode, true, filenamePrefix, null);
+//		String filenamePrefix = Commons.getFilenamePrefix(signedNode);
+//		
+//		Commons.dumpNodeToFile(signedNode, true, filenamePrefix, null);
 	}
 
-	private void signSobre(Message message) throws TransformerFactoryConfigurationError, EFacturaException, Exception {
+	private void signSobre(SobreEmitido sobreEmitido, Message message) throws TransformerFactoryConfigurationError, APIException, Exception {
 		List list = message.getContent(java.util.List.class);
 		
 		WSEFacturaEFACRECEPCIONSOBRE sobre = (WSEFacturaEFACRECEPCIONSOBRE) list.get(0);
@@ -148,18 +146,51 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		InputStream stream = new ByteArrayInputStream(docString.getBytes());			
 		Document allDocument= dbf.newDocumentBuilder().parse(stream);
 		
-		signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE");
+		allDocument = signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE");
 		
-		data.setXmlData(XML.documentToString(allDocument));
+		String documentString = XML.documentToString(allDocument);
+		data.setXmlData(documentString);
 		message.setContent(List.class, list);
 		
-		String filenamePrefix = Commons.getFilenamePrefix(allDocument.getDocumentElement());
+		sobreEmitido.setXmlDgi(documentString);
 		
-		Commons.dumpNodeToFile(allDocument, true,filenamePrefix, null);
+		/*
+		 * Extraigo el hash del CFE
+		 */
+		EnvioCFE envioCFE = (EnvioCFE) XML.unMarshall(XML.loadXMLFromString(sobre.getDatain().getXmlData()), EnvioCFE.class);
+		
+		for (Iterator<CFEDefType> iterator = envioCFE.getCVES().iterator(); iterator.hasNext();) {
+			CFEDefType cfeDefType = iterator.next();
+			
+			if (cfeDefType.getEFact()!=null){
+				IdDocFact id = cfeDefType.getEFact().getEncabezado().getIdDoc();
+				CFE cfe = sobreEmitido.getCFE(id.getNro().intValue(), id.getSerie().toString(), TipoDoc.fromInt(id.getTipoCFE().intValue()));
+				cfe.setHash(cfeDefType.getSignature().getSignedInfo().getReferences().get(0).getDigestValue());
+			}
+			
+			if (cfeDefType.getETck()!=null){
+				IdDocTck id = cfeDefType.getETck().getEncabezado().getIdDoc();
+				CFE cfe = sobreEmitido.getCFE(id.getNro().intValue(), id.getSerie().toString(), TipoDoc.fromInt(id.getTipoCFE().intValue()));
+				cfe.setHash(cfeDefType.getSignature().getSignedInfo().getReferences().get(0).getDigestValue());
+			}
+			
+			if (cfeDefType.getEResg()!=null){
+				IdDocResg id = cfeDefType.getEResg().getEncabezado().getIdDoc();
+				CFE cfe = sobreEmitido.getCFE(id.getNro().intValue(), id.getSerie().toString(), TipoDoc.fromInt(id.getTipoCFE().intValue()));
+				cfe.setHash(cfeDefType.getSignature().getSignedInfo().getReferences().get(0).getDigestValue());
+			}
+			
+			//TODO completar los documentos que faltan
+			
+		}
+		
+//		String filenamePrefix = Commons.getFilenamePrefix(allDocument.getDocumentElement());
+//		
+//		Commons.dumpNodeToFile(allDocument, true,filenamePrefix, null);
 		
 	}
 
-	public static void signDocument(DocumentBuilderFactory dbf, Document allDocument, String childTagName, String parentTagName)
+	public static Document signDocument(DocumentBuilderFactory dbf, Document allDocument, String childTagName, String parentTagName)
 			throws ParserConfigurationException, FileNotFoundException, IOException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException, Exception {
 		/*
@@ -194,17 +225,17 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		/*
 		 *  Build the message again 
 		 */
+		
 		if (parentTagName!=null){
 			Node signedNode = allDocument.importNode(cfeDocument.getElementsByTagName(childTagName).item(0), true);
 			allDocument.getElementsByTagName(parentTagName).item(0).appendChild(signedNode);
 		}else
-			allDocument = cfeDocument;
+			if (childTagName!=null)
+				allDocument = cfeDocument;
+		
+		return allDocument;
 		
 
 	}
 	
-	
-	
-
-
 }

@@ -7,6 +7,8 @@ import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
 
+import com.bluedot.efactura.model.SobreEmitido;
+
 import dgi.soap.recepcion.Data;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
 
@@ -21,6 +23,9 @@ public class NamespacesInterceptor extends AbstractPhaseInterceptor<Message> {
 		List list = message.getContent(java.util.List.class);
 
 		if (!(list.get(0) instanceof WSEFacturaEFACRECEPCIONSOBRE))
+			return;
+		
+		if (InterceptorContextHolder.getSobreEmitido().isReenvio())
 			return;
 		
 		WSEFacturaEFACRECEPCIONSOBRE sobre= (WSEFacturaEFACRECEPCIONSOBRE)list.get(0);

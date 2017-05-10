@@ -1,0 +1,57 @@
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
+	version="2.1">
+
+	<persistence-unit name="defaultPersistenceUnit"
+		transaction-type="RESOURCE_LOCAL">
+		<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+		<non-jta-data-source>DefaultDS</non-jta-data-source>
+
+		<class>com.bluedot.commons.alerts.Alert</class>
+		<class>com.bluedot.commons.alerts.AlertGroup</class>
+		<class>com.bluedot.commons.alerts.AlertMap</class>
+		<class>com.bluedot.commons.alerts.AlertMetadata</class>
+
+		<class>com.bluedot.commons.messages.Message</class>
+
+		<class>com.bluedot.commons.notificationChannels.APNS</class>
+		<class>com.bluedot.commons.notificationChannels.Email</class>
+		<class>com.bluedot.commons.notificationChannels.GCM</class>
+		<class>com.bluedot.commons.notificationChannels.SMS</class>
+		<class>com.bluedot.commons.notificationChannels.NotificationChannel</class>
+		<class>com.bluedot.commons.notificationChannels.NotificationRecord</class>
+
+		<class>com.bluedot.commons.security.Account</class>
+		<class>com.bluedot.commons.security.Address</class>
+		<class>com.bluedot.commons.security.Credential</class>
+		<class>com.bluedot.commons.security.Permission</class>
+		<class>com.bluedot.commons.security.Session</class>
+		<class>com.bluedot.commons.security.Settings</class>
+		<class>com.bluedot.commons.security.User</class>
+		<class>com.bluedot.commons.security.Account</class>
+		<class>com.bluedot.commons.security.Account</class>
+		<class>com.bluedot.commons.security.Account</class>
+
+		<class>com.bluedot.efactura.model.CAE</class>
+		<class>com.bluedot.efactura.model.CFE</class>
+		<class>com.bluedot.efactura.model.Detalle</class>
+		<class>com.bluedot.efactura.model.Empresa</class>
+		<class>com.bluedot.efactura.model.IVA</class>
+		<class>com.bluedot.efactura.model.Pais</class>
+		<class>com.bluedot.efactura.model.ReporteDiario</class>
+		<class>com.bluedot.efactura.model.Sobre</class>
+		<class>com.bluedot.efactura.model.SobreEmitido</class>
+		<class>com.bluedot.efactura.model.SobreRecibido</class>
+		<class>com.bluedot.efactura.model.Titular</class>
+		<class>com.bluedot.efactura.model.UI</class>
+		<properties>
+			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
+			<property name="hibernate.hbm2ddl.auto" value="update" />
+			<property name="hibernate.show_sql" value="false" />
+			<property name="hibernate.format_sql" value="true" />
+			<property name="hibernate.ejb.naming_strategy" value="db.CustomNamingStrategy" />
+		</properties>
+	</persistence-unit>
+
+</persistence>

@@ -181,4 +181,9 @@ public class ItemResgWrapper implements ItemInterface {
 		}
 	}
 
+	@Override
+	public void addCodItem(TpoCod tpoCod, String cod) {
+		
+	}
+
 }

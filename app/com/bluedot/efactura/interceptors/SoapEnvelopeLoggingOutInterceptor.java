@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.text.ParseException;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,8 +27,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
+import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.commons.Commons;
-import com.bluedot.efactura.global.EFacturaException;
 
 import dgi.soap.recepcion.Data;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
@@ -155,7 +153,7 @@ public class SoapEnvelopeLoggingOutInterceptor extends AbstractLoggingIntercepto
 				
 				
 			} catch (SAXException | IOException | ParserConfigurationException | ParseException
-					| TransformerFactoryConfigurationError | EFacturaException e) {
+					| TransformerFactoryConfigurationError | APIException e) {
 				e.printStackTrace();
 			}
 		}
