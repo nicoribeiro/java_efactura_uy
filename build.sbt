@@ -28,7 +28,7 @@ libraryDependencies ++= Seq(
 	"com.zaxxer" % "HikariCP-java6" % "2.3.7",
     "com.edulify" %% "play-hikaricp" % "2.0.6",
     "com.twilio.sdk" % "twilio-java-sdk" % "3.6.2",
-    "play4jpa" %% "play4jpa" % "1.0-SNAPSHOT",
+    "play4jpa" %% "play4jpa" % "0.1",
     //Para imprimir
     "org.apache.pdfbox" % "pdfbox" % "2.0.2"
 )
