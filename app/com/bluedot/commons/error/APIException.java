@@ -216,7 +216,7 @@ public class APIException extends Throwable
 	@Override
 	public String getMessage()
 	{
-		return getDetailMessage() != null ? getDetailMessage() : "";
+		return  getJSONObject().toString();
 	}
 
 	public boolean isLog() {
@@ -232,7 +232,7 @@ public class APIException extends Throwable
 		JSONObject jsonError = new JSONObject();
 		jsonError.put("result_code", error.code);
 		jsonError.put("result_message", error.name());
-		jsonError.put("result_detail", getMessage());
+		jsonError.put("result_detail", getDetailMessage());
 		
 		return jsonError;
 	}
