@@ -4,7 +4,7 @@ version := "0.63"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
 // el excludeAll(ExclusionRule(organization = "org.apache.geronimo.specs")) es para que no incluya el paquete geronimo-javamail_1.4_spec-1.7.1.jar que es viejo y anda muy mal
 
@@ -28,7 +28,7 @@ libraryDependencies ++= Seq(
 	"com.zaxxer" % "HikariCP-java6" % "2.3.7",
     "com.edulify" %% "play-hikaricp" % "2.0.6",
     "com.twilio.sdk" % "twilio-java-sdk" % "3.6.2",
-    "play4jpa" %% "play4jpa" % "0.1",
+    "play4jpa" %% "play4jpa" % "2.4.11",
     //Para imprimir
     "org.apache.pdfbox" % "pdfbox" % "2.0.2"
 )
