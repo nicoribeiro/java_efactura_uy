@@ -206,10 +206,6 @@ public class Empresa extends Model<Empresa>{
 		return codigoSucursal;
 	}
 
-	public void setCodigoSucursal(int codigoSucursal) {
-		this.codigoSucursal = codigoSucursal;
-	}
-
 	public Date getVencimientoFirma() {
 		return vencimientoFirma;
 	}
