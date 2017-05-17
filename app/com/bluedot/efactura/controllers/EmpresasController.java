@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -25,7 +24,6 @@ import org.w3c.dom.NodeList;
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.ErrorMessage;
-import com.bluedot.commons.hazelcast.Mutex;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
@@ -40,6 +38,13 @@ import com.bluedot.efactura.services.impl.ConsultaRutServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -47,16 +52,17 @@ import play.mvc.Security;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
+@Api(value = "Operaciones de Empresa") 
 public class EmpresasController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(EmpresasController.class);
 
-	private Mutex mutex;
-	
-	@Inject
-	public EmpresasController(Mutex mutex){
-		this.mutex = mutex;
-	}
+//	private Mutex mutex;
+//	
+//	@Inject
+//	public EmpresasController(Mutex mutex){
+//		this.mutex = mutex;
+//	}
 	
 	public Promise<Result> darInformacionRut(String idrut) throws APIException {
 		//TODO tomar este consulta rut de un factory
@@ -129,6 +135,19 @@ public class EmpresasController extends AbstractController {
 		return json(json.toString());
 	}
 	
+	
+	
+	
+	
+//		@ApiOperation( 
+//		     nickname = "GetEmpresa", 
+//		     value = "Get Empresa", 
+//		     notes = "Obtener una Empresa por RUT", 
+//		     httpMethod = "GET", 
+//		     response = Empresa.class
+//		 ) 
+	
+		
 	public Promise<Result> getEmpresaByRut(String rut) throws APIException {
 		
 		Empresa empresa = Empresa.findByRUT(rut, true);

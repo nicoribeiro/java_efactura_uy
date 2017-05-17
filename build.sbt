@@ -30,7 +30,9 @@ libraryDependencies ++= Seq(
     "com.twilio.sdk" % "twilio-java-sdk" % "3.6.2",
     "play4jpa" %% "play4jpa" % "2.4.11",
     //Para imprimir
-    "org.apache.pdfbox" % "pdfbox" % "2.0.2"
+    "org.apache.pdfbox" % "pdfbox" % "2.0.2",
+    //Documentacion del API
+    "io.swagger" %% "swagger-play2" % "1.5.2"
 )
 
 resolvers += Resolver.url("Edulify Repository", url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns)

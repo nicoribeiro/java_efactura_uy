@@ -47,6 +47,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
+import io.swagger.annotations.Api;
 import play.Play;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
@@ -56,6 +57,7 @@ import play.mvc.Security;
 @Tx
 @ErrorMessage
 @Security.Authenticated(Secured.class)
+@Api(value = "Operaciones de Documentos") 
 public class DocumentController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(DocumentController.class);
