@@ -19,6 +19,17 @@ DEPLOYS=$BASE/deploys
 VERSION=$MAJOR.$MINOR
 BUILD_NAME=java_efactura_uy-$VERSION
 
+if [ ! -d "$DEPLOYS" ]; then
+	# Control will enter here if $DEPLOYS doesn't exist.
+	mkdir $DEPLOYS
+fi
+
+if [ ! -d "$DEPLOYS/$SERVER_GROUP" ]; then
+        # Control will enter here if $DEPLOYS/$SERVER_GROUP doesn't exist.
+        mkdir $DEPLOYS/$SERVER_GROUP
+fi
+
+
 rm -r $DEPLOYS/$SERVER_GROUP/*
 
 /usr/bin/unzip $BUILDS/$BUILD_NAME.zip -d  $DEPLOYS/$SERVER_GROUP

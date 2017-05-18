@@ -14,6 +14,12 @@ VERSION=$MAJOR.$(($MINOR + $INCREMENT))
 BUILD_LOG=$BUILDS/build.log
 BUILD_NAME=java_efactura_uy-$VERSION.zip
 
+
+if [ ! -d "$BUILDS" ]; then
+	# Control will enter here if $BUILDS doesn't exist.
+	mkdir $BUILDS
+fi
+
 # Increment minor version
 echo $(($MINOR + $INCREMENT)) > $CONFIG/minor.conf
 
