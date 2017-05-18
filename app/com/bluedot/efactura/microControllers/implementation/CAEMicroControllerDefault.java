@@ -45,22 +45,30 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	 * 
 	 * @param empresa Empresa poseedora de los CAE a manipular
 	 */
-	
+	//TODO como se crea cada vez no hay problema cuando se acaban los numeros de un CAE, pero si hacemos cache esto hay que atenderlo
 	//TODO revisar que todas las llamadas a este constructor eesten con mutex
 	public CAEMicroControllerDefault(Empresa empresa){
 		super(empresa);
 		caesMap = new HashMap<TipoDoc, CAE>();
 		for (Iterator<CAE> iterator = empresa.getCAEs().iterator(); iterator.hasNext();) {
 			CAE cae = iterator.next();
-			if (cae.getFechaAnulado()==null && DateHandler.diff( new Date(), cae.getFechaVencimiento())>1 && cae.getSiguiente()<cae.getFin())
-				caesMap.put(cae.getTipo(), cae);
+			if (cae.getFechaAnulado() == null && DateHandler.diff( new Date(), cae.getFechaVencimiento()) > 1 && cae.getSiguiente() <= cae.getFin())
+				if (caesMap.get(cae.getTipo()) != null){
+					/*
+					 * Hay mas de un CAE para este tipo, uso el que tenga fecha de vencimiento mas cercana
+					 */
+					if (caesMap.get(cae.getTipo()).getFechaVencimiento().after(cae.getFechaVencimiento()))
+						caesMap.put(cae.getTipo(), cae);
+				}
+				else
+					caesMap.put(cae.getTipo(), cae);
 		}
 	}
 	
 
 	private synchronized long consumeId(CAE cae) throws IOException, JSONException, APIException
 	{
-		if (cae.getSiguiente() == cae.getFin())
+		if (cae.getSiguiente()  > cae.getFin())
 			throw APIException.raise(APIErrors.CAE_NOT_AVAILABLE_ID.withParams(cae.getNro(), cae.getTipo()));
 
 		long siguiente = cae.getSiguiente();
