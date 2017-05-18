@@ -18,6 +18,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.MotivoRechazoSobre;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.services.IntercambioService;
 
@@ -98,7 +99,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 				// 1 porque el sobre actual ya fue persistido
 				if (sobres.size()>1){
 					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo("S08");
+					rechazo.setMotivo(MotivoRechazoSobre.S08.name());
 					rechazo.setGlosa("Ya existe sobre con idEmisor:" + envioCFEEntreEmpresas.getCaratula().getIdemisor());
 					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
 				}
@@ -108,7 +109,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 				 */
 				if (!envioCFEEntreEmpresas.getCaratula().getRutReceptor().equals(empresa.getRut())){
 					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo("S02");
+					rechazo.setMotivo(MotivoRechazoSobre.S02.name());
 					rechazo.setGlosa("No coincide RUC de Sobre, Certificado, envío o CFE");
 					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
 				}
@@ -118,7 +119,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 				 */
 				if (envioCFEEntreEmpresas.getCaratula().getCantCFE() != envioCFEEntreEmpresas.getCFEAdendas().size()){
 					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo("S05");
+					rechazo.setMotivo(MotivoRechazoSobre.S05.name());
 					rechazo.setGlosa("No coinciden cantidad CFE de carátula y contenido");
 					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
 				}

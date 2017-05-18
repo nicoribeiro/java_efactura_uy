@@ -27,6 +27,7 @@ public class PaisesController extends AbstractController {
 		    notes = "Retorna un pais",
 		    response = Pais.class
 		    )
+	
 	public Promise<Result> getPais(int id) throws APIException {
 		
 		Pais pais = Pais.findById(id, true);

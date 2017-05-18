@@ -20,7 +20,7 @@ public interface RecepcionService {
 
 	ReporteDiario generarReporteDiario(Date date, Empresa empresa) throws APIException;
 
-	void consultarResultados(Date date, Empresa empresa) throws APIException;
+//	void consultarResultados(Date date, Empresa empresa) throws APIException;
 
 	void reenviarSobre(SobreEmitido sobre) throws APIException;
 

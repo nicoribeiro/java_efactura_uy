@@ -21,6 +21,7 @@ import com.bluedot.commons.utils.ObjectPool;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.commons.Commons.DgiService;
+import com.bluedot.efactura.pool.wrappers.WSPersonaGetActEmpresarialSoapPortWrapper;
 
 import dgi.soap.rut.WSPersonaGetActEmpresarialSoapPort;
 import play.Play;

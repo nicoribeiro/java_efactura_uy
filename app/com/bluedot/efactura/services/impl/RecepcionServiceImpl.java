@@ -31,11 +31,12 @@ import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.MotivoRechazoCFE;
+import com.bluedot.efactura.model.MotivoRechazoSobre;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
-import com.bluedot.efactura.pool.WSEFacturaSoapPortWrapper;
 import com.bluedot.efactura.pool.WSRecepcionPool;
+import com.bluedot.efactura.pool.wrappers.WSEFacturaSoapPortWrapper;
 import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.strategy.report.SummaryStrategy;
 import com.sun.istack.logging.Logger;
@@ -420,14 +421,15 @@ public class RecepcionServiceImpl implements RecepcionService {
 			if (ACKSobre == null)
 				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
 
-			sobre.setRespuesta_dgi(response.getXmlData());
+			
 
-			sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
-
-			sobre.setEstado(ACKSobre.getDetalle().getEstado());
-
-			switch (sobre.getEstado()) {
+			switch (ACKSobre.getDetalle().getEstado()) {
 			case AS:
+				
+				sobre.setRespuesta_dgi(response.getXmlData());
+				sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
+				sobre.setEstado(ACKSobre.getDetalle().getEstado());
+				
 				sobre.setToken(ACKSobre.getDetalle().getParamConsulta().getToken());
 				sobre.setFechaConsulta(
 						ACKSobre.getDetalle().getParamConsulta().getFechahora().toGregorianCalendar().getTime());
@@ -435,7 +437,14 @@ public class RecepcionServiceImpl implements RecepcionService {
 			case BA:
 				break;
 			case BS:
-				throw APIException.raise(APIErrors.SOBRE_RECHAZADO);
+				
+				if (sobreEnviadoAnteriormente(ACKSobre))
+					throw APIException.raise(APIErrors.SOBRE_YA_ENVIADO);
+				else{
+					sobre.setRespuesta_dgi(response.getXmlData());
+					sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
+					sobre.setEstado(ACKSobre.getDetalle().getEstado());
+				}
 			}
 
 			return ACKSobre;
@@ -443,6 +452,13 @@ public class RecepcionServiceImpl implements RecepcionService {
 			throw APIException.raise(e);
 		}
 
+	}
+
+	private boolean sobreEnviadoAnteriormente(ACKSobredefType ACKSobre) {
+		if (ACKSobre.getDetalle()!=null && ACKSobre.getDetalle().getMotivosRechazo().size()==1 && ACKSobre.getDetalle().getMotivosRechazo().get(0).getMotivo().equals(MotivoRechazoSobre.S08.name()))
+			return true;
+		else
+			return false;
 	}
 
 	private void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
@@ -510,8 +526,11 @@ public class RecepcionServiceImpl implements RecepcionService {
 	@Override
 	public void consultaResultadoSobre(SobreEmitido sobre) throws APIException {
 		try {
-			if (sobre.getToken() == null || sobre.getIdReceptor() == null)
-				return;
+			if (sobre.getToken() == null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("token");
+				
+			if (sobre.getIdReceptor() == null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("idReceptor");
 
 			Data result = consultaResultadoSobre(sobre.getToken(), sobre.getIdReceptor());
 
@@ -687,18 +706,18 @@ public class RecepcionServiceImpl implements RecepcionService {
 	// }
 	// }
 
-	@Override
-	public void consultarResultados(Date date, Empresa empresa) throws APIException {
-
-		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, date);
-
-		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
-			SobreEmitido sobre = iterator.next();
-			this.consultaResultadoSobre((SobreEmitido) sobre);
-
-		}
-
-	}
+//	@Override
+//	public void consultarResultados(Date date, Empresa empresa) throws APIException {
+//
+//		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, date);
+//
+//		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
+//			SobreEmitido sobre = iterator.next();
+//			this.consultaResultadoSobre((SobreEmitido) sobre);
+//
+//		}
+//
+//	}
 
 	@Override
 	public void reenviarSobre(SobreEmitido sobre) throws APIException {

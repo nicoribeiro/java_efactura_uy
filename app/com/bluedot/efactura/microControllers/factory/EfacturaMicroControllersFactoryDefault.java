@@ -10,6 +10,7 @@ import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.services.impl.ConsultasServiceImpl;
 import com.bluedot.efactura.services.impl.RecepcionServiceImpl;
 
 public class EfacturaMicroControllersFactoryDefault extends MicroControllerFactoryDefault implements EfacturaMicroControllersFactory
@@ -40,7 +41,7 @@ public class EfacturaMicroControllersFactoryDefault extends MicroControllerFacto
 
 	@Override
 	public ServiceMicroController getServiceMicroController(Empresa empresa) throws APIException {
-		return new ServiceMicroControllerDefault(new RecepcionServiceImpl(), empresa, getCAEMicroController(empresa));
+		return new ServiceMicroControllerDefault(new RecepcionServiceImpl(), empresa, getCAEMicroController(empresa), new ConsultasServiceImpl());
 	}
 
 	@Override

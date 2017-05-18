@@ -1,6 +1,8 @@
 package com.bluedot.efactura.microControllers.implementation;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.Email;
 import com.bluedot.commons.utils.EmailAttachmentReceiver;
 import com.bluedot.commons.utils.ThreadMan;
@@ -21,6 +24,7 @@ import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.Sobre;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.SobreRecibido;
+import com.bluedot.efactura.services.ConsultasService;
 import com.bluedot.efactura.services.IntercambioService;
 import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
@@ -32,6 +36,8 @@ import dgi.classes.respuestas.cfe.ACKCFEdefType;
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
+import dgi.soap.consultas.ACKConsultaEnviosSobre;
+import dgi.soap.consultas.DatosSobre;
 
 public class ServiceMicroControllerDefault extends MicroControllerDefault implements ServiceMicroController {
 
@@ -39,11 +45,13 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	
 	private RecepcionService recepcionService;
 	private CAEMicroController caeMicroController;
+	private ConsultasService consultasService;
 
-	public ServiceMicroControllerDefault(RecepcionService recepcionService, Empresa empresa, CAEMicroController caeMicroController) {
+	public ServiceMicroControllerDefault(RecepcionService recepcionService, Empresa empresa, CAEMicroController caeMicroController, ConsultasService consultasService) {
 		super(empresa);
 		this.recepcionService = recepcionService;
 		this.caeMicroController = caeMicroController;
+		this.consultasService = consultasService;
 	}	
 
 	@Override
@@ -59,18 +67,50 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	
 	@Override
 	public void reenviar(SobreEmitido sobre) throws APIException {
-		recepcionService.reenviarSobre(sobre);
+		try {
+			recepcionService.reenviarSobre(sobre);
+		} catch (APIException e) {
+			if (e.getError()==APIErrors.SOBRE_YA_ENVIADO){
+				consultaResultado(sobre);
+			}else
+				throw e;
+		}
 	}
 
 	@Override
 	public void consultarResultados(Date date) throws APIException {
-		recepcionService.consultarResultados(date, empresa);
+		
+		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, date);
+
+		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
+			SobreEmitido sobre = iterator.next();
+			consultaResultado((SobreEmitido) sobre);
+		}
 	}
 
 	@Override
-	public SobreEmitido consultaResultado(SobreEmitido sobre) throws APIException {
-		recepcionService.consultaResultadoSobre(sobre);
-		return sobre;
+	public SobreEmitido consultaResultado(SobreEmitido sobreEmitido) throws APIException {
+		
+		if (sobreEmitido.getToken() == null || sobreEmitido.getIdReceptor() == null){
+			ACKConsultaEnviosSobre respuesta = consultasService.consultarEnvioSobre(sobreEmitido.getId(), 0, DateHandler.minus(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), DateHandler.add(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH));
+			
+			List<DatosSobre> sobres = respuesta.getColeccionDatosSobre().getDatosSobre();
+			
+			for (DatosSobre sobre : sobres) {
+				if (sobre.getIdEmisor()==sobreEmitido.getId()){
+					sobreEmitido.setEstado(EstadoACKSobreType.fromValue(sobre.getEstadoSobre()));
+					sobreEmitido.setIdReceptor(sobre.getIdReceptor());
+					if (sobreEmitido.getEstado()==EstadoACKSobreType.AS){
+						sobreEmitido.setToken(sobre.getParamConsulta().getToken());
+						sobreEmitido.setFechaConsulta(sobre.getParamConsulta().getFechahora().toGregorianCalendar().getTime());
+					}
+					sobreEmitido.update();
+				}
+			}
+		}
+		
+		recepcionService.consultaResultadoSobre(sobreEmitido);
+		return sobreEmitido;
 	}
 
 	@Override
