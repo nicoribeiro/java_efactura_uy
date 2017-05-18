@@ -73,16 +73,16 @@ public class CommonStrategy {
 			empresa.save();
 		}else{
 			/*
-			 * Si la empresa existe veo si puedo actualizar algun dato
+			 * Si la empresa existe actualizo los datos que puedo
 			 */
-			if (empresa.getDepartamento()==null)
-				empresa.setDepartamento(deptoRecep);
-			if (empresa.getLocalidad()==null)
-				empresa.setLocalidad(ciudadRecep);
-			if (empresa.getDireccion()==null)
-				empresa.setDireccion(dirRecep);
-			if (empresa.getRazon()==null)
-				empresa.setRazon(rznSocRecep);
+			if (deptoRecep!=null)
+				empresa.setDepartamento(deptoRecep.toUpperCase());
+			if (ciudadRecep!=null)
+				empresa.setLocalidad(ciudadRecep.toUpperCase());
+			if (dirRecep!=null)
+				empresa.setDireccion(dirRecep.toUpperCase());
+			if (rznSocRecep!=null)
+				empresa.setRazon(rznSocRecep.toUpperCase());
 			empresa.update();
 		}
 			
