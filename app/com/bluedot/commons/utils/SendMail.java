@@ -71,7 +71,7 @@ public class SendMail
 		// Create a default MimeMessage object.
 		MimeMessage message = new MimeMessage(session);
 		Multipart multiPart;
-		if (attachments.size()>0)
+		if (attachments != null && attachments.size()>0)
 			multiPart = new MimeMultipart("mixed");
 		else
 			multiPart = new MimeMultipart("alternative");
