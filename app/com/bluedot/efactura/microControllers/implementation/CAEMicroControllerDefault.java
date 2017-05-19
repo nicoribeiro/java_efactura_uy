@@ -4,10 +4,15 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -35,7 +40,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 
 	//TODO se podria hacer un cache de esta info en hazelcast
 	
-	private HashMap<TipoDoc, CAE> caesMap;
+	private HashMap<TipoDoc, List<CAE>> caesMap;
 	
 	/**
 	 * Crea un handler de CAEs para la empresa dada
@@ -49,23 +54,42 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	//TODO revisar que todas las llamadas a este constructor eesten con mutex
 	public CAEMicroControllerDefault(Empresa empresa){
 		super(empresa);
-		caesMap = new HashMap<TipoDoc, CAE>();
+		caesMap = new HashMap<TipoDoc, List<CAE>>();
 		for (Iterator<CAE> iterator = empresa.getCAEs().iterator(); iterator.hasNext();) {
 			CAE cae = iterator.next();
-			if (cae.getFechaAnulado() == null && DateHandler.diff( new Date(), cae.getFechaVencimiento()) > 1 && cae.getSiguiente() <= cae.getFin())
-				if (caesMap.get(cae.getTipo()) != null){
-					/*
-					 * Hay mas de un CAE para este tipo, uso el que tenga fecha de vencimiento mas cercana
-					 */
-					if (caesMap.get(cae.getTipo()).getFechaVencimiento().after(cae.getFechaVencimiento()))
-						caesMap.put(cae.getTipo(), cae);
-				}
-				else
-					caesMap.put(cae.getTipo(), cae);
+			if (cae.getFechaAnulado() == null && DateHandler.diff( new Date(), cae.getFechaVencimiento()) > 1 && cae.getSiguiente() <= cae.getFin()){
+				/*
+				 * Es un CAE valido y tiene numeros disponibles
+				 */
+				addCAEtoMap(cae);
+			}
+		}
+
+		sortCAEs();
+	}
+
+	/**
+	 * @param cae
+	 */
+	private void addCAEtoMap(CAE cae) {
+		if (caesMap.get(cae.getTipo()) == null)
+			caesMap.put(cae.getTipo(), new LinkedList<CAE>());
+		
+		caesMap.get(cae.getTipo()).add(cae);
+	}
+	
+	
+	private void sortCAEs(){
+		for (List<CAE> caeList : caesMap.values()) {
+			Collections.sort(caeList, new Comparator<CAE>() {
+		         @Override
+		         public int compare(CAE o1, CAE o2) {
+		             return o1.getFechaVencimiento().compareTo(o2.getFechaVencimiento());
+		         }
+		     });
 		}
 	}
 	
-
 	private synchronized long consumeId(CAE cae) throws IOException, JSONException, APIException
 	{
 		if (cae.getSiguiente()  > cae.getFin())
@@ -84,7 +108,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		CAEDataType cae = new CAEDataType();
 		if (!caesMap.containsKey(tipoDoc))
 			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND.withParams(tipoDoc.friendlyName, tipoDoc.value));
-		CAE caeJson = caesMap.get(tipoDoc);
+		CAE caeJson = caesMap.get(tipoDoc).get(0);
 
 		cae.setCAEID(new BigInteger(String.valueOf(caeJson.getNro())));
 		cae.setDNro(new BigInteger(String.valueOf(caeJson.getInicial())));
@@ -108,14 +132,14 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	{
 		if (!caesMap.containsKey(tipoDoc))
 			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND.withParams(tipoDoc.friendlyName, tipoDoc.value));
-		return caesMap.get(tipoDoc);
+		return caesMap.get(tipoDoc).get(0);
 	}
 
 	@Override
 	public synchronized IdDocTck getIdDocTick(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocTck iddoc = new IdDocTck();
 
-		CAE cae = caesMap.get(tipoDoc);
+		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		if (cae==null)
 			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND.withParams(tipoDoc.friendlyName, tipoDoc.value));
@@ -145,7 +169,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	{
 		IdDocFact iddoc = new IdDocFact();
 
-		CAE cae = caesMap.get(tipoDoc);
+		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		if (montosIncluyenIva)
 			iddoc.setMntBruto(new BigInteger("1"));
@@ -171,7 +195,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	public synchronized IdDocResg getIdDocResg(TipoDoc tipoDoc) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocResg iddoc = new IdDocResg();
 
-		CAE cae = caesMap.get(tipoDoc);
+		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
 		iddoc.setSerie(cae.getSerie());
@@ -193,26 +217,55 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		if (cae.getFechaAnulado()!=null)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("FechaAnulado")).setDetailMessage("Fecha anulado debe ser == null");
 		
-		//TODO agregar todas las validaciones pertinentes del nuevo CAE
+		if (DateHandler.diff( new Date(), cae.getFechaVencimiento()) > 1)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("FechaVencimiento")).setDetailMessage("CAE muy proximo a vencer");
 		
-		if (caesMap.containsKey(cae.getTipo())){
-			anularCAE(caesMap.get(cae.getTipo()));
-		}
+		if (cae.getInicial() == 0)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Inicial")).setDetailMessage("Inicial no puede ser 0");
+		
+		if (cae.getFin() == 0)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Fin")).setDetailMessage("Fin no puede ser 0");		
+		
+		if (cae.getSiguiente() != cae.getInicial())
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Siguiente")).setDetailMessage("Siguiente debe ser = a Inicial");
+		
+		if (cae.getTipo() == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Tipo")).setDetailMessage("El CAE debe tener Tipo");
+		
+		if (cae.getSerie() == null || cae.getSerie().equals(""))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Serie")).setDetailMessage("La Serie no puede ser vacia");
 		
 		cae.save();
 		empresa.getCAEs().add(cae);
-		caesMap.put(cae.getTipo(), cae);
+		addCAEtoMap(cae);
 		
 	}
 
+	public Set<TipoDoc> getTipoDoc() {
+		return caesMap.keySet();
+	}
 
-	private void anularCAE(CAE cae) {
+	public int getCantCAEValidos(TipoDoc tipoDoc) {
+		if (caesMap.get(tipoDoc)==null)
+			return 0;
+		else
+			return caesMap.get(tipoDoc).size();
 		
-		//TODO ver como marco para notificar a la DGI de los ids anulados
-		cae.setFechaAnulado(new Date());
-		cae.update();
-		caesMap.remove(cae.getTipo());
+	}
+
+	public double getPorcentajeUsoCAE(TipoDoc tipoDoc) {
 		
+		long usados = 0;
+		
+		long totales = 0;
+		
+		for (CAE cae : caesMap.get(tipoDoc)) {
+			totales =+ cae.getFin()-cae.getInicial()+1;
+			usados =+ cae.getSiguiente()-cae.getInicial();
+		}
+		
+		
+		return Math.floor(((float)usados/totales)*100);
 	}
 
 }

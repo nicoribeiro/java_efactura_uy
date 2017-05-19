@@ -10,14 +10,13 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
@@ -25,12 +24,8 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
-import com.bluedot.commons.utils.Email;
-import com.bluedot.commons.utils.EmailAttachmentReceiver;
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.Print;
-import com.bluedot.commons.utils.ThreadMan;
-import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.GenerateInvoice;
 import com.bluedot.efactura.MODO_SISTEMA;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
@@ -38,15 +33,12 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
-import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.notifications.NotificationManager;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
-import com.bluedot.efactura.services.IntercambioService;
-import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
-import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import io.swagger.annotations.Api;
 import play.Play;
 import play.libs.F.Promise;
@@ -60,8 +52,27 @@ import play.mvc.Security;
 @Api(value = "Operaciones de Documentos") 
 public class DocumentController extends AbstractController {
 
+	private static boolean initialized = false;
+	
 	final static Logger logger = LoggerFactory.getLogger(DocumentController.class);
 
+	private static ExecutorService executor = Executors.newFixedThreadPool(5);
+	
+	private static Runnable runner = new NotificationManager(60l * 1000l /* * 60l * 24l */);
+	
+	public DocumentController(){
+		
+			init();
+		
+	}
+	
+	private synchronized void init() {
+		if (!initialized) {
+			initialized = true;
+			executor.execute(runner);
+		}
+	}
+	
 	public Promise<Result> cambiarModo(String modo) throws APIException {
 		MODO_SISTEMA modoEnum = MODO_SISTEMA.valueOf(modo);
 		if (modoEnum == null)
