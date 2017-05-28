@@ -2,7 +2,6 @@ package com.bluedot.efactura.services.impl;
 
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
@@ -20,7 +19,6 @@ import org.w3c.dom.Document;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.notificationChannels.MessagingHelper;
-import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.commons.Commons;
@@ -30,6 +28,7 @@ import com.bluedot.efactura.interceptors.NamespacesInterceptor;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.MotivoRechazoCFE;
 import com.bluedot.efactura.model.MotivoRechazoSobre;
 import com.bluedot.efactura.model.ReporteDiario;
@@ -211,7 +210,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			allDocument = XML
 					.loadXMLFromString(NamespacesInterceptor.doNamespaceChanges(XML.documentToString(allDocument)));
 
-			allDocument = SignatureInterceptor.signDocument(dbf, allDocument, "ns0:CFE", "DGICFE:CFE_Adenda");
+			allDocument = SignatureInterceptor.signDocument(dbf, allDocument, "ns0:CFE", "DGICFE:CFE_Adenda", sobre.getEmpresaEmisora().getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
 
 			sobre.setXmlEmpresa(XML.documentToString(allDocument));
 			
@@ -408,12 +407,14 @@ public class RecepcionServiceImpl implements RecepcionService {
 				WSRecepcionPool.getInstance().checkIn(portWrapper);
 			} catch (Throwable e) {
 				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
+			} finally{
+				/*
+				 * Borramos el contexto
+				 */
+				InterceptorContextHolder.clear();
 			}
 
-			/*
-			 * Borramos el contexto
-			 */
-			InterceptorContextHolder.clear();
+			
 
 			ACKSobredefType ACKSobre = (ACKSobredefType) XML.unMarshall(XML.loadXMLFromString(response.getXmlData()),
 					ACKSobredefType.class);
@@ -646,7 +647,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			
 			reporteDiario.setTimestampEnviado(new Date());
 			
-			Data data = sendReporte(reporteString, fecha);
+			Data data = sendReporte(reporteString, fecha, reporteDiario.getEmpresa());
 
 			reporteDiario.setRespuesta(data.getXmlData());
 
@@ -667,8 +668,15 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 	}
 
-	private Data sendReporte(String reporte, Date date) throws APIException {
+	private Data sendReporte(String reporte, Date date, Empresa empresa) throws APIException {
 		try {
+			
+			/*
+			 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
+			 * parametros a los Interceptors
+			 */
+			InterceptorContextHolder.setEmpresa(empresa);
+			
 			WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
 
 			WSEFacturaEFACRECEPCIONREPORTE input = new WSEFacturaEFACRECEPCIONREPORTE();
@@ -683,6 +691,11 @@ public class RecepcionServiceImpl implements RecepcionService {
 			return output.getDataout();
 		} catch (Throwable e) {
 			throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
+		}finally{
+			/*
+			 * Borramos el contexto
+			 */
+			InterceptorContextHolder.clear();
 		}
 	}
 

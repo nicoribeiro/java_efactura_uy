@@ -16,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
@@ -87,6 +88,9 @@ public class Empresa extends Model<Empresa>{
 	private String codigoPostal;
 	
 	private String resolucion;
+	
+	@OneToOne(mappedBy="empresa")
+	private FirmaDigital firmaDigital;
 
 	public Empresa() {
 		super();
@@ -370,5 +374,13 @@ public class Empresa extends Model<Empresa>{
 
 	public void setFromEnvio(String fromEnvio) {
 		this.fromEnvio = fromEnvio;
+	}
+
+	public FirmaDigital getFirmaDigital() {
+		return firmaDigital;
+	}
+
+	public void setFirmaDigital(FirmaDigital firmaDigital) {
+		this.firmaDigital = firmaDigital;
 	}
 }

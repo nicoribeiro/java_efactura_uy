@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -23,6 +27,7 @@ import org.w3c.dom.NodeList;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
@@ -31,6 +36,7 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.bluedot.efactura.services.ConsultaRutService;
@@ -215,6 +221,9 @@ public class EmpresasController extends AbstractController {
 		String mailNotificaciones = empresaJson.has("mailNotificaciones") ? empresaJson.findPath("mailNotificaciones").asText() : null;
 		String fromEnvio = empresaJson.has("fromEnvio") ? empresaJson.findPath("fromEnvio").asText() : null;
 		
+		String certificado = empresaJson.has("certificado") ? empresaJson.findPath("certificado").asText() : null;
+		String privateKey = empresaJson.has("privateKey") ? empresaJson.findPath("privateKey").asText() : null;
+		
 		if (hostRecepcion != null)
 			empresa.setHostRecepcion(hostRecepcion);
 		
@@ -278,7 +287,37 @@ public class EmpresasController extends AbstractController {
 			}
 			
 		}
+		
+		if (certificado != null){
+			if (privateKey ==null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("privateKey");
 			
+			FirmaDigital firmaDigital = new FirmaDigital();
+			
+			firmaDigital.setCertificate(certificado);
+			firmaDigital.setPrivateKey(privateKey);
+			
+			KeyStore keystore = firmaDigital.getKeyStore();
+			
+			try {
+				if(keystore.getCertificate(FirmaDigital.KEY_ALIAS).getType().equals("X.509")){
+					X509Certificate certificate  = (X509Certificate) keystore.getCertificate(FirmaDigital.KEY_ALIAS);
+					
+					firmaDigital.setValidaHasta(certificate.getNotAfter());
+					firmaDigital.setValidaDesde(certificate.getNotBefore());
+					
+					empresa.getFirmaDigital().delete();
+					
+					firmaDigital.setEmpresa(empresa);
+					firmaDigital.save();
+					
+	            }
+			} catch (KeyStoreException e) {
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("certificado invalido o clave privada invalida");
+			}
+			
+			
+		}
 		
 		empresa.update();
 		

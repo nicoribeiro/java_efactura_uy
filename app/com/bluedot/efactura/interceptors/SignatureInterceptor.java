@@ -25,8 +25,9 @@ import org.w3c.dom.Node;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.commons.utils.XmlSignature;
-import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
 
@@ -41,6 +42,8 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
 
 public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 
+
+			
 	public SignatureInterceptor() {
 		super(Phase.MARSHAL);
 		addAfter(NamespacesInterceptor.class.getName());
@@ -61,9 +64,10 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 					signSobre(sobre, message);
 				}
 				
-				if (list.get(0) instanceof WSEFacturaEFACRECEPCIONREPORTE)
-					signReporte(message);
-				
+				if (list.get(0) instanceof WSEFacturaEFACRECEPCIONREPORTE){
+					Empresa empresa = InterceptorContextHolder.getEmpresa();
+					signReporte(message, empresa);
+				}
 				
 				
 			} catch (TransformerFactoryConfigurationError | Exception | APIException  e) {
@@ -74,7 +78,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 
 	}
 
-	private  void signReporte(Message message) throws TransformerFactoryConfigurationError, APIException, Exception{
+	private  void signReporte(Message message, Empresa empresa) throws TransformerFactoryConfigurationError, APIException, Exception{
 		List list = message.getContent(java.util.List.class);
 		
 		WSEFacturaEFACRECEPCIONREPORTE sobre = (WSEFacturaEFACRECEPCIONREPORTE) list.get(0);
@@ -95,17 +99,15 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		cfeDocument.appendChild(unsignedNode);
 		
 		/*
-		 * Key Store & Cert 
+		 * Key Store
 		 */
-		KeyStore keystore = Commons.getKeyStore();
-		String certName = Commons.getCetificateAlias();
-		String certPass = Commons.getCertificatePassword();
+		KeyStore keystore = empresa.getFirmaDigital().getKeyStore();
 
 		
 		/*
 		 * Sign the CFE
 		 */
-		XmlSignature xmlSignature = new XmlSignature(certName, certPass, keystore);
+		XmlSignature xmlSignature = new XmlSignature(FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD, keystore);
 		xmlSignature.sign(cfeDocument);
 		
 		
@@ -119,9 +121,6 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		message.setContent(List.class, list);
 
 		
-//		String filenamePrefix = Commons.getFilenamePrefix(signedNode);
-//		
-//		Commons.dumpNodeToFile(signedNode, true, filenamePrefix, null);
 	}
 
 	private void signSobre(SobreEmitido sobreEmitido, Message message) throws TransformerFactoryConfigurationError, APIException, Exception {
@@ -146,7 +145,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		InputStream stream = new ByteArrayInputStream(docString.getBytes());			
 		Document allDocument= dbf.newDocumentBuilder().parse(stream);
 		
-		allDocument = signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE");
+		allDocument = signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE", sobreEmitido.getEmpresaEmisora().getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
 		
 		String documentString = XML.documentToString(allDocument);
 		data.setXmlData(documentString);
@@ -184,13 +183,9 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 			
 		}
 		
-//		String filenamePrefix = Commons.getFilenamePrefix(allDocument.getDocumentElement());
-//		
-//		Commons.dumpNodeToFile(allDocument, true,filenamePrefix, null);
-		
 	}
 
-	public static Document signDocument(DocumentBuilderFactory dbf, Document allDocument, String childTagName, String parentTagName)
+	public static Document signDocument(DocumentBuilderFactory dbf, Document allDocument, String childTagName, String parentTagName, KeyStore keystore, String certName, String certPass)
 			throws ParserConfigurationException, FileNotFoundException, IOException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException, Exception {
 		/*
@@ -203,14 +198,6 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 			cfeDocument.adoptNode(unsignedNode);
 			cfeDocument.appendChild(unsignedNode);
 		}
-		
-		/*
-		 * Key Store & Cert 
-		 */
-		KeyStore keystore = Commons.getKeyStore();
-		String certName = Commons.getCetificateAlias();
-		String certPass = Commons.getCertificatePassword();
-
 		
 		/*
 		 * Sign the CFE

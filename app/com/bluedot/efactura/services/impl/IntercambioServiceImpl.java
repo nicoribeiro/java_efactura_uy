@@ -18,6 +18,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.MotivoRechazoSobre;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.services.IntercambioService;
@@ -153,7 +154,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 				
 				Document allDocument = XML.marshall(ackSobredefType);
 
-				allDocument = SignatureInterceptor.signDocument(dbf, allDocument,"ACKSobre",null);
+				allDocument = SignatureInterceptor.signDocument(dbf, allDocument,"ACKSobre",null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
 				
 				sobreRecibido.setRespuesta_empresa(XML.documentToString(allDocument));
 				
@@ -203,7 +204,7 @@ public class IntercambioServiceImpl implements IntercambioService {
 					DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 					dbf.setNamespaceAware(true);
 					Document allDocument = XML.marshall(ackcfEdefType);
-					allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null);
+					allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
 					sobreRecibido.setResultado_empresa(XML.documentToString(allDocument));
 					
 					return ackcfEdefType;
