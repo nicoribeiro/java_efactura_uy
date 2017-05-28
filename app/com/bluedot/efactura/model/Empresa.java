@@ -49,8 +49,6 @@ public class Empresa extends Model<Empresa>{
 	
 	private Integer codigoSucursal;
 	
-	private Date vencimientoFirma;
-	
 	private String mailRecepcion;
 	
 	private String hostRecepcion;
@@ -60,8 +58,6 @@ public class Empresa extends Model<Empresa>{
 	private String passRecepcion;
 	
 	private String puertoRecepcion;
-	
-	private int diasAvisoVencimiento;
 	
 	private boolean emisorElectronico;
 	
@@ -97,7 +93,7 @@ public class Empresa extends Model<Empresa>{
 	}
 
 	public Empresa(String rut, String razon, String nombreComercial, String direccion, String localidad,
-			String departamento, int codigoSucursal, Date vencimientoFirma) {
+			String departamento, int codigoSucursal) {
 		super();
 		this.rut = rut;
 		this.razon = razon;
@@ -106,7 +102,6 @@ public class Empresa extends Model<Empresa>{
 		this.localidad = localidad;
 		this.departamento = departamento;
 		this.codigoSucursal = codigoSucursal;
-		this.vencimientoFirma = vencimientoFirma;
 	}
 	
 	private static Finder<Integer, Empresa> find = new Finder<Integer, Empresa>(Integer.class, Empresa.class);
@@ -210,28 +205,12 @@ public class Empresa extends Model<Empresa>{
 		return codigoSucursal;
 	}
 
-	public Date getVencimientoFirma() {
-		return vencimientoFirma;
-	}
-
-	public void setVencimientoFirma(Date vencimientoFirma) {
-		this.vencimientoFirma = vencimientoFirma;
-	}
-
 	public String getMailRecepcion() {
 		return mailRecepcion;
 	}
 
 	public void setMailRecepcion(String mailRecepcion) {
 		this.mailRecepcion = mailRecepcion;
-	}
-
-	public int getDiasAvisoVencimiento() {
-		return diasAvisoVencimiento;
-	}
-
-	public void setDiasAvisoVencimiento(int diasAvisoVencimiento) {
-		this.diasAvisoVencimiento = diasAvisoVencimiento;
 	}
 
 	public List<CAE> getCAEs() {

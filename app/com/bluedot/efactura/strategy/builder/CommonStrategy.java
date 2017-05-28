@@ -69,7 +69,7 @@ public class CommonStrategy {
 			/*
 			 * Si la empresa no existe la registro como nueva en el sistema
 			 */
-			empresa = new Empresa(docRecep, rznSocRecep, null, dirRecep, ciudadRecep, deptoRecep, 0, null);
+			empresa = new Empresa(docRecep, rznSocRecep, null, dirRecep, ciudadRecep, deptoRecep, 0);
 			empresa.save();
 		}else{
 			/*

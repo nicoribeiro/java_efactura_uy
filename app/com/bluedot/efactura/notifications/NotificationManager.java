@@ -48,7 +48,7 @@ public class NotificationManager implements Runnable {
 								List<Empresa> empresas = Empresa.findAll();
 
 								for (Empresa empresa : empresas) {
-									if (empresa.getVencimientoFirma() != null)
+									if (empresa.getFirmaDigital() != null)
 										checkFechaVencimientoFirma(empresa);
 									if (empresa.getCAEs() != null && !empresa.getCAEs().isEmpty())
 										try {
@@ -90,10 +90,10 @@ public class NotificationManager implements Runnable {
 		String firma = Play.application().configuration().getString("mail.notificaciones.firma").replace("<nl>",
 				"\n");
 		
-		if (empresa.getVencimientoFirma() != null && DateHandler.diff(new Date(), empresa.getVencimientoFirma()) < Play
+		if (empresa.getFirmaDigital().getValidaHasta() != null && DateHandler.diff(new Date(), empresa.getFirmaDigital().getValidaHasta()) < Play
 				.application().configuration().getInt("notificaciones.firma.vencimiento", 30)) {
 			String body = cabezal + "La Firma digital de la empresa " + empresa.getNombreComercial()
-					+ " vencera el proximo " + empresa.getVencimientoFirma() + "\n"
+					+ " vencera el proximo " + empresa.getFirmaDigital().getValidaHasta() + "\n"
 					+ "Por favor asegurese de renovarla antes de la fecha de vencimiento de forma de evitar cortes en la emision de documentos electrónicos."
 					+ firma;
 

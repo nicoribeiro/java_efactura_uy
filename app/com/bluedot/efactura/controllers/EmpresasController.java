@@ -113,7 +113,7 @@ public class EmpresasController extends AbstractController {
 
 					Empresa empresa = Empresa.findByRUT(rut);
 					if ( empresa == null) {
-						empresa = new Empresa(rut, null, null, null, null, null, 0, null);
+						empresa = new Empresa(rut, null, null, null, null, null, 0);
 						empresa.save();
 					}else{
 						empresa.update();
@@ -203,9 +203,7 @@ public class EmpresasController extends AbstractController {
 		String departamento = empresaJson.has("departamento") ? empresaJson.findPath("departamento").asText() : null;
 		String direccion = empresaJson.has("direccion") ? empresaJson.findPath("direccion").asText() : null;
 		String nombreComercial = empresaJson.has("nombreComercial") ? empresaJson.findPath("nombreComercial").asText() : null;
-		Integer diasAvisoVencimiento = empresaJson.has("diasAvisoVencimiento") ? empresaJson.findPath("diasAvisoVencimiento").asInt() : null;
 		String localidad = empresaJson.has("localidad") ? empresaJson.findPath("localidad").asText() : null;
-		String vencimientoFirma = empresaJson.has("vencimientoFirma") ? empresaJson.findPath("vencimientoFirma").asText() : null;
 		Integer codigoSucursal = empresaJson.has("codigoSucursal") ? empresaJson.findPath("codigoSucursal").asInt() : null;
 		String logoPath = empresaJson.has("logoPath") ? empresaJson.findPath("logoPath").asText() : null;
 		String paginaWeb = empresaJson.has("paginaWeb") ? empresaJson.findPath("paginaWeb").asText() : null;
@@ -263,9 +261,6 @@ public class EmpresasController extends AbstractController {
 		if (nombreComercial != null)
 			empresa.setNombreComercial(nombreComercial);
 		
-		if (diasAvisoVencimiento != null)
-			empresa.setDiasAvisoVencimiento(diasAvisoVencimiento);
-		
 		if (localidad != null)
 			empresa.setLocalidad(localidad);
 		
@@ -274,9 +269,6 @@ public class EmpresasController extends AbstractController {
 		
 		if (razon != null)
 			empresa.setRazon(razon);
-		
-		if (vencimientoFirma != null)
-			empresa.setVencimientoFirma(DateHandler.fromStringToDate(vencimientoFirma, new SimpleDateFormat("yyyy-MM-dd")));
 		
 		if (logoPath!=null){
 			Path path = Paths.get(logoPath);

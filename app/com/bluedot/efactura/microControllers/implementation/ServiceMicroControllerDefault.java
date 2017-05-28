@@ -222,7 +222,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						sobreRecibido.setEmpresaReceptora(empresa);
 						Empresa empresaEmisora = Empresa.findByRUT(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
 						if (empresaEmisora == null) {
-							empresaEmisora = new Empresa(envioCFEEntreEmpresas.getCaratula().getRUCEmisor(), null, null, null, null, null, 0, null);
+							empresaEmisora = new Empresa(envioCFEEntreEmpresas.getCaratula().getRUCEmisor(), null, null, null, null, null, 0);
 							empresaEmisora.save();
 						}
 						sobreRecibido.setEmpresaEmisora(empresaEmisora);
