@@ -232,7 +232,8 @@ public class APIException extends Throwable
 	{
 		JSONObject jsonError = new JSONObject();
 		jsonError.put("result_code", error.code);
-		jsonError.put("result_message", error.name());
+		jsonError.put("result_name", error.name());
+		jsonError.put("result_message", error.message);
 		jsonError.put("result_detail", getDetailMessage());
 		
 		return jsonError;
