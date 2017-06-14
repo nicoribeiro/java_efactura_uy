@@ -14,20 +14,20 @@ import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.frontend.ClientProxy;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
+import org.apache.wss4j.common.crypto.Crypto;
 import org.apache.wss4j.dom.handler.WSHandlerConstants;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.ObjectPool;
-import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.commons.Commons.DgiService;
 import com.bluedot.efactura.interceptors.CDataWriterInterceptor;
 import com.bluedot.efactura.interceptors.NamespacesInterceptor;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
+import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.pool.wrappers.WSEFacturaSoapPortWrapper;
 
 import dgi.soap.recepcion.WSEFacturaSoapPort;
-import play.Play;
 
 public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 	private static WSRecepcionPool instance = null;
@@ -35,8 +35,8 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 	public static synchronized WSRecepcionPool getInstance()
 			throws IOException, APIException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
 		if (instance == null) {
-			CallbackHandler passwordCallback = Commons.getPasswordCallback();
-			instance = new WSRecepcionPool(Play.application().configuration().getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(),
+			CallbackHandler passwordCallback = FirmaDigital.getPasswordCallback();
+			instance = new WSRecepcionPool(FirmaDigital.KEY_ALIAS,
 					passwordCallback, Commons.getURL(DgiService.Recepcion));
 		}
 
@@ -47,15 +47,12 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 		throw new CloneNotSupportedException();
 	}
 
-	private final String securityPropertiesPath;
 	private final String certificateAlias;
 	private final CallbackHandler passwordCallback;
 	private final String serviceURL;
 
-	private WSRecepcionPool(String securityPropertiesPath, String keystoreAlias, CallbackHandler passwordCallback,
+	private WSRecepcionPool(String keystoreAlias, CallbackHandler passwordCallback,
 			String serviceURL) {
-		this.securityPropertiesPath = Objects.requireNonNull(securityPropertiesPath,
-				"Security properties path is required");
 		this.certificateAlias = Objects.requireNonNull(keystoreAlias, "Certificate alias is required");
 		this.passwordCallback = Objects.requireNonNull(passwordCallback, "Password callback is required");
 		this.serviceURL = serviceURL;
@@ -73,10 +70,13 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 
 		Endpoint cxfEndpoint = ClientProxy.getClient(port).getEndpoint();
 
+		Crypto customMerlin = new CustomMerlin();
+		
 		Map<String, Object> outProps = new HashMap<>();
 		outProps.put(WSHandlerConstants.ACTION, WSHandlerConstants.SIGNATURE);
 		outProps.put(WSHandlerConstants.USER, certificateAlias);
-		outProps.put(WSHandlerConstants.SIG_PROP_FILE, securityPropertiesPath);
+		outProps.put(WSHandlerConstants.SIG_PROP_REF_ID, "CustomMerlin");
+		outProps.put("CustomMerlin", customMerlin);
 		outProps.put(WSHandlerConstants.SIG_KEY_ID, "DirectReference");
 		outProps.put(WSHandlerConstants.PW_CALLBACK_REF, passwordCallback);
 

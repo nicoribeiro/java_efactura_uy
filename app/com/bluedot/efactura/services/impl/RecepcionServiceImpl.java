@@ -22,7 +22,6 @@ import com.bluedot.commons.notificationChannels.MessagingHelper;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.commons.Commons;
-import com.bluedot.efactura.commons.EfacturaSecurity;
 import com.bluedot.efactura.interceptors.InterceptorContextHolder;
 import com.bluedot.efactura.interceptors.NamespacesInterceptor;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
@@ -282,9 +281,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 			caratula.setRUCEmisor(RUCemisor);
 			caratula.setRutReceptor(RUCreceptor);
 			caratula.setVersion("1.0");
-			caratula.setX509Certificate(EfacturaSecurity.getCertificate(Commons.getCetificateAlias(),
-					Commons.getCertificatePassword(), Commons.getKeyStore()));
-
+			caratula.setX509Certificate(sobre.getEmpresaEmisora().getFirmaDigital().getCertificateEncoded());
+			
 			envioCFE.setCaratula(caratula);
 		} catch (Exception e) {
 			throw APIException.raise(e);
@@ -359,8 +357,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			caratula.setRUCEmisor(RUCemisor);
 			caratula.setRutReceptor(RUCreceptor);
 			caratula.setVersion("1.0");
-			caratula.setX509Certificate(EfacturaSecurity.getCertificate(Commons.getCetificateAlias(),
-					Commons.getCertificatePassword(), Commons.getKeyStore()));
+			caratula.setX509Certificate(sobre.getEmpresaEmisora().getFirmaDigital().getCertificateEncoded());
 
 			signed.setCaratula(caratula);
 		} catch (Exception e) {

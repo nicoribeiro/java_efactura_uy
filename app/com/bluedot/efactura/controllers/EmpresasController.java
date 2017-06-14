@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -45,12 +45,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -288,10 +282,11 @@ public class EmpresasController extends AbstractController {
 			
 			firmaDigital.setCertificate(certificado);
 			firmaDigital.setPrivateKey(privateKey);
-			
-			KeyStore keystore = firmaDigital.getKeyStore();
-			
 			try {
+				
+				KeyStore keystore = firmaDigital.getKeyStore();
+			
+			
 				if(keystore.getCertificate(FirmaDigital.KEY_ALIAS).getType().equals("X.509")){
 					X509Certificate certificate  = (X509Certificate) keystore.getCertificate(FirmaDigital.KEY_ALIAS);
 					
@@ -304,7 +299,7 @@ public class EmpresasController extends AbstractController {
 					firmaDigital.save();
 					
 	            }
-			} catch (KeyStoreException e) {
+			} catch (IOException | GeneralSecurityException e) {
 				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("certificado invalido o clave privada invalida");
 			}
 			

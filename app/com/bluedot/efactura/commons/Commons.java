@@ -46,21 +46,21 @@ import dgi.soap.recepcion.Data;
 import play.Play;
 
 public class Commons {
-	private static String securityPrefixName = "org.apache.ws.security.crypto.merlin.keystore.";
+//	private static String securityPrefixName = "org.apache.ws.security.crypto.merlin.keystore.";
 	private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-	private static Properties securityProperties;
+//	private static Properties securityProperties;
 	
-	static{
-		securityProperties = new Properties();
-		try {
-			if (Play.isDev())
-				securityProperties.load(new FileInputStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
-			else
-				securityProperties.load(Commons.class.getClassLoader().getResourceAsStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+//	static{
+//		securityProperties = new Properties();
+//		try {
+//			if (Play.isDev())
+//				securityProperties.load(new FileInputStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
+//			else
+//				securityProperties.load(Commons.class.getClassLoader().getResourceAsStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	public enum DgiService {
 		Recepcion, Consulta, Rut
@@ -82,32 +82,25 @@ public class Commons {
 
 	}
 
-	public static KeyPasswordCallback getPasswordCallback() throws FileNotFoundException, IOException,
-			KeyStoreException, NoSuchAlgorithmException, CertificateException {
+	
 
-		Map<String, String> keystorePasswords = new HashMap<>();
-		keystorePasswords.put(getCetificateAlias(), getCertificatePassword());
-		return new KeyPasswordCallback(keystorePasswords);
+//	public static KeyStore getKeyStore() throws FileNotFoundException, IOException, KeyStoreException,
+//			NoSuchAlgorithmException, CertificateException {
+//		KeyStore keystore = KeyStore.getInstance(securityProperties.getProperty(securityPrefixName + "type"));
+//		InputStream fIn = Commons.class.getClassLoader().getResourceAsStream(securityProperties.getProperty(securityPrefixName + "file"));
+//		keystore.load(fIn, securityProperties.getProperty(securityPrefixName + "password").toCharArray());
+//
+//		return keystore;
+//	}
 
-	}
-
-	public static KeyStore getKeyStore() throws FileNotFoundException, IOException, KeyStoreException,
-			NoSuchAlgorithmException, CertificateException {
-		KeyStore keystore = KeyStore.getInstance(securityProperties.getProperty(securityPrefixName + "type"));
-		InputStream fIn = Commons.class.getClassLoader().getResourceAsStream(securityProperties.getProperty(securityPrefixName + "file"));
-		keystore.load(fIn, securityProperties.getProperty(securityPrefixName + "password").toCharArray());
-
-		return keystore;
-	}
-
-	public static String getCertificatePassword() throws FileNotFoundException, IOException, KeyStoreException,
-			NoSuchAlgorithmException, CertificateException {
-		return securityProperties.getProperty("certificate.password");
-	}
-
-	public static String getCetificateAlias() throws FileNotFoundException, IOException {
-		return securityProperties.getProperty("certificate.alias");
-	}
+//	public static String getCertificatePassword() throws FileNotFoundException, IOException, KeyStoreException,
+//			NoSuchAlgorithmException, CertificateException {
+//		return securityProperties.getProperty("certificate.password");
+//	}
+//
+//	public static String getCetificateAlias() throws FileNotFoundException, IOException {
+//		return securityProperties.getProperty("certificate.alias");
+//	}
 
 	public static JSONObject safeGetJSONObject(JSONObject object, String key) throws APIException {
 		if (object.optJSONObject(key) == null)
@@ -131,6 +124,12 @@ public class Commons {
 		if (!object.has(key))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
 		return object.optInt(key);
+	}
+	
+	public static long safeGetLong(JSONObject object, String key) throws APIException {
+		if (!object.has(key))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+		return object.optLong(key);
 	}
 
 	public static String getFilenamePrefix(CFEDefType cfe)
@@ -321,5 +320,7 @@ public class Commons {
 		return Play.application().configuration().getString(Constants.RUC_DGI + "." + environment, "219999830019");
 		
 	}
+
+	
 
 }
