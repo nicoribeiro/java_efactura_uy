@@ -530,6 +530,12 @@ public class RecepcionServiceImpl implements RecepcionService {
 			if (sobre.getIdReceptor() == null)
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("idReceptor");
 
+			/*
+			 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
+			 * parametros a los Interceptors
+			 */
+			InterceptorContextHolder.setEmpresa(sobre.getEmpresaEmisora());
+			
 			Data result = consultaResultadoSobre(sobre.getToken(), sobre.getIdReceptor());
 
 			sobre.setResultado_dgi(result.getXmlData());
@@ -567,6 +573,11 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 		} catch (Exception e) {
 			throw APIException.raise(e);
+		}finally{
+			/*
+			 * Borramos el contexto
+			 */
+			InterceptorContextHolder.clear();
 		}
 
 	}
