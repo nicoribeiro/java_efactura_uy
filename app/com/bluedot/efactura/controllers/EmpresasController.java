@@ -293,7 +293,8 @@ public class EmpresasController extends AbstractController {
 					firmaDigital.setValidaHasta(certificate.getNotAfter());
 					firmaDigital.setValidaDesde(certificate.getNotBefore());
 					
-					empresa.getFirmaDigital().delete();
+					if (empresa.getFirmaDigital()!=null)
+						empresa.getFirmaDigital().delete();
 					
 					firmaDigital.setEmpresa(empresa);
 					firmaDigital.save();
