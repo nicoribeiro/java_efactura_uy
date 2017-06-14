@@ -257,7 +257,7 @@ public class CFE extends Model<CFE>{
 	}
 
 	
-	public static CFE findById(Empresa empresa, TipoDoc tipo, String serie, long nro, boolean throwExceptionWhenMissing) throws APIException
+	public static List<CFE> findById(Empresa empresa, TipoDoc tipo, String serie, long nro, boolean throwExceptionWhenMissing) throws APIException
 	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 		
@@ -272,8 +272,30 @@ public class CFE extends Model<CFE>{
 							Restrictions.eq("nro", nro)
 					));
 		
-		CFE cfe =  q.findUnique();
-		if (cfe == null && throwExceptionWhenMissing)
+		List<CFE> cfe =  q.findList();
+		if ((cfe == null || cfe.size()==0)&& throwExceptionWhenMissing)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO.withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro));
+		return cfe;
+	}
+	
+	public static List<CFE> findById(Empresa empresa, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, boolean throwExceptionWhenMissing) throws APIException
+	{
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+		
+			
+			q.getCriteria().createAlias("empresaEmisora", "empresa", JoinType.LEFT_OUTER_JOIN);
+			
+			q.getCriteria().add(Restrictions.and
+					
+					(		Restrictions.eq("empresa.id", empresa.getId()), 
+							Restrictions.eq("tipo",tipo), 
+							Restrictions.eq("serie", serie), 
+							Restrictions.eq("nro", nro),
+							Restrictions.eq("estado", estado)
+					));
+		
+		List<CFE> cfe =  q.findList();
+		if ((cfe == null || cfe.size()==0)&& throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO.withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro));
 		return cfe;
 	}

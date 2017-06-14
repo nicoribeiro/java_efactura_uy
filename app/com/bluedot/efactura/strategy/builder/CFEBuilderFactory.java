@@ -6,6 +6,8 @@ import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.TipoDoc;
 
+import dgi.classes.entreEmpresas.CFEEmpresasType;
+
 public class CFEBuilderFactory {
 
 	
@@ -23,6 +25,29 @@ public class CFEBuilderFactory {
 		return getInterface(cfe.getTipo(), strategy, caeMicroController);
 		
 	}
+	
+	public static CFEBuiderInterface getCFEBuilder(CFEEmpresasType cfe) throws APIException {
+		
+		TipoDoc tipoDoc = null;
+		
+		if (cfe.getCFE().getEFact()!=null)
+			tipoDoc = TipoDoc.fromInt(cfe.getCFE().getEFact().getEncabezado().getIdDoc().getTipoCFE().intValue());
+		
+		if (cfe.getCFE().getERem()!=null)
+			tipoDoc = TipoDoc.fromInt(cfe.getCFE().getERem().getEncabezado().getIdDoc().getTipoCFE().intValue());
+		
+		if (cfe.getCFE().getEResg()!=null)
+			tipoDoc = TipoDoc.fromInt(cfe.getCFE().getEResg().getEncabezado().getIdDoc().getTipoCFE().intValue());
+		
+		if (cfe.getCFE().getETck()!=null)
+			tipoDoc = TipoDoc.fromInt(cfe.getCFE().getETck().getEncabezado().getIdDoc().getTipoCFE().intValue());
+		
+		CFEStrategy strategy = (new CFEStrategy.Builder()).withTipo(tipoDoc).build();
+		
+		return getInterface(tipoDoc, strategy, null);
+		
+	}
+
 	
 	private static CFEBuiderInterface getInterface(TipoDoc tipoDoc, CFEStrategy strategy,
 			CAEMicroController caeMicroController) throws APIException{
@@ -74,5 +99,5 @@ public class CFEBuilderFactory {
 		
 		return null;
 	}
-	
+
 }

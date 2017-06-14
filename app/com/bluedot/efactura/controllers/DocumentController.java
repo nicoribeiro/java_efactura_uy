@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -39,6 +40,7 @@ import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
+import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import io.swagger.annotations.Api;
 import play.Play;
 import play.libs.F.Promise;
@@ -58,7 +60,7 @@ public class DocumentController extends AbstractController {
 
 	private static ExecutorService executor = Executors.newFixedThreadPool(5);
 	
-	private static Runnable runner = new NotificationManager(60l * 1000l /* * 60l * 24l */);
+	private static Runnable runner = new NotificationManager(60l * 1000l * 60l * 24l);
 	
 	public DocumentController(){
 		
@@ -101,22 +103,22 @@ public class DocumentController extends AbstractController {
 		if (!document.has("Encabezado"))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Encabezado"));
 
-		if (!document.getJSONObject("Encabezado").has("Identificacion"))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Identificacion"));
+		if (!document.getJSONObject("Encabezado").has("IdDoc"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("IdDoc"));
 
-		if (!document.getJSONObject("Encabezado").getJSONObject("Identificacion").has("tipo"))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("tipo"));
+		if (!document.getJSONObject("Encabezado").getJSONObject("IdDoc").has("TipoCFE"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("TipoCFE"));
 
-		if (!document.getJSONObject("Encabezado").getJSONObject("Identificacion").has("id"))
+		if (!document.getJSONObject("Encabezado").getJSONObject("IdDoc").has("id"))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("id"));
 
 		TipoDoc tipo = TipoDoc
-				.fromInt(document.getJSONObject("Encabezado").getJSONObject("Identificacion").getInt("tipo"));
+				.fromInt(document.getJSONObject("Encabezado").getJSONObject("IdDoc").getInt("TipoCFE"));
 
 		if (tipo == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("tipo"));
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoCFE"));
 
-		String id = document.getJSONObject("Encabezado").getJSONObject("Identificacion").getString("id");
+		String id = document.getJSONObject("Encabezado").getJSONObject("IdDoc").getString("id");
 
 		CFE cfe = CFE.findByGeneradorId(empresa, id);
 
@@ -127,16 +129,15 @@ public class DocumentController extends AbstractController {
 		case eFactura:
 		case eTicket:
 		case eResguardo:
-			cfe = factory.getCFEMicroController(empresa).create(tipo, document);
+			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
 			break;
 		case Nota_de_Credito_de_eFactura:
 		case Nota_de_Credito_de_eTicket:
 		case Nota_de_Debito_de_eFactura:
 		case Nota_de_Debito_de_eTicket:
-			if (!document.getJSONObject("Encabezado").has("Referencia"))
+			if (!document.has("Referencia"))
 				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Referencia"));
-			cfe = factory.getCFEMicroController(empresa).create(tipo, document,
-					document.getJSONObject("Encabezado").getJSONObject("Referencia"));
+			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
 			break;
 
 		case eFactura_Contingencia:
@@ -212,8 +213,13 @@ public class DocumentController extends AbstractController {
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
 
+		if (cfes.size()>1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+		
+		CFE cfe = cfes.get(0);
+		
 		JSONObject error = null;
 
 		try {
@@ -248,8 +254,13 @@ public class DocumentController extends AbstractController {
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
 
+		if (cfes.size()>1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+		
+		CFE cfe = cfes.get(0);
+		
 		factory.getServiceMicroController(empresa).anularDocumento(cfe);
 
 		return json(OK);
@@ -282,8 +293,13 @@ public class DocumentController extends AbstractController {
 		if (tipo == null)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoDoc", idTipoDoc));
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
 
+		if (cfes.size()>1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+		
+		CFE cfe = cfes.get(0);
+		
 		JSONObject error = null;
 
 		try {
@@ -317,8 +333,13 @@ public class DocumentController extends AbstractController {
 		if (tipo == null)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoDoc", idTipoDoc));
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
 
+		if (cfes.size()>1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+		
+		CFE cfe = cfes.get(0); 
+			
 		JSONObject error = null;
 
 		try {
@@ -411,8 +432,13 @@ public class DocumentController extends AbstractController {
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
 
+		if (cfes.size()>1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+		
+		CFE cfe = cfes.get(0);
+		
 		try {
 			File pdf = generarPDF(empresa, cfe);
 

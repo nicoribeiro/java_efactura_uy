@@ -15,7 +15,6 @@ public interface CFEMicroController
 	 * @return un nuevo CFE con los datos del objecto JSON
 	 * @throws APIException cuando hay un error
 	 */
-	public CFE create(TipoDoc tipo, JSONObject jsonObject) throws APIException;
-	public CFE create(TipoDoc tipo, JSONObject jsonObject, JSONObject referencia) throws APIException;
+	public CFE create(TipoDoc tipo, JSONObject jsonObject, boolean esCfeEmitido) throws APIException;
 	
 }

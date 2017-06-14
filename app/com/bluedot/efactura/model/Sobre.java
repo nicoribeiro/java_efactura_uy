@@ -22,10 +22,13 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
+import org.hibernate.criterion.Restrictions;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.utils.XML;
+import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
@@ -149,6 +152,23 @@ public class Sobre extends Model<Sobre> {
 	@Transient
 	ACKSobredefType ackSobredefType;
 	
+	/** 
+	 * 
+	 * Email de referencia. Tipicamente es una lista de un solo elemento, 
+	 * pero como pueden haber retransmisiones o procesamientos duplicados del mismo 
+	 * sobre se modela como lista  
+	 * 
+	 * SobreEmitido:
+	 * 
+	 * Es es ack de la empresa
+	 * 
+	 * SobreRecibido:
+	 * 
+	 * Es el email en el que vino el sobre
+	 */
+	@OneToMany
+	private List<EmailMessage> emails;
+	
 	public Sobre() {
 		super();
 	}
@@ -175,6 +195,14 @@ public class Sobre extends Model<Sobre> {
 		if (sobre == null && throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.SOBRE_NO_ENCONTRADO.withParams("id", id));
 		return sobre;
+	}
+	
+	public static List<Sobre> findByNombre(String name) {
+		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query();
+		
+		q.getCriteria().add(Restrictions.eq("nombreArchivo", name));
+		
+		return q.findList();
 	}
 
 	public long getId() {
@@ -308,6 +336,17 @@ public class Sobre extends Model<Sobre> {
 
 	public void setAckSobredefType(ACKSobredefType ackSobredefType) {
 		this.ackSobredefType = ackSobredefType;
+	}
+
+	public List<EmailMessage> getEmails() {
+		if (emails==null)
+			emails = new LinkedList<EmailMessage>();
+
+		return emails;
+	}
+
+	public void setEmails(List<EmailMessage> emails) {
+		this.emails = emails;
 	}
 	
 }

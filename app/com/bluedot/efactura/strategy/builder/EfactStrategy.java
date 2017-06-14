@@ -192,16 +192,15 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 		if (ciudadRecep ==null)
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("ciudadRecep"));
 		
-		if (deptoRecep ==null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("deptoRecep"));
-		
 		receptor.setTipoDocRecep(tipoDocRecep.getId());
 		receptor.setCodPaisRecep(codPaisRecep);
 		receptor.setDocRecep(docRecep);
 		receptor.setDirRecep(dirRecep);
 		receptor.setRznSocRecep(rznSocRecep);
 		receptor.setCiudadRecep(ciudadRecep);
-		receptor.setDeptoRecep(deptoRecep);
+		
+		if (deptoRecep != null)
+			receptor.setDeptoRecep(deptoRecep);
 		
 		cfe.setEmpresaReceptora(getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep));
 		

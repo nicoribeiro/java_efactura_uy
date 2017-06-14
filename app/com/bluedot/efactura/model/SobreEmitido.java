@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.Entity;
+import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
@@ -13,6 +14,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.utils.XML;
 import com.play4jpa.jpa.models.DefaultQuery;
 
@@ -60,7 +62,7 @@ public class SobreEmitido extends Sobre{
 	
 	@Transient
 	private boolean reenvio = false;
-
+	
 	public SobreEmitido() {
 		super();
 	}
@@ -166,6 +168,5 @@ public class SobreEmitido extends Sobre{
 
 	public void setReenvio(boolean reenvio) {
 		this.reenvio = reenvio;
-	}
-	
+	}	
 }

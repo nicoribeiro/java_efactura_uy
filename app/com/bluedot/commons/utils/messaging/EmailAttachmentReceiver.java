@@ -1,4 +1,4 @@
-package com.bluedot.commons.utils;
+package com.bluedot.commons.utils.messaging;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -21,14 +21,13 @@ import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.NoSuchProviderException;
 import javax.mail.Part;
-import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.MimeBodyPart;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.sun.mail.pop3.POP3Message;
+import com.sun.mail.imap.IMAPMessage;
 
 
 
@@ -53,25 +52,39 @@ public class EmailAttachmentReceiver {
  
     /**
      * Downloads new messages and saves attachments to disk if any.
+     * @param protocol imap or pop3
      * @param host
      * @param port
      * @param userName
      * @param password
      */
-    public List<Email> downloadEmail(String host, int port,
-            String userName, String password) {
+    public List<Email> downloadEmail(String protocol, String host, String port,
+            String userName, String password, int start, int end) {
         
+    	
+    	/*
+    	 * Port 110 - this is the default POP3 non-encrypted port
+    	 * Port 995 - this is the port you need to use if you want to connect using POP3 securely
+    	 * 
+    	 * Port 143 - this is the default IMAP non-encrypted port
+    	 * Port 993 - this is the port you need to use if you want to connect using IMAP securely
+    	 * 
+    	 * Port 25 - this is the default SMTP non-encrypted port
+    	 * Port 465 - this is the port used, if you want to send messages using SMTP securely
+    	 */
+    	
     	final String usernameFinal = userName;
 
 		final String passwordFinal = password;
     	
     	List<Email> emails = new LinkedList<Email>();
     	
-    	Properties properties = new Properties();
+    	Properties properties = EmailReceiver.getServerProperties(protocol, host, port, true);
  
+    	 Session session = Session.getInstance(properties);
+    	
         // server setting
-        properties.put("mail.pop3.host", host);
-        properties.put("mail.pop3.port", port);
+    	
  
         // SSL setting
 //        properties.setProperty("mail.pop3.socketFactory.class","javax.net.ssl.SSLSocketFactory");
@@ -81,14 +94,14 @@ public class EmailAttachmentReceiver {
        
         
      // Get the default Session object.
-     		Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
-     			protected PasswordAuthentication getPasswordAuthentication()
-     			{
-     				return new PasswordAuthentication(usernameFinal, passwordFinal);
-     			}
-     		});
+//     		Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
+//     			protected PasswordAuthentication getPasswordAuthentication()
+//     			{
+//     				return new PasswordAuthentication(usernameFinal, passwordFinal);
+//     			}
+//     		});
      		
-            // session.setDebug(true);
+//            session.setDebug(true);
         
      		 try {
 				String packageName="javax.mail.internet.";
@@ -105,7 +118,7 @@ public class EmailAttachmentReceiver {
      		
         try {
             // connects to the message store
-            Store store = session.getStore("pop3");
+            Store store = session.getStore(protocol);
             store.connect(userName, password);
  
             // opens the inbox folder
@@ -113,11 +126,19 @@ public class EmailAttachmentReceiver {
             folderInbox.open(Folder.READ_ONLY);
  
             // fetches new messages from server
-            Message[] arrayMessages = folderInbox.getMessages();
+            Message[] arrayMessages = folderInbox.getMessages(start, end);
            
+            
+            
             for (int i = 0; i < arrayMessages.length; i++) {
-            	POP3Message message = (POP3Message)arrayMessages[i];
-                Address[] fromAddress = message.getFrom();
+            	IMAPMessage message = (IMAPMessage)arrayMessages[i];
+                
+            	
+            	
+            	
+            	
+            	
+            	Address[] fromAddress = message.getFrom();
                 String from="";
                 if (fromAddress !=null && fromAddress.length > 0)
                 	from = fromAddress[0].toString();
@@ -130,7 +151,7 @@ public class EmailAttachmentReceiver {
                 // store attachment file name, separated by comma
                 String attachFiles = "";
  
-                Email email = new Email(from,subject,sentDate,messageContent);
+                Email email = new Email(message.getMessageID(), from, subject, sentDate, messageContent);
                 
 //                List<File> attachments = getAttachments(message);
                 
@@ -148,7 +169,11 @@ public class EmailAttachmentReceiver {
                             part.getDataHandler().writeTo(bos);
 
                             String decodedContent = bos.toString();
-                            	email.getAttachments().put(fileName, decodedContent);
+                            Attachment attachment = new Attachment();
+                            attachment.setAttachmentType(AttachmentType.TEXT);
+                            attachment.setPayload(decodedContent);
+                            attachment.setName(fileName);
+                            email.getAttachments().add(attachment);
                             
 //                            part.saveFile(saveDirectory + File.separator + fileName);
                         } else {
@@ -175,11 +200,11 @@ public class EmailAttachmentReceiver {
  
                 // print out details of each message
                 System.out.println("Message #" + (i + 1) + ":");
-                System.out.println("\t From: " + from);
-                System.out.println("\t Subject: " + subject);
-                System.out.println("\t Sent Date: " + sentDate);
-                System.out.println("\t Message: " + messageContent);
-                System.out.println("\t Attachments: " + attachFiles);
+//                System.out.println("\t From: " + from);
+//                System.out.println("\t Subject: " + subject);
+//                System.out.println("\t Sent Date: " + sentDate);
+//                System.out.println("\t Message: " + messageContent);
+//                System.out.println("\t Attachments: " + attachFiles);
                 
             }
  
@@ -204,7 +229,7 @@ public class EmailAttachmentReceiver {
      */
     public static void main(String[] args) {
         String host = "pop.gmail.com";
-        int port = 995;
+        String port = "995";
         String userName = "your_email";
         String password = "your_password";
  
@@ -212,7 +237,7 @@ public class EmailAttachmentReceiver {
  
         EmailAttachmentReceiver receiver = new EmailAttachmentReceiver();
         receiver.setSaveDirectory(saveDirectory);
-        receiver.downloadEmail(host, port, userName, password);
+        receiver.downloadEmail("pop3", host, port, userName, password, 1, 10);
  
     }
     

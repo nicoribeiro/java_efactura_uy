@@ -28,6 +28,7 @@ import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FormaDePago;
 import com.bluedot.efactura.model.IVA;
 import com.bluedot.efactura.model.IndicadorFacturacion;
+import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.TipoDocumento;
 
 import dgi.classes.recepcion.Emisor;
@@ -43,6 +44,9 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	protected CFEStrategy strategy;
 	protected CAEMicroController caeMicroController;
 
+	public static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	
+	
 	public CFEBuilderImpl(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
 		this.caeMicroController = caeMicroController;
 		this.strategy = strategy;
@@ -71,7 +75,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 			item.setCantidad(new BigDecimal(Commons.safeGetString(itemJson,"Cantidad")));
 
 			item.setUniMed(Commons.safeGetString(itemJson,"UniMed"));
-
+ 
 			item.setPrecioUnitario(new BigDecimal(Commons.safeGetString(itemJson,"PrecioUnitario")));
 
 			if (!itemJson.has("MontoItem"))
@@ -313,15 +317,29 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	}
 
 	@Override
-	public void buildIdDoc(boolean montosIncluyenIva, int formaPago) throws APIException {
+	public void buildIdDoc(boolean montosIncluyenIva, int formaPago, JSONObject idDocJson) throws APIException {
+		
+		if (idDocJson.has("Nro"))
+			strategy.getCFE().setNro(idDocJson.getLong("Nro"));
+		if (idDocJson.has("Serie"))
+			strategy.getCFE().setSerie(idDocJson.getString("Serie"));
+		
 		strategy.getCFE().setFormaDePago(FormaDePago.fromInt(formaPago));
 		strategy.getCFE().setIndMontoBruto(montosIncluyenIva);
-		strategy.getCFE().setCae(caeMicroController.getCAE(strategy.getCFE().getTipo()));
+		try {
+			if (idDocJson.has("FchEmis"))
+				strategy.getCFE().setFecha(simpleDateFormat.parse(idDocJson.getString("FchEmis")));
+			else
+				strategy.getCFE().setFecha(new Date());
+		} catch (JSONException | ParseException e) {
+			throw APIException.raise(e);
+		}
 	}
 
 	@Override
 	public void buildCAEData() throws APIException {
 		strategy.setCAEData();
+		strategy.getCFE().setCae(caeMicroController.getCAE(strategy.getCFE().getTipo()));
 	}
 
 	@Override
@@ -342,15 +360,41 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 
 		strategy.getCFE().setEmpresaEmisora(empresaEmisora);
 	}
+	
+	@Override
+	public void buildEmisor(JSONObject emisorJson) throws APIException {
+		Emisor emisor = strategy.getEmisor();
+		
+		emisor.setRUCEmisor(Commons.safeGetString(emisorJson, "RUCEmisor"));
+
+		emisor.setRznSoc(Commons.safeGetString(emisorJson, "RznSoc"));
+
+		emisor.setCdgDGISucur(new BigInteger(Commons.safeGetString(emisorJson, "CdgDGISucur")));
+
+		emisor.setDomFiscal(Commons.safeGetString(emisorJson, "DomFiscal"));
+
+		emisor.setCiudad(Commons.safeGetString(emisorJson, "Ciudad"));
+
+		emisor.setDepartamento(Commons.safeGetString(emisorJson, "Departamento"));
+
+		Empresa empresaEmisora = Empresa.findByRUT(Commons.safeGetString(emisorJson, "RUCEmisor"));
+		
+		strategy.getCFE().setEmpresaEmisora(empresaEmisora);
+		
+	}
 
 	@Override
-	public void buildReferencia(Empresa empresaEmisora, JSONObject referenciaJSON) throws APIException {
+	public void buildReferencia(Empresa empresaEmisora, JSONArray referenciasJSON) throws APIException {
 
 		try {
 			if (strategy.getCFE().isObligatorioReferencia()) {
 
+				for (int i = 0; i< referenciasJSON.length(); i++ ) {
+					
+					JSONObject referenciaJSON = referenciasJSON.getJSONObject(i);
+				
 				if (referenciaJSON == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("referencia"));
+					throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Referencia"));
 
 				ReferenciaTipo referenciaType = strategy.getReferenciaTipo();
 
@@ -360,10 +404,10 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 				 * Campo Opcional
 				 */
 				if (referenciaJSON.has("FechaCFEref")) {
-					SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd");
-					Date parsedDate = new SimpleDateFormat("yyyyMMdd").parse(referenciaJSON.getString("FechaCFEref"));
-					referencia.setFechaCFEref(
-							DatatypeFactory.newInstance().newXMLGregorianCalendar(outputFormat.format(parsedDate)));
+					Date parsedDate = simpleDateFormat.parse(referenciaJSON.getString("FechaCFEref"));
+					GregorianCalendar cal = new GregorianCalendar();
+					cal.setTime(parsedDate);
+					referencia.setFechaCFEref(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 				}
 
 				/*
@@ -374,43 +418,47 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 				 * 
 				 * Se debe explicitar el motivo en "Razón Referencia" (C6)
 				 */
-				String generadorId = Commons.safeGetString(referenciaJSON, "NroRef");
-				CFE cfeReferencia = CFE.findByGeneradorId(empresaEmisora, generadorId);
-
-				if (cfeReferencia == null) {
+				if (referenciaJSON.has("IndGlobal") && referenciaJSON.getInt("IndGlobal")==1){
 					referencia.setIndGlobal(new BigInteger("1"));
 					referencia.setRazonRef(Commons.safeGetString(referenciaJSON, "RazonRef"));
 					strategy.getCFE().setRazonReferencia(Commons.safeGetString(referenciaJSON, "RazonRef"));
 				} else {
-					referencia.setNroCFERef(new BigInteger(String.valueOf(cfeReferencia.getNro())));
-					referencia.setSerie(cfeReferencia.getSerie());
-					referencia.setTpoDocRef(new BigInteger(String.valueOf(cfeReferencia.getTipo().value)));
-					strategy.getCFE().setReferencia(cfeReferencia);
+					referencia.setNroCFERef(new BigInteger(Commons.safeGetString(referenciaJSON, "NroCFERef")));
+					referencia.setSerie(Commons.safeGetString(referenciaJSON,"Serie"));
+					referencia.setTpoDocRef(new BigInteger(Commons.safeGetString(referenciaJSON,"TpoDocRef")));
+					referencia.setNroLinRef(Commons.safeGetInteger(referenciaJSON, "NroLinRef"));
+					
+					List<CFE> cfes = CFE.findById(empresaEmisora, TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef")), Commons.safeGetString(referenciaJSON,"Serie"), Commons.safeGetLong(referenciaJSON, "NroCFERef"), false);
+					
+					if (cfes.size()>1)
+						throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+					
+					if (cfes.size()==1){
+						CFE cfeReferencia = cfes.get(0);
+						strategy.getCFE().setReferencia(cfeReferencia);
+					}
 				}
-
-				referencia.setNroLinRef(1);
+				referencia.setNroLinRef(Commons.safeGetInteger(referenciaJSON, "NroLinRef"));
+				
 
 				referenciaType.getReferencias().add(referencia);
+				}
 			}
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (DatatypeConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} catch (JSONException | ParseException | DatatypeConfigurationException e) {
+			throw APIException.raise(e);
+		} 
 	}
 
 	@Override
-	public void buildTimestampFirma() throws APIException {
+	public void buildTimestampFirma(Long timestamp) throws APIException {
 		try {
+			
 			GregorianCalendar cal = new GregorianCalendar();
+			if (timestamp!=null)
+				cal.setTime(new Date(timestamp));
 			XMLGregorianCalendar xmlCal = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
 			strategy.setTimestampFirma(xmlCal);
-			strategy.getCFE().setFecha(cal.getTime());
+				
 		} catch (DatatypeConfigurationException e) {
 			throw APIException.raise(e);
 		}

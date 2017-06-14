@@ -8,17 +8,14 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
-import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.TipoDocumento;
-import com.bluedot.efactura.model.Titular;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.wrappers.IdDocInterface;
 import dgi.classes.recepcion.wrappers.ItemInterface;
-import dgi.classes.recepcion.wrappers.ReceptorInterface;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 
 public interface CFEStrategy {
@@ -47,7 +44,7 @@ public interface CFEStrategy {
 			this.cfe = cfe;
 			return this;
 		}
-
+		
 		public CFEStrategy build() throws APIException {
 			if (cfe==null){
 				cfe = new CFE();
@@ -112,6 +109,8 @@ public interface CFEStrategy {
 			return null;
 
 		}
+
+		
 
 	}
 

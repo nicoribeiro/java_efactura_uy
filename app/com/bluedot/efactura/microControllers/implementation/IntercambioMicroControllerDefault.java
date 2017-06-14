@@ -1,4 +1,4 @@
-package com.bluedot.efactura.services.impl;
+package com.bluedot.efactura.microControllers.implementation;
 
 import java.math.BigInteger;
 import java.util.Date;
@@ -12,16 +12,29 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
+import com.bluedot.efactura.microControllers.interfaces.IntercambioMicroController;
+import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
+import com.bluedot.efactura.model.MotivoRechazoCFE;
 import com.bluedot.efactura.model.MotivoRechazoSobre;
 import com.bluedot.efactura.model.SobreRecibido;
-import com.bluedot.efactura.services.IntercambioService;
+import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
+import com.bluedot.efactura.services.ConsultasService;
+import com.bluedot.efactura.services.RecepcionService;
+import com.bluedot.efactura.strategy.builder.CFEBuilderFactory;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
@@ -36,8 +49,17 @@ import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 import dgi.classes.respuestas.sobre.ParamConsultaType;
 import dgi.classes.respuestas.sobre.RechazoSobreType;
 
-public class IntercambioServiceImpl implements IntercambioService {
+public class IntercambioMicroControllerDefault implements IntercambioMicroController {
 
+	final static Logger logger = LoggerFactory.getLogger(IntercambioMicroControllerDefault.class);
+	
+	private CFEMicroController cfeMicroController;
+
+	public IntercambioMicroControllerDefault(CFEMicroController cfeMicroController) {
+		this.cfeMicroController = cfeMicroController;
+	}
+	
+	
 	@Override
 	public ACKSobredefType procesarSobre(Empresa empresa, SobreRecibido sobreRecibido) throws APIException {
 		
@@ -91,13 +113,17 @@ public class IntercambioServiceImpl implements IntercambioService {
 				 * 
 				 * S07 Sobre enviado supera el tamaño máximo admitido
 				 * 
+				 * S08 Ya existe sobre con el mismo idEmisor
+				 * 
 				 */
 
 				/*
 				 * Controlo que no exista el sobre en mi sistema (para evitar envios dobles)
 				 */
 				List<SobreRecibido> sobres = SobreRecibido.findSobreRecibido(envioCFEEntreEmpresas.getCaratula().getIdemisor().longValue(), sobreRecibido.getEmpresaEmisora(),sobreRecibido.getEmpresaReceptora());
-				// 1 porque el sobre actual ya fue persistido
+				/*
+				 * S08
+				 */
 				if (sobres.size()>1){
 					RechazoSobreType rechazo = new RechazoSobreType();
 					rechazo.setMotivo(MotivoRechazoSobre.S08.name());
@@ -193,8 +219,8 @@ public class IntercambioServiceImpl implements IntercambioService {
 					 */
 					int i = 1;
 					for (Iterator<CFEEmpresasType> iterator = envioCFEEntreEmpresas.getCFEAdendas().iterator(); iterator.hasNext();) {
-						CFEEmpresasType cfe = iterator.next();
-						procesarCFE(cfe, ackcfEdefType, new BigInteger(String.valueOf(i)));
+						CFEEmpresasType cfeEmpresasTypee = iterator.next();
+						procesarCFE(cfeEmpresasTypee, ackcfEdefType, new BigInteger(String.valueOf(i)));
 						i++;
 					}
 					
@@ -218,11 +244,31 @@ public class IntercambioServiceImpl implements IntercambioService {
 		//TODO si los servicios son la capa superior nunca deberian tirar exepciones distintas de APIException
 	}
 
-	private void procesarCFE(CFEEmpresasType cfe, ACKCFEdefType ackcfEdefType, BigInteger ordinal) {
-		ACKCFEDet ack = new ACKCFEDet();
-		ack.setNroOrdinal(ordinal);
+	private void procesarCFE(CFEEmpresasType cfeEmpresasType, ACKCFEdefType ackcfEdefType, BigInteger ordinal) throws APIException {
 		
 		/*
+		 * Serializo el CFEEmpresasType a JSONObject
+		 */
+		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFEEmpresasTypeSerializer().objectToJson(cfeEmpresasType);
+		logger.debug("cfeJson: " + cfeJson.toString());
+		
+		TipoDoc tipoDoc = TipoDoc.fromInt(cfeJson.getJSONObject("Encabezado").getJSONObject("IdDoc").getInt("TipoCFE"));
+		
+		/*
+		 * Creo un CFE de mi modelo
+		 */
+ 		CFE cfe = cfeMicroController.create(tipoDoc, cfeJson, false);
+ 		
+		
+ 		/*
+ 		 * Por defecto se acepta, luego en los controles se cambia de estado si corresponde
+ 		 */
+ 		cfe.setEstado(EstadoACKCFEType.AE);
+ 		RechazoCFEDGIType rechazo = null;
+ 		
+		
+ 		
+ 		/*
 		 * CONTROLES CFE
 		 * 
 		 * E02 Tipo y No de CFE ya existe en los registros
@@ -236,83 +282,88 @@ public class IntercambioServiceImpl implements IntercambioService {
 		 * E07 Fecha Firma de CFE no se corresponde con fecha CAE
 		 */
 		
+		/*
+		 * E02
+		 */
+ 		List<CFE> cfes = CFE.findById(cfe.getEmpresaEmisora(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(), EstadoACKCFEType.AE, false);
+
+ 		if (cfes.size()>1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+ 		
+ 		if (cfes.size()==1){
+	 		rechazo = new RechazoCFEDGIType();
+			rechazo.setMotivo("E02");
+			rechazo.setGlosa("Tipo y No de CFE ya existe en los registros");
+			cfe.getMotivo().add(MotivoRechazoCFE.E02);
+			cfe.setEstado(EstadoACKCFEType.BE);
+ 		}
+ 		
+ 		//TODO estos controles
+ 		/*
+		 * E03
+		 */
+ 		
+ 		/*
+		 * E04
+		 */
+ 		
+ 		/*
+		 * E05
+		 */
+ 		
+ 		/*
+		 * E07
+		 */
 		
-		if (cfe.getCFE().getEFact()!=null){
-			ack.setNroCFE(cfe.getCFE().getEFact().getEncabezado().getIdDoc().getNro());
-			ack.setSerie(cfe.getCFE().getEFact().getEncabezado().getIdDoc().getSerie());
-			ack.setFechaCFE(cfe.getCFE().getEFact().getEncabezado().getIdDoc().getFchEmis());
-			ack.setTipoCFE(cfe.getCFE().getEFact().getEncabezado().getIdDoc().getTipoCFE());
-			ack.setTmstCFE(cfe.getCFE().getEFact().getTmstFirma());
-		}
+		/*
+		 * Genero la respuesta
+		 */
+		ACKCFEDet respuestaCFE = buildAck(ordinal, tipoDoc, cfe, rechazo);
+		ackcfEdefType.getACKCFEDet().add(respuestaCFE);
 		
-		if (cfe.getCFE().getERem()!=null){
-			ack.setNroCFE(cfe.getCFE().getERem().getEncabezado().getIdDoc().getNro());
-			ack.setSerie(cfe.getCFE().getERem().getEncabezado().getIdDoc().getSerie());
-			ack.setFechaCFE(cfe.getCFE().getERem().getEncabezado().getIdDoc().getFchEmis());
-			ack.setTipoCFE(cfe.getCFE().getERem().getEncabezado().getIdDoc().getTipoCFE());
-			ack.setTmstCFE(cfe.getCFE().getERem().getTmstFirma());
-		}
-		
-		if (cfe.getCFE().getEResg()!=null){
-			ack.setNroCFE(cfe.getCFE().getEResg().getEncabezado().getIdDoc().getNro());
-			ack.setSerie(cfe.getCFE().getEResg().getEncabezado().getIdDoc().getSerie());
-			ack.setFechaCFE(cfe.getCFE().getEResg().getEncabezado().getIdDoc().getFchEmis());
-			ack.setTipoCFE(cfe.getCFE().getEResg().getEncabezado().getIdDoc().getTipoCFE());
-			ack.setTmstCFE(cfe.getCFE().getEResg().getTmstFirma());
-		}
-		
-		if (cfe.getCFE().getETck()!=null){
-			ack.setNroCFE(cfe.getCFE().getETck().getEncabezado().getIdDoc().getNro());
-			ack.setSerie(cfe.getCFE().getETck().getEncabezado().getIdDoc().getSerie());
-			ack.setFechaCFE(cfe.getCFE().getETck().getEncabezado().getIdDoc().getFchEmis());
-			ack.setTipoCFE(cfe.getCFE().getETck().getEncabezado().getIdDoc().getTipoCFE());
-			ack.setTmstCFE(cfe.getCFE().getETck().getTmstFirma());
-		}
-		
-		//TODO faltan cfe.getCFE().getEFactExp() y cfe.getCFE().getERemExp()
-		
-		//TODO no se hacen chequeos ninguno, siempre se acepta. Hacer los chequeos 
-		//TODO esta HARCODED A MORIR!!!!!!
-		int nro = ack.getNroCFE().intValue();
-		EstadoACKCFEType estado;
-		RechazoCFEDGIType rechazo = new RechazoCFEDGIType();
-		switch (nro) {
-		case 2:
-			estado = EstadoACKCFEType.BE;
-			rechazo.setMotivo("E05");
-			rechazo.setGlosa("Tipo y No de CFE no se corresponden con el CAE");
-			ack.getMotivosRechazoCF().add(rechazo);
-			break;
-		case 4:
-			estado = EstadoACKCFEType.BE;
-			rechazo.setMotivo("E05");
-			rechazo.setGlosa("Tipo y No de CFE no se corresponden con el CAE");
-			ack.getMotivosRechazoCF().add(rechazo);
-			break;
-		case 6:
-			estado = EstadoACKCFEType.BE;
-			rechazo.setMotivo("E05");
-			rechazo.setGlosa("Tipo y No de CFE no se corresponden con el CAE");
-			ack.getMotivosRechazoCF().add(rechazo);
-			break;
-		case 8:
-			estado = EstadoACKCFEType.BE;
-			rechazo.setMotivo("E05");
-			rechazo.setGlosa("Tipo y No de CFE no se corresponden con el CAE");
-			ack.getMotivosRechazoCF().add(rechazo);
-			break;
-		default:
-			estado = EstadoACKCFEType.AE;
-			break;
-		}
-		ack.setEstado(estado);
-		addResultado(estado, ackcfEdefType);
+		/*
+		 * Registro el resultado
+		 */
+		sumarizarResultado(cfe.getEstado(), ackcfEdefType);
 		
 		
-		ackcfEdefType.getACKCFEDet().add(ack);
+		cfe.save();
 	}
 
-	private void addResultado(EstadoACKCFEType estado, ACKCFEdefType ackcfEdefType) {
+
+	/**
+	 * @param ordinal
+	 * @param tipoDoc
+	 * @param cfe
+	 * @return
+	 * @throws APIException 
+	 * @throws DatatypeConfigurationException
+	 */
+	private ACKCFEDet buildAck(BigInteger ordinal, TipoDoc tipoDoc, CFE cfe, RechazoCFEDGIType rechazo) throws APIException {
+		ACKCFEDet ack = new ACKCFEDet();
+		ack.setNroOrdinal(ordinal);
+		ack.setNroCFE(new BigInteger(String.valueOf(cfe.getNro())));
+		ack.setSerie(cfe.getSerie());
+		
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.setTime(cfe.getFecha());
+		try {
+			ack.setFechaCFE(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
+		} catch (DatatypeConfigurationException e) {
+			throw APIException.raise(e);
+		}
+		
+		ack.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
+
+		if (rechazo!=null)
+			ack.getMotivosRechazoCF().add(rechazo);
+		
+		ack.setEstado(cfe.getEstado());
+		
+		return ack;
+	}
+
+	private void sumarizarResultado(EstadoACKCFEType estado, ACKCFEdefType ackcfEdefType) {
 		
 		ackcfEdefType.getCaratula().setCantenSobre(ackcfEdefType.getCaratula().getCantenSobre().add(new BigInteger("1")));
 		ackcfEdefType.getCaratula().setCantResponden(ackcfEdefType.getCaratula().getCantResponden().add(new BigInteger("1")));

@@ -13,7 +13,7 @@ public enum IndicadorFacturacion {
 
 	INDICADOR_FACTURACION_IVA_OTRA_TASA(4, true),
 
-	INDICADOR_FACTURACION_ENTREGA_GRATUITA(5),
+	INDICADOR_FACTURACION_ENTREGA_GRATUITA(5, true),
 
 	/*
 	 * 4.10. ¿Cómo se documentan las cobranzas de terceros? (01/12/2011) Las

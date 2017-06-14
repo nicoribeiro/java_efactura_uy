@@ -11,12 +11,15 @@ import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.utils.DateHandler;
-import com.bluedot.commons.utils.Email;
-import com.bluedot.commons.utils.EmailAttachmentReceiver;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
+import com.bluedot.commons.utils.messaging.Attachment;
+import com.bluedot.commons.utils.messaging.Email;
+import com.bluedot.commons.utils.messaging.EmailAttachmentReceiver;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.microControllers.interfaces.IntercambioMicroController;
 import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
@@ -25,9 +28,7 @@ import com.bluedot.efactura.model.Sobre;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.services.ConsultasService;
-import com.bluedot.efactura.services.IntercambioService;
 import com.bluedot.efactura.services.RecepcionService;
-import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
 import com.bluedot.efactura.strategy.builder.CFEBuiderInterface;
 import com.bluedot.efactura.strategy.builder.CFEBuilderFactory;
 
@@ -46,12 +47,14 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	private RecepcionService recepcionService;
 	private CAEMicroController caeMicroController;
 	private ConsultasService consultasService;
+	private IntercambioMicroController intercambioMicroController;
 
-	public ServiceMicroControllerDefault(RecepcionService recepcionService, Empresa empresa, CAEMicroController caeMicroController, ConsultasService consultasService) {
+	public ServiceMicroControllerDefault(RecepcionService recepcionService, Empresa empresa, CAEMicroController caeMicroController, ConsultasService consultasService, IntercambioMicroController intercambioMicroController) {
 		super(empresa);
 		this.recepcionService = recepcionService;
 		this.caeMicroController = caeMicroController;
 		this.consultasService = consultasService;
+		this.intercambioMicroController = intercambioMicroController;
 	}	
 
 	@Override
@@ -146,65 +149,92 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		
 		
 	}
-	
+	/**
+	 * Hay 3 tipos de correos que pueden llegar a ser validos
+	 * 
+	 * 1 - Respuesta a un sobre con CFE emitidos por una empresa manejada por este sistema. 
+	 * 2 - Respuesta a la recepcion de un SobreEmitido
+	 * 3 - Un sobre con CFE emitidos por otra empresa hacia una empresa manejada por el sistema.
+	 */
 	@Override
 	public void getDocumentosEntrantes() throws APIException {
 		//TODO terminar
 		// TODO mutex
 
-		IntercambioService service = new IntercambioServiceImpl();
-
 		EmailAttachmentReceiver receiver = new EmailAttachmentReceiver();
-		List<Email> emails = receiver.downloadEmail(empresa.getHostRecepcion(),
-				110, empresa.getUserRecepcion(),
-				empresa.getPassRecepcion());
-
+		
+		for (int i = 1; i < 5000; i=i+100) {
+			List<Email> emails = receiver.downloadEmail("imap", empresa.getHostRecepcion(),
+					empresa.getPuertoRecepcion(), empresa.getUserRecepcion(),
+					empresa.getPassRecepcion(),i, i+99);
+			procesarEmails(emails);
+		}
+		
+		
+		
+	}
+	
+	private void procesarEmails(List<Email> emails) throws APIException {
+	
 		for (Email email : emails)
 
 		{
-			for (String attachmentName : email.getAttachments().keySet()) {
+			/*
+			 * Convierto El datatype Email a un Email del modelo
+			 */
+			EmailMessage emailModel = new EmailMessage(email);
+			
+			if (EmailMessage.findByMessageId(emailModel.getMessageId()).size()>0){
+				logger.info("Este Email ya fue procesado messageId:" + emailModel.getMessageId());
+				continue;
+			}
+			
+			emailModel.save();
+			
+			for (Attachment attachment : email.getAttachments()) {
 				try {
-					String attachment = email.getAttachments().get(attachmentName);
-
-					logger.info("Procesando Adjunto: " + attachmentName);
 					
-					Document document = XML.loadXMLFromString(attachment);
+					logger.info("Procesando Adjunto: " + attachment.getName());
+					
+					Document document = XML.loadXMLFromString(attachment.getPayload());
+					
+					logger.debug("Attachment: " + attachment.getPayload());
 					
 					/*
-					 * Es la respuesta de los CFE dentro de un SobreEmitido (respuesta de aceptacion)
+					 * 1 - Es la respuesta de los CFE dentro de un SobreEmitido (respuesta de aceptacion)
 					 */
-					if (attachmentName.substring(0, 3).equalsIgnoreCase("ME_")){
+					if (attachment.getName().substring(0, 3).equalsIgnoreCase("ME_")){
 						ACKCFEdefType ackCFEdefType = (ACKCFEdefType) XML.unMarshall(document,
 								ACKCFEdefType.class);
 						Sobre sobre = SobreEmitido.findById(ackCFEdefType.getCaratula().getIDEmisor().longValue(), true);
 						
 						if (sobre instanceof SobreEmitido){
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
-							sobreEmitido.setResultado_empresa(attachment);
+							sobreEmitido.setResultado_empresa(attachment.getPayload());
 							sobreEmitido.update();
 						}
 					}
 					
 					/*
-					 * Es una respuesta a la recepcion de un SobreEmitido (respuesta de recepcion)
+					 * 2 - Es una respuesta a la recepcion de un SobreEmitido (respuesta de recepcion)
 					 */
-					if (attachmentName.substring(0, 2).equalsIgnoreCase("M_")){
+					if (attachment.getName().substring(0, 2).equalsIgnoreCase("M_")){
 						ACKSobredefType ackSobredefType = (ACKSobredefType) XML.unMarshall(document,
 								ACKSobredefType.class);
 						Sobre sobre = SobreEmitido.findById(ackSobredefType.getCaratula().getIDEmisor().longValue(), true);
 						
 						if (sobre instanceof SobreEmitido){
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
-							sobreEmitido.setRespuesta_empresa(attachment);
+							sobreEmitido.setRespuesta_empresa(attachment.getPayload());
 							sobreEmitido.update();
 						}
 						
 					}
 					
 					/*
-					 * Es un sobre con CFE adentro
+					 * 3 - Es un sobre con CFE adentro
 					 */
-					if (attachmentName.substring(0, 3).equalsIgnoreCase("Sob")){
+					if (attachment.getName().substring(0, 3).equalsIgnoreCase("Sob")){
 
 						EnvioCFEEntreEmpresas envioCFEEntreEmpresas = (EnvioCFEEntreEmpresas) XML.unMarshall(document,
 								EnvioCFEEntreEmpresas.class);
@@ -215,36 +245,55 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						if (empresaReceptoraCandidata.getId() != empresa.getId())
 							break;
 
-						/*
-						 * Create el SobreRecibido
-						 */
-						SobreRecibido sobreRecibido = new SobreRecibido();
-						sobreRecibido.setEmpresaReceptora(empresa);
-						Empresa empresaEmisora = Empresa.findByRUT(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
-						if (empresaEmisora == null) {
-							empresaEmisora = new Empresa(envioCFEEntreEmpresas.getCaratula().getRUCEmisor(), null, null, null, null, null, 0);
-							empresaEmisora.save();
+						List<Sobre> sobres = SobreRecibido.findByNombre(attachment.getName());
+						
+						SobreRecibido sobreRecibido=null;
+						
+						if (sobres.size()>0 && sobres.get(0) instanceof SobreRecibido)
+							sobreRecibido = (SobreRecibido) sobres.get(0);
+						
+						if (sobreRecibido==null){
+							/*
+							 * Create el SobreRecibido
+							 */
+							sobreRecibido = new SobreRecibido();
+							sobreRecibido.setEmpresaReceptora(empresa);
+							Empresa empresaEmisora = Empresa.findByRUT(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
+							if (empresaEmisora == null) {
+								empresaEmisora = new Empresa(envioCFEEntreEmpresas.getCaratula().getRUCEmisor(), null, null, null, null, null, 0);
+								empresaEmisora.save();
+							}
+							sobreRecibido.setEmpresaEmisora(empresaEmisora);
+							sobreRecibido.setEnvioCFEEntreEmpresas(envioCFEEntreEmpresas);
+							sobreRecibido.setNombreArchivo(attachment.getName());
+							sobreRecibido.setXmlEmpresa(attachment.getPayload());
+							sobreRecibido.save();
+							sobreRecibido.getEmails().add(emailModel);
+							ThreadMan.forceTransactionFlush();
+
+							/*
+							 * PROCESO SOBRE
+							 */
+							intercambioMicroController.procesarSobre(empresa, sobreRecibido);
+							sobreRecibido.update();
+							ThreadMan.forceTransactionFlush();
+
+							/*
+							 * PROCESO CFE DENTRO DE SOBRE
+							 */
+							if (sobreRecibido.getEstado()==EstadoACKSobreType.AS){
+								intercambioMicroController.procesarCFESobre(empresa, sobreRecibido);
+								sobreRecibido.update();
+								ThreadMan.forceTransactionFlush();
+							}
+
+						}else{
+							sobreRecibido.getEmails().add(emailModel);
+							sobreRecibido.update();
+							ThreadMan.forceTransactionFlush();
 						}
-						sobreRecibido.setEmpresaEmisora(empresaEmisora);
-						sobreRecibido.setEnvioCFEEntreEmpresas(envioCFEEntreEmpresas);
-						sobreRecibido.setNombreArchivo(attachmentName);
-						sobreRecibido.setXmlEmpresa(attachment);
-						sobreRecibido.save();
-						ThreadMan.forceTransactionFlush();
-
-						/*
-						 * PROCESO SOBRE
-						 */
-						service.procesarSobre(empresa, sobreRecibido);
-						sobreRecibido.update();
-						ThreadMan.forceTransactionFlush();
-
-						/*
-						 * PROCESO CFE DENTRO DE SOBRE
-						 */
-						service.procesarCFESobre(empresa, sobreRecibido);
-						sobreRecibido.update();
-						ThreadMan.forceTransactionFlush();
+						
+						
 					}
 					
 					

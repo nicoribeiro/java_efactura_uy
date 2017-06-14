@@ -19,8 +19,9 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.XML;
-import com.bluedot.efactura.services.IntercambioService;
-import com.bluedot.efactura.services.impl.IntercambioServiceImpl;
+import com.bluedot.efactura.microControllers.implementation.CFEMicroControllerDefault;
+import com.bluedot.efactura.microControllers.implementation.IntercambioMicroControllerDefault;
+import com.bluedot.efactura.microControllers.interfaces.IntercambioMicroController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.istack.logging.Logger;
 
@@ -52,7 +53,7 @@ public class HomologacionController_Intercambio extends AbstractController {
 			
 			String path = jsonObject.getString("path");
 			
-			IntercambioService service = new IntercambioServiceImpl();
+//			IntercambioMicroController service = new IntercambioMicroControllerDefault(new CFEMicroControllerDefault(modo, empresa, caeMicroController));
 			
 			Document document = XML.readDocument(path);
 			

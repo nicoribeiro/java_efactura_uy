@@ -15,17 +15,19 @@ public interface CFEBuiderInterface {
 
 	void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws APIException;
 
-	void buildIdDoc(boolean montosIncluyenIva, int formaPago) throws APIException;
+	void buildIdDoc(boolean montosIncluyenIva, int formaPago, JSONObject idDocJson) throws APIException;
 
 	void asignarId() throws APIException;
 	
 	void buildCAEData() throws APIException;
 
 	void buildEmisor(Empresa empresaEmisora) throws APIException;
+	
+	void buildEmisor(JSONObject emisorJson) throws APIException;
 
-	void buildReferencia(Empresa empresaEmisora, JSONObject referencia) throws APIException;
+	void buildReferencia(Empresa empresaEmisora, JSONArray referencia) throws APIException;
 
-	void buildTimestampFirma() throws APIException;
+	void buildTimestampFirma(Long timestamp) throws APIException;
 
 	CFE getCFE();
 

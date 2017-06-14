@@ -80,7 +80,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create EResg object from json description
 				 */
-				CFE eResguardo = factory.getCFEMicroController(empresa).create(TipoDoc.eResguardo, resguardo);
+				CFE eResguardo = factory.getCFEMicroController(empresa).create(TipoDoc.eResguardo, resguardo, true);
 				eResguardos[i] = eResguardo.getEresguardo();
 
 			}
@@ -120,7 +120,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create Efact object from json description
 				 */
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura,factura);
+				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura,factura, true);
 				eFacturas[i] = eFactura.getEfactura();
 
 			}
@@ -137,13 +137,13 @@ public class TestingController extends PruebasController {
 				JSONObject notaCredito = new JSONObject();
 				notaCredito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON));
 				notaCredito.put("Detalle", detalleJSON);
-
+				
 				JSONObject referencia = getReferencia(eFacturas[i]);
-
+				notaCredito.put("Referencia", referencia);
 				/*
 				 * Create Nota de credito object from json description
 				 */
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, referencia);
+				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, true);
 				eFacturas_credito[i] = eFactura.getEfactura();
 
 			}
@@ -162,10 +162,11 @@ public class TestingController extends PruebasController {
 				notaDebito.put("Detalle", detalleJSON);
 
 				JSONObject referencia = getReferencia(eFacturas[i]);
+				notaDebito.put("Referencia", referencia);
 				/*
 				 * Create Nota de debito object from json description
 				 */
-				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, referencia);
+				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, true);
 				eFacturas_debito[i] = eFactura.getEfactura();
 
 			}
@@ -214,7 +215,7 @@ public class TestingController extends PruebasController {
 				/*
 				 * Create ETck object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket, ticket);
+				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket, ticket, true);
 				eTickets[i] = eTicket.getEticket();
 
 			}
@@ -233,11 +234,11 @@ public class TestingController extends PruebasController {
 				notaCredito.put("Detalle", detalleJSON);
 
 				JSONObject referencia = getReferencia(eTickets[i]);
-
+				notaCredito.put("Referencia", referencia);
 				/*
 				 * Create Nota de credito object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eTicket,notaCredito, referencia);
+				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eTicket,notaCredito, true);
 				eTickets_credito[i] = eTicket.getEticket();
 
 			}
@@ -256,10 +257,11 @@ public class TestingController extends PruebasController {
 				notaDebito.put("Detalle", detalleJSON);
 
 				JSONObject referencia = getReferencia(eTickets[i]);
+				notaDebito.put("Referencia", referencia);
 				/*
 				 * Create Nota de debito object from json description
 				 */
-				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eTicket,notaDebito, referencia);
+				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eTicket,notaDebito, true);
 				etickets_debito[i] = eTicket.getEticket();;
 
 			}

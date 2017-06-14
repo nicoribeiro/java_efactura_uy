@@ -6,10 +6,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
+import com.bluedot.commons.security.EmailMessage;
 import com.play4jpa.jpa.models.DefaultQuery;
 @Entity
 public class SobreRecibido extends Sobre{
@@ -33,7 +36,6 @@ public class SobreRecibido extends Sobre{
 	 * Fecha en que se procesa el sobre
 	 */
 	private Date timestampProcesado;
-	
 	
 	public SobreRecibido() {
 		super();
@@ -71,7 +73,7 @@ public class SobreRecibido extends Sobre{
 		
 		return sobresRecibidos;
 	}
-
+	
 	public long getIdEmisor() {
 		return idEmisor;
 	}
@@ -99,5 +101,9 @@ public class SobreRecibido extends Sobre{
 
 	public void setTimestampProcesado(Date timestampProcesado) {
 		this.timestampProcesado = timestampProcesado;
+	}
+
+	public void setIdEmisor(Long idEmisor) {
+		this.idEmisor = idEmisor;
 	}
 }

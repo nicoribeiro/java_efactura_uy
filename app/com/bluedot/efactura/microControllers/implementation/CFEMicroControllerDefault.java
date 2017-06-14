@@ -1,9 +1,9 @@
 package com.bluedot.efactura.microControllers.implementation;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.MODO_SISTEMA;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
@@ -26,20 +26,29 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		this.caeMicroController = caeMicroController;
 	}
 
-	private CFE buildTemplate(JSONObject docJSON, CFEBuiderInterface cfeBuilder, JSONObject referencia)
-			throws APIException {
+	public CFE create(TipoDoc tipo, JSONObject docJSON, boolean esCfeEmitido) throws APIException {
 		
-		cfeBuilder.buildTimestampFirma();
+		 CFEBuiderInterface cfeBuilder = CFEBuilderFactory.getCFEBuilder(getTipoDoc(modo, tipo), caeMicroController);
+		
+		/*
+		 * Timestamp Firma
+		 */
+		cfeBuilder.buildTimestampFirma(docJSON.has("TmstFirma") ? docJSON.getLong("TmstFirma") : null);
 
+		/*
+		 * Adenda
+		 */
+		cfeBuilder.getCFE().setAdenda(docJSON.has("Adenda") ? docJSON.get("Adenda") instanceof JSONArray ? docJSON.getJSONArray("Adenda").toString(): docJSON.getString("Adenda") : null);
+		
 		/*
 		 * Encabezado
 		 */
 		JSONObject encabezadoJSON = Commons.safeGetJSONObject(docJSON,"Encabezado");
 
-		int MntBruto = Commons.safeGetInteger(encabezadoJSON, "MntBruto");
+		int MntBruto = Commons.safeGetInteger(Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"), "MntBruto");
 		boolean montosIncluyenIva = (MntBruto==1); 
 				
-		int formaPago = Commons.safeGetInteger(encabezadoJSON, "FmaPago");
+		int formaPago = Commons.safeGetInteger(Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"), "FmaPago");
 		
 		/*
 		 * Detalle (lineas de factura)
@@ -49,7 +58,11 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Emisor (dentro de encabezado)
 		 */
-		cfeBuilder.buildEmisor(empresa);
+		if (encabezadoJSON.has("Emisor"))
+			cfeBuilder.buildEmisor(Commons.safeGetJSONObject(encabezadoJSON, "Emisor"));
+		else
+			cfeBuilder.buildEmisor(empresa);
+			
 		
 		/*
 		 * Totales (dentro de encabezado)
@@ -64,17 +77,18 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * IdDoc (dentro de encabezado)
 		 */
-		cfeBuilder.buildIdDoc(montosIncluyenIva, formaPago);
+		cfeBuilder.buildIdDoc(montosIncluyenIva, formaPago, Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"));
 		
 		/*
 		 * Referencia
 		 */
-		cfeBuilder.buildReferencia(empresa, referencia);
+		cfeBuilder.buildReferencia(empresa, docJSON.has("Referencia") ?  Commons.safeGetJSONArray(docJSON,"Referencia") : null);
 
 		/*
 		 * CAEData
 		 */
-		cfeBuilder.buildCAEData();
+		if (esCfeEmitido)
+			cfeBuilder.buildCAEData();
 		
 		/*
 		 * JSON Generador
@@ -84,27 +98,14 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * ID Generador
 		 */
-		if (Commons.safeGetJSONObject(encabezadoJSON,"Identificacion").has("id"))
-  			cfeBuilder.getCFE().setGeneradorId(Commons.safeGetJSONObject(encabezadoJSON,"Identificacion").getString("id"));
+		if (Commons.safeGetJSONObject(encabezadoJSON,"IdDoc").has("id"))
+  			cfeBuilder.getCFE().setGeneradorId(Commons.safeGetJSONObject(encabezadoJSON,"IdDoc").getString("id"));
 		
 		return cfeBuilder.getCFE();
 	}
 
-	@Override
-	public CFE create(TipoDoc tipo, JSONObject factura) throws APIException {
-		return buildTemplate(factura, CFEBuilderFactory.getCFEBuilder(getTipoDoc(modo, tipo), caeMicroController), null);
-	}
+	
 
-
-	@Override
-	public CFE create(TipoDoc tipo, JSONObject jsonObject, JSONObject referencia) throws APIException {
-		if (referencia == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Referencia"));
-
-		return buildTemplate(jsonObject, CFEBuilderFactory.getCFEBuilder(getTipoDoc(modo, tipo), caeMicroController),
-				referencia);
-
-	}
 
 	public static TipoDoc getTipoDoc(MODO_SISTEMA modo, TipoDoc tipo){
 		if (modo==MODO_SISTEMA.NORMAL && tipo.value<200)
