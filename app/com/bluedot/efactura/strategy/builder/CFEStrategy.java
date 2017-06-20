@@ -75,6 +75,10 @@ public interface CFEStrategy {
 			case eResguardo_Contingencia:
 				return new EResguardoStrategy(cfe, caeMicroController);
 
+			case eRemito:
+			case eRemito_Contingencia:
+				return new ERemitoStrategy(cfe, caeMicroController);
+				
 			case Nota_de_Credito_de_eFactura_Exportacion:
 			case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
 			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
@@ -96,8 +100,6 @@ public interface CFEStrategy {
 			case eFactura_Venta_por_Cuenta_Ajena:
 			case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 
-			case eRemito:
-			case eRemito_Contingencia:
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
 

@@ -23,11 +23,6 @@ public class SobreRecibido extends Sobre{
 	private static final long serialVersionUID = -2509429294768242581L;
 	
 	/**
-	 * Id que le otorga el emisor al sobre
-	 */
-	private Long idEmisor;
-	
-	/**
 	 * Fecha recibido por el sistema de correo
 	 */
 	private Date timestampRecibido;
@@ -57,7 +52,8 @@ public class SobreRecibido extends Sobre{
 		q.getCriteria().add(Restrictions.and
 
 				(		Restrictions.eq("empresaEmisora.id", empresaEmisora.getId()),
-						Restrictions.eq("empresaReceptora.id", empresaReceptora.getId())
+						Restrictions.eq("empresaReceptora.id", empresaReceptora.getId()),
+						Restrictions.eq("idEmisor", idEmisor)
 						));
 
 		
@@ -67,22 +63,13 @@ public class SobreRecibido extends Sobre{
 		
 		for (Iterator<Sobre> iterator = sobres.iterator(); iterator.hasNext();) {
 			Sobre sobre = iterator.next();
-			if (sobre instanceof SobreRecibido && ((SobreRecibido)sobre).getIdEmisor()==idEmisor)
+			if (sobre instanceof SobreRecibido)
 				 sobresRecibidos.add((SobreRecibido) sobre);
 		}
 		
 		return sobresRecibidos;
 	}
 	
-	public long getIdEmisor() {
-		return idEmisor;
-	}
-
-
-	public void setIdEmisor(long idEmisor) {
-		this.idEmisor = idEmisor;
-	}
-
 
 	public Date getTimestampRecibido() {
 		return timestampRecibido;
@@ -103,7 +90,4 @@ public class SobreRecibido extends Sobre{
 		this.timestampProcesado = timestampProcesado;
 	}
 
-	public void setIdEmisor(Long idEmisor) {
-		this.idEmisor = idEmisor;
-	}
 }

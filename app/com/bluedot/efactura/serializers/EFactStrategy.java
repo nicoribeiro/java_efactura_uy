@@ -105,6 +105,8 @@ public class EFactStrategy implements CFEEmpresasStrategy {
 			item.put("UniMed", itemDetFact.getUniMed()==null || itemDetFact.getUniMed().equals("") ? "N/A" : itemDetFact.getUniMed());
 			item.put("PrecioUnitario", String.valueOf(itemDetFact.getPrecioUnitario()));
 			item.put("MontoItem", String.valueOf(itemDetFact.getMontoItem()));
+			item.put("DscItem", String.valueOf(itemDetFact.getDscItem()));
+			
 			
 			//TODO soportar mas de un CodItem
 			if (itemDetFact.getCodItems()!=null &&  itemDetFact.getCodItems().size()>0){ 

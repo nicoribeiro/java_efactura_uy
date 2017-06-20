@@ -18,34 +18,34 @@ import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.TipoDocumento;
 
 import dgi.classes.recepcion.CAEDataType;
-import dgi.classes.recepcion.CFEDefType.EResg;
-import dgi.classes.recepcion.CFEDefType.EResg.Detalle;
-import dgi.classes.recepcion.CFEDefType.EResg.Encabezado;
+import dgi.classes.recepcion.CFEDefType.ERem;
+import dgi.classes.recepcion.CFEDefType.ERem.Detalle;
+import dgi.classes.recepcion.CFEDefType.ERem.Encabezado;
+import dgi.classes.recepcion.CFEDefType.ERem.Encabezado.Totales;
 import dgi.classes.recepcion.Emisor;
-import dgi.classes.recepcion.IdDocResg;
-import dgi.classes.recepcion.ItemResg;
-import dgi.classes.recepcion.ReceptorResg;
+import dgi.classes.recepcion.IdDocRem;
+import dgi.classes.recepcion.ItemRem;
+import dgi.classes.recepcion.ReceptorRem;
 import dgi.classes.recepcion.ReferenciaTipo;
-import dgi.classes.recepcion.TotalesResg;
 import dgi.classes.recepcion.wrappers.IdDocInterface;
-import dgi.classes.recepcion.wrappers.IdDocResgWrapper;
+import dgi.classes.recepcion.wrappers.IdDocRemWrapper;
 import dgi.classes.recepcion.wrappers.ItemInterface;
-import dgi.classes.recepcion.wrappers.ItemResgWrapper;
+import dgi.classes.recepcion.wrappers.ItemRemWrapper;
 import dgi.classes.recepcion.wrappers.ReceptorInterface;
-import dgi.classes.recepcion.wrappers.ReceptorResgWrapper;
+import dgi.classes.recepcion.wrappers.ReceptorRemitoWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
-import dgi.classes.recepcion.wrappers.TotalesResguardoWrrapper;
+import dgi.classes.recepcion.wrappers.TotalesRemitoWrrapper;
 
-public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
+public class ERemitoStrategy extends CommonStrategy implements CFEStrategy {
 
-	public EResguardoStrategy(CFE cfe, CAEMicroController caeMicroController) throws APIException {
+	public ERemitoStrategy(CFE cfe, CAEMicroController caeMicroController) throws APIException {
 		super(cfe, caeMicroController);
-		if (cfe.getEresguardo() == null)
-			this.cfe.setEresguardo(new EResg());
+		if (cfe.getEremito() == null)
+			this.cfe.setEremito(new ERem());
 
 		switch (cfe.getTipo()) {
-		case eResguardo:
-		case eResguardo_Contingencia:
+		case eRemito:
+		case eRemito_Contingencia:
 			break;
 		default:
 			throw APIException.raise(APIErrors.NOT_SUPPORTED)
@@ -63,36 +63,36 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 
 	private ReceptorInterface getReceptor() {
 		if (getEncabezado().getReceptor() == null)
-			getEncabezado().setReceptor(new ReceptorResg());
-		return new ReceptorResgWrapper(getEncabezado().getReceptor());
+			getEncabezado().setReceptor(new ReceptorRem());
+		return new ReceptorRemitoWrapper(getEncabezado().getReceptor());
 	}
 
 	private Encabezado getEncabezado() {
-		if (cfe.getEresguardo().getEncabezado() == null)
-			cfe.getEresguardo().setEncabezado(new Encabezado());
-		return cfe.getEresguardo().getEncabezado();
+		if (cfe.getEremito().getEncabezado() == null)
+			cfe.getEremito().setEncabezado(new Encabezado());
+		return cfe.getEremito().getEncabezado();
 	}
 
 	@Override
 	public TotalesInterface getTotales() {
 		if (getEncabezado().getTotales() == null)
-			getEncabezado().setTotales(new TotalesResg());
-		return new TotalesResguardoWrrapper(getEncabezado().getTotales());
+			getEncabezado().setTotales(new Totales());
+		return new TotalesRemitoWrrapper(getEncabezado().getTotales());
 	}
 
 	@Override
 	public CAEDataType getCAEData() {
-		if (cfe.getEresguardo().getCAEData() == null)
-			cfe.getEresguardo().setCAEData(new CAEDataType());
-		return cfe.getEresguardo().getCAEData();
+		if (cfe.getEremito().getCAEData() == null)
+			cfe.getEremito().setCAEData(new CAEDataType());
+		return cfe.getEremito().getCAEData();
 	}
 
 	@Override
 	public List<ItemInterface> getItem() {
 		ArrayList<ItemInterface> list = new ArrayList<ItemInterface>();
 
-		for (ItemResg itemResg : cfe.getEresguardo().getDetalle().getItems()) {
-			list.add(new ItemResgWrapper(itemResg));
+		for (ItemRem itemRem : cfe.getEremito().getDetalle().getItems()) {
+			list.add(new ItemRemWrapper(itemRem));
 		}
 		return list;
 	}
@@ -100,14 +100,14 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 	@Override
 	public IdDocInterface getIdDoc() {
 		if (getEncabezado().getIdDoc() == null)
-			getEncabezado().setIdDoc(new IdDocResg());
-		return new IdDocResgWrapper(getEncabezado().getIdDoc());
+			getEncabezado().setIdDoc(new IdDocRem());
+		return new IdDocRemWrapper(getEncabezado().getIdDoc());
 	}
 
 	@Override
 	public void setIdDoc() throws APIException {
 		try {
-			IdDocResg idDocResg = caeMicroController.getIdDocResg(cfe.getTipo());
+			IdDocRem idDocResg = caeMicroController.getIdDocRem(cfe.getTipo());
 			getEncabezado().setIdDoc(idDocResg);
 			cfe.setSerie(idDocResg.getSerie());
 			cfe.setNro(idDocResg.getNro().intValue());
@@ -119,7 +119,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 	@Override
 	public void setCAEData() throws APIException {
 		try {
-			cfe.getEresguardo().setCAEData(caeMicroController.getCAEDataType(cfe.getTipo()));
+			cfe.getEremito().setCAEData(caeMicroController.getCAEDataType(cfe.getTipo()));
 		} catch (DatatypeConfigurationException | JSONException | ParseException e) {
 			APIException.raise(e);
 		}
@@ -127,28 +127,28 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 	}
 
 	private Detalle getDetalle() {
-		if (cfe.getEresguardo().getDetalle() == null)
-			cfe.getEresguardo().setDetalle(new Detalle());
-		return cfe.getEresguardo().getDetalle();
+		if (cfe.getEremito().getDetalle() == null)
+			cfe.getEremito().setDetalle(new Detalle());
+		return cfe.getEremito().getDetalle();
 	}
 
 	@Override
 	public ItemInterface createItem() {
-		ItemResg item = new ItemResg();
+		ItemRem item = new ItemRem();
 		getDetalle().getItems().add(item);
-		return new ItemResgWrapper(item);
+		return new ItemRemWrapper(item);
 	}
 
 	@Override
 	public ReferenciaTipo getReferenciaTipo() {
-		if (cfe.getEresguardo().getReferencia() == null)
-			cfe.getEresguardo().setReferencia(new ReferenciaTipo());
-		return cfe.getEresguardo().getReferencia();
+		if (cfe.getEremito().getReferencia() == null)
+			cfe.getEremito().setReferencia(new ReferenciaTipo());
+		return cfe.getEremito().getReferencia();
 	}
 
 	@Override
 	public void setTimestampFirma(XMLGregorianCalendar newXMLGregorianCalendar) {
-		cfe.getEresguardo().setTmstFirma(newXMLGregorianCalendar);
+		cfe.getEremito().setTmstFirma(newXMLGregorianCalendar);
 	}
 
 	@Override

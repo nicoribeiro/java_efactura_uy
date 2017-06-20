@@ -211,10 +211,10 @@ public class ItemDetFactWrapper implements ItemInterface {
 	}
 
 	@Override
-	public void addCodItem(TpoCod tpoCod, String cod) {
+	public void addCodItem(String tpoCod, String cod) {
 		CodItem codItem = new CodItem();
 		codItem.setCod(cod);
-		codItem.setTpoCod(tpoCod.name());
+		codItem.setTpoCod(tpoCod);
 		delegate.getCodItems().add(codItem);
 		
 	}

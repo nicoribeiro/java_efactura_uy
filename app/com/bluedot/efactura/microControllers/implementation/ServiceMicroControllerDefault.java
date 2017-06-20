@@ -101,9 +101,9 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			
 			for (DatosSobre sobre : sobres) {
 				if (sobre.getIdEmisor()==sobreEmitido.getId()){
-					sobreEmitido.setEstado(EstadoACKSobreType.fromValue(sobre.getEstadoSobre()));
+					sobreEmitido.setEstadoDgi(EstadoACKSobreType.fromValue(sobre.getEstadoSobre()));
 					sobreEmitido.setIdReceptor(sobre.getIdReceptor());
-					if (sobreEmitido.getEstado()==EstadoACKSobreType.AS){
+					if (sobreEmitido.getEstadoDgi()==EstadoACKSobreType.AS){
 						sobreEmitido.setToken(sobre.getParamConsulta().getToken());
 						sobreEmitido.setFechaConsulta(sobre.getParamConsulta().getFechahora().toGregorianCalendar().getTime());
 					}
@@ -127,7 +127,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		/*
 		 * El sobre fue rechazado
 		 */
-		if (cfe.getSobre()!=null && cfe.getSobre().getEstado() != null && cfe.getSobre().getEstado()== EstadoACKSobreType.BS)
+		if (cfe.getSobre()!=null && cfe.getSobre().getEstadoDgi() != null && cfe.getSobre().getEstadoDgi()== EstadoACKSobreType.BS)
 			anular = true;
 			
 		/*
@@ -179,16 +179,16 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		for (Email email : emails)
 
 		{
+			
+			if (EmailMessage.findByMessageId(email.getMessageId()).size()>0){
+				logger.info("Este Email ya fue procesado messageId:" + email.getMessageId());
+				continue;
+			}
+			
 			/*
 			 * Convierto El datatype Email a un Email del modelo
 			 */
 			EmailMessage emailModel = new EmailMessage(email);
-			
-			if (EmailMessage.findByMessageId(emailModel.getMessageId()).size()>0){
-				logger.info("Este Email ya fue procesado messageId:" + emailModel.getMessageId());
-				continue;
-			}
-			
 			emailModel.save();
 			
 			for (Attachment attachment : email.getAttachments()) {
@@ -225,6 +225,8 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						
 						if (sobre instanceof SobreEmitido){
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
+							sobreEmitido.setEstadoEmpresa(ackSobredefType.getDetalle().getEstado());
+//							sobreEmitido.setMotivo(ackSobredefType.getDetalle().getMotivosRechazo());
 							sobreEmitido.setRespuesta_empresa(attachment.getPayload());
 							sobreEmitido.update();
 						}
@@ -281,7 +283,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 							/*
 							 * PROCESO CFE DENTRO DE SOBRE
 							 */
-							if (sobreRecibido.getEstado()==EstadoACKSobreType.AS){
+							if (sobreRecibido.getEstadoEmpresa()==EstadoACKSobreType.AS){
 								intercambioMicroController.procesarCFESobre(empresa, sobreRecibido);
 								sobreRecibido.update();
 								ThreadMan.forceTransactionFlush();

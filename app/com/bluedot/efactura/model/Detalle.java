@@ -29,9 +29,13 @@ public class Detalle extends Model<Detalle> {
 	 */
 	private int nroLinea;
 	
+	private String tpoCod;
+	
 	private String codItem;
 
 	private String nombreItem;
+	
+	private String descripcionItem;
 
 	private double cantidad;
 
@@ -190,6 +194,22 @@ public class Detalle extends Model<Detalle> {
 
 	public void setCodItem(String codItem) {
 		this.codItem = codItem;
+	}
+
+	public String getDescripcionItem() {
+		return descripcionItem;
+	}
+
+	public void setDescripcionItem(String descripcionItem) {
+		this.descripcionItem = descripcionItem;
+	}
+
+	public String getTpoCod() {
+		return tpoCod;
+	}
+
+	public void setTpoCod(String tpoCod) {
+		this.tpoCod = tpoCod;
 	}
 
 }

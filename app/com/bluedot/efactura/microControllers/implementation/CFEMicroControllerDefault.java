@@ -45,10 +45,12 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		 */
 		JSONObject encabezadoJSON = Commons.safeGetJSONObject(docJSON,"Encabezado");
 
-		int MntBruto = Commons.safeGetInteger(Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"), "MntBruto");
-		boolean montosIncluyenIva = (MntBruto==1); 
-				
-		int formaPago = Commons.safeGetInteger(Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"), "FmaPago");
+		boolean montosIncluyenIva = false;
+		
+		if (Commons.safeGetJSONObject(encabezadoJSON, "IdDoc").has("MntBruto")){
+			int MntBruto = Commons.safeGetInteger(Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"), "MntBruto");
+			montosIncluyenIva = (MntBruto==1); 
+		}
 		
 		/*
 		 * Detalle (lineas de factura)
@@ -70,14 +72,17 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		cfeBuilder.buildTotales(Commons.safeGetJSONObject(encabezadoJSON,"Totales"), montosIncluyenIva);
 
 		/*
+		 * IdDoc (dentro de encabezado)
+		 */
+		Integer formaPago = null;
+		if (Commons.safeGetJSONObject(encabezadoJSON, "IdDoc").has("FmaPago"))
+			formaPago = Commons.safeGetInteger(Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"), "FmaPago");
+		cfeBuilder.buildIdDoc(montosIncluyenIva, formaPago, Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"));
+		
+		/*
 		 * Receptor (dentro de encabezado)
 		 */
 		cfeBuilder.buildReceptor(Commons.safeGetJSONObject(encabezadoJSON,"Receptor"));
-		
-		/*
-		 * IdDoc (dentro de encabezado)
-		 */
-		cfeBuilder.buildIdDoc(montosIncluyenIva, formaPago, Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"));
 		
 		/*
 		 * Referencia

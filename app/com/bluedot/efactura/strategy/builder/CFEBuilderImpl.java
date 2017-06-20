@@ -75,6 +75,9 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 			item.setCantidad(new BigDecimal(Commons.safeGetString(itemJson,"Cantidad")));
 
 			item.setUniMed(Commons.safeGetString(itemJson,"UniMed"));
+			
+			if (itemJson.has("DscItem") && !itemJson.getString("DscItem").equalsIgnoreCase("null") && !itemJson.getString("DscItem").equalsIgnoreCase(""))
+				item.setDscItem(itemJson.getString("DscItem"));
  
 			item.setPrecioUnitario(new BigDecimal(Commons.safeGetString(itemJson,"PrecioUnitario")));
 
@@ -85,9 +88,18 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 			
 			Detalle detalle = new Detalle(strategy.getCFE(), i,  item.getNomItem(), item.getCantidad().doubleValue(), item.getUniMed(), item.getPrecioUnitario().doubleValue(), item.getMontoItem().doubleValue());
 			
+			if (itemJson.has("DscItem"))
+				detalle.setDescripcionItem(item.getDscItem());
+			
 			if (itemJson.has("CodItem")){
-				item.addCodItem(TpoCod.INT1, itemJson.getString("CodItem"));
+				String tpoCod = TpoCod.INT1.name();
+				if (itemJson.has("TpoCod"))
+					tpoCod = itemJson.getString("TpoCod");
+				
+				item.addCodItem(tpoCod, itemJson.getString("CodItem"));
+				
 				detalle.setCodItem(itemJson.getString("CodItem"));
+				detalle.setTpoCod(tpoCod);
 			}
 			
 			strategy.getCFE().getDetalle().add(detalle);
@@ -317,15 +329,18 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	}
 
 	@Override
-	public void buildIdDoc(boolean montosIncluyenIva, int formaPago, JSONObject idDocJson) throws APIException {
+	public void buildIdDoc(boolean montosIncluyenIva, Integer formaPago, JSONObject idDocJson) throws APIException {
 		
 		if (idDocJson.has("Nro"))
 			strategy.getCFE().setNro(idDocJson.getLong("Nro"));
 		if (idDocJson.has("Serie"))
 			strategy.getCFE().setSerie(idDocJson.getString("Serie"));
 		
-		strategy.getCFE().setFormaDePago(FormaDePago.fromInt(formaPago));
+		if (formaPago!=null)
+			strategy.getCFE().setFormaDePago(FormaDePago.fromInt(formaPago));
+		
 		strategy.getCFE().setIndMontoBruto(montosIncluyenIva);
+		
 		try {
 			if (idDocJson.has("FchEmis"))
 				strategy.getCFE().setFecha(simpleDateFormat.parse(idDocJson.getString("FchEmis")));
@@ -420,8 +435,12 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 				 */
 				if (referenciaJSON.has("IndGlobal") && referenciaJSON.getInt("IndGlobal")==1){
 					referencia.setIndGlobal(new BigInteger("1"));
-					referencia.setRazonRef(Commons.safeGetString(referenciaJSON, "RazonRef"));
-					strategy.getCFE().setRazonReferencia(Commons.safeGetString(referenciaJSON, "RazonRef"));
+					
+					String RazonRef = "";
+					if (referenciaJSON.has("RazonRef"))
+						RazonRef = referenciaJSON.getString("RazonRef");
+					referencia.setRazonRef(RazonRef);
+					strategy.getCFE().setRazonReferencia(RazonRef);
 				} else {
 					referencia.setNroCFERef(new BigInteger(Commons.safeGetString(referenciaJSON, "NroCFERef")));
 					referencia.setSerie(Commons.safeGetString(referenciaJSON,"Serie"));

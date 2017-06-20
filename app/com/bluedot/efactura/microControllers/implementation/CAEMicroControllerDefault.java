@@ -31,6 +31,7 @@ import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
+import dgi.classes.recepcion.IdDocRem;
 import dgi.classes.recepcion.IdDocResg;
 import dgi.classes.recepcion.IdDocTck;
 
@@ -209,6 +210,25 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 
 		return iddoc;
 	}
+	
+	@Override
+	public IdDocRem getIdDocRem(TipoDoc tipoDoc) throws APIException, DatatypeConfigurationException, IOException {
+		IdDocRem iddoc = new IdDocRem();
+
+		CAE cae = caesMap.get(tipoDoc).get(0);
+
+		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
+		iddoc.setSerie(cae.getSerie());
+		iddoc.setNro(new BigInteger(String.valueOf(consumeId(cae))));
+		
+		/*
+		 * Fecha
+		 */
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		iddoc.setFchEmis(date);
+
+		return iddoc;
+	}
 
 
 	@Override
@@ -267,5 +287,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		
 		return Math.floor(((float)usados/totales)*100);
 	}
+
+	
 
 }

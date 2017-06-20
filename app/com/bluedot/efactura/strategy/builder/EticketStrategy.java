@@ -14,10 +14,8 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
-import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.TipoDocumento;
-import com.bluedot.efactura.model.Titular;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType.ETck;

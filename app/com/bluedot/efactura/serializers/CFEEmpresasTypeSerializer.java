@@ -31,13 +31,19 @@ public class CFEEmpresasTypeSerializer<T> extends JSONSerializer<CFEEmpresasType
 					if (cfe.getAdenda() instanceof byte[])
 						cfeJson.put("Adenda", new String((byte[])cfe.getAdenda()));
 					else
-						logger.info("Adenda no es de tipo org.apache.xerces.dom.ElementNSImpl por lo que no se puede serializar");
+						if (cfe.getAdenda() instanceof String)
+							cfeJson.put("Adenda", cfe.getAdenda());
+							else
+								logger.info("Adenda no es de un tipo conocido por lo que no se puede serializar");
 		} catch (TransformerFactoryConfigurationError | TransformerException e) {
 			e.printStackTrace();
 		}
 
 		CFEEmpresasStrategy strategy = getStrategy(cfe);
 
+		if (strategy==null)
+			logger.info("No se pudo obtener Estrategia");
+		
 		cfeJson.put("TmstFirma", strategy.getTimestampFirma(cfe));
 		
 		cfeJson.put("Encabezado", strategy.getEncabezado(cfe));

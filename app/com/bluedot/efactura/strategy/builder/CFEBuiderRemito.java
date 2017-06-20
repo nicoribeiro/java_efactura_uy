@@ -17,17 +17,16 @@ import dgi.classes.recepcion.RetPercResg;
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.recepcion.TotalesResg.RetencPercep;
 import dgi.classes.recepcion.wrappers.ItemInterface;
-import dgi.classes.recepcion.wrappers.ItemResgWrapper;
+import dgi.classes.recepcion.wrappers.ItemRemWrapper;
 import dgi.classes.recepcion.wrappers.RetPercInterface;
 import dgi.classes.recepcion.wrappers.RetPercResgWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 import dgi.classes.recepcion.wrappers.TotalesRetencPercepInterface;
 import dgi.classes.recepcion.wrappers.TotalesRetencPercepResg;
 
-public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInterface {
+public class CFEBuiderRemito extends CFEBuilderImpl implements CFEBuiderInterface {
 
-	
-	public CFEBuiderResguardo(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
+	public CFEBuiderRemito(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
 		super(caeMicroController, strategy);
 	}
 
@@ -35,7 +34,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 	public void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws APIException {
 
 		for (int i = 1; i <= detalleJson.length(); i++) {
-			ItemResgWrapper item = (ItemResgWrapper) strategy.createItem();
+			ItemRemWrapper item = (ItemRemWrapper) strategy.createItem();
 			JSONObject itemJson = detalleJson.getJSONObject(i - 1);
 
 			item.setNroLinDet(i);
@@ -43,7 +42,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 			if (itemJson.has("IndFact"))
 				item.setIndFact(new BigInteger(Commons.safeGetString(itemJson,"IndFact")));
 
-			JSONArray retencionesJSON = Commons.safeGetJSONArray(itemJson,"RetencPercep");
+			JSONArray retencionesJSON = Commons.safeGetJSONArray(itemJson,"Retenciones");
 
 			if (retencionesJSON.length() > 5)
 				throw APIException.raise(APIErrors.MALFORMED_CFE).setDetailMessage(
@@ -138,5 +137,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 		
 		totales.setMntTotRetenido(total);
 	}
+
+	
 
 }

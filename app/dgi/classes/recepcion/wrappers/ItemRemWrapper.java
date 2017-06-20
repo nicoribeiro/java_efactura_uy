@@ -3,20 +3,18 @@ package dgi.classes.recepcion.wrappers;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import dgi.classes.recepcion.ItemDetFact.CodItem;
 import dgi.classes.recepcion.ItemDetFact.SubDescuento;
 import dgi.classes.recepcion.ItemDetFact.SubRecargo;
-import dgi.classes.recepcion.ItemResg;
-import dgi.classes.recepcion.RetPercResg;
+import dgi.classes.recepcion.ItemRem;
 
-public class ItemResgWrapper implements ItemInterface {
+public class ItemRemWrapper implements ItemInterface {
 
-	private ItemResg delegate;
+	private ItemRem delegate;
 
-	public ItemResgWrapper(ItemResg item) {
+	public ItemRemWrapper(ItemRem item) {
 		this.delegate = item;
 	}
 
@@ -87,13 +85,7 @@ public class ItemResgWrapper implements ItemInterface {
 
 	@Override
 	public List<RetPercInterface> getRetencPerceps() {
-		ArrayList<RetPercInterface> list = new ArrayList<RetPercInterface>();
-		for (Iterator<RetPercResg> iterator = delegate.getRetencPerceps().iterator(); iterator.hasNext();) {
-			RetPercResg retPerc = iterator.next();
-			list.add(new RetPercResgWrapper(retPerc));
-		}
-		
-		return list;
+		return null;
 	}
 
 	@Override
@@ -174,10 +166,6 @@ public class ItemResgWrapper implements ItemInterface {
 
 	@Override
 	public void setRetencPerceps(List<RetPercInterface> list) {
-		for (Iterator<RetPercInterface> iterator = list.iterator(); iterator.hasNext();) {
-			RetPercInterface retencion = iterator.next();
-			delegate.getRetencPerceps().add((RetPercResg) retencion.getDelegate());
-		}
 	}
 
 	@Override

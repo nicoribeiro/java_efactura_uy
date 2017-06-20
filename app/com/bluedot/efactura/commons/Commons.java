@@ -115,7 +115,7 @@ public class Commons {
 	}
 	
 	public static String safeGetString(JSONObject object, String key) throws APIException {
-		if (object.optString(key).equals(""))
+		if (!object.has(key))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
 		return object.optString(key);
 	}

@@ -15,7 +15,7 @@ public interface CFEBuiderInterface {
 
 	void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws APIException;
 
-	void buildIdDoc(boolean montosIncluyenIva, int formaPago, JSONObject idDocJson) throws APIException;
+	void buildIdDoc(boolean montosIncluyenIva, Integer formaPago, JSONObject idDocJson) throws APIException;
 
 	void asignarId() throws APIException;
 	

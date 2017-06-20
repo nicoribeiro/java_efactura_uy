@@ -13,6 +13,7 @@ import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
+import dgi.classes.recepcion.IdDocRem;
 import dgi.classes.recepcion.IdDocResg;
 import dgi.classes.recepcion.IdDocTck;
 
@@ -63,11 +64,15 @@ public interface CAEMicroController {
 	IdDocResg getIdDocResg(TipoDoc tipo)
 			throws APIException, DatatypeConfigurationException, IOException;
 
+	/**
+	 * Obtiene un nuevo identificador de Remito
+	 * 
+	 * @return
+	 */
+	IdDocRem getIdDocRem(TipoDoc tipo)
+			throws APIException, DatatypeConfigurationException, IOException;
+	
 	void addCAE(CAE cae) throws APIException;
 
-
-//	public abstract void refreshMap()throws IOException, APIException ;
-
-	
 
 }

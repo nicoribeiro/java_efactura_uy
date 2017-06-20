@@ -419,14 +419,21 @@ public class RecepcionServiceImpl implements RecepcionService {
 			if (ACKSobre == null)
 				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
 
+			try {
+				/*
+				 * Pruebo si se parseo bien la respuesta
+				 */
+				ACKSobre.getDetalle().getEstado();
+			} catch (Throwable e) {
+				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+			}
 			
-
 			switch (ACKSobre.getDetalle().getEstado()) {
 			case AS:
 				
 				sobre.setRespuesta_dgi(response.getXmlData());
 				sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
-				sobre.setEstado(ACKSobre.getDetalle().getEstado());
+				sobre.setEstadoDgi(ACKSobre.getDetalle().getEstado());
 				
 				sobre.setToken(ACKSobre.getDetalle().getParamConsulta().getToken());
 				sobre.setFechaConsulta(
@@ -441,7 +448,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 				else{
 					sobre.setRespuesta_dgi(response.getXmlData());
 					sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
-					sobre.setEstado(ACKSobre.getDetalle().getEstado());
+					sobre.setEstadoDgi(ACKSobre.getDetalle().getEstado());
 				}
 			}
 

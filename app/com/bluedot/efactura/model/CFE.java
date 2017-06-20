@@ -36,6 +36,7 @@ import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
 import dgi.classes.recepcion.CFEDefType.EFact;
+import dgi.classes.recepcion.CFEDefType.ERem;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.TipMonType;
@@ -201,6 +202,9 @@ public class CFE extends Model<CFE>{
 	
 	@Transient
 	private EResg eresguardo;
+	
+	@Transient
+	private ERem eremito;
 	
 	@Type(type="text")
 	private String generadorJson;
@@ -749,6 +753,14 @@ public class CFE extends Model<CFE>{
 
 	public void setAdenda(String adenda) {
 		this.adenda = adenda;
+	}
+
+	public ERem getEremito() {
+		return eremito;
+	}
+
+	public void setEremito(ERem eremito) {
+		this.eremito = eremito;
 	}
 
 }

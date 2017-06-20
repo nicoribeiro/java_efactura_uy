@@ -70,7 +70,11 @@ public class CFEBuilderFactory {
 		case Nota_de_Credito_de_eTicket_Contingencia:
 			return new CFEBuilderImpl(caeMicroController, strategy);
 		case eResguardo:
+		case eResguardo_Contingencia:
 			return new CFEBuiderResguardo(caeMicroController, strategy);
+		case eRemito:
+		case eRemito_Contingencia:
+			return new CFEBuiderRemito(caeMicroController, strategy);
 		case Nota_de_Credito_de_eFactura_Exportacion:
 		case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
 		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
@@ -87,11 +91,8 @@ public class CFEBuilderFactory {
 		case eFactura_Exportacion_Contingencia:
 		case eFactura_Venta_por_Cuenta_Ajena:
 		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-		case eRemito:
-		case eRemito_Contingencia:
 		case eRemito_de_Exportacion:
 		case eRemito_de_Exportacion_Contingencia:
-		case eResguardo_Contingencia:
 		case eTicket_Venta_por_Cuenta_Ajena:
 		case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 			throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage("No existe Builder para tipoDoc:" + tipoDoc.value);

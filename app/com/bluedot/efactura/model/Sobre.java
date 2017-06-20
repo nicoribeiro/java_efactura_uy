@@ -90,12 +90,12 @@ public class Sobre extends Model<Sobre> {
 	 * 
 	 * BS - Sobre Rechazado
 	 * 
-	 * En caso de SobreEmitido este campo es la respuesta inmediata a la llamada del webservice de DGI
+	 * En caso de SobreEmitido este campo es el estado de la respuesta al sobre enviado a la Empresa
 	 * 
-	 * En caso de SobreRecibido este campo es la respuesta que da el sistema cuando lo toma del servidor de correo.
+	 * En caso de SobreRecibido este campo es la respuesta que da el sistema cuando toma el sobre de un correo.
 	 */
 	@Enumerated(EnumType.STRING)
-	private EstadoACKSobreType estado;
+	private EstadoACKSobreType estadoEmpresa;
 	
 	/**
 	 * Si el estado == BS debe existir un motivo de rechazo
@@ -151,6 +151,11 @@ public class Sobre extends Model<Sobre> {
 	
 	@Transient
 	ACKSobredefType ackSobredefType;
+	
+	/**
+	 * Id que le otorga el emisor al sobre
+	 */
+	private Long idEmisor;
 	
 	/** 
 	 * 
@@ -257,12 +262,12 @@ public class Sobre extends Model<Sobre> {
 		this.cfes = cfes;
 	}
 
-	public EstadoACKSobreType getEstado() {
-		return estado;
+	public EstadoACKSobreType getEstadoEmpresa() {
+		return estadoEmpresa;
 	}
 
-	public void setEstado(EstadoACKSobreType estado) {
-		this.estado = estado;
+	public void setEstadoEmpresa(EstadoACKSobreType estado) {
+		this.estadoEmpresa = estado;
 	}
 
 	public MotivoRechazoSobre getMotivo() {
@@ -347,6 +352,14 @@ public class Sobre extends Model<Sobre> {
 
 	public void setEmails(List<EmailMessage> emails) {
 		this.emails = emails;
+	}
+	
+	public Long getIdEmisor() {
+		return idEmisor;
+	}
+
+	public void setIdEmisor(Long idEmisor) {
+		this.idEmisor = idEmisor;
 	}
 	
 }

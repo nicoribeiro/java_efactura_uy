@@ -156,7 +156,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 					/*
 					 * Se acepta el sobre!
 					 */
-					sobreRecibido.setEstado(EstadoACKSobreType.AS);
+					sobreRecibido.setEstadoEmpresa(EstadoACKSobreType.AS);
 					ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.AS);
 					ParamConsultaType params = new ParamConsultaType();
 					params.setFechahora(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
@@ -166,7 +166,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 					/*
 					 * Se rechaza el sobre!
 					 */
-					sobreRecibido.setEstado(EstadoACKSobreType.BS);
+					sobreRecibido.setEstadoEmpresa(EstadoACKSobreType.BS);
 					ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.BS);
 				}
 				

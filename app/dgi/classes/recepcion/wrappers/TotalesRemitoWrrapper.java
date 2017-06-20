@@ -1,42 +1,35 @@
 package dgi.classes.recepcion.wrappers;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
+import dgi.classes.recepcion.CFEDefType.ERem.Encabezado.Totales;
 import dgi.classes.recepcion.TipMonType;
-import dgi.classes.recepcion.TotalesResg;
-import dgi.classes.recepcion.TotalesResg.RetencPercep;
 
-public class TotalesResguardoWrrapper implements TotalesInterface {
+public class TotalesRemitoWrrapper implements TotalesInterface {
 
-	private TotalesResg delegate;
+	private Totales delegate;
 
-	public TotalesResguardoWrrapper(TotalesResg totales) {
+	public TotalesRemitoWrrapper(Totales totales) {
 		this.delegate = totales;
 	}
 
 	@Override
 	public TipMonType getTpoMoneda() {
-		return delegate.getTpoMoneda();
+		return null;
 	}
 
 	@Override
 	public void setTpoMoneda(TipMonType value) {
-		delegate.setTpoMoneda(value);
-
 	}
 
 	@Override
 	public BigDecimal getTpoCambio() {
-		return delegate.getTpoCambio();
+		return null;
 	}
 
 	@Override
 	public void setTpoCambio(BigDecimal value) {
-		delegate.setTpoCambio(value);
-
 	}
 
 	@Override
@@ -166,7 +159,6 @@ public class TotalesResguardoWrrapper implements TotalesInterface {
 
 	@Override
 	public void setMntTotRetenido(BigDecimal value) {
-		delegate.setMntTotRetenido(value);
 	}
 
 	@Override
@@ -181,13 +173,7 @@ public class TotalesResguardoWrrapper implements TotalesInterface {
 
 	@Override
 	public List<TotalesRetencPercepInterface> getRetencPerceps() {
-		ArrayList<TotalesRetencPercepInterface> list = new ArrayList<TotalesRetencPercepInterface>();
-		for (Iterator<RetencPercep> iterator = delegate.getRetencPerceps().iterator(); iterator.hasNext();) {
-			RetencPercep retPerc = iterator.next();
-			list.add(new TotalesRetencPercepResg(retPerc));
-		}
-		
-		return list;
+		return null;
 	}
 
 	@Override
@@ -210,10 +196,6 @@ public class TotalesResguardoWrrapper implements TotalesInterface {
 
 	@Override
 	public void setRetencPercep(List<TotalesRetencPercepInterface> list) {
-		for (Iterator<TotalesRetencPercepInterface> iterator = list.iterator(); iterator.hasNext();) {
-			TotalesRetencPercepInterface retencion = iterator.next();
-			delegate.getRetencPerceps().add((RetencPercep) retencion.getDelegate());
-		}
 	}
 
 }

@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
@@ -20,6 +22,7 @@ import com.play4jpa.jpa.models.DefaultQuery;
 
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.recepcion.EnvioCFE;
+import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 @Entity
 public class SobreEmitido extends Sobre{
 	
@@ -27,6 +30,16 @@ public class SobreEmitido extends Sobre{
 	 * 
 	 */
 	private static final long serialVersionUID = 405831344290550640L;
+	
+	/**
+	 * AS - Sobre Recibido 
+	 * 
+	 * BS - Sobre Rechazado
+	 * 
+	 * Es el estado de la respuesta al sobre enviado a DGI
+	 */
+	@Enumerated(EnumType.STRING)
+	private EstadoACKSobreType estadoDgi;
 	
 	/**
 	 * Es el xml que se envio DGI
@@ -168,5 +181,13 @@ public class SobreEmitido extends Sobre{
 
 	public void setReenvio(boolean reenvio) {
 		this.reenvio = reenvio;
+	}
+
+	public EstadoACKSobreType getEstadoDgi() {
+		return estadoDgi;
+	}
+
+	public void setEstadoDgi(EstadoACKSobreType estadoDGI) {
+		this.estadoDgi = estadoDGI;
 	}	
 }
