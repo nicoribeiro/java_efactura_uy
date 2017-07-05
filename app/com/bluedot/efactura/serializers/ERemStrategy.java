@@ -90,7 +90,8 @@ public class ERemStrategy implements CFEEmpresasStrategy {
 			JSONObject item = new JSONObject();
 			
 			item.put("NroLinDet", String.valueOf(itemRem.getNroLinDet()));
-			item.put("IndFact", String.valueOf(itemRem.getIndFact()));
+			if (itemRem.getIndFact()!=null)
+				item.put("IndFact", String.valueOf(itemRem.getIndFact()));
 			item.put("NomItem", itemRem.getNomItem());
 			item.put("Cantidad", String.valueOf(itemRem.getCantidad()));
 			item.put("UniMed", itemRem.getUniMed()==null || itemRem.getUniMed().equals("") ? "N/A" : itemRem.getUniMed());

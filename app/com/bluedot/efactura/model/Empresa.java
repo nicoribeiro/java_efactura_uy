@@ -65,6 +65,8 @@ public class Empresa extends Model<Empresa>{
 	
 	private String fromEnvio; 
 	
+	private int offsetMail;
+	
 	@Lob
 	private byte[] logo;
 	
@@ -361,5 +363,13 @@ public class Empresa extends Model<Empresa>{
 
 	public void setFirmaDigital(FirmaDigital firmaDigital) {
 		this.firmaDigital = firmaDigital;
+	}
+
+	public int getOffsetMail() {
+		return offsetMail;
+	}
+
+	public void setOffsetMail(int offsetMail) {
+		this.offsetMail = offsetMail;
 	}
 }

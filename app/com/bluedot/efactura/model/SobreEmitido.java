@@ -5,10 +5,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.OneToOne;
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
@@ -16,11 +18,9 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.utils.XML;
 import com.play4jpa.jpa.models.DefaultQuery;
 
-import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.recepcion.EnvioCFE;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 @Entity
@@ -76,13 +76,17 @@ public class SobreEmitido extends Sobre{
 	@Transient
 	private boolean reenvio = false;
 	
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "sobreEmitido", fetch = FetchType.LAZY)
+	private List<CFE> cfes;
+	
 	public SobreEmitido() {
 		super();
 	}
 
 	public SobreEmitido(Empresa empresaEmisora, Empresa empresaReceptora, String nombreArchivo, int cantComprobantes,
 			List<CFE> cfes) {
-		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes, cfes);
+		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes);
+		this.cfes = cfes;
 	}
 	
 	public static List<SobreEmitido> findByEmpresaEmisoraAndDate(Empresa empresaEmisora, Date fecha) throws APIException
@@ -128,7 +132,7 @@ public class SobreEmitido extends Sobre{
 	public void setXmlDgi(String xml) {
 		this.xmlDgi = xml;
 	}
-
+ 
 	public String getRespuesta_dgi() {
 		return respuesta_dgi;
 	}
@@ -189,5 +193,15 @@ public class SobreEmitido extends Sobre{
 
 	public void setEstadoDgi(EstadoACKSobreType estadoDGI) {
 		this.estadoDgi = estadoDGI;
-	}	
+	}
+	
+	public List<CFE> getCfes() {
+		if (cfes==null)
+			cfes = new LinkedList<CFE>();
+		return cfes;
+	}
+
+	public void setCfes(List<CFE> cfes) {
+		this.cfes = cfes;
+	}
 }

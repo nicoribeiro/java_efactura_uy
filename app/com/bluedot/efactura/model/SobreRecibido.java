@@ -5,14 +5,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
-import com.bluedot.commons.security.EmailMessage;
 import com.play4jpa.jpa.models.DefaultQuery;
 @Entity
 public class SobreRecibido extends Sobre{
@@ -32,6 +32,9 @@ public class SobreRecibido extends Sobre{
 	 */
 	private Date timestampProcesado;
 	
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "sobreRecibido", fetch = FetchType.LAZY)
+	private List<CFE> cfes;
+	
 	public SobreRecibido() {
 		super();
 	}
@@ -39,7 +42,8 @@ public class SobreRecibido extends Sobre{
 
 	public SobreRecibido(Empresa empresaEmisora, Empresa empresaReceptora, String nombreArchivo, int cantComprobantes,
 			List<CFE> cfes) {
-		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes, cfes);
+		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes);
+		this.cfes = cfes;
 	}
 
 	public static List<SobreRecibido> findSobreRecibido(long idEmisor, Empresa empresaEmisora, Empresa empresaReceptora) {
@@ -88,6 +92,16 @@ public class SobreRecibido extends Sobre{
 
 	public void setTimestampProcesado(Date timestampProcesado) {
 		this.timestampProcesado = timestampProcesado;
+	}
+	
+	public List<CFE> getCfes() {
+		if (cfes==null)
+			cfes = new LinkedList<CFE>();
+		return cfes;
+	}
+
+	public void setCfes(List<CFE> cfes) {
+		this.cfes = cfes;
 	}
 
 }

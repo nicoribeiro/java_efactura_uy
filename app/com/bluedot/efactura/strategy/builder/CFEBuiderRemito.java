@@ -2,27 +2,20 @@ package com.bluedot.efactura.strategy.builder;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.model.Detalle;
 
-import dgi.classes.recepcion.RetPercResg;
-import dgi.classes.recepcion.TipMonType;
-import dgi.classes.recepcion.TotalesResg.RetencPercep;
 import dgi.classes.recepcion.wrappers.ItemInterface;
 import dgi.classes.recepcion.wrappers.ItemRemWrapper;
-import dgi.classes.recepcion.wrappers.RetPercInterface;
-import dgi.classes.recepcion.wrappers.RetPercResgWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
-import dgi.classes.recepcion.wrappers.TotalesRetencPercepInterface;
-import dgi.classes.recepcion.wrappers.TotalesRetencPercepResg;
+import dgi.classes.recepcion.wrappers.TpoCod;
 
 public class CFEBuiderRemito extends CFEBuilderImpl implements CFEBuiderInterface {
 
@@ -42,41 +35,33 @@ public class CFEBuiderRemito extends CFEBuilderImpl implements CFEBuiderInterfac
 			if (itemJson.has("IndFact"))
 				item.setIndFact(new BigInteger(Commons.safeGetString(itemJson,"IndFact")));
 
-			JSONArray retencionesJSON = Commons.safeGetJSONArray(itemJson,"Retenciones");
+			
+			item.setNomItem(Commons.safeGetString(itemJson,"NomItem"));
 
-			if (retencionesJSON.length() > 5)
-				throw APIException.raise(APIErrors.MALFORMED_CFE).setDetailMessage(
-						"Se aceptan hasta 5 rentenciones por item, se enviaron " + retencionesJSON.length());
+			item.setCantidad(new BigDecimal(Commons.safeGetString(itemJson,"Cantidad")));
+
+			item.setUniMed(Commons.safeGetString(itemJson,"UniMed"));
 			
+			if (itemJson.has("DscItem") && !itemJson.getString("DscItem").equalsIgnoreCase("null") && !itemJson.getString("DscItem").equalsIgnoreCase(""))
+				item.setDscItem(itemJson.getString("DscItem"));
+ 
+			Detalle detalle = new Detalle(strategy.getCFE(), i,  item.getNomItem(), item.getCantidad().doubleValue(), item.getUniMed(), 0, 0);
 			
+			if (itemJson.has("DscItem"))
+				detalle.setDescripcionItem(item.getDscItem());
 			
-			List<RetPercInterface> retenciones = item.getRetencPerceps();
-			
-			for (int j = 0; j < retencionesJSON.length(); j++) {
-				RetPercResg retencion = new RetPercResg();
-				JSONObject retencionJSON = retencionesJSON.getJSONObject(j);
+			if (itemJson.has("CodItem")){
+				String tpoCod = TpoCod.INT1.name();
+				if (itemJson.has("TpoCod"))
+					tpoCod = itemJson.getString("TpoCod");
 				
+				item.addCodItem(tpoCod, itemJson.getString("CodItem"));
 				
-				if (retencionJSON.optString("CodRet") == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("CodRet"));
-				retencion.setCodRet(retencionJSON.getString("CodRet"));
-
-				if (retencionJSON.optString("Tasa") == null)
-					retencion.setTasa(new BigDecimal(retencionJSON.getString("Tasa")));
-
-				if (retencionJSON.optString("MntSujetoaRet") == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("MntSujetoaRet");
-				retencion.setMntSujetoaRet(new BigDecimal(retencionJSON.getString("MntSujetoaRet")));
-
-				if (retencionJSON.optString("ValRetPerc") == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("ValRetPerc");
-				retencion.setValRetPerc(new BigDecimal(retencionJSON.getString("ValRetPerc")));
-
-				retenciones.add(new RetPercResgWrapper(retencion));
-
+				detalle.setCodItem(itemJson.getString("CodItem"));
+				detalle.setTpoCod(tpoCod);
 			}
 			
-			item.setRetencPerceps(retenciones);
+			strategy.getCFE().getDetalle().add(detalle);
 
 		}
 	}
@@ -85,27 +70,6 @@ public class CFEBuiderRemito extends CFEBuilderImpl implements CFEBuiderInterfac
 	public void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws APIException {
 		TotalesInterface totales = strategy.getTotales();
 
-		/*
-		 * Moneda
-		 */
-		TipMonType moneda = TipMonType.fromValue(totalesJson.getString("TpoMoneda"));
-
-		if (moneda == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TpoMoneda"))
-					.setDetailMessage("El campo TpoMoneda no es ninguno de los conocidos, ver tabla de monedas.");
-
-		totales.setTpoMoneda(moneda);
-
-		/*
-		 * Tipo de cambio
-		 */
-		if (moneda != TipMonType.UYU)
-			if (totalesJson.has("TpoCambio"))
-				totales.setTpoCambio(new BigDecimal(totalesJson.getString("TpoCambio")));
-			else
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("totales.TpoCambio"));
-		
-		
 		List<ItemInterface> items = strategy.getItem();
 		
 		/*
@@ -113,29 +77,6 @@ public class CFEBuiderRemito extends CFEBuilderImpl implements CFEBuiderInterfac
 		 */
 		totales.setCantLinDet(items.size());
 		
-		BigDecimal total = new BigDecimal("0");
-		
-		List<TotalesRetencPercepInterface> totalesRetenciones = totales.getRetencPerceps();
-		
-		for (Iterator<ItemInterface> iterator = items.iterator(); iterator.hasNext();) {
-			ItemInterface item = iterator.next();
-			List<RetPercInterface> retencionesPercepciones = item.getRetencPerceps();
-			
-			TotalesRetencPercepResg retencion = new TotalesRetencPercepResg(new RetencPercep()); 
-			
-			for (Iterator<RetPercInterface> iterator2 = retencionesPercepciones.iterator(); iterator2.hasNext();) {
-				RetPercInterface retPerc = iterator2.next();
-				retencion.setCodRet(retPerc.getCodRet());
-				retencion.setValRetPerc(retencion.getValRetPerc()!=null?retencion.getValRetPerc().add(retPerc.getValRetPerc()):retPerc.getValRetPerc());
-				total = total.add(retPerc.getValRetPerc());
-			}
-			
-			totalesRetenciones.add(retencion);
-		}
-		
-		totales.setRetencPercep(totalesRetenciones);
-		
-		totales.setMntTotRetenido(total);
 	}
 
 	

@@ -40,7 +40,6 @@ import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
-import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import io.swagger.annotations.Api;
 import play.Play;
 import play.libs.F.Promise;
@@ -48,8 +47,8 @@ import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
 
-@Tx
 @ErrorMessage
+@Tx
 @Security.Authenticated(Secured.class)
 @Api(value = "Operaciones de Documentos") 
 public class DocumentController extends AbstractController {
@@ -63,9 +62,7 @@ public class DocumentController extends AbstractController {
 	private static Runnable runner = new NotificationManager(60l * 1000l * 60l * 24l);
 	
 	public DocumentController(){
-		
-			init();
-		
+		init();
 	}
 	
 	private synchronized void init() {
@@ -224,7 +221,7 @@ public class DocumentController extends AbstractController {
 
 		try {
 			if (cfe.getEstado() == null)
-				factory.getServiceMicroController(empresa).reenviar(cfe.getSobre());
+				factory.getServiceMicroController(empresa).reenviar(cfe.getSobreEmitido());
 		} catch (APIException e) {
 			logger.error("APIException:", e);
 			error = e.getJSONObject();
@@ -304,7 +301,7 @@ public class DocumentController extends AbstractController {
 
 		try {
 			if (cfe.getEstado() == null)
-				factory.getServiceMicroController(empresa).consultaResultado(cfe.getSobre());
+				factory.getServiceMicroController(empresa).consultaResultado(cfe.getSobreEmitido());
 		} catch (APIException e) {
 			logger.error("APIException:", e);
 			error = e.getJSONObject();
@@ -362,14 +359,7 @@ public class DocumentController extends AbstractController {
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
 				.getMicroControllersFactory();
 
-		JSONObject error = null;
-
-		try {
-				factory.getServiceMicroController(empresaReceptora).getDocumentosEntrantes();
-		} catch (APIException e) {
-			logger.error("APIException:", e);
-			error = e.getJSONObject();
-		}
+		factory.getServiceMicroController(empresaReceptora).getDocumentosEntrantes();
 		
 		return json(OK);
 

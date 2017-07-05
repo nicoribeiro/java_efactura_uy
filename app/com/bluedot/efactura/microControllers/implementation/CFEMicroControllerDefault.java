@@ -106,6 +106,11 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		if (Commons.safeGetJSONObject(encabezadoJSON,"IdDoc").has("id"))
   			cfeBuilder.getCFE().setGeneradorId(Commons.safeGetJSONObject(encabezadoJSON,"IdDoc").getString("id"));
 		
+		/*
+		 * Ordinal
+		 */
+		cfeBuilder.getCFE().setOrdinal(1);
+		
 		return cfeBuilder.getCFE();
 	}
 

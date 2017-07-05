@@ -126,10 +126,10 @@ public class ItemDetFactWrapper implements ItemInterface {
 
 	}
 
-	@Override
-	public List<CodItem> getCodItems() {
-		return delegate.getCodItems();
-	}
+//	@Override
+//	public List<CodItem> getCodItems() {
+//		return delegate.getCodItems();
+//	}
 
 	@Override
 	public void setIndFact(BigInteger value) {

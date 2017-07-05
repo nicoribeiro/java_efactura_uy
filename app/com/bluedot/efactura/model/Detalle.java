@@ -51,15 +51,11 @@ public class Detalle extends Model<Detalle> {
 
 	private double recargoMonto;
 
-	private double tasaRecepPercep;
-
-	private double montoSujetoRecepPercep;
-
 	/**
 	 * montoItem=Precio*cantidad - descuento + recargo
 	 */
 	private double montoItem;
-
+	
 	public Detalle() {
 		super();
 	}
@@ -162,22 +158,6 @@ public class Detalle extends Model<Detalle> {
 
 	public void setRecargoMonto(double recargoMonto) {
 		this.recargoMonto = recargoMonto;
-	}
-
-	public double getTasaRecepPercep() {
-		return tasaRecepPercep;
-	}
-
-	public void setTasaRecepPercep(double tasaRecepPercep) {
-		this.tasaRecepPercep = tasaRecepPercep;
-	}
-
-	public double getMontoSujetoRecepPercep() {
-		return montoSujetoRecepPercep;
-	}
-
-	public void setMontoSujetoRecepPercep(double montoSujetoRecepPercep) {
-		this.montoSujetoRecepPercep = montoSujetoRecepPercep;
 	}
 
 	public double getMontoItem() {

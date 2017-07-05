@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -20,8 +19,9 @@ import org.w3c.dom.Document;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.XML;
+import com.bluedot.commons.utils.XmlSignature;
+import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
-import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.IntercambioMicroController;
 import com.bluedot.efactura.model.CFE;
@@ -29,12 +29,10 @@ import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.MotivoRechazoCFE;
 import com.bluedot.efactura.model.MotivoRechazoSobre;
+import com.bluedot.efactura.model.Respuesta;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
-import com.bluedot.efactura.services.ConsultasService;
-import com.bluedot.efactura.services.RecepcionService;
-import com.bluedot.efactura.strategy.builder.CFEBuilderFactory;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
@@ -46,7 +44,6 @@ import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Caratula;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Detalle;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
-import dgi.classes.respuestas.sobre.ParamConsultaType;
 import dgi.classes.respuestas.sobre.RechazoSobreType;
 
 public class IntercambioMicroControllerDefault implements IntercambioMicroController {
@@ -61,14 +58,12 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 	
 	
 	@Override
-	public ACKSobredefType procesarSobre(Empresa empresa, SobreRecibido sobreRecibido) throws APIException {
+	public ACKSobredefType procesarSobre(Empresa empresa, SobreRecibido sobreRecibido, Document documentCrudo) throws APIException {
 		
 	
 			
 			try {
 				sobreRecibido.setTimestampRecibido(new Date());
-				
-				
 				
 				EnvioCFEEntreEmpresas envioCFEEntreEmpresas = sobreRecibido.getEnvioCFEEntreEmpresas(); 
 				sobreRecibido.setIdEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor().longValue());
@@ -77,6 +72,15 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				ACKSobredefType ackSobredefType = new ACKSobredefType();
 				ackSobredefType.setVersion("1.0");
 				
+				Respuesta respuestaSobre = new Respuesta();
+				sobreRecibido.setRespuestaSobre(respuestaSobre);
+				/*
+				 * solo se asigna el id
+				 * ver: https://stackoverflow.com/questions/25862537/hibernate-persist-vs-save-method
+				 */
+				play.db.jpa.JPA.em().persist(respuestaSobre);
+				sobreRecibido.update();
+				respuestaSobre.setNombreArchivo("M_" + respuestaSobre.getId() + "_" + sobreRecibido.getNombreArchivo());
 				
 				/*
 				 * Caratula
@@ -86,8 +90,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				caratula.setFecHRecibido(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 				caratula.setTmst(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 				caratula.setIDReceptor(BigInteger.valueOf(sobreRecibido.getId()));
-				//TODO cambiar este id
-				caratula.setIDRespuesta(new BigInteger("1"));
+				caratula.setIDRespuesta(new BigInteger(String.valueOf(respuestaSobre.getId())));
 				caratula.setIDEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor());
 				caratula.setNomArch(sobreRecibido.getNombreArchivo());
 				caratula.setRUCReceptor(sobreRecibido.getEmpresaReceptora().getRut());
@@ -122,15 +125,9 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				 */
 				List<SobreRecibido> sobres = SobreRecibido.findSobreRecibido(envioCFEEntreEmpresas.getCaratula().getIdemisor().longValue(), sobreRecibido.getEmpresaEmisora(),sobreRecibido.getEmpresaReceptora());
 				/*
-				 * S08
+				 * S01
 				 */
-				if (sobres.size()>1){
-					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo(MotivoRechazoSobre.S08.name());
-					rechazo.setGlosa("Ya existe sobre con idEmisor:" + envioCFEEntreEmpresas.getCaratula().getIdemisor());
-					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
-				}
-					
+				
 				/*
 				 * S02
 				 */
@@ -142,6 +139,20 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				}
 				
 				/*
+				 * S03
+				 */
+//				if (!XmlSignature.veryfySignatures(documentCrudo)){
+//					RechazoSobreType rechazo = new RechazoSobreType();
+//					rechazo.setMotivo(MotivoRechazoSobre.S03.name());
+//					rechazo.setGlosa(MotivoRechazoSobre.S03.getMotivo());
+//					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
+//				}
+				
+				/*
+				 * S04
+				 */
+				
+				/*
 				 * S05
 				 */
 				if (envioCFEEntreEmpresas.getCaratula().getCantCFE() != envioCFEEntreEmpresas.getCFEAdendas().size()){
@@ -151,6 +162,23 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
 				}
 				
+				/*
+				 * S06
+				 */
+				
+				/*
+				 * S07
+				 */
+				
+				/*
+				 * S08
+				 */
+				if (sobres.size()>1){
+					RechazoSobreType rechazo = new RechazoSobreType();
+					rechazo.setMotivo(MotivoRechazoSobre.S08.name());
+					rechazo.setGlosa("Ya existe sobre con idEmisor:" + envioCFEEntreEmpresas.getCaratula().getIdemisor());
+					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
+				}
 				
 				if (ackSobredefType.getDetalle().getMotivosRechazo().size()==0){
 					/*
@@ -158,10 +186,6 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 					 */
 					sobreRecibido.setEstadoEmpresa(EstadoACKSobreType.AS);
 					ackSobredefType.getDetalle().setEstado(EstadoACKSobreType.AS);
-					ParamConsultaType params = new ParamConsultaType();
-					params.setFechahora(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-					params.setToken(UUID.randomUUID().toString());
-					ackSobredefType.getDetalle().setParamConsulta(params);
 				}else{
 					/*
 					 * Se rechaza el sobre!
@@ -182,9 +206,13 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 
 				allDocument = SignatureInterceptor.signDocument(dbf, allDocument,"ACKSobre",null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
 				
-				sobreRecibido.setRespuesta_empresa(XML.documentToString(allDocument));
+				respuestaSobre.setPayload(XML.documentToString(allDocument));
+				respuestaSobre.update();
 				
-				//TODO enviar correo a la empresa con el resultado primario (el secundario debe pasar por administracion de la empresa)
+				/*
+				 * Envio la respuesta al emisor
+				 */
+				Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora(), respuestaSobre.getNombreArchivo(), respuestaSobre.getPayload());
 				
 				sobreRecibido.setAckSobredefType(ackSobredefType);
 				
@@ -195,7 +223,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 			
 		
 	}
-
+	
 	@Override
 	public ACKCFEdefType procesarCFESobre(Empresa empresa, SobreRecibido sobreRecibido) throws APIException {
 		
@@ -208,6 +236,19 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				
 				sobreRecibido.setCantComprobantes(envioCFEEntreEmpresas.getCFEAdendas().size());
 				
+//				Respuesta respuestaCfes = new Respuesta();
+//				sobreRecibido.setRespuestaCfes(respuestaCfes);
+//				/*
+//				 * solo se asigna el id
+//				 * ver: https://stackoverflow.com/questions/25862537/hibernate-persist-vs-save-method
+//				 */
+//				play.db.jpa.JPA.em().persist(respuestaCfes);
+//				sobreRecibido.update();
+//				respuestaCfes.setNombreArchivo("ME_" + respuestaCfes.getId() + "_" + sobreRecibido.getNombreArchivo());
+				
+				/*
+				 * Si el sobre no fue rechazado con errores S0X entonces proceso los CFE internos
+				 */
 				if (ackSobredefType.getDetalle().getMotivosRechazo().size()==0){
 					
 					ACKCFEdefType ackcfEdefType = new ACKCFEdefType();
@@ -219,19 +260,25 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 					 */
 					int i = 1;
 					for (Iterator<CFEEmpresasType> iterator = envioCFEEntreEmpresas.getCFEAdendas().iterator(); iterator.hasNext();) {
-						CFEEmpresasType cfeEmpresasTypee = iterator.next();
-						procesarCFE(cfeEmpresasTypee, ackcfEdefType, new BigInteger(String.valueOf(i)));
+						CFEEmpresasType cfeEmpresasType = iterator.next();
+						procesarCfeEntrante(cfeEmpresasType, ackcfEdefType, i, sobreRecibido);
 						i++;
 					}
 					
 					/*
 					 * Serializo el XML respuesta
 					 */
-					DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-					dbf.setNamespaceAware(true);
-					Document allDocument = XML.marshall(ackcfEdefType);
-					allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
-					sobreRecibido.setResultado_empresa(XML.documentToString(allDocument));
+//					DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+//					dbf.setNamespaceAware(true);
+//					Document allDocument = XML.marshall(ackcfEdefType);
+//					allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
+//					respuestaCfes.setPayload(XML.documentToString(allDocument));
+//					respuestaCfes.update();
+					
+					/*
+					 * Envio la respuesta al emisor
+					 */
+//					Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora(), respuestaCfes.getNombreArchivo(), respuestaCfes.getPayload());
 					
 					return ackcfEdefType;
 				}
@@ -244,7 +291,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		//TODO si los servicios son la capa superior nunca deberian tirar exepciones distintas de APIException
 	}
 
-	private void procesarCFE(CFEEmpresasType cfeEmpresasType, ACKCFEdefType ackcfEdefType, BigInteger ordinal) throws APIException {
+	private void procesarCfeEntrante(CFEEmpresasType cfeEmpresasType, ACKCFEdefType ackcfEdefType, int ordinal, SobreRecibido sobreRecibido) throws APIException {
 		
 		/*
 		 * Serializo el CFEEmpresasType a JSONObject
@@ -258,7 +305,8 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		 * Creo un CFE de mi modelo
 		 */
  		CFE cfe = cfeMicroController.create(tipoDoc, cfeJson, false);
- 		
+ 		cfe.setSobreRecibido(sobreRecibido);
+ 		cfe.setOrdinal(ordinal);
 		
  		/*
  		 * Por defecto se acepta, luego en los controles se cambia de estado si corresponde
@@ -271,6 +319,8 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
  		/*
 		 * CONTROLES CFE
 		 * 
+		 * E01 Tipo y No de CFE ya fue reportado como anulado
+		 * 
 		 * E02 Tipo y No de CFE ya existe en los registros
 		 * 
 		 * E03 Tipo y No de CFE no se corresponden con el CAE
@@ -282,6 +332,10 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		 * E07 Fecha Firma de CFE no se corresponde con fecha CAE
 		 */
 		
+ 		/*
+		 * E01
+		 */
+ 		
 		/*
 		 * E02
 		 */
@@ -318,7 +372,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		/*
 		 * Genero la respuesta
 		 */
-		ACKCFEDet respuestaCFE = buildAck(ordinal, tipoDoc, cfe, rechazo);
+		ACKCFEDet respuestaCFE = buildAck(new BigInteger(String.valueOf(ordinal)), tipoDoc, cfe, rechazo);
 		ackcfEdefType.getACKCFEDet().add(respuestaCFE);
 		
 		/*

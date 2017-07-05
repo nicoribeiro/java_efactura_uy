@@ -30,8 +30,8 @@ import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
 
-@Tx
 @ErrorMessage
+@Tx
 @Security.Authenticated(Secured.class)
 public class UserController extends AbstractController
 {

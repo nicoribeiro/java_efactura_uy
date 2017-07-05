@@ -15,6 +15,8 @@ import java.util.Properties;
 
 import javax.mail.Address;
 import javax.mail.BodyPart;
+import javax.mail.FetchProfile;
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -24,6 +26,7 @@ import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.search.FlagTerm;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -59,7 +62,7 @@ public class EmailAttachmentReceiver {
      * @param password
      */
     public List<Email> downloadEmail(String protocol, String host, String port,
-            String userName, String password, int start, int end) {
+            String userName, String password, int offset, int messageQuantity) {
         
     	
     	/*
@@ -124,20 +127,38 @@ public class EmailAttachmentReceiver {
             // opens the inbox folder
             Folder folderInbox = store.getFolder("INBOX");
             folderInbox.open(Folder.READ_ONLY);
+            int messageCount = folderInbox.getMessageCount();
+            int end = offset + messageQuantity - 1;
+            
+            if (offset < 1)
+            	offset = 1;
+            
+            if (end > messageCount)
+            	end = messageCount;
+            	
  
             // fetches new messages from server
-            Message[] arrayMessages = folderInbox.getMessages(start, end);
+            Message[] arrayMessages = folderInbox.getMessages(offset, end);
            
+            /* Get the messages which is unread in the Inbox */
+
+            Message messages[] = folderInbox.search(new FlagTerm(new Flags(
+                    Flags.Flag.SEEN), false));
+            System.out.println("No. of Unread Messages : " + messages.length);
+
+//            /* Use a suitable FetchProfile */
+//            FetchProfile fp = new FetchProfile();
+//            fp.add(FetchProfile.Item.ENVELOPE);
+//
+//            fp.add(FetchProfile.Item.CONTENT_INFO);
+//
+//            folderInbox.fetch(messages, fp);
+            
             
             
             for (int i = 0; i < arrayMessages.length; i++) {
             	IMAPMessage message = (IMAPMessage)arrayMessages[i];
                 
-            	
-            	
-            	
-            	
-            	
             	Address[] fromAddress = message.getFrom();
                 String from="";
                 if (fromAddress !=null && fromAddress.length > 0)

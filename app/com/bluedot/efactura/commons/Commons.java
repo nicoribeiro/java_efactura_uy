@@ -1,20 +1,13 @@
 package com.bluedot.efactura.commons;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
+import java.util.TreeMap;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -33,10 +26,12 @@ import org.w3c.dom.Node;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.notificationChannels.MessagingHelper;
 import com.bluedot.commons.utils.IO;
 import com.bluedot.commons.utils.PrettyPrint;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.Constants;
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.classes.recepcion.CFEDefType;
@@ -319,6 +314,34 @@ public class Commons {
 
 		return Play.application().configuration().getString(Constants.RUC_DGI + "." + environment, "219999830019");
 		
+	}
+	
+	
+	public static void enviarMail(Empresa empresaDesde, Empresa empresaHasta, String nombreArchivo, String archivo) throws APIException {
+		try {
+
+			Map<String, String> attachments = new TreeMap<String, String>();
+
+			attachments.put(nombreArchivo, archivo);
+
+			String subject = nombreArchivo;
+
+//			String body = Play.application().configuration().getString("mail.body")
+//					.replace("<nombre>", empresa.getNombreComercial())
+//					.replace("<mail>", empresa.getMailNotificaciones()).replace("<tel>", empresa.getTelefono())
+//					.replace("<nl>", "\n");
+			String body = "";
+
+			new MessagingHelper()
+					.withCustomConfig(empresaDesde.getFromEnvio(), empresaDesde.getHostRecepcion(), Integer.parseInt(empresaDesde.getPuertoRecepcion()),
+							empresaDesde.getUserRecepcion(), empresaDesde.getPassRecepcion())
+					.withAttachment(attachments)
+					.sendEmail(empresaHasta.getMailRecepcion(), body, null, subject, false);
+
+		} catch (Exception e) {
+			throw APIException.raise(e);
+		}
+
 	}
 
 	

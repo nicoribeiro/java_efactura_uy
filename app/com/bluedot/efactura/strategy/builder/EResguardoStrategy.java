@@ -181,7 +181,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 				Pais pais = Pais.findByCodigo(codPaisRecep, true);
 				cfe.setTitular(getOrCreateTitular(pais, tipoDocRecep, docRecep));
 			} else {
-				if (rznSocRecep != null && dirRecep != null && ciudadRecep != null && deptoRecep != null)
+				if (rznSocRecep != null && dirRecep != null && ciudadRecep != null)
 					cfe.setEmpresaReceptora(
 							getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep));
 			}

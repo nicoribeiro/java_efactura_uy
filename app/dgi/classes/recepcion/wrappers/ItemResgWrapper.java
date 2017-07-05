@@ -107,10 +107,10 @@ public class ItemResgWrapper implements ItemInterface {
 
 	}
 
-	@Override
-	public List<CodItem> getCodItems() {
-		return null;
-	}
+//	@Override
+//	public List<CodItem> getCodItems() {
+//		return null;
+//	}
 
 	@Override
 	public void setIndFact(BigInteger value) {

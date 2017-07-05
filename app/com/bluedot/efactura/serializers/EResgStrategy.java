@@ -96,7 +96,8 @@ public class EResgStrategy implements CFEEmpresasStrategy {
 			JSONObject item = new JSONObject();
 			
 			item.put("NroLinDet", String.valueOf(itemResg.getNroLinDet()));
-			item.put("IndFact", String.valueOf(itemResg.getIndFact()));
+			if (itemResg.getIndFact()!=null)
+				item.put("IndFact", String.valueOf(itemResg.getIndFact()));
 			
 			JSONArray retPercResgArray = new JSONArray();
 			for (RetPercResg retPercResg : itemResg.getRetencPerceps()) {
@@ -104,7 +105,8 @@ public class EResgStrategy implements CFEEmpresasStrategy {
 				retPercResgObject.put("CodRet", String.valueOf(retPercResg.getCodRet()));
 				retPercResgObject.put("MntSujetoaRet", String.valueOf(retPercResg.getMntSujetoaRet()));
 				retPercResgObject.put("ValRetPerc", String.valueOf(retPercResg.getValRetPerc()));
-				retPercResgObject.put("Tasa", String.valueOf(retPercResg.getTasa()));
+				if (retPercResg.getTasa()!=null)
+					retPercResgObject.put("Tasa", String.valueOf(retPercResg.getTasa()));
 				retPercResgArray.put(retPercResgObject);
 			}
 			

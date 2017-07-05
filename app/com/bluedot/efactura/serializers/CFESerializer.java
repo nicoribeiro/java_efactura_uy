@@ -34,10 +34,9 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 		cfeJson.put("emresaReceptora", cfe.getEmpresaReceptora()!=null? empresaSerializer.objectToJson(cfe.getEmpresaReceptora()): JSONObject.NULL);
 		cfeJson.put("emresaEmisora", cfe.getEmpresaEmisora()!=null? empresaSerializer.objectToJson(cfe.getEmpresaEmisora()): JSONObject.NULL);
 		cfeJson.put("detalle", cfe.getDetalle()!=null? detalleSerializer.objectToJson(cfe.getDetalle()): JSONObject.NULL);
-		cfeJson.put("xml", cfe.getXml());
 		cfeJson.put("estado", cfe.getEstado());
-		if (cfe.getSobre()!=null && cfe.getSobre().getFechaConsulta()!=null)
-			cfeJson.put("fechaConsulta", sdf.format(cfe.getSobre().getFechaConsulta()));
+		if (cfe.getSobreEmitido()!=null && cfe.getSobreEmitido().getFechaConsulta()!=null)
+			cfeJson.put("fechaConsulta", sdf.format(cfe.getSobreEmitido().getFechaConsulta()));
 		
 		return cfeJson;
 	}

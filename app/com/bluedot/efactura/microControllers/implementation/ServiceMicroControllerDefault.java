@@ -11,11 +11,13 @@ import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.security.Attachment;
+import com.bluedot.commons.security.AttachmentEstado;
 import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
-import com.bluedot.commons.utils.messaging.Attachment;
+
 import com.bluedot.commons.utils.messaging.Email;
 import com.bluedot.commons.utils.messaging.EmailAttachmentReceiver;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
@@ -24,6 +26,7 @@ import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
+import com.bluedot.efactura.model.Respuesta;
 import com.bluedot.efactura.model.Sobre;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.SobreRecibido;
@@ -127,7 +130,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		/*
 		 * El sobre fue rechazado
 		 */
-		if (cfe.getSobre()!=null && cfe.getSobre().getEstadoDgi() != null && cfe.getSobre().getEstadoDgi()== EstadoACKSobreType.BS)
+		if (cfe.getSobreEmitido()!=null && cfe.getSobreEmitido().getEstadoDgi() != null && cfe.getSobreEmitido().getEstadoDgi()== EstadoACKSobreType.BS)
 			anular = true;
 			
 		/*
@@ -163,18 +166,32 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 
 		EmailAttachmentReceiver receiver = new EmailAttachmentReceiver();
 		
-		for (int i = 1; i < 5000; i=i+100) {
-			List<Email> emails = receiver.downloadEmail("imap", empresa.getHostRecepcion(),
+		int offset = empresa.getOffsetMail()==0 ? 1 : empresa.getOffsetMail();
+		int messageQuantity = 100;
+		List<Email> emails = null;
+		do {
+			
+			emails = receiver.downloadEmail("imap", empresa.getHostRecepcion(),
 					empresa.getPuertoRecepcion(), empresa.getUserRecepcion(),
-					empresa.getPassRecepcion(),i, i+99);
-			procesarEmails(emails);
-		}
-		
-		
+					empresa.getPassRecepcion(), offset, messageQuantity);
+			
+			try {
+				procesarEmails(emails);
+				offset += emails.size();
+				empresa.setOffsetMail(offset);
+				empresa.update();
+				ThreadMan.forceTransactionFlush();
+			} catch (APIException e) {
+				throw e;
+			} catch (Exception e) {
+				throw APIException.raise(e);
+			}
+			
+		} while (emails.size() == messageQuantity);
 		
 	}
 	
-	private void procesarEmails(List<Email> emails) throws APIException {
+	private void procesarEmails(List<Email> emails) throws APIException, Exception {
 	
 		for (Email email : emails)
 
@@ -186,19 +203,29 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			}
 			
 			/*
-			 * Convierto El datatype Email a un Email del modelo
+			 * Convierto El datatype Email a un Email del modelo y lo persisto junto con sus Attachments
 			 */
 			EmailMessage emailModel = new EmailMessage(email);
 			emailModel.save();
+			ThreadMan.forceTransactionFlush();
 			
-			for (Attachment attachment : email.getAttachments()) {
+			logger.info("Procesado email: " + email.getMessageId());
+			logger.info("Email contiene " + email.getAttachments().size() + " attachments");
+			
+			for (Attachment attachment : emailModel.getAttachments()) {
 				try {
+					
+					/*
+					 * Si hubo una ecepcion las entidades se desatachearon del persistence context con el rollback.
+					 * Por lo tanto, como no estoy seguro si estan o no debo volverlas a pedir a la BBDD.
+					 */
+					attachment = Attachment.findById(attachment.getId());
 					
 					logger.info("Procesando Adjunto: " + attachment.getName());
 					
 					Document document = XML.loadXMLFromString(attachment.getPayload());
 					
-					logger.debug("Attachment: " + attachment.getPayload());
+					logger.debug("Attachment payload: " + attachment.getPayload());
 					
 					/*
 					 * 1 - Es la respuesta de los CFE dentro de un SobreEmitido (respuesta de aceptacion)
@@ -210,8 +237,15 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						
 						if (sobre instanceof SobreEmitido){
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
-							sobreEmitido.setResultado_empresa(attachment.getPayload());
+							
+							Respuesta respuestaCfe = new Respuesta();
+							sobreEmitido.setRespuestaCfes(respuestaCfe);
+							respuestaCfe.setNombreArchivo(attachment.getName());
+							respuestaCfe.setPayload(attachment.getPayload());
+							respuestaCfe.save();
 							sobreEmitido.update();
+							
+							
 						}
 					}
 					
@@ -227,7 +261,12 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
 							sobreEmitido.setEstadoEmpresa(ackSobredefType.getDetalle().getEstado());
 //							sobreEmitido.setMotivo(ackSobredefType.getDetalle().getMotivosRechazo());
-							sobreEmitido.setRespuesta_empresa(attachment.getPayload());
+							
+							Respuesta respuestaSobre = new Respuesta();
+							sobreEmitido.setRespuestaSobre(respuestaSobre);
+							respuestaSobre.setNombreArchivo(attachment.getName());
+							respuestaSobre.setPayload(attachment.getPayload());
+							respuestaSobre.save();
 							sobreEmitido.update();
 						}
 						
@@ -271,14 +310,12 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 							sobreRecibido.setXmlEmpresa(attachment.getPayload());
 							sobreRecibido.save();
 							sobreRecibido.getEmails().add(emailModel);
-							ThreadMan.forceTransactionFlush();
 
 							/*
 							 * PROCESO SOBRE
 							 */
-							intercambioMicroController.procesarSobre(empresa, sobreRecibido);
+							intercambioMicroController.procesarSobre(empresa, sobreRecibido, document);
 							sobreRecibido.update();
-							ThreadMan.forceTransactionFlush();
 
 							/*
 							 * PROCESO CFE DENTRO DE SOBRE
@@ -286,28 +323,43 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 							if (sobreRecibido.getEstadoEmpresa()==EstadoACKSobreType.AS){
 								intercambioMicroController.procesarCFESobre(empresa, sobreRecibido);
 								sobreRecibido.update();
-								ThreadMan.forceTransactionFlush();
 							}
 
 						}else{
 							sobreRecibido.getEmails().add(emailModel);
 							sobreRecibido.update();
-							ThreadMan.forceTransactionFlush();
 						}
 						
 						
 					}
-					
+					attachment.setEstado(AttachmentEstado.PROCESADO_OK);
+					attachment.update();
+					/*
+					 * Para que se guarden en la BBDD los cambios referentes al procesamiento del ultimo attachment
+					 */
+					ThreadMan.forceTransactionFlush();
 					
 
-				} catch (APIException e) {
-					e.printStackTrace();
-				} catch (Exception e) {
-					e.printStackTrace();
+				} catch (APIException | Exception e) {
+					logger.error("APIException is: ", e);
+					/*
+					 * si hubo una ecepcion en el procesamiento del attachment debo rollbaquear y setear el estado del attachment a PROCESADO_ERROR
+					 */
+					play.db.jpa.JPA.em().getTransaction().rollback();
+					play.db.jpa.JPA.em().getTransaction().begin();
+					Attachment attachmentFromBD = Attachment.findById(attachment.getId());
+					attachmentFromBD.setEstado(AttachmentEstado.PROCESADO_ERROR);
+					attachmentFromBD.update();
+					ThreadMan.forceTransactionFlush();
+					/*
+					 * Vuelvo a cargar la empsa para que este en el persistence context
+					 */
+					empresa = Empresa.findByRUT(empresa.getRut());
 				}
 
 			}
-
+			
+			logger.info("Fin procesaminto email: " + email.getMessageId());
 		}
 
 

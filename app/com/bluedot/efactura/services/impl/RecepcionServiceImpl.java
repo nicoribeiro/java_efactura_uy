@@ -6,8 +6,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeFactory;
@@ -18,7 +16,6 @@ import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.notificationChannels.MessagingHelper;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.commons.Commons;
@@ -59,7 +56,6 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTEResponse;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBREResponse;
-import play.Play;
 
 public class RecepcionServiceImpl implements RecepcionService {
 
@@ -129,7 +125,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 		SobreEmitido sobre = new SobreEmitido(cfe.getEmpresaEmisora(), cfe.getEmpresaReceptora(), "", 1, null);
 		sobre.getCfes().add(cfe);
 		sobre.setFecha(new Date());
-		cfe.setSobre(sobre);
+		cfe.setSobreEmitido(sobre);
 		sobre.save();
 
 		/*
@@ -212,7 +208,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			allDocument = SignatureInterceptor.signDocument(dbf, allDocument, "ns0:CFE", "DGICFE:CFE_Adenda", sobre.getEmpresaEmisora().getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
 
 			sobre.setXmlEmpresa(XML.documentToString(allDocument));
-			
+			sobre.update();
 			
 		} catch (TransformerFactoryConfigurationError | Exception e) {
 			e.printStackTrace();
@@ -466,36 +462,6 @@ public class RecepcionServiceImpl implements RecepcionService {
 			return false;
 	}
 
-	private void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
-		try {
-
-			Map<String, String> attachments = new TreeMap<String, String>();
-
-			attachments.put(sobre.getNombreArchivo(), sobre.getXmlEmpresa());
-			sobre.update();
-
-			Empresa empresa = sobre.getEmpresaEmisora();
-
-			String subject = Play.application().configuration().getString("mail.subject").replace("<cfe>",
-					sobre.getNombreArchivo());
-
-			String body = Play.application().configuration().getString("mail.body")
-					.replace("<nombre>", empresa.getNombreComercial())
-					.replace("<mail>", empresa.getMailNotificaciones()).replace("<tel>", empresa.getTelefono())
-					.replace("<nl>", "\n");
-
-			new MessagingHelper()
-					.withCustomConfig(empresa.getFromEnvio(), empresa.getHostRecepcion(), Integer.parseInt(empresa.getPuertoRecepcion()),
-							empresa.getUserRecepcion(), empresa.getPassRecepcion())
-					.withAttachment(attachments)
-					.sendEmail(sobre.getEmpresaReceptora().getMailRecepcion(), body, null, subject, false);
-
-		} catch (Exception e) {
-			throw APIException.raise(e);
-		}
-
-	}
-
 	@Override
 	public Data consultaResultadoSobre(String token, Long idReceptor) throws APIException {
 
@@ -563,7 +529,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 						 * Envio a la empresa
 						 */
 						if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null)
-							this.enviarSobreEmpresa(sobre);
+							Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora(), sobre.getNombreArchivo(), sobre.getXmlEmpresa());
+//							this.enviarSobreEmpresa(sobre);
 					}else{
 						for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
 								.iterator(); iterator2.hasNext();) {
@@ -756,7 +723,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 	@Override
 	public void enviarMailEmpresa(CFE cfe) throws APIException {
-		SobreEmitido sobre = cfe.getSobre();
+		SobreEmitido sobre = cfe.getSobreEmitido();
 		
 		if (sobre.getEmpresaReceptora().isEmisorElectronico()){
 			if (sobre.getXmlEmpresa()==null){
@@ -769,7 +736,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 					e.printStackTrace();
 				}
 			}
-			enviarSobreEmpresa(cfe.getSobre());
+			Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora(), sobre.getNombreArchivo(), sobre.getXmlEmpresa());
 		}
 		
 	}

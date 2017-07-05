@@ -6,8 +6,10 @@ import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
 
 import org.hibernate.criterion.Restrictions;
 
@@ -24,7 +26,8 @@ public class EmailMessage extends Model<EmailMessage> {
 	private static final long serialVersionUID = -8701151304733591795L;
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy=GenerationType.SEQUENCE,generator="email_message_seq")
+	@SequenceGenerator(name = "email_message_seq", sequenceName = "email_message_seq" )
 	private long id;
 
 	private String messageId;

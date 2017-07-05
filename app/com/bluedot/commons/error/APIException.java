@@ -89,7 +89,7 @@ public class APIException extends Throwable
 		EMAIL_EXISTS(19,  200, true), 
 		PHONE_EXISTS(20,  200, true),
 		SETTING_SCHEMA_ERROR(21,  200, true),
-		
+		ATTACHMENT_NOT_FOUND(22, 200, true),
 		
 		
 		 
@@ -117,7 +117,8 @@ public class APIException extends Throwable
 		HAY_CFE_SIN_RESPUESTA(116, 200, true),
 		FALTA_TIPO_CAMBIO(117,  404, true), 
 		TEMPRANO_PARA_GENERAR_REPORTE(118,  404, true), 
-		SOBRE_YA_ENVIADO(119,  404, true) 
+		SOBRE_YA_ENVIADO(119,  404, true), 
+		RESPUESTA_NO_ENCONTRADA(120,  404, true)
 		;
 
 

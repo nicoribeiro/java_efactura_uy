@@ -77,10 +77,16 @@ public class CFE extends Model<CFE>{
 	private Titular titular;
 	
 	/**
-	 * Sobre que contiene el CFE
+	 * Sobre que contiene el CFE cuando es emitido por el Sistema
 	 */
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
-	private SobreEmitido sobre;
+	private SobreEmitido sobreEmitido;
+	
+	/**
+	 * Sobre que contiene el CFE cuando fue recibido por el sistema
+	 */
+	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
+	private SobreRecibido sobreRecibido;
 	
 	/**
 	 * Reporte diario en el que se reporto el CFE
@@ -183,12 +189,6 @@ public class CFE extends Model<CFE>{
 	private List<MotivoRechazoCFE> motivo;
 	
 	/**
-	 * El CFE en formato xml
-	 */
-	@Type(type="text")
-	private String xml;
-	
-	/**
 	 * Lineas del CFE
 	 */
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="cfe", fetch=FetchType.LAZY)
@@ -228,6 +228,9 @@ public class CFE extends Model<CFE>{
 	@Type(type="text")
 	private String adenda;
 
+	@OneToMany
+	private List<RetencionPercepcion> retencionesPercepciones; 
+	
 	public CFE() {
 		super();
 	}
@@ -337,12 +340,12 @@ public class CFE extends Model<CFE>{
 		this.titular = titular;
 	}
 
-	public SobreEmitido getSobre() {
-		return sobre;
+	public SobreEmitido getSobreEmitido() {
+		return sobreEmitido;
 	}
 
-	public void setSobre(SobreEmitido sobre) {
-		this.sobre = sobre;
+	public void setSobreEmitido(SobreEmitido sobreEmitido) {
+		this.sobreEmitido = sobreEmitido;
 	}
 
 	public ReporteDiario getReporteDiario() {
@@ -471,14 +474,6 @@ public class CFE extends Model<CFE>{
 
 	public void setEstado(EstadoACKCFEType estado) {
 		this.estado = estado;
-	}
-
-	public String getXml() {
-		return xml;
-	}
-
-	public void setXml(String xml) {
-		this.xml = xml;
 	}
 
 	public List<Detalle> getDetalle() {
@@ -761,6 +756,24 @@ public class CFE extends Model<CFE>{
 
 	public void setEremito(ERem eremito) {
 		this.eremito = eremito;
+	}
+
+	public Sobre getSobreRecibido() {
+		return sobreRecibido;
+	}
+
+	public void setSobreRecibido(SobreRecibido sobreRecibido) {
+		this.sobreRecibido = sobreRecibido;
+	}
+	
+	public List<RetencionPercepcion> getRetencionesPercepciones() {
+		if (retencionesPercepciones==null)
+			retencionesPercepciones = new LinkedList<RetencionPercepcion>();
+		return retencionesPercepciones;
+	}
+
+	public void setRetencionesPercepciones(List<RetencionPercepcion> retencionesPercepciones) {
+		this.retencionesPercepciones = retencionesPercepciones;
 	}
 
 }

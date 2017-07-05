@@ -7,10 +7,15 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.SequenceGenerator;
 
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.messaging.AttachmentType;
+import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
 @Entity
@@ -22,7 +27,8 @@ public class Attachment extends Model<Attachment> {
 	private static final long serialVersionUID = 6770091807939153590L;
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy=GenerationType.SEQUENCE,generator="attachment_seq")
+	@SequenceGenerator(name = "attachment_seq", sequenceName = "attachment_seq" )
 	private int id;
 
 	private String url;
@@ -36,6 +42,11 @@ public class Attachment extends Model<Attachment> {
 	private String createdBy;
 
 	private long timestamp;
+	
+	private String name;
+	
+	@Enumerated(EnumType.STRING)
+	private AttachmentEstado estado;
 
 	public Attachment() {
 
@@ -47,8 +58,27 @@ public class Attachment extends Model<Attachment> {
 		this.payload = attachment.getPayload();
 		this.createdBy = attachment.getCreatedBy();
 		this.timestamp = attachment.getTimestamp();
+		this.name = attachment.getName();
+		this.estado = AttachmentEstado.PENDIENTE;
 	}
 
+	public static Finder<Integer, Attachment> find = new Finder<Integer, Attachment>(Integer.class, Attachment.class);
+	
+	public static Attachment findById(Integer id)
+	{
+		return find.byId(id);
+	}
+	
+	public static Attachment findById(Integer id, boolean throwExceptionWhenMissing) throws APIException
+	{
+		Attachment attachment = find.byId(id);
+		
+		if (attachment==null && throwExceptionWhenMissing)
+			throw APIException.raise(APIErrors.ATTACHMENT_NOT_FOUND.withParams("id", id));
+		
+		return attachment;
+	}
+	
 	public int getId() {
 		return id;
 	}
@@ -105,5 +135,29 @@ public class Attachment extends Model<Attachment> {
 			list.add(convert(attachment));
 		}
 		return list;
+	}
+
+	public String getPayload() {
+		return payload;
+	}
+
+	public void setPayload(String payload) {
+		this.payload = payload;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public AttachmentEstado getEstado() {
+		return estado;
+	}
+
+	public void setEstado(AttachmentEstado estado) {
+		this.estado = estado;
 	}
 }

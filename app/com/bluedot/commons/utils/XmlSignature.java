@@ -217,7 +217,7 @@ public class XmlSignature {
 		return outputStream;
 	}
 
-	public void veryfySignatures(String filepath) {
+	public static boolean veryfySignatures(Document doc) {
 
 		// cfeXMLSignatureValidateFile: VALIDAR LAS FIRMAS DE UN SOBRE ENTERO
 		// BUSCA TODOS LOS NODOS FIRMADOS Y LOS VALIDA
@@ -229,9 +229,9 @@ public class XmlSignature {
 		try {
 			javax.xml.parsers.DocumentBuilderFactory dbFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
 			dbFactory.setNamespaceAware(true);
-			javax.xml.parsers.DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			org.w3c.dom.Document doc = dBuilder
-					.parse(new org.xml.sax.InputSource(new java.io.FileInputStream(filepath)));
+//			javax.xml.parsers.DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+//			org.w3c.dom.Document doc = dBuilder
+//					.parse(new org.xml.sax.InputSource(new java.io.FileInputStream(filepath)));
 
 			// Find Signatures
 			org.w3c.dom.NodeList nls = doc.getElementsByTagNameNS(javax.xml.crypto.dsig.XMLSignature.XMLNS,
@@ -373,6 +373,7 @@ public class XmlSignature {
 				} catch (Exception e) {
 					e.printStackTrace();
 					errorMsg += e.getMessage();
+					return false;
 				}
 
 				System.out.println(errorMsg);
@@ -393,12 +394,13 @@ public class XmlSignature {
 			// [!&ErrorMsg!] = e.getMessage();
 			e.printStackTrace();
 			System.err.println("Error capturado:" + e.getMessage());
+			return false;
 		}
 		// [!&Certificate64!] = certificate64;
 
 		// &ErrorMsg = &ErrorMsg
 		// &Certificate64 = &Certificate64
-
+		return true;
 	}
 
 }

@@ -45,7 +45,7 @@ public interface ItemInterface {
 	 * 
 	 * 
 	 */
-	List<CodItem> getCodItems();
+//	List<CodItem> getCodItems();
 
 	/**
 	 * Gets the value of the indFact property.
