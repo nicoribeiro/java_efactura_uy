@@ -19,7 +19,6 @@ import org.w3c.dom.Document;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.XML;
-import com.bluedot.commons.utils.XmlSignature;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
@@ -235,7 +234,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				ACKSobredefType ackSobredefType = sobreRecibido.getAckSobredefType();
 				
 				sobreRecibido.setCantComprobantes(envioCFEEntreEmpresas.getCFEAdendas().size());
-				
+				//TODO aca hay que reactivar la respuesta pero con una previa autorizacion de administracion
 //				Respuesta respuestaCfes = new Respuesta();
 //				sobreRecibido.setRespuestaCfes(respuestaCfes);
 //				/*

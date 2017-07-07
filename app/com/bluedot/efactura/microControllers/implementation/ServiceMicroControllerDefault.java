@@ -4,6 +4,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,7 @@ import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.notificationChannels.MessagingHelper;
 import com.bluedot.commons.security.Attachment;
 import com.bluedot.commons.security.AttachmentEstado;
 import com.bluedot.commons.security.EmailMessage;
@@ -161,7 +164,6 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	 */
 	@Override
 	public void getDocumentosEntrantes() throws APIException {
-		//TODO terminar
 		// TODO mutex
 
 		EmailAttachmentReceiver receiver = new EmailAttachmentReceiver();
@@ -260,7 +262,6 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						if (sobre instanceof SobreEmitido){
 							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
 							sobreEmitido.setEstadoEmpresa(ackSobredefType.getDetalle().getEstado());
-//							sobreEmitido.setMotivo(ackSobredefType.getDetalle().getMotivosRechazo());
 							
 							Respuesta respuestaSobre = new Respuesta();
 							sobreEmitido.setRespuestaSobre(respuestaSobre);
@@ -355,6 +356,19 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 					 * Vuelvo a cargar la empsa para que este en el persistence context
 					 */
 					empresa = Empresa.findByRUT(empresa.getRut());
+					
+					/*
+					 * Envio mail a los administradores notificando del error
+					 */
+					Map<String, String> attachments = new TreeMap<String, String>();
+					attachments.put(attachmentFromBD.getName(), attachmentFromBD.getPayload());
+					String fullStackTrace = org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace(e);
+					new MessagingHelper()
+						.withCustomConfig(empresa.getFromEnvio(), empresa.getHostRecepcion(), Integer.parseInt(empresa.getPuertoRecepcion()),
+								empresa.getUserRecepcion(), empresa.getPassRecepcion())
+						.withAttachment(attachments)
+						.sendEmail(empresa.getMailNotificaciones(), fullStackTrace, null, "Error Procesando Archivo Recibido", false);
+					
 				}
 
 			}

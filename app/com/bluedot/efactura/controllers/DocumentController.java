@@ -11,8 +11,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -35,9 +33,10 @@ import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.TipoDoc;
-import com.bluedot.efactura.notifications.NotificationManager;
+import com.bluedot.efactura.pollers.PollerManager;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
 
 import io.swagger.annotations.Api;
@@ -57,19 +56,20 @@ public class DocumentController extends AbstractController {
 	
 	final static Logger logger = LoggerFactory.getLogger(DocumentController.class);
 
-	private static ExecutorService executor = Executors.newFixedThreadPool(5);
+	private PollerManager pollerManager;
 	
-	private static Runnable runner = new NotificationManager(60l * 1000l * 60l * 24l);
-	
-	public DocumentController(){
-		init();
+	@Inject
+	public DocumentController(PollerManager pollerManager){
+		super();
+		this.pollerManager = pollerManager;
+		if (!initialized) {
+			init();
+		}
 	}
 	
 	private synchronized void init() {
-		if (!initialized) {
-			initialized = true;
-			executor.execute(runner);
-		}
+		initialized = true;
+		pollerManager.queue();
 	}
 	
 	public Promise<Result> cambiarModo(String modo) throws APIException {

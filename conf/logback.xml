@@ -27,8 +27,8 @@
   <logger name="application" level="INFO" />
   <logger name="org.apache.cxf" level="INFO"/>
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
-  <logger name="javax.mail" level="DEBUG" />
-  <logger name="com.bluedot" level="DEBUG" />
+  <logger name="javax.mail" level="INFO" />
+  <logger name="com.bluedot" level="INFO" />
   
   <!-- Log all SQL DML statements as they are executed -->
 <!-- 	<Logger name="org.hibernate.SQL" level="debug" /> -->

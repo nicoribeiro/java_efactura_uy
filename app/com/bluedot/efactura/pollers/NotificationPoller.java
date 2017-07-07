@@ -1,4 +1,4 @@
-package com.bluedot.efactura.notifications;
+package com.bluedot.efactura.pollers;
 
 import java.util.Date;
 import java.util.List;
@@ -17,17 +17,17 @@ import com.bluedot.efactura.model.TipoDoc;
 
 import play.Play;
 
-public class NotificationManager implements Runnable {
+public class NotificationPoller implements Runnable {
 
 	private static final long INTERVAL = 1000L;
 
-	final static Logger logger = LoggerFactory.getLogger(NotificationManager.class);
+	final static Logger logger = LoggerFactory.getLogger(NotificationPoller.class);
 
 	private long sleepTimeInMillis;
 
 	private long runs;
 
-	public NotificationManager(long sleepTimeInMillis) {
+	public NotificationPoller(long sleepTimeInMillis) {
 		super();
 		this.sleepTimeInMillis = sleepTimeInMillis;
 		runs = 0;

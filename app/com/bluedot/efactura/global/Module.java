@@ -2,6 +2,7 @@ package com.bluedot.efactura.global;
 
 import com.bluedot.commons.hazelcast.HazelcastFactory;
 import com.bluedot.commons.hazelcast.Mutex;
+import com.bluedot.efactura.pollers.PollerManager;
 import com.google.inject.AbstractModule;
 
 /**
@@ -21,6 +22,8 @@ public class Module extends AbstractModule {
 		bind(HazelcastFactory.class);
 
 		bind(Mutex.class);
+		
+		bind(PollerManager.class).asEagerSingleton();
 	}
 
 }
