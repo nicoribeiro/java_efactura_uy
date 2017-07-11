@@ -27,6 +27,7 @@
   <logger name="application" level="INFO" />
   <logger name="org.apache.cxf" level="INFO"/>
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
+  <logger name="com.sun.mail.imap" level="OFF" />
   <logger name="javax.mail" level="OFF" />
   <logger name="com.bluedot" level="INFO" />
   
