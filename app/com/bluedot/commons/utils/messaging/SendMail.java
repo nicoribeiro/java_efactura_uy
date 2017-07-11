@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 public class SendMail
 {
-
+	//TODO revisar que esta clase es igual a otra en com.bluedot.commons.utils
 	final static Logger logger = LoggerFactory.getLogger(SendMail.class);
 
 	public static void sendMail(String username, String password, String smtpHost, String smtpPort, String from, String recipient, String subject, String textVersion, String htmlVersion, List<Attachment> attachments, boolean logInstedOfSend) throws MessagingException
@@ -136,15 +136,14 @@ public class SendMail
 			mails.append(address.toString() + " ");
 		}
 
-		if (logInstedOfSend)
-		{
-			logger.info("HOST: " + smtpHost);
-			logger.info("FROM: " + from);
-			logger.info("SUBJECT: " + subject);
-			logger.info("TO: " + mails);
-			logger.info("BODY-TEXT: " + textVersion);
-			logger.info("BODY-HTML: " + htmlVersion);
-		} else
+		logger.info("HOST: " + smtpHost);
+		logger.info("FROM: " + from);
+		logger.info("SUBJECT: " + subject);
+		logger.info("TO: " + mails);
+		logger.info("BODY-TEXT: " + textVersion);
+		logger.info("BODY-HTML: " + htmlVersion);
+
+		if (!logInstedOfSend)
 			logger.info("Sent message successfully to: " + mails);
 
 	}

@@ -11,7 +11,7 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%date %coloredLevel from %logger in %thread - %message%n%xException</pattern>
+      <pattern>%date %coloredLevel from %logger{15} in %thread - %message%n%xException</pattern>
     </encoder>
   </appender>
 
@@ -27,7 +27,7 @@
   <logger name="application" level="INFO" />
   <logger name="org.apache.cxf" level="INFO"/>
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
-  <logger name="javax.mail" level="INFO" />
+  <logger name="javax.mail" level="OFF" />
   <logger name="com.bluedot" level="INFO" />
   
   <!-- Log all SQL DML statements as they are executed -->

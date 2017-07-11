@@ -102,62 +102,32 @@ public class EmailAttachmentReceiver {
 				String from = "";
 				if (fromAddress != null && fromAddress.length > 0)
 					from = fromAddress[0].toString();
+				
+//				if (from.contains("buscojobs.com"))
+//					logger.info("Message #" + (i + 1) + ":");
+				
 				String subject = message.getSubject();
 				Date sentDate = message.getSentDate();
 
-				String contentType = message.getContentType();
 				String messageContent = "";
 
-				// store attachment file name, separated by comma
-				String attachFiles = "";
-
 				Email email = new Email(message.getMessageID(), from, subject, sentDate, messageContent);
-
-				if (contentType.contains("multipart")) {
-					// content may contain attachments
-					Multipart multiPart = (Multipart) message.getContent();
-					int numberOfParts = multiPart.getCount();
-					for (int partCount = 0; partCount < numberOfParts; partCount++) {
-						MimeBodyPart part = (MimeBodyPart) multiPart.getBodyPart(partCount);
-						if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
-							// this part is attachment
-							String fileName = part.getFileName();
-							attachFiles += fileName + ", ";
-							ByteArrayOutputStream bos = new ByteArrayOutputStream();
-							part.getDataHandler().writeTo(bos);
-
-							String decodedContent = bos.toString();
-							Attachment attachment = new Attachment();
-							attachment.setAttachmentType(AttachmentType.TEXT);
-							attachment.setPayload(decodedContent);
-							attachment.setName(fileName);
-							email.getAttachments().add(attachment);
-
-						} else {
-							// this part may be the message content
-							messageContent = part.getContent().toString();
-						}
-					}
-
-					if (attachFiles.length() > 1) {
-						attachFiles = attachFiles.substring(0, attachFiles.length() - 2);
-					}
-				} else if (contentType.contains("text/plain") || contentType.contains("text/html")) {
-					Object content = message.getContent();
-					if (content != null) {
-						messageContent = content.toString();
-					}
-				}
+				
+				logger.info("Message #" + (i + 1) + ":");
+				logger.info("Message id" + email.getMessageId());
+				
+				messageContent = extractAttachments(message, messageContent, email);
 
 				emails.add(email);
 
-				// print out details of each message
-				logger.info("Message #" + (i + 1) + ":");
+				/*
+				 * Print out details of each message
+				 */
 				logger.debug("\t From: " + from);
 				logger.debug("\t Subject: " + subject);
 				logger.debug("\t Sent Date: " + sentDate);
 				logger.debug("\t Message: " + messageContent);
-				logger.debug("\t Attachments: " + attachFiles);
+				logger.debug("\t #Attachments: " + email.getAttachments().size());
 
 			}
 
@@ -169,6 +139,121 @@ public class EmailAttachmentReceiver {
 		}
 
 		return emails;
+	}
+
+	/**
+	 * @param message
+	 * @param messageContent
+	 * @param email
+	 * @return
+	 * @throws IOException
+	 * @throws MessagingException
+	 */
+	private String extractAttachments(Part message, String messageContent, Email email)
+			throws IOException, MessagingException {
+		String contentType = message.getContentType();
+		
+		if (contentType.contains("multipart")) {
+			Multipart multiPart = (Multipart) message.getContent();
+			int numberOfParts = multiPart.getCount();
+			
+			for (int partCount = 0; partCount < numberOfParts; partCount++) {
+				MimeBodyPart part = (MimeBodyPart) multiPart.getBodyPart(partCount);
+				logger.info("Content-Type: " + part.getContentType());
+				if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
+					/*
+					 *  This part is attachment
+					 */
+					messagePartToAttachment(email, part);
+	
+				} else {
+					if (part.getContentType().toLowerCase().contains("multipart")) {
+						extractAttachments((Multipart) part.getContent(), messageContent, email);
+					}else
+						if (part.getContentType().toLowerCase().contains("text/plain") || part.getContentType().toLowerCase().contains("text/html"))
+							/*
+							 * This part may be the message content
+							 */
+							messageContent = messageContent.concat(part.getContent().toString());
+						else
+							/*
+							 * This is an attachment but not in the ATTACHMENT section
+							 */
+							messagePartToAttachment(email, part);
+				}
+			}
+		}else {
+			
+			if (contentType.toLowerCase().contains("text/plain") || contentType.toLowerCase().contains("text/html")) {
+				Object content = message.getContent();
+				if (content != null) {
+					/*
+					 * This part may be the message content
+					 */
+					messageContent = messageContent.concat(message.getContent().toString());
+				}
+			}else {
+				messagePartToAttachment(email, message);
+			}
+			
+			
+		}
+			
+		return messageContent;
+	}
+
+	private void extractAttachments(Multipart multiPart, String messageContent, Email email) throws MessagingException, IOException {
+		
+		
+		int numberOfParts = multiPart.getCount();
+		
+		for (int partCount = 0; partCount < numberOfParts; partCount++) {
+			MimeBodyPart part = (MimeBodyPart) multiPart.getBodyPart(partCount);
+			logger.info("Content-Type: " + part.getContentType());
+			if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
+				/*
+				 *  This part is attachment
+				 */
+				messagePartToAttachment(email, part);
+
+			} else {
+				if (part.getContentType().toLowerCase().contains("multipart")) {
+					extractAttachments((Multipart) part.getContent(), messageContent, email);
+				}else
+					if (part.getContentType().toLowerCase().contains("text/plain") || part.getContentType().toLowerCase().contains("text/html"))
+						/*
+						 * This part may be the message content
+						 */
+						messageContent = messageContent.concat(part.getContent().toString());
+					else
+						/*
+						 * This is an attachment but not in the ATTACHMENT section
+						 */
+						messagePartToAttachment(email, part);
+			}
+		}
+		
+		
+	}
+
+	/**
+	 * @param email
+	 * @param part
+	 * @throws MessagingException
+	 * @throws IOException
+	 */
+	private void messagePartToAttachment(Email email, Part part) throws MessagingException, IOException {
+		String fileName = part.getFileName();
+//							attachFiles += fileName + ", ";
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		part.getDataHandler().writeTo(bos);
+
+		String decodedContent = bos.toString();
+		Attachment attachment = new Attachment();
+		attachment.setAttachmentType(AttachmentType.TEXT);
+		attachment.setPayload(decodedContent);
+		attachment.setName(fileName);
+		email.getAttachments().add(attachment);
 	}
 
 }
