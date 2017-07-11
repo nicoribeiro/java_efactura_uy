@@ -5,6 +5,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,11 +29,13 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.utils.Tuple;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
@@ -315,6 +320,45 @@ public class CFE extends Model<CFE>{
 		CFE cfe = q.findUnique();
 		return cfe;
 	}
+	
+	
+	public static Tuple<List<CFE>,Long> find(Empresa empresa, Date fromDate, Date toDate, int page, int pageSize, DireccionDocumento direccion)
+	{
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+
+		Criterion dateCriteria = null;
+		
+		if (fromDate != null)
+			if (toDate==null)
+				dateCriteria = Restrictions.ge("fecha", fromDate);
+			else
+				dateCriteria = Restrictions.between("fecha", fromDate, toDate);
+		else
+			if (toDate!=null)
+				dateCriteria = Restrictions.le("fecha", toDate);
+		
+		if (dateCriteria!=null)
+			q.getCriteria().add(dateCriteria);
+		
+		switch (direccion) {
+		case AMBOS:
+			q.getCriteria().add( Restrictions.or( Restrictions.eq("empresaReceptora", empresa), Restrictions.eq("empresaEmisora", empresa))   );
+			break;
+		case EMITIDO:
+			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa)  );
+			break;
+		case RECIBIDO:
+			q.getCriteria().add( Restrictions.eq("empresaReceptora", empresa));
+			break;
+		}
+		
+		long rowCount = q.findRowCount();
+		
+		List<CFE> list =  page > 0 && pageSize > 0 ? q.findPage(page, pageSize) : q.findList();
+		
+		return new Tuple<List<CFE>, Long>(list, rowCount);
+	}
+	
 
 	public Empresa getEmpresaEmisora() {
 		return empresaEmisora;

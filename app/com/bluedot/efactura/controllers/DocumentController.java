@@ -25,11 +25,13 @@ import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.Print;
+import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.GenerateInvoice;
 import com.bluedot.efactura.MODO_SISTEMA;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.DireccionDocumento;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.TipoDoc;
@@ -365,11 +367,22 @@ public class DocumentController extends AbstractController {
 
 	}
 	
-	public Promise<Result> getDocumentosEntrantes(String rut, String fecha) throws APIException {
+	public Promise<Result> getDocumentosEntrantes(String rut) throws APIException {
 		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
 		
-		//TODO serializar los Sobres_recibidos y devolver
-		return json(OK);
+		Date fromDate = request().getQueryString("fromDate") != null ? (new Date(Long.parseLong(request().getQueryString("fromDate")) * 1000)) : null;
+		Date toDate = request().getQueryString("toDate") != null ? (new Date(Long.parseLong(request().getQueryString("toDate")) * 1000)) : null;
+		
+		int page = request().getQueryString("page") != null ? Integer.parseInt(request().getQueryString("page")) : 1;
+		int pageSize = request().getQueryString("pageSize") != null ? Math.min(Integer.parseInt(request().getQueryString("pageSize")), 50) : 50;
+		
+		DireccionDocumento direccion = request().getQueryString("direccion") != null ? DireccionDocumento.valueOf(request().getQueryString("direccion")) : DireccionDocumento.AMBOS;
+		
+		Tuple<List<CFE>,Long> cfes = CFE.find(empresaReceptora, fromDate, toDate, page, pageSize, direccion);
+		
+		JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
+		
+		return json(JSONUtils.createObjectList(cfeArray, cfes.item2, page, pageSize).toString());
 
 	}
 
