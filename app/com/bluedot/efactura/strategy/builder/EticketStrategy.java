@@ -162,7 +162,7 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 
 	@Override
 	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
-			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep) throws APIException {
+			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, boolean update) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
 		
@@ -171,24 +171,24 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 		if (supera10000UI()) {
 			
 			if (tipoDocRecep==null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("tipoDocRecep"));
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("tipoDocRecep");
 			
 			if (tipoDocRecep == TipoDocumento.RUC)
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("tipoDocRecep")).setDetailMessage("Deberia ser distinto de 2 (RUC)");
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("tipoDocRecep").setDetailMessage("Deberia ser distinto de 2 (RUC)");
 
 			if (codPaisRecep == null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("codPaisRecep"));
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("codPaisRecep");
 
 			if ((tipoDocRecep==TipoDocumento.RUC || tipoDocRecep==TipoDocumento.CI)  && !codPaisRecep.equals("UY"))
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("codPaisRecep"))
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("codPaisRecep")
 						.setDetailMessage("Debe ser UY");
 
 			if (tipoDocRecep==TipoDocumento.DNI  && (codPaisRecep.equals("AR") || codPaisRecep.equals("BR") || codPaisRecep.equals("CL") || codPaisRecep.equals("PY"))   )
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("codPaisRecep"))
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("codPaisRecep")
 						.setDetailMessage("Debe ser UY");
 			
 			if (docRecep == null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("docRecep"));
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecep");
 
 
 		}

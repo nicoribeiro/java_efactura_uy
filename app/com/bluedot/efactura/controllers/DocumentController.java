@@ -77,7 +77,7 @@ public class DocumentController extends AbstractController {
 	public Promise<Result> cambiarModo(String modo) throws APIException {
 		MODO_SISTEMA modoEnum = MODO_SISTEMA.valueOf(modo);
 		if (modoEnum == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("modo"));
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("modo");
 
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
 				.getMicroControllersFactory();
@@ -100,29 +100,29 @@ public class DocumentController extends AbstractController {
 
 		// TODO estos controles se pueden mover a una annotation
 		if (!document.has("Encabezado"))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Encabezado"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Encabezado");
 
 		if (!document.getJSONObject("Encabezado").has("IdDoc"))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("IdDoc"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("IdDoc");
 
 		if (!document.getJSONObject("Encabezado").getJSONObject("IdDoc").has("TipoCFE"))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("TipoCFE"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("TipoCFE");
 
 		if (!document.getJSONObject("Encabezado").getJSONObject("IdDoc").has("id"))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("id"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("id");
 
 		TipoDoc tipo = TipoDoc
 				.fromInt(document.getJSONObject("Encabezado").getJSONObject("IdDoc").getInt("TipoCFE"));
 
 		if (tipo == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoCFE"));
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoCFE");
 
 		String id = document.getJSONObject("Encabezado").getJSONObject("IdDoc").getString("id");
 
-		CFE cfe = CFE.findByGeneradorId(empresa, id);
+		CFE cfe = CFE.findByGeneradorId(empresa, id, DireccionDocumento.EMITIDO);
 
 		if (cfe != null)
-			throw APIException.raise(APIErrors.EXISTE_CFE.withParams("generadorId", id));
+			throw APIException.raise(APIErrors.EXISTE_CFE).withParams("generadorId", id);
 
 		switch (tipo) {
 		case eFactura:
@@ -135,7 +135,7 @@ public class DocumentController extends AbstractController {
 		case Nota_de_Debito_de_eFactura:
 		case Nota_de_Debito_de_eTicket:
 			if (!document.has("Referencia"))
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Referencia"));
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia");
 			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
 			break;
 
@@ -212,10 +212,10 @@ public class DocumentController extends AbstractController {
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, null, DireccionDocumento.EMITIDO, true);
 
 		if (cfes.size()>1)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
 		
 		CFE cfe = cfes.get(0);
 		
@@ -253,10 +253,10 @@ public class DocumentController extends AbstractController {
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, null, DireccionDocumento.EMITIDO, true);
 
 		if (cfes.size()>1)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
 		
 		CFE cfe = cfes.get(0);
 		
@@ -290,12 +290,12 @@ public class DocumentController extends AbstractController {
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
 		if (tipo == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoDoc", idTipoDoc));
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
 
-		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, null, DireccionDocumento.EMITIDO, true);
 
 		if (cfes.size()>1)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
 		
 		CFE cfe = cfes.get(0);
 		
@@ -330,12 +330,12 @@ public class DocumentController extends AbstractController {
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
 		if (tipo == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TipoDoc", idTipoDoc));
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
 
-		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, null, DireccionDocumento.EMITIDO, true);
 
 		if (cfes.size()>1)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
 		
 		CFE cfe = cfes.get(0); 
 			
@@ -389,7 +389,7 @@ public class DocumentController extends AbstractController {
 	public Promise<Result> generarReporteDiario(String rut, String fecha, int cantReportes) throws APIException {
 
 		if (cantReportes < 1)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("cantReportes", cantReportes));
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("cantReportes", cantReportes);
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
 
@@ -435,10 +435,10 @@ public class DocumentController extends AbstractController {
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 
-		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, true);
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, null, DireccionDocumento.EMITIDO, true);
 
 		if (cfes.size()>1)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
 		
 		CFE cfe = cfes.get(0);
 		

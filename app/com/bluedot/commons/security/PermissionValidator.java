@@ -41,7 +41,7 @@ public class PermissionValidator
 				sessionUser = credential.getUser();
 
 				if (sessionUser == null)
-					throw APIException.raise(APIErrors.USER_NOT_FOUND.withParams("", ""));
+					throw APIException.raise(APIErrors.USER_NOT_FOUND).withParams("", "");
 
 			} catch (Throwable e)
 			{

@@ -99,7 +99,7 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 		Account account = find.byId(id);
 		
 		if (account==null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.ACCOUNT_NOT_FOUND.withParams("id", id));
+			throw APIException.raise(APIErrors.ACCOUNT_NOT_FOUND).withParams("id", id);
 		
 		return account;
 	}

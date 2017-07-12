@@ -46,7 +46,7 @@ public class Respuesta extends Model<Respuesta> {
 		Respuesta pais = find.byId(id);
 
 		if (pais == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.RESPUESTA_NO_ENCONTRADA.withParams("id",id));
+			throw APIException.raise(APIErrors.RESPUESTA_NO_ENCONTRADA).withParams("id",id);
 
 		return pais;
 	}

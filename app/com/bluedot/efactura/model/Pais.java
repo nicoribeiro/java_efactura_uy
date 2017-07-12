@@ -51,7 +51,7 @@ public class Pais extends Model<Pais> {
 		Pais pais = find.byId(id);
 
 		if (pais == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.PAIS_NO_ENCONTRADO.withParams("id",id));
+			throw APIException.raise(APIErrors.PAIS_NO_ENCONTRADO).withParams("id",id);
 
 		return pais;
 	}
@@ -65,7 +65,7 @@ public class Pais extends Model<Pais> {
 		Pais pais = q.findUnique();
 		
 		if (pais == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.PAIS_NO_ENCONTRADO.withParams("codigo",codigo));
+			throw APIException.raise(APIErrors.PAIS_NO_ENCONTRADO).withParams("codigo",codigo);
 
 		return pais;
 	}

@@ -74,7 +74,7 @@ public class Attachment extends Model<Attachment> {
 		Attachment attachment = find.byId(id);
 		
 		if (attachment==null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.ATTACHMENT_NOT_FOUND.withParams("id", id));
+			throw APIException.raise(APIErrors.ATTACHMENT_NOT_FOUND).withParams("id", id);
 		
 		return attachment;
 	}

@@ -205,7 +205,7 @@ public abstract class Sobre extends Model<Sobre> {
 		Sobre sobre = find.byId(id);
 
 		if (sobre == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.SOBRE_NO_ENCONTRADO.withParams("id", id));
+			throw APIException.raise(APIErrors.SOBRE_NO_ENCONTRADO).withParams("id", id);
 		return sobre;
 	}
 	

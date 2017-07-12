@@ -63,7 +63,7 @@ public class PollerManager {
 		
 		if (applicationProvider.get().configuration().getBoolean("NotificationPoller.run", false)){
 			logger.info("NotificationPoller: running");
-			runner = new NotificationPoller(60l * 1000l * 60l * 24l);
+			runner = new NotificationPoller();
 			executor.execute(runner);
 		}else
 			logger.info("NotificationPoller: not running");

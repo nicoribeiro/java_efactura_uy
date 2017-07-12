@@ -50,7 +50,7 @@ public class JsonPostValidator extends Action<ValidateJsonPost>
 			String value = values[i];
 			if (!json.has(value))
 			{
-				return raiseValidationError(context, APIException.raise(APIErrors.MISSING_PARAMETER.withParams(value)));
+				return raiseValidationError(context, APIException.raise(APIErrors.MISSING_PARAMETER).withParams(value));
 			}
 		}
 

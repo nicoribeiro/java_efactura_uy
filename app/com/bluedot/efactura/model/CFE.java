@@ -264,57 +264,60 @@ public class CFE extends Model<CFE>{
 		CFE cfe = find.byId(id);
 
 		if (cfe == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO.withParams("id", id));
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("id", id);
 		return cfe;
 	}
-
 	
-	public static List<CFE> findById(Empresa empresa, TipoDoc tipo, String serie, long nro, boolean throwExceptionWhenMissing) throws APIException
+	public static List<CFE> findById(Empresa empresa, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, DireccionDocumento direccion, boolean throwExceptionWhenMissing) throws APIException
 	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 		
+		switch (direccion) {
+		case AMBOS:
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("DireccionDocumento", direccion.name());
+		case EMITIDO:
+			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
+			q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
+			break;
+		case RECIBIDO:
+			q.getCriteria().add(Restrictions.eq("empresaReceptora", empresa));
+			q.getCriteria().add(Restrictions.isNotNull("sobreRecibido"));
+			break;
+		}
 			
-			q.getCriteria().createAlias("empresaEmisora", "empresa", JoinType.LEFT_OUTER_JOIN);
 			
-			q.getCriteria().add(Restrictions.and
-					
-					(		Restrictions.eq("empresa.id", empresa.getId()), 
-							Restrictions.eq("tipo",tipo), 
-							Restrictions.eq("serie", serie), 
-							Restrictions.eq("nro", nro)
-					));
+		q.getCriteria().add(Restrictions.and
+		(		 
+			Restrictions.eq("tipo",tipo), 
+			Restrictions.eq("serie", serie), 
+			Restrictions.eq("nro", nro)
+		));
+		
+		if (estado!=null)
+			q.getCriteria().add(Restrictions.eq("estado", estado));
 		
 		List<CFE> cfe =  q.findList();
 		if ((cfe == null || cfe.size()==0)&& throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO.withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro));
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro);
 		return cfe;
 	}
 	
-	public static List<CFE> findById(Empresa empresa, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, boolean throwExceptionWhenMissing) throws APIException
-	{
-		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
-		
-			
-			q.getCriteria().createAlias("empresaEmisora", "empresa", JoinType.LEFT_OUTER_JOIN);
-			
-			q.getCriteria().add(Restrictions.and
-					
-					(		Restrictions.eq("empresa.id", empresa.getId()), 
-							Restrictions.eq("tipo",tipo), 
-							Restrictions.eq("serie", serie), 
-							Restrictions.eq("nro", nro),
-							Restrictions.eq("estado", estado)
-					));
-		
-		List<CFE> cfe =  q.findList();
-		if ((cfe == null || cfe.size()==0)&& throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO.withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro));
-		return cfe;
-	}
-	
-	public static CFE findByGeneradorId(Empresa empresa, String id) {
+	public static CFE findByGeneradorId(Empresa empresa, String id, DireccionDocumento direccion) throws APIException {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
+		switch (direccion) {
+		case AMBOS:
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("DireccionDocumento", direccion.name());
+		case EMITIDO:
+			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
+			q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
+			break;
+		case RECIBIDO:
+			q.getCriteria().add(Restrictions.eq("empresaReceptora", empresa));
+			q.getCriteria().add(Restrictions.isNotNull("sobreRecibido"));
+			break;
+		}
+		
 		q.getCriteria().add(Restrictions.eq("generadorId", id));
 
 		CFE cfe = q.findUnique();

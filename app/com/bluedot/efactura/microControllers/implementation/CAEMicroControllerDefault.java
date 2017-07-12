@@ -94,7 +94,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	private synchronized long consumeId(CAE cae) throws IOException, JSONException, APIException
 	{
 		if (cae.getSiguiente()  > cae.getFin())
-			throw APIException.raise(APIErrors.CAE_NOT_AVAILABLE_ID.withParams(cae.getNro(), cae.getTipo()));
+			throw APIException.raise(APIErrors.CAE_NOT_AVAILABLE_ID).withParams(cae.getNro(), cae.getTipo());
 
 		long siguiente = cae.getSiguiente();
 		cae.setSiguiente(siguiente+1);
@@ -108,7 +108,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 
 		CAEDataType cae = new CAEDataType();
 		if (!caesMap.containsKey(tipoDoc))
-			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND.withParams(tipoDoc.friendlyName, tipoDoc.value));
+			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
 		CAE caeJson = caesMap.get(tipoDoc).get(0);
 
 		cae.setCAEID(new BigInteger(String.valueOf(caeJson.getNro())));
@@ -132,7 +132,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	public synchronized CAE getCAE(TipoDoc tipoDoc) throws APIException
 	{
 		if (!caesMap.containsKey(tipoDoc))
-			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND.withParams(tipoDoc.friendlyName, tipoDoc.value));
+			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
 		return caesMap.get(tipoDoc).get(0);
 	}
 
@@ -143,7 +143,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		if (cae==null)
-			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND.withParams(tipoDoc.friendlyName, tipoDoc.value));
+			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
 		
 		if (montosIncluyenIva)
 			iddoc.setMntBruto(new BigInteger("1"));
@@ -235,25 +235,25 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	public void addCAE(CAE cae) throws APIException {
 		
 		if (cae.getFechaAnulado()!=null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("FechaAnulado")).setDetailMessage("Fecha anulado debe ser == null");
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("FechaAnulado").setDetailMessage("Fecha anulado debe ser == null");
 		
 		if (DateHandler.diff( new Date(), cae.getFechaVencimiento()) > 1)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("FechaVencimiento")).setDetailMessage("CAE muy proximo a vencer");
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("FechaVencimiento").setDetailMessage("CAE muy proximo a vencer");
 		
 		if (cae.getInicial() == 0)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Inicial")).setDetailMessage("Inicial no puede ser 0");
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Inicial").setDetailMessage("Inicial no puede ser 0");
 		
 		if (cae.getFin() == 0)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Fin")).setDetailMessage("Fin no puede ser 0");		
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Fin").setDetailMessage("Fin no puede ser 0");		
 		
 		if (cae.getSiguiente() != cae.getInicial())
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Siguiente")).setDetailMessage("Siguiente debe ser = a Inicial");
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Siguiente").setDetailMessage("Siguiente debe ser = a Inicial");
 		
 		if (cae.getTipo() == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Tipo")).setDetailMessage("El CAE debe tener Tipo");
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Tipo").setDetailMessage("El CAE debe tener Tipo");
 		
 		if (cae.getSerie() == null || cae.getSerie().equals(""))
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("Serie")).setDetailMessage("La Serie no puede ser vacia");
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Serie").setDetailMessage("La Serie no puede ser vacia");
 		
 		cae.save();
 		empresa.getCAEs().add(cae);

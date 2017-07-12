@@ -167,28 +167,28 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 		ReceptorInterface receptor = getReceptor();
 		
 		if (tipoDocRecep==null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("tipoDocRecep"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("tipoDocRecep");
 		
 		if (tipoDocRecep != TipoDocumento.RUC)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("tipoDocRecep")).setDetailMessage("Deberia ser 2 (RUC)");
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("tipoDocRecep").setDetailMessage("Deberia ser 2 (RUC)");
 		
 		if (codPaisRecep ==null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("codPaisRecep"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("codPaisRecep");
 		
 		if (!codPaisRecep.equals("UY"))
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("codPaisRecep")).setDetailMessage("Deberia ser UY");
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("codPaisRecep").setDetailMessage("Deberia ser UY");
 		
 		if (docRecep ==null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("docRecep"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecep");
 		
 		if (dirRecep ==null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("dirRecep"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("dirRecep");
 		
 		if (rznSocRecep ==null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("rznSocRecep"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("rznSocRecep");
 		
 		if (ciudadRecep ==null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("ciudadRecep"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("ciudadRecep");
 		
 		receptor.setTipoDocRecep(tipoDocRecep.getId());
 		receptor.setCodPaisRecep(codPaisRecep);

@@ -35,7 +35,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 			emailAddress = "auto-generated-"+UUID.randomUUID().toString().substring(0, 8)+"@somemail.com";
 		
 		if (User.findByEmailAddress(emailAddress) != null)
-			throw APIException.raise(APIErrors.USER_ALREADY_EXISTS.withParams("emailAddress", emailAddress));
+			throw APIException.raise(APIErrors.USER_ALREADY_EXISTS).withParams("emailAddress", emailAddress);
 		
 		/*
 		 * USER

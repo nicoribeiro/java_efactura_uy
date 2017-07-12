@@ -114,7 +114,7 @@ public class Empresa extends Model<Empresa>{
 		Empresa empresa = find.byId(id);
 
 		if (empresa == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA.withParams("id",id));
+			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA).withParams("id",id);
 					
 
 		return empresa;
@@ -129,7 +129,7 @@ public class Empresa extends Model<Empresa>{
 		Empresa empresa = find.query().eq("rut", rut).findUnique();
 
 		if (empresa == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA.withParams("rut", rut));
+			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA).withParams("rut", rut);
 
 		return empresa;
 	}

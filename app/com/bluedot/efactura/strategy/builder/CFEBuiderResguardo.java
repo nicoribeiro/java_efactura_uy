@@ -62,7 +62,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 				retencionPercepcion.save();
 				
 				if (retencionJSON.optString("CodRet") == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("CodRet"));
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("CodRet");
 				retencion.setCodRet(retencionJSON.getString("CodRet"));
 				retencionPercepcion.setCodigo(retencionJSON.getString("CodRet"));
 				
@@ -102,7 +102,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 		TipMonType moneda = TipMonType.fromValue(totalesJson.getString("TpoMoneda"));
 
 		if (moneda == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TpoMoneda"))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TpoMoneda")
 					.setDetailMessage("El campo TpoMoneda no es ninguno de los conocidos, ver tabla de monedas.");
 
 		totales.setTpoMoneda(moneda);
@@ -117,7 +117,7 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 				totales.setTpoCambio(new BigDecimal(df.format(totalesJson.getDouble("TpoCambio"))));
 				strategy.getCFE().setTipoCambio(totales.getTpoCambio().doubleValue());
 			}else
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("totales.TpoCambio"));
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("totales.TpoCambio");
 		
 		
 		List<ItemInterface> items = strategy.getItem();

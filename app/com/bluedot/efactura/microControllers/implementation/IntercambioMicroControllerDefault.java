@@ -24,6 +24,7 @@ import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.IntercambioMicroController;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.DireccionDocumento;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.MotivoRechazoCFE;
@@ -338,10 +339,10 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		/*
 		 * E02
 		 */
- 		List<CFE> cfes = CFE.findById(cfe.getEmpresaEmisora(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(), EstadoACKCFEType.AE, false);
+ 		List<CFE> cfes = CFE.findById(cfe.getEmpresaEmisora(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(), EstadoACKCFEType.AE, DireccionDocumento.EMITIDO, false);
 
  		if (cfes.size()>1)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+ 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",cfe.getEmpresaEmisora().getRut()+"-"+cfe.getNro()+"-"+cfe.getSerie()+"-"+cfe.getTipo()).setDetailMessage("No identifica a un unico cfe");
  		
  		if (cfes.size()==1){
 	 		rechazo = new RechazoCFEDGIType();

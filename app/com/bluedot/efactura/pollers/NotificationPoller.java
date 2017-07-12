@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.notificationChannels.MessagingHelper;
-import com.bluedot.commons.utils.DatabaseExecutor;
-import com.bluedot.commons.utils.DatabaseExecutor.PromiseBlock;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.microControllers.implementation.CAEMicroControllerDefault;
 import com.bluedot.efactura.model.Empresa;
@@ -17,65 +15,37 @@ import com.bluedot.efactura.model.TipoDoc;
 
 import play.Play;
 
-public class NotificationPoller implements Runnable {
+public class NotificationPoller extends PollerRunner {
 
-	private static final long INTERVAL = 1000L;
+	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l * 60l * 24l;
 
 	final static Logger logger = LoggerFactory.getLogger(NotificationPoller.class);
 
-	private long sleepTimeInMillis;
 
-	private long runs;
-
-	public NotificationPoller(long sleepTimeInMillis) {
-		super();
-		this.sleepTimeInMillis = sleepTimeInMillis;
-		runs = 0;
+	public NotificationPoller() {
+		super(logger,SLEEP_TIME_IN_MILLIS);
 	}
 
-	public void run() {
+	@Override
+	protected void executeConcreteAction() throws APIException {
+		
+		logger.info("Buscando Empresas ...");
 
-		while (true) {
-			try {
-				if (INTERVAL * runs > sleepTimeInMillis) {
-					runs = 0;
-					try {
-						DatabaseExecutor.syncDatabaseAction(new PromiseBlock<Void>() {
-							public Void execute() {
+		List<Empresa> empresas = Empresa.findAll();
 
-								logger.info("Buscando Empresas ...");
-
-								List<Empresa> empresas = Empresa.findAll();
-
-								for (Empresa empresa : empresas) {
-									if (empresa.getFirmaDigital() != null)
-										checkFechaVencimientoFirma(empresa);
-									if (empresa.getCAEs() != null && !empresa.getCAEs().isEmpty())
-										try {
-											checkCAEs(empresa);
-										} catch (APIException e) {
-											e.printStackTrace();
-										}
-								}
-								
-								logger.info("Finaliza Procesamiento de Empresas ...");
-
-								return null;
-							}
-
-						}, true);
-
-					} catch (Throwable e) {
-						e.printStackTrace();
-					}
+		for (Empresa empresa : empresas) {
+			if (empresa.getFirmaDigital() != null)
+				checkFechaVencimientoFirma(empresa);
+			if (empresa.getCAEs() != null && !empresa.getCAEs().isEmpty())
+				try {
+					checkCAEs(empresa);
+				} catch (APIException e) {
+					e.printStackTrace();
 				}
-				runs++;
-				Thread.sleep(INTERVAL);
-
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 		}
+		
+		logger.info("Finaliza Procesamiento de Empresas ...");
+		
 	}
 
 	private void checkFechaVencimientoFirma(Empresa empresa) {

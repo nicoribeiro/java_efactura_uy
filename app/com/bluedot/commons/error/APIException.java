@@ -22,7 +22,7 @@ public class APIException extends Throwable
 	}
 	
 	private APIException(APIErrors error) {
-		super(error.message);
+		super(error.i18nKey);
 		this.error = error;
 		this.log = true;
 	}
@@ -35,6 +35,8 @@ public class APIException extends Throwable
 	private String detailMessage= "";
 	private APIErrors error;
 	private boolean log;
+	private Object[] args;
+	private String message;
 	
 	/*
 	 * 400 Bad Request
@@ -124,7 +126,6 @@ public class APIException extends Throwable
 
 		int code;
 		int httpCode;
-		String message;
 		String i18nKey;
 		boolean log;
 		
@@ -137,20 +138,9 @@ public class APIException extends Throwable
 			this.i18nKey = name();
 		}
 		
-		public APIErrors withParams(Object... args){
-			message = Messages.get(i18nKey, args);
-			return this;
-		}
-		
 		public int code()
 		{
 			return code;
-		}
-		public String message()
-		{
-			if (message==null)
-				message = Messages.get(i18nKey);
-			return message;
 		}
 		
 		public int httpCode()
@@ -177,6 +167,17 @@ public class APIException extends Throwable
 	}
 	
 	
+	public APIException withParams(Object... args){
+		message = Messages.get(error.i18nKey, args);
+		return this;
+	}
+	
+	public String getInternalMessage()
+	{
+		if (message==null)
+			message = Messages.get(error.i18nKey);
+		return message;
+	}
 	
 	public String getDetailMessage()
 	{
@@ -234,7 +235,7 @@ public class APIException extends Throwable
 		JSONObject jsonError = new JSONObject();
 		jsonError.put("result_code", error.code);
 		jsonError.put("result_name", error.name());
-		jsonError.put("result_message", error.message);
+		jsonError.put("result_message", getInternalMessage());
 		jsonError.put("result_detail", getDetailMessage());
 		
 		return jsonError;

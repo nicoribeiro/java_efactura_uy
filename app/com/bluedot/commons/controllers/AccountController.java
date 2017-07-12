@@ -248,12 +248,12 @@ public class AccountController extends AbstractController
 		ACLType type = com.bluedot.commons.utils.EnumUtils.valueOf(aclTypeString, ACLType.class);
 
 		if (type == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("aclType"));
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("aclType");
 
 		ACLAction action = com.bluedot.commons.utils.EnumUtils.valueOf(aclAction, ACLAction.class);
 
 		if (action == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("aclAction"));
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("aclAction");
 
 		switch (type)
 		{
@@ -292,10 +292,10 @@ public class AccountController extends AbstractController
 		 * ACL CONTROL
 		 */
 		if (aclName == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("acl"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("acl");
 		final AccountAccessLevel accountAcl = com.bluedot.commons.utils.EnumUtils.valueOf(aclName, AccountAccessLevel.class);
 		if (accountAcl == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("acl"));
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("acl");
 
 		ArrayList<Permission> toRemove = new ArrayList<>();
 		for (Permission permission : user.getPermissions())
@@ -490,7 +490,7 @@ public class AccountController extends AbstractController
 					user = User.findByEmailAddress(emailAddress);
 					
 					if (parentAccount.getUsers().contains(user))
-						throw APIException.raise(APIErrors.USER_ALREADY_EXISTS.withParams("emailAddress", emailAddress));
+						throw APIException.raise(APIErrors.USER_ALREADY_EXISTS).withParams("emailAddress", emailAddress);
 				}
 				else
 				{

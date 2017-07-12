@@ -258,13 +258,13 @@ public class RecepcionServiceImpl implements RecepcionService {
 				if (RUCemisor == null)
 					RUCemisor = rucEmisor;
 				else if (!RUCemisor.equals(rucEmisor))
-					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("RUCemisor"))
+					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("RUCemisor")
 							.setDetailMessage("Cannot have many RUCemisor values on one envelope");
 
 				if (RUCreceptor == null)
 					RUCreceptor = rucReceptor;
 				else if (!RUCemisor.equals(rucReceptor))
-					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("RUCreceptor"))
+					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("RUCreceptor")
 							.setDetailMessage("Cannot have many RUCreceptor on one envelope");
 
 			}
@@ -466,9 +466,9 @@ public class RecepcionServiceImpl implements RecepcionService {
 	public Data consultaResultadoSobre(String token, Long idReceptor) throws APIException {
 
 		if (token == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("token"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("token");
 		if (idReceptor == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("idReceptor"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("idReceptor");
 
 		try {
 			WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
@@ -561,7 +561,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 	public ReporteDiario generarReporteDiario(Date fecha, Empresa empresa) throws APIException {
 		try {
 			if (fecha == null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("fecha"));
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("fecha");
 
 			long hours = ((new Date()).getTime()-fecha.getTime())/1000/60/60;
 			

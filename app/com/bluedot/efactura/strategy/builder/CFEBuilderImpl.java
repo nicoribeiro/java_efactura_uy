@@ -24,6 +24,7 @@ import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Detalle;
+import com.bluedot.efactura.model.DireccionDocumento;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FormaDePago;
 import com.bluedot.efactura.model.IVA;
@@ -141,7 +142,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		TipMonType moneda = TipMonType.fromValue(totalesJson.getString("TpoMoneda"));
 
 		if (moneda == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TpoMoneda"))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TpoMoneda")
 					.setDetailMessage("El campo TpoMoneda no es ninguno de los conocidos, ver tabla de monedas.");
 
 		totales.setTpoMoneda(moneda);
@@ -156,7 +157,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 				totales.setTpoCambio(new BigDecimal(df.format(totalesJson.getDouble("TpoCambio"))));
 				strategy.getCFE().setTipoCambio(totales.getTpoCambio().doubleValue());
 			}else
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("totales.TpoCambio"));
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("totales.TpoCambio");
 
 		/*
 		 * Cantidad de Lineas
@@ -411,7 +412,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 					JSONObject referenciaJSON = referenciasJSON.getJSONObject(i);
 				
 				if (referenciaJSON == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("Referencia"));
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia");
 
 				ReferenciaTipo referenciaType = strategy.getReferenciaTipo();
 
@@ -449,10 +450,10 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 					referencia.setTpoDocRef(new BigInteger(Commons.safeGetString(referenciaJSON,"TpoDocRef")));
 					referencia.setNroLinRef(Commons.safeGetInteger(referenciaJSON, "NroLinRef"));
 					
-					List<CFE> cfes = CFE.findById(empresaEmisora, TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef")), Commons.safeGetString(referenciaJSON,"Serie"), Commons.safeGetLong(referenciaJSON, "NroCFERef"), false);
+					List<CFE> cfes = CFE.findById(empresaEmisora, TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef")), Commons.safeGetString(referenciaJSON,"Serie"), Commons.safeGetLong(referenciaJSON, "NroCFERef"), null, DireccionDocumento.EMITIDO, false);
 					
 					if (cfes.size()>1)
-						throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).setDetailMessage("RUT+NRO+SERIE+TIPODOC no identifica a un unico cfe");
+						throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",empresaEmisora.getRut()+"-"+Commons.safeGetLong(referenciaJSON, "NroCFERef")+"-"+Commons.safeGetString(referenciaJSON,"Serie")+"-"+TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef"))).setDetailMessage("No identifica a un unico cfe");
 					
 					if (cfes.size()==1){
 						CFE cfeReferencia = cfes.get(0);

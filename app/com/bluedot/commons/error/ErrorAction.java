@@ -94,7 +94,7 @@ public class ErrorAction extends Action<ErrorMessage>
 		if(ctx.args.get("validation_error") != null)
 		{
 			APIException e = (APIException)ctx.args.get("validation_exception");
-			ObjectNode jsonError = buildError(e.getError().message(), e.getError().code(), e.getDetailMessage());
+			ObjectNode jsonError = buildError(e.getInternalMessage(), e.getError().code(), e.getDetailMessage());
 			return Promise.<Result>pure(Results.status(e.getError().httpCode(), jsonError));
 		}
 		return null;
@@ -102,7 +102,7 @@ public class ErrorAction extends Action<ErrorMessage>
 	
 	public static Promise<Result> handleAPIException(APIException e)
 	{
-		ObjectNode jsonError = buildError(e.getError().message(), e.getError().code(), e.getDetailMessage());
+		ObjectNode jsonError = buildError(e.getInternalMessage(), e.getError().code(), e.getDetailMessage());
 		if (e.isLog())
 			logger.error("APIException is: ", e);
 		return Promise.<Result> pure(Results.status(e.getError().httpCode(), jsonError));

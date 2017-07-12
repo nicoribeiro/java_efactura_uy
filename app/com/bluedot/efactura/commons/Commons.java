@@ -99,31 +99,31 @@ public class Commons {
 
 	public static JSONObject safeGetJSONObject(JSONObject object, String key) throws APIException {
 		if (object.optJSONObject(key) == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.getJSONObject(key);
 	}
 	
 	public static JSONArray safeGetJSONArray(JSONObject object, String key) throws APIException {
 		if (object.optJSONArray(key) == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.getJSONArray(key);
 	}
 	
 	public static String safeGetString(JSONObject object, String key) throws APIException {
 		if (!object.has(key))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.optString(key);
 	}
 	
 	public static Integer safeGetInteger(JSONObject object, String key) throws APIException {
 		if (!object.has(key))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.optInt(key);
 	}
 	
 	public static long safeGetLong(JSONObject object, String key) throws APIException {
 		if (!object.has(key))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.optLong(key);
 	}
 
