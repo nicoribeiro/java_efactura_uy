@@ -107,7 +107,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	}
 
 	@Override
-	public void buildReceptor(JSONObject receptorJson) throws APIException {
+	public void buildReceptor(JSONObject receptorJson, boolean esCfeEmitido) throws APIException {
 		
 		TipoDocumento TipoDocRecep = receptorJson.has("TipoDocRecep")? TipoDocumento.fromInt(receptorJson.getInt("TipoDocRecep")): null;
 
@@ -123,7 +123,9 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		
 		String DeptoRecep = receptorJson.has("DeptoRecep") ? receptorJson.getString("DeptoRecep") : null;
 		
-		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep);
+		boolean update = esCfeEmitido;
+		
+		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep, update);
 		
 	}
 
@@ -392,7 +394,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 
 		emisor.setDepartamento(Commons.safeGetString(emisorJson, "Departamento"));
 
-		Empresa empresaEmisora = Empresa.findByRUT(Commons.safeGetString(emisorJson, "RUCEmisor"));
+		Empresa empresaEmisora = Empresa.getOrCreateEmpresa(emisor.getRUCEmisor(), emisor.getRznSoc(), emisor.getDomFiscal(), emisor.getCiudad(), emisor.getDepartamento(), false); 
 		
 		strategy.getCFE().setEmpresaEmisora(empresaEmisora);
 		

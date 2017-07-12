@@ -82,7 +82,8 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Receptor (dentro de encabezado)
 		 */
-		cfeBuilder.buildReceptor(Commons.safeGetJSONObject(encabezadoJSON,"Receptor"));
+		boolean update = esCfeEmitido;
+		cfeBuilder.buildReceptor(Commons.safeGetJSONObject(encabezadoJSON,"Receptor"), update);
 		
 		/*
 		 * Referencia

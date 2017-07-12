@@ -14,6 +14,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.TipoDocumento;
 
@@ -158,7 +159,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 
 	@Override
 	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String rznSocRecep,
-			String dirRecep, String ciudadRecep, String deptoRecep) throws APIException {
+			String dirRecep, String ciudadRecep, String deptoRecep, boolean update) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
 		if (tipoDocRecep != null)
@@ -183,7 +184,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 			} else {
 				if (rznSocRecep != null && dirRecep != null && ciudadRecep != null)
 					cfe.setEmpresaReceptora(
-							getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep));
+							Empresa.getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep, update));
 			}
 
 	}

@@ -5,7 +5,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -95,7 +94,7 @@ public class Empresa extends Model<Empresa>{
 	}
 
 	public Empresa(String rut, String razon, String nombreComercial, String direccion, String localidad,
-			String departamento, int codigoSucursal) {
+			String departamento) {
 		super();
 		this.rut = rut;
 		this.razon = razon;
@@ -103,7 +102,6 @@ public class Empresa extends Model<Empresa>{
 		this.direccion = direccion;
 		this.localidad = localidad;
 		this.departamento = departamento;
-		this.codigoSucursal = codigoSucursal;
 	}
 	
 	private static Finder<Integer, Empresa> find = new Finder<Integer, Empresa>(Integer.class, Empresa.class);
@@ -121,7 +119,6 @@ public class Empresa extends Model<Empresa>{
 
 		return empresa;
 	}
-	
 	
 	public static Empresa findByRUT(String rut)
 	{
@@ -145,6 +142,35 @@ public class Empresa extends Model<Empresa>{
 	public static long count(){
 		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
 		return q.findRowCount();
+	}
+	
+	public static Empresa getOrCreateEmpresa(String docRecep, String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, boolean update) {
+		Empresa empresa = Empresa.findByRUT(docRecep);
+		
+		if (empresa == null) {
+			/*
+			 * Si la empresa no existe la registro como nueva en el sistema
+			 */
+			empresa = new Empresa(docRecep, rznSocRecep, null, dirRecep, ciudadRecep, deptoRecep);
+			empresa.save();
+		}else{
+			if (update) {
+				/*
+				 * Si la empresa existe actualizo los datos que puedo
+				 */
+				if (deptoRecep!=null)
+					empresa.setDepartamento(deptoRecep.toUpperCase());
+				if (ciudadRecep!=null)
+					empresa.setLocalidad(ciudadRecep.toUpperCase());
+				if (dirRecep!=null)
+					empresa.setDireccion(dirRecep.toUpperCase());
+				if (rznSocRecep!=null)
+					empresa.setRazon(rznSocRecep.toUpperCase());
+				empresa.update();
+			}
+		}
+		
+		return empresa;
 	}
 
 	public int getId() {

@@ -215,9 +215,18 @@ public class GenerateInvoice {
 		/*
 		 * Datos del Emisor
 		 */
+		/*
+		 * Aca no se puede usar todos los datos de cfe.getEmpresaEmisora() porque pueden haber cambiado, puedo usar los datos del generador_json 
+		 * o desde el XML que se envia a DGI. Como el XML esta dentro del sobre prefiero usar los datos del generador_json 
+		 * 
+		 * Los datos que pueden cambiar son direccion, localidad, departamento y codigoPostal
+		 * 
+		 */
+		JSONObject generador = new JSONObject(cfe.getGeneradorJson());
+		
 		createHeadings(bf, cb, emisor_x, emisor_y, cfe.getEmpresaEmisora().getRazon());
-		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize, cfe.getEmpresaEmisora().getDireccion() + " CP " + cfe.getEmpresaEmisora().getCodigoPostal());
-		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 2, cfe.getEmpresaEmisora().getLocalidad()+ " - Uruguay") ;
+		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize, generador.getJSONObject("Encabezado").getJSONObject("Emisor").getString("DomFiscal") + " CP " + cfe.getEmpresaEmisora().getCodigoPostal());
+		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 2, generador.getJSONObject("Encabezado").getJSONObject("Emisor").getString("Ciudad") + " - Uruguay") ;
 		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 3, cfe.getEmpresaEmisora().getTelefono());
 		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 4, cfe.getEmpresaEmisora().getPaginaWeb());
 
@@ -269,16 +278,22 @@ public class GenerateInvoice {
 		case eRemito_Contingencia:
 		case eResguardo:
 		case eResguardo_Contingencia:
-
+			/*
+			 * Aca no se puede usar todos los datos de cfe.getEmpresaReceptora() porque pueden haber cambiado, puedo usar los datos del generador_json 
+			 * o desde el XML que se envia a DGI. Como el XML esta dentro del sobre prefiero usar los datos del generador_json 
+			 * 
+			 * Los datos que pueden cambiar son direccion, localidad, departamento 
+			 * 
+			 */
+			JSONObject generador = new JSONObject(cfe.getGeneradorJson());
+			
 			createHeadings(bf, cb, receptor_x + 50, receptor_y, "RUC COMPRADOR", PdfContentByte.ALIGN_CENTER);
 			createHeadings(bf, cb, receptor_x + 50, receptor_y - headerRowSize, cfe.getEmpresaReceptora().getRut(),
 					PdfContentByte.ALIGN_CENTER);
-			
-			
-			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, cfe.getEmpresaReceptora().getDireccion(),
+			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DirRecep"),
 					PdfContentByte.ALIGN_LEFT);
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4,
-					cfe.getEmpresaReceptora().getLocalidad() + " - " + cfe.getEmpresaReceptora().getDepartamento(), PdfContentByte.ALIGN_LEFT);
+					cfe.getEmpresaReceptora().getLocalidad() + " - " + generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DeptoRecep"), PdfContentByte.ALIGN_LEFT);
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, cfe.getEmpresaReceptora().getRazon(),
 					PdfContentByte.ALIGN_LEFT);
 			break;

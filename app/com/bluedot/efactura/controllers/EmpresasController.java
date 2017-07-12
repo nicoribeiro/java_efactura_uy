@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -107,7 +106,7 @@ public class EmpresasController extends AbstractController {
 
 					Empresa empresa = Empresa.findByRUT(rut);
 					if ( empresa == null) {
-						empresa = new Empresa(rut, null, null, null, null, null, 0);
+						empresa = new Empresa(rut, null, null, null, null, null);
 						empresa.save();
 					}else{
 						empresa.update();

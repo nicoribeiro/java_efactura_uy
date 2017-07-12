@@ -11,7 +11,7 @@ public interface CFEBuiderInterface {
 	
 	void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws APIException;
 
-	void buildReceptor(JSONObject receptorJson) throws APIException;
+	void buildReceptor(JSONObject receptorJson, boolean esCfeEmitido) throws APIException;
 
 	void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws APIException;
 
