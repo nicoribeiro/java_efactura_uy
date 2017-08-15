@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -34,6 +35,8 @@ import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.DireccionDocumento;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
+import com.bluedot.efactura.model.Sobre;
+import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.pollers.PollerManager;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
@@ -320,7 +323,7 @@ public class DocumentController extends AbstractController {
 
 	}
 	
-	public Promise<Result> enviarMailEmpresa(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+	public Promise<Result> enviarCfeEmpresa(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
 
@@ -342,7 +345,7 @@ public class DocumentController extends AbstractController {
 		JSONObject error = null;
 
 		try {
-			factory.getServiceMicroController(empresa).enviarMailEmpresa(cfe);
+			factory.getServiceMicroController(empresa).enviarCfeEmpresa(cfe);
 		} catch (APIException e) {
 			logger.error("APIException:", e);
 			error = e.getJSONObject();
@@ -354,6 +357,31 @@ public class DocumentController extends AbstractController {
 		return json(error.toString());
 
 	}
+	
+	public Promise<Result> enviarSobreEmpresa(String rut, long sobreId) throws APIException {
+
+		Sobre sobre = SobreEmitido.findById(sobreId,true);
+
+		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
+				.getMicroControllersFactory();
+		
+		JSONObject error = null;
+		
+		if (sobre instanceof SobreEmitido)
+			try {
+				factory.getServiceMicroController(sobre.getEmpresaEmisora()).enviarSobreEmpresa((SobreEmitido)sobre);
+			} catch (APIException e) {
+				logger.error("APIException:", e);
+				error = e.getJSONObject();
+			}
+		
+		if (error == null)
+			error =  new JSONObject(OK);
+
+		return json(error.toString());
+
+	}
+	
 
 	public Promise<Result> procesarEmailEntrantes(String rut) throws APIException {
 		Empresa empresaReceptora = Empresa.findByRUT(rut, true);

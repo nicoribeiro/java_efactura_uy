@@ -30,9 +30,20 @@ public class SendMail
 
 	public static void sendMail(String username, String password, String smtpHost, int smtpPort, String from, String recipient, String subject, String textVersion, String htmlVersion, Map<String, String> attachments, boolean logInstedOfSend) throws MessagingException
 	{
-		Address[] array = new Address[1];
-
-		array[0] = new InternetAddress(recipient);
+		Address[] array;
+		
+		if (recipient.contains(",")) {
+			String[] recipients = recipient.split(",");
+			array = new Address[recipients.length];
+			for (int i = 0; i < recipients.length; i++) {
+				array[i] = new InternetAddress(recipients[i]);
+			}
+		}
+		else {
+			array = new Address[1];
+			array[0] = new InternetAddress(recipient);
+		}
+		
 		sendMail(username, password, smtpHost, smtpPort, from, array, subject, textVersion, htmlVersion, attachments, logInstedOfSend);
 
 	}
@@ -133,8 +144,11 @@ public class SendMail
 		logger.info("BODY-HTML: " + htmlVersion);
 		logger.info("ATTACHMENTS: " + attachmentsNames);
 		
-		if (!logInstedOfSend)
-			logger.info("Message sended successfully to: " + mails);
+		if (logInstedOfSend)
+			logger.info("Message wasn't sent, only logged");
+		else
+			logger.info("Message sent successfully to: " + mails);
+		
 
 	}
 

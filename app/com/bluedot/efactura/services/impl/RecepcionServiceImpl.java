@@ -722,7 +722,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 	}
 
 	@Override
-	public void enviarMailEmpresa(CFE cfe) throws APIException {
+	public void enviarCfeEmpresa(CFE cfe) throws APIException {
 		SobreEmitido sobre = cfe.getSobreEmitido();
 		
 		if (sobre.getEmpresaReceptora().isEmisorElectronico()){
@@ -736,9 +736,14 @@ public class RecepcionServiceImpl implements RecepcionService {
 					e.printStackTrace();
 				}
 			}
-			Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora(), sobre.getNombreArchivo(), sobre.getXmlEmpresa());
+			enviarSobreEmpresa(sobre);
 		}
 		
+	}
+
+	@Override
+	public void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
+		Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora(), sobre.getNombreArchivo(), sobre.getXmlEmpresa());
 	}
 
 	// @Override

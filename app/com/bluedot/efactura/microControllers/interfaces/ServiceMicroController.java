@@ -23,6 +23,8 @@ public interface ServiceMicroController {
 
 	void getDocumentosEntrantes() throws APIException;
 
-	void enviarMailEmpresa(CFE cfe) throws APIException;
+	void enviarCfeEmpresa(CFE cfe) throws APIException;
+
+	void enviarSobreEmpresa(SobreEmitido sobre) throws APIException;
 
 }
