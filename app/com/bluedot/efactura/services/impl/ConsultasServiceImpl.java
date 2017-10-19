@@ -7,7 +7,9 @@ import javax.xml.datatype.DatatypeFactory;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.interceptors.InterceptorContextHolder;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.pool.WSConsultasPool;
@@ -82,7 +84,13 @@ public class ConsultasServiceImpl implements ConsultasService {
 
 	@Override
 	public ACKConsultaEnviosSobre consultarEnvioSobre(long idEmisor, long idReceptor, Date fechaDesde,
-			Date FechaHasta) throws APIException {
+			Date FechaHasta, Empresa empresa) throws APIException {
+		
+		/*
+		 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
+		 * parametros a los Interceptors
+		 */
+		InterceptorContextHolder.setEmpresa(empresa);
 		
 		try {
 			WSEFacturaConsultasSoapPortWrapper portWrapper = WSConsultasPool.getInstance().checkOut();

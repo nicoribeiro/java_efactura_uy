@@ -32,6 +32,8 @@ import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.pool.WSRecepcionPool;
 import com.bluedot.efactura.pool.wrappers.WSEFacturaSoapPortWrapper;
+import com.bluedot.efactura.respuestas.Respuestas;
+import com.bluedot.efactura.respuestas.Respuestas.Respuesta;
 import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.strategy.report.SummaryStrategy;
 import com.sun.istack.logging.Logger;
@@ -421,7 +423,25 @@ public class RecepcionServiceImpl implements RecepcionService {
 				 */
 				ACKSobre.getDetalle().getEstado();
 			} catch (Throwable e) {
-				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				/*
+				 * Intento parsear la respuesta ahora pensando que fue un error
+				 */
+				Respuestas respuestas = (Respuestas) XML.unMarshall(XML.loadXMLFromString(response.getXmlData()),
+						Respuestas.class);
+				
+				if (respuestas == null)
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				
+				Respuesta respuesta = respuestas.getRespuesta().iterator().next();
+				
+				if (respuesta == null)
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				
+				if (respuesta.getCodigo().intValue()==108) {
+					throw APIException.raise(APIErrors.SOBRE_YA_ENVIADO);
+				}else
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				
 			}
 			
 			switch (ACKSobre.getDetalle().getEstado()) {

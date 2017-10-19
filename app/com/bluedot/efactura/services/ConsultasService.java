@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.TipoDoc;
 
@@ -49,7 +50,7 @@ public interface ConsultasService {
 	 * - Id Emisor e Id Receptor son opcionales
 	 * - Rango de Fechas de envío no debe superar los 31 días
 	 */
-	ACKConsultaEnviosSobre consultarEnvioSobre(long idEmisor, long idReceptor, Date fechaDesde, Date FechaHasta) throws APIException;
+	ACKConsultaEnviosSobre consultarEnvioSobre(long idEmisor, long idReceptor, Date fechaDesde, Date FechaHasta, Empresa empresa) throws APIException;
 	
 	/*
 	 * Dado el Id Receptor de un reporte, devuelve la respuesta original del reporte consultado.

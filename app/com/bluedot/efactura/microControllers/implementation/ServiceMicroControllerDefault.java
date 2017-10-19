@@ -101,7 +101,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	public SobreEmitido consultaResultado(SobreEmitido sobreEmitido) throws APIException {
 		
 		if (sobreEmitido.getToken() == null || sobreEmitido.getIdReceptor() == null){
-			ACKConsultaEnviosSobre respuesta = consultasService.consultarEnvioSobre(sobreEmitido.getId(), 0, DateHandler.minus(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), DateHandler.add(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH));
+			ACKConsultaEnviosSobre respuesta = consultasService.consultarEnvioSobre(sobreEmitido.getId(), 0, DateHandler.minus(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), DateHandler.add(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), empresa);
 			
 			List<DatosSobre> sobres = respuesta.getColeccionDatosSobre().getDatosSobre();
 			
