@@ -22,6 +22,16 @@
   <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
     <appender-ref ref="STDOUT" />
   </appender>
+  
+  <appender name="SYSLOG" class="ch.qos.logback.classic.net.SyslogAppender">
+        <syslogHost>192.168.1.144</syslogHost>
+        <facility>LOCAL1</facility>
+        <port>5140</port>
+        <!-- include %exception in message instead of allowing default multiline stack trace -->
+        <throwableExcluded>true</throwableExcluded>
+        <suffixPattern>-$- %logger -$- %thread -$- %message%n%xException</suffixPattern> 
+ </appender>  
+  
 
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
@@ -56,6 +66,7 @@
   <root level="INFO">
 	<!--     <appender-ref ref="ASYNCFILE" /> -->
     <appender-ref ref="ASYNCSTDOUT" />
+    <appender-ref ref="SYSLOG" />
   </root>
   
 </configuration>
