@@ -58,7 +58,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		caesMap = new HashMap<TipoDoc, List<CAE>>();
 		for (Iterator<CAE> iterator = empresa.getCAEs().iterator(); iterator.hasNext();) {
 			CAE cae = iterator.next();
-			if (cae.getFechaAnulado() == null && DateHandler.diff( new Date(), cae.getFechaVencimiento()) > 1 && cae.getSiguiente() <= cae.getFin()){
+			if (cae.getFechaAnulado() == null && (new Date()).before(cae.getFechaVencimiento()) && cae.getSiguiente() <= cae.getFin()){
 				/*
 				 * Es un CAE valido y tiene numeros disponibles
 				 */
@@ -237,7 +237,10 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		if (cae.getFechaAnulado()!=null)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("FechaAnulado").setDetailMessage("Fecha anulado debe ser == null");
 		
-		if (DateHandler.diff( new Date(), cae.getFechaVencimiento()) > 1)
+		if ((new Date().after(cae.getFechaVencimiento())))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("FechaVencimiento").setDetailMessage("Fecha de vencimeinto en el pasado");		
+		
+		if (DateHandler.diff(new Date(), cae.getFechaVencimiento()) <= 7)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("FechaVencimiento").setDetailMessage("CAE muy proximo a vencer");
 		
 		if (cae.getInicial() == 0)
