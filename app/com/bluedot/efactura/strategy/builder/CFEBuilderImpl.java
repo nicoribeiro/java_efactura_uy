@@ -384,6 +384,8 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		Emisor emisor = strategy.getEmisor();
 		
 		emisor.setRUCEmisor(Commons.safeGetString(emisorJson, "RUCEmisor"));
+		
+		emisor.setNomComercial(Commons.safeGetString(emisorJson, "NomComercial"));
 
 		emisor.setRznSoc(Commons.safeGetString(emisorJson, "RznSoc"));
 
