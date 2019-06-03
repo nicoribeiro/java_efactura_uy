@@ -52,7 +52,7 @@ public class NotificationPoller extends PollerRunner {
 
 		logger.info("Chequeando Vencimiento Firma para Empresa: " + empresa.getNombreComercial());
 
-		String subject = "Próximo Vencimiento de CAE";
+		String subject = "Próximo Vencimiento de Firma Digital";
 
 		String cabezal = Play.application().configuration().getString("mail.notificaciones.cabezal").replace("<nl>",
 				"\n");
