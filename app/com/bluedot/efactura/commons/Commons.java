@@ -1,20 +1,13 @@
 package com.bluedot.efactura.commons;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
+import java.util.TreeMap;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -33,10 +26,12 @@ import org.w3c.dom.Node;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.notificationChannels.MessagingHelper;
 import com.bluedot.commons.utils.IO;
 import com.bluedot.commons.utils.PrettyPrint;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.Constants;
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.classes.recepcion.CFEDefType;
@@ -46,21 +41,21 @@ import dgi.soap.recepcion.Data;
 import play.Play;
 
 public class Commons {
-	private static String securityPrefixName = "org.apache.ws.security.crypto.merlin.keystore.";
+//	private static String securityPrefixName = "org.apache.ws.security.crypto.merlin.keystore.";
 	private static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-	private static Properties securityProperties;
+//	private static Properties securityProperties;
 	
-	static{
-		securityProperties = new Properties();
-		try {
-			if (Play.isDev())
-				securityProperties.load(new FileInputStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
-			else
-				securityProperties.load(Commons.class.getClassLoader().getResourceAsStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+//	static{
+//		securityProperties = new Properties();
+//		try {
+//			if (Play.isDev())
+//				securityProperties.load(new FileInputStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
+//			else
+//				securityProperties.load(Commons.class.getClassLoader().getResourceAsStream(Play.application().configuration().getString(Constants.SECURITY_FILE)));
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	public enum DgiService {
 		Recepcion, Consulta, Rut
@@ -82,55 +77,54 @@ public class Commons {
 
 	}
 
-	public static KeyPasswordCallback getPasswordCallback() throws FileNotFoundException, IOException,
-			KeyStoreException, NoSuchAlgorithmException, CertificateException {
+	
 
-		Map<String, String> keystorePasswords = new HashMap<>();
-		keystorePasswords.put(getCetificateAlias(), getCertificatePassword());
-		return new KeyPasswordCallback(keystorePasswords);
+//	public static KeyStore getKeyStore() throws FileNotFoundException, IOException, KeyStoreException,
+//			NoSuchAlgorithmException, CertificateException {
+//		KeyStore keystore = KeyStore.getInstance(securityProperties.getProperty(securityPrefixName + "type"));
+//		InputStream fIn = Commons.class.getClassLoader().getResourceAsStream(securityProperties.getProperty(securityPrefixName + "file"));
+//		keystore.load(fIn, securityProperties.getProperty(securityPrefixName + "password").toCharArray());
+//
+//		return keystore;
+//	}
 
-	}
-
-	public static KeyStore getKeyStore() throws FileNotFoundException, IOException, KeyStoreException,
-			NoSuchAlgorithmException, CertificateException {
-		KeyStore keystore = KeyStore.getInstance(securityProperties.getProperty(securityPrefixName + "type"));
-		InputStream fIn = Commons.class.getClassLoader().getResourceAsStream(securityProperties.getProperty(securityPrefixName + "file"));
-		keystore.load(fIn, securityProperties.getProperty(securityPrefixName + "password").toCharArray());
-
-		return keystore;
-	}
-
-	public static String getCertificatePassword() throws FileNotFoundException, IOException, KeyStoreException,
-			NoSuchAlgorithmException, CertificateException {
-		return securityProperties.getProperty("certificate.password");
-	}
-
-	public static String getCetificateAlias() throws FileNotFoundException, IOException {
-		return securityProperties.getProperty("certificate.alias");
-	}
+//	public static String getCertificatePassword() throws FileNotFoundException, IOException, KeyStoreException,
+//			NoSuchAlgorithmException, CertificateException {
+//		return securityProperties.getProperty("certificate.password");
+//	}
+//
+//	public static String getCetificateAlias() throws FileNotFoundException, IOException {
+//		return securityProperties.getProperty("certificate.alias");
+//	}
 
 	public static JSONObject safeGetJSONObject(JSONObject object, String key) throws APIException {
 		if (object.optJSONObject(key) == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.getJSONObject(key);
 	}
 	
 	public static JSONArray safeGetJSONArray(JSONObject object, String key) throws APIException {
 		if (object.optJSONArray(key) == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.getJSONArray(key);
 	}
 	
 	public static String safeGetString(JSONObject object, String key) throws APIException {
-		if (object.optString(key).equals(""))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+		if (!object.has(key))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.optString(key);
 	}
 	
 	public static Integer safeGetInteger(JSONObject object, String key) throws APIException {
 		if (!object.has(key))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams(key));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.optInt(key);
+	}
+	
+	public static long safeGetLong(JSONObject object, String key) throws APIException {
+		if (!object.has(key))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
+		return object.optLong(key);
 	}
 
 	public static String getFilenamePrefix(CFEDefType cfe)
@@ -321,5 +315,35 @@ public class Commons {
 		return Play.application().configuration().getString(Constants.RUC_DGI + "." + environment, "219999830019");
 		
 	}
+	
+	
+	public static void enviarMail(Empresa empresaDesde, Empresa empresaHasta, String nombreArchivo, String archivo) throws APIException {
+		try {
+
+			Map<String, String> attachments = new TreeMap<String, String>();
+
+			attachments.put(nombreArchivo, archivo);
+
+			String subject = nombreArchivo;
+
+//			String body = Play.application().configuration().getString("mail.body")
+//					.replace("<nombre>", empresa.getNombreComercial())
+//					.replace("<mail>", empresa.getMailNotificaciones()).replace("<tel>", empresa.getTelefono())
+//					.replace("<nl>", "\n");
+			String body = "";
+
+			new MessagingHelper()
+					.withCustomConfig(empresaDesde.getFromEnvio(), empresaDesde.getHostRecepcion(), Integer.parseInt(empresaDesde.getPuertoRecepcion()),
+							empresaDesde.getUserRecepcion(), empresaDesde.getPassRecepcion())
+					.withAttachment(attachments)
+					.sendEmail(empresaHasta.getMailRecepcion(), body, null, subject, false);
+
+		} catch (Exception e) {
+			throw APIException.raise(e);
+		}
+
+	}
+
+	
 
 }

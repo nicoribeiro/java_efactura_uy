@@ -10,7 +10,6 @@ import dgi.classes.recepcion.ItemDetFact.CodItem;
 import dgi.classes.recepcion.ItemDetFact.SubDescuento;
 import dgi.classes.recepcion.ItemDetFact.SubRecargo;
 import dgi.classes.recepcion.ItemResg;
-import dgi.classes.recepcion.RetPerc;
 import dgi.classes.recepcion.RetPercResg;
 
 public class ItemResgWrapper implements ItemInterface {
@@ -108,10 +107,10 @@ public class ItemResgWrapper implements ItemInterface {
 
 	}
 
-	@Override
-	public List<CodItem> getCodItems() {
-		return null;
-	}
+//	@Override
+//	public List<CodItem> getCodItems() {
+//		return null;
+//	}
 
 	@Override
 	public void setIndFact(BigInteger value) {
@@ -182,7 +181,7 @@ public class ItemResgWrapper implements ItemInterface {
 	}
 
 	@Override
-	public void addCodItem(TpoCod tpoCod, String cod) {
+	public void addCodItem(String tpoCod, String cod) {
 		
 	}
 

@@ -8,17 +8,14 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
-import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.TipoDocumento;
-import com.bluedot.efactura.model.Titular;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.wrappers.IdDocInterface;
 import dgi.classes.recepcion.wrappers.ItemInterface;
-import dgi.classes.recepcion.wrappers.ReceptorInterface;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 
 public interface CFEStrategy {
@@ -47,7 +44,7 @@ public interface CFEStrategy {
 			this.cfe = cfe;
 			return this;
 		}
-
+		
 		public CFEStrategy build() throws APIException {
 			if (cfe==null){
 				cfe = new CFE();
@@ -78,6 +75,10 @@ public interface CFEStrategy {
 			case eResguardo_Contingencia:
 				return new EResguardoStrategy(cfe, caeMicroController);
 
+			case eRemito:
+			case eRemito_Contingencia:
+				return new ERemitoStrategy(cfe, caeMicroController);
+				
 			case Nota_de_Credito_de_eFactura_Exportacion:
 			case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
 			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
@@ -99,8 +100,6 @@ public interface CFEStrategy {
 			case eFactura_Venta_por_Cuenta_Ajena:
 			case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 
-			case eRemito:
-			case eRemito_Contingencia:
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
 
@@ -112,6 +111,8 @@ public interface CFEStrategy {
 			return null;
 
 		}
+
+		
 
 	}
 
@@ -138,6 +139,6 @@ public interface CFEStrategy {
 	CFE getCFE();
 
 	void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
-			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep) throws APIException;
+			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, boolean update) throws APIException;
 
 }

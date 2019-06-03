@@ -5,7 +5,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -16,6 +15,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
@@ -48,8 +48,6 @@ public class Empresa extends Model<Empresa>{
 	
 	private Integer codigoSucursal;
 	
-	private Date vencimientoFirma;
-	
 	private String mailRecepcion;
 	
 	private String hostRecepcion;
@@ -60,13 +58,13 @@ public class Empresa extends Model<Empresa>{
 	
 	private String puertoRecepcion;
 	
-	private int diasAvisoVencimiento;
-	
 	private boolean emisorElectronico;
 	
 	private String mailNotificaciones;
 	
 	private String fromEnvio; 
+	
+	private int offsetMail;
 	
 	@Lob
 	private byte[] logo;
@@ -87,13 +85,16 @@ public class Empresa extends Model<Empresa>{
 	private String codigoPostal;
 	
 	private String resolucion;
+	
+	@OneToOne(mappedBy="empresa")
+	private FirmaDigital firmaDigital;
 
 	public Empresa() {
 		super();
 	}
 
 	public Empresa(String rut, String razon, String nombreComercial, String direccion, String localidad,
-			String departamento, int codigoSucursal, Date vencimientoFirma) {
+			String departamento) {
 		super();
 		this.rut = rut;
 		this.razon = razon;
@@ -101,8 +102,6 @@ public class Empresa extends Model<Empresa>{
 		this.direccion = direccion;
 		this.localidad = localidad;
 		this.departamento = departamento;
-		this.codigoSucursal = codigoSucursal;
-		this.vencimientoFirma = vencimientoFirma;
 	}
 	
 	private static Finder<Integer, Empresa> find = new Finder<Integer, Empresa>(Integer.class, Empresa.class);
@@ -115,12 +114,11 @@ public class Empresa extends Model<Empresa>{
 		Empresa empresa = find.byId(id);
 
 		if (empresa == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA.withParams("id",id));
+			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA).withParams("id",id);
 					
 
 		return empresa;
 	}
-	
 	
 	public static Empresa findByRUT(String rut)
 	{
@@ -131,7 +129,7 @@ public class Empresa extends Model<Empresa>{
 		Empresa empresa = find.query().eq("rut", rut).findUnique();
 
 		if (empresa == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA.withParams("rut", rut));
+			throw APIException.raise(APIErrors.EMPRESA_NO_ENCONTRADA).withParams("rut", rut);
 
 		return empresa;
 	}
@@ -144,6 +142,35 @@ public class Empresa extends Model<Empresa>{
 	public static long count(){
 		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
 		return q.findRowCount();
+	}
+	
+	public static Empresa getOrCreateEmpresa(String docRecep, String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, boolean update) {
+		Empresa empresa = Empresa.findByRUT(docRecep);
+		
+		if (empresa == null) {
+			/*
+			 * Si la empresa no existe la registro como nueva en el sistema
+			 */
+			empresa = new Empresa(docRecep, rznSocRecep, null, dirRecep, ciudadRecep, deptoRecep);
+			empresa.save();
+		}else{
+			if (update) {
+				/*
+				 * Si la empresa existe actualizo los datos que puedo
+				 */
+				if (deptoRecep!=null)
+					empresa.setDepartamento(deptoRecep.toUpperCase());
+				if (ciudadRecep!=null)
+					empresa.setLocalidad(ciudadRecep.toUpperCase());
+				if (dirRecep!=null)
+					empresa.setDireccion(dirRecep.toUpperCase());
+				if (rznSocRecep!=null)
+					empresa.setRazon(rznSocRecep.toUpperCase());
+				empresa.update();
+			}
+		}
+		
+		return empresa;
 	}
 
 	public int getId() {
@@ -206,32 +233,12 @@ public class Empresa extends Model<Empresa>{
 		return codigoSucursal;
 	}
 
-	public void setCodigoSucursal(int codigoSucursal) {
-		this.codigoSucursal = codigoSucursal;
-	}
-
-	public Date getVencimientoFirma() {
-		return vencimientoFirma;
-	}
-
-	public void setVencimientoFirma(Date vencimientoFirma) {
-		this.vencimientoFirma = vencimientoFirma;
-	}
-
 	public String getMailRecepcion() {
 		return mailRecepcion;
 	}
 
 	public void setMailRecepcion(String mailRecepcion) {
 		this.mailRecepcion = mailRecepcion;
-	}
-
-	public int getDiasAvisoVencimiento() {
-		return diasAvisoVencimiento;
-	}
-
-	public void setDiasAvisoVencimiento(int diasAvisoVencimiento) {
-		this.diasAvisoVencimiento = diasAvisoVencimiento;
 	}
 
 	public List<CAE> getCAEs() {
@@ -374,5 +381,21 @@ public class Empresa extends Model<Empresa>{
 
 	public void setFromEnvio(String fromEnvio) {
 		this.fromEnvio = fromEnvio;
+	}
+
+	public FirmaDigital getFirmaDigital() {
+		return firmaDigital;
+	}
+
+	public void setFirmaDigital(FirmaDigital firmaDigital) {
+		this.firmaDigital = firmaDigital;
+	}
+
+	public int getOffsetMail() {
+		return offsetMail;
+	}
+
+	public void setOffsetMail(int offsetMail) {
+		this.offsetMail = offsetMail;
 	}
 }

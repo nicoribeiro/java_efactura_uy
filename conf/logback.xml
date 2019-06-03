@@ -11,7 +11,7 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%date %coloredLevel from %logger in %thread - %message%n%xException</pattern>
+      <pattern>%date %coloredLevel from %logger{15} in %thread - %message%n%xException</pattern>
     </encoder>
   </appender>
 
@@ -22,15 +22,51 @@
   <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
     <appender-ref ref="STDOUT" />
   </appender>
+  
+  <appender name="SYSLOG" class="ch.qos.logback.classic.net.SyslogAppender">
+        <syslogHost>192.168.1.144</syslogHost>
+        <facility>LOCAL1</facility>
+        <port>5140</port>
+        <!-- include %exception in message instead of allowing default multiline stack trace -->
+        <throwableExcluded>true</throwableExcluded>
+        <suffixPattern>-$- %logger -$- %thread -$- %message%n%xException</suffixPattern> 
+ </appender>  
+  
 
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
   <logger name="org.apache.cxf" level="INFO"/>
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
+  <logger name="com.sun.mail.imap" level="OFF" />
+  <logger name="javax.mail" level="OFF" />
+  <logger name="com.bluedot" level="INFO" />
+  
+  <!-- Log all SQL DML statements as they are executed -->
+<!-- 	<Logger name="org.hibernate.SQL" level="debug" /> -->
+	<!-- Log all JDBC parameters -->
+<!-- 	<Logger name="org.hibernate.type" level="debug" /> -->
+	<!-- Log all SQL DDL statements as they are executed -->
+<!-- 	<Logger name="org.hibernate.tool.hbm2ddl" level="debug" /> -->
+	<!-- Log the state of all entities (max 20 entities) associated with the 
+		session at flush time -->
+<!-- 	<Logger name="org.hibernate.pretty" level="debug" /> -->
+	<!-- Log all second-level cache activity -->
+<!-- 	<Logger name="org.hibernate.cache" level="debug" /> -->
+	<!-- Log transaction related activity -->
+<!-- 	<Logger name="org.hibernate.transaction" level="debug" /> -->
+	<!-- Log all JDBC resource acquisition -->
+<!-- 	<Logger name="org.hibernate.jdbc" level="debug" /> -->
+	<!-- Log HQL and SQL ASTs during query parsing -->
+<!-- 	<Logger name="org.hibernate.hql.ast.AST" level="debug" /> -->
+	<!-- Log all JAAS authorization requests -->
+<!-- 	<Logger name="org.hibernate.secure" level="debug" /> -->
+	<!-- Log everything (a lot of information, but very useful for troubleshooting) -->
+<!-- 	<Logger name="org.hibernate" level="debug" /> -->
 
   <root level="INFO">
 	<!--     <appender-ref ref="ASYNCFILE" /> -->
     <appender-ref ref="ASYNCSTDOUT" />
+    <appender-ref ref="SYSLOG" />
   </root>
   
 </configuration>

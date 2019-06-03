@@ -1,4 +1,4 @@
-package com.bluedot.efactura.pool;
+package com.bluedot.efactura.pool.wrappers;
 
 import dgi.soap.rut.WSPersonaGetActEmpresarialSoapPort;
 

@@ -35,7 +35,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 			emailAddress = "auto-generated-"+UUID.randomUUID().toString().substring(0, 8)+"@somemail.com";
 		
 		if (User.findByEmailAddress(emailAddress) != null)
-			throw APIException.raise(APIErrors.USER_ALREADY_EXISTS.withParams("emailAddress", emailAddress));
+			throw APIException.raise(APIErrors.USER_ALREADY_EXISTS).withParams("emailAddress", emailAddress);
 		
 		/*
 		 * USER
@@ -62,7 +62,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 				phoneNotificationChannel.validate(phoneNotificationChannel.getValidationKey());
 			
 			if (signUpConfigurator.sendValidationToNotificationChannels)
-				phoneNotificationChannel.sendValidationKey(MessagingHelper.getValidationHost(signUpConfigurator.hostForValidationsLinks));
+				phoneNotificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(signUpConfigurator.hostForValidationsLinks));
 		}
 		
 		/*
@@ -74,7 +74,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 			emailNotificationChannel.validate(emailNotificationChannel.getValidationKey());
 		
 		if (signUpConfigurator.sendValidationToNotificationChannels)
-			emailNotificationChannel.sendValidationKey(MessagingHelper.getValidationHost(signUpConfigurator.hostForValidationsLinks));
+			emailNotificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(signUpConfigurator.hostForValidationsLinks));
 		
 		user.save();
 
@@ -121,7 +121,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 	
 	private boolean sendAccountValidationEmail(String to, Account account, String host)
 	{
-		String activationLink = MessagingHelper.getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/validate";
+		String activationLink = new MessagingHelper().getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/validate";
 
 		StringBuilder htmlEmailBody = new StringBuilder();
 
@@ -133,13 +133,13 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		textEmailBody.append("Thank you for join");
 		textEmailBody.append("\nValidate your account by accessing this URL: " + activationLink);
 
-		return MessagingHelper.sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Welcome!", true);
+		return new MessagingHelper().withPlayConfig().sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Welcome!", true);
 	}
 	
 	@Override
 	public boolean sendPasswordResetEmail(String to, Account account, String resetKey, String host)
 	{
-		String resetLink = MessagingHelper.getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/reset?key=" + resetKey;
+		String resetLink = new MessagingHelper().getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/reset?key=" + resetKey;
 
 		StringBuilder htmlEmailBody = new StringBuilder();
 
@@ -151,7 +151,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		textEmailBody.append("Password recovery");
 		textEmailBody.append("\nReset your password by accessing this URL: " + resetLink);
 
-		return MessagingHelper.sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Reset your password", true);
+		return new MessagingHelper().withPlayConfig().sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Reset your password", true);
 	}
 	
 	

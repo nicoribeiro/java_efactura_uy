@@ -17,15 +17,19 @@ import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
+import org.hibernate.criterion.Restrictions;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.utils.XML;
+import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
@@ -36,14 +40,17 @@ import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @MappedSuperclass
-public class Sobre extends Model<Sobre> {
+public abstract class Sobre extends Model<Sobre> {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 8050514407296677614L;
 
-	static final String FORMATO_NOMBRE_SOBRE = "Sob_<RUC>_<FECHA>_<ID>.xml";
+	static final String FORMATO_NOMBRE_SOBRE = "Sob_<RUC>_<FECHA>_<ID_EMISOR>.xml";
+	static final String FORMATO_ACK_SOBRE = "M_<ID_RECEPTOR>_Sob_<RUC>_<FECHA>_<ID_EMISOR>.xml";
+	static final String FORMATO_ACK_CFE = "ME_<ID_RECEPTOR>_Sob_<RUC>_<FECHA>_<ID_EMISOR>.xml";
+	
 	static final SimpleDateFormat formatoFechaSobre = new SimpleDateFormat("yyyyMMdd");
 	
 	@Id
@@ -79,20 +86,17 @@ public class Sobre extends Model<Sobre> {
 	@Temporal(TemporalType.DATE)
 	private Date fecha;
 	
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "sobre", fetch = FetchType.LAZY)
-	private List<CFE> cfes;
-	
 	/**
 	 * AS - Sobre Recibido 
 	 * 
 	 * BS - Sobre Rechazado
 	 * 
-	 * En caso de SobreEmitido este campo es la respuesta inmediata a la llamada del webservice de DGI
+	 * En caso de SobreEmitido este campo es el estado de la respuesta al sobre enviado a la Empresa
 	 * 
-	 * En caso de SobreRecibido este campo es la respuesta que da el sistema cuando lo toma del servidor de correo.
+	 * En caso de SobreRecibido este campo es la respuesta que da el sistema cuando toma el sobre de un correo.
 	 */
 	@Enumerated(EnumType.STRING)
-	private EstadoACKSobreType estado;
+	private EstadoACKSobreType estadoEmpresa;
 	
 	/**
 	 * Si el estado == BS debe existir un motivo de rechazo
@@ -112,6 +116,42 @@ public class Sobre extends Model<Sobre> {
 	@Type(type="text")
 	private String xmlEmpresa;
 	
+
+//	@Type(type="text")
+//	private String respuesta_empresa;
+	
+	
+//	@Type(type="text")
+//	private String resultado_empresa;
+	
+	@Transient
+	EnvioCFEEntreEmpresas envioCFEEntreEmpresas;
+	
+	@Transient
+	ACKSobredefType ackSobredefType;
+	
+	/**
+	 * Id que le otorga el emisor al sobre
+	 */
+	private Long idEmisor;
+	
+	/** 
+	 * 
+	 * Email de referencia. Tipicamente es una lista de un solo elemento, 
+	 * pero como pueden haber retransmisiones o procesamientos duplicados del mismo 
+	 * sobre se modela como lista  
+	 * 
+	 * SobreEmitido:
+	 * 
+	 * Es es ack de la empresa
+	 * 
+	 * SobreRecibido:
+	 * 
+	 * Es el email en el que vino el sobre
+	 */
+	@OneToMany
+	private List<EmailMessage> emails;
+
 	/**
 	 * Respuesta de recepcion y aceptacion del sobre, no implica que los CFE son aceptados.
 	 * 
@@ -124,9 +164,9 @@ public class Sobre extends Model<Sobre> {
 	 * Se genera por el sistema automaticamente si el formato es correcto.
 	 * 
 	 */
-	@Type(type="text")
-	private String respuesta_empresa;
-	
+	@OneToOne
+	private Respuesta respuestaSobre;
+
 	/** 
 	 * 
 	 * Resultado de Procesar los CFEs dentro del sobre.
@@ -140,27 +180,19 @@ public class Sobre extends Model<Sobre> {
 	 * El resultado proviene de la empresa de este sistema, 
 	 * este proceso requiere un intervencion manual del usuario.
 	 */
-	@Type(type="text")
-	private String resultado_empresa;
-	
-	@Transient
-	EnvioCFEEntreEmpresas envioCFEEntreEmpresas;
-	
-	@Transient
-	ACKSobredefType ackSobredefType;
+	@OneToOne
+	private Respuesta respuestaCfes;
 	
 	public Sobre() {
 		super();
 	}
 
-	public Sobre(Empresa empresaEmisora, Empresa empresaReceptora, String nombreArchivo, int cantComprobantes,
-			List<CFE> cfes) {
+	public Sobre(Empresa empresaEmisora, Empresa empresaReceptora, String nombreArchivo, int cantComprobantes) {
 		super();
 		this.empresaEmisora = empresaEmisora;
 		this.empresaReceptora = empresaReceptora;
 		this.nombreArchivo = nombreArchivo;
 		this.cantComprobantes = cantComprobantes;
-		this.cfes = cfes;
 	}
 	
 	protected static Finder<Long, Sobre> find = new Finder<Long, Sobre>(Long.class, Sobre.class);
@@ -173,8 +205,16 @@ public class Sobre extends Model<Sobre> {
 		Sobre sobre = find.byId(id);
 
 		if (sobre == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.SOBRE_NO_ENCONTRADO.withParams("id", id));
+			throw APIException.raise(APIErrors.SOBRE_NO_ENCONTRADO).withParams("id", id);
 		return sobre;
+	}
+	
+	public static List<Sobre> findByNombre(String name) {
+		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query();
+		
+		q.getCriteria().add(Restrictions.eq("nombreArchivo", name));
+		
+		return q.findList();
 	}
 
 	public long getId() {
@@ -203,7 +243,7 @@ public class Sobre extends Model<Sobre> {
 
 	public String getNombreArchivo() {
 		if (nombreArchivo==null || nombreArchivo.equals(""))
-			nombreArchivo =  FORMATO_NOMBRE_SOBRE.replace("<RUC>", getEmpresaEmisora().getRut()).replace("<FECHA>", formatoFechaSobre.format(new Date())).replace("<ID>", String.valueOf(getId()));
+			nombreArchivo =  FORMATO_NOMBRE_SOBRE.replace("<RUC>", getEmpresaEmisora().getRut()).replace("<FECHA>", formatoFechaSobre.format(new Date())).replace("<ID_EMISOR>", String.valueOf(getId()));
 		return nombreArchivo;
 	}
 
@@ -219,22 +259,12 @@ public class Sobre extends Model<Sobre> {
 		this.cantComprobantes = cantComprobantes;
 	}
 
-	public List<CFE> getCfes() {
-		if (cfes==null)
-			cfes = new LinkedList<CFE>();
-		return cfes;
+	public EstadoACKSobreType getEstadoEmpresa() {
+		return estadoEmpresa;
 	}
 
-	public void setCfes(List<CFE> cfes) {
-		this.cfes = cfes;
-	}
-
-	public EstadoACKSobreType getEstado() {
-		return estado;
-	}
-
-	public void setEstado(EstadoACKSobreType estado) {
-		this.estado = estado;
+	public void setEstadoEmpresa(EstadoACKSobreType estado) {
+		this.estadoEmpresa = estado;
 	}
 
 	public MotivoRechazoSobre getMotivo() {
@@ -245,21 +275,21 @@ public class Sobre extends Model<Sobre> {
 		this.motivo = motivo;
 	}
 
-	public String getRespuesta_empresa() {
-		return respuesta_empresa;
-	}
-
-	public void setRespuesta_empresa(String respuesta_empresa) {
-		this.respuesta_empresa = respuesta_empresa;
-	}
-
-	public String getResultado_empresa() {
-		return resultado_empresa;
-	}
-
-	public void setResultado_empresa(String resultado_empresa) {
-		this.resultado_empresa = resultado_empresa;
-	}
+//	public String getRespuesta_empresa() {
+//		return respuesta_empresa;
+//	}
+//
+//	public void setRespuesta_empresa(String respuesta_empresa) {
+//		this.respuesta_empresa = respuesta_empresa;
+//	}
+//
+//	public String getResultado_empresa() {
+//		return resultado_empresa;
+//	}
+//
+//	public void setResultado_empresa(String resultado_empresa) {
+//		this.resultado_empresa = resultado_empresa;
+//	}
 
 	public String getXmlEmpresa() {
 		return xmlEmpresa;
@@ -278,6 +308,8 @@ public class Sobre extends Model<Sobre> {
 		return null;
 		
 	}
+	
+	public abstract List<CFE> getCfes();
 
 	public Date getFecha() {
 		return fecha;
@@ -308,6 +340,44 @@ public class Sobre extends Model<Sobre> {
 
 	public void setAckSobredefType(ACKSobredefType ackSobredefType) {
 		this.ackSobredefType = ackSobredefType;
+	}
+
+	public List<EmailMessage> getEmails() {
+		if (emails==null)
+			emails = new LinkedList<EmailMessage>();
+
+		return emails;
+	}
+
+	public void setEmails(List<EmailMessage> emails) {
+		this.emails = emails;
+	}
+	
+	public Long getIdEmisor() {
+		return idEmisor;
+	}
+
+	public void setIdEmisor(Long idEmisor) {
+		this.idEmisor = idEmisor;
+	}
+	
+	public Respuesta getRespuestaSobre() {
+		return respuestaSobre;
+	}
+
+
+	public void setRespuestaSobre(Respuesta respuestaSobre) {
+		this.respuestaSobre = respuestaSobre;
+	}
+
+
+	public Respuesta getRespuestaCfes() {
+		return respuestaCfes;
+	}
+
+
+	public void setRespuestaCfes(Respuesta respuestaCfes) {
+		this.respuestaCfes = respuestaCfes;
 	}
 	
 }

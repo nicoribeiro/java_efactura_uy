@@ -45,7 +45,7 @@ public interface ItemInterface {
 	 * 
 	 * 
 	 */
-	List<CodItem> getCodItems();
+//	List<CodItem> getCodItems();
 
 	/**
 	 * Gets the value of the indFact property.
@@ -362,7 +362,7 @@ public interface ItemInterface {
 
 	List<CodItemInterface> getGenericCodItem();
 	
-	void addCodItem(TpoCod TpoCod, String Cod);
+	void addCodItem(String TpoCod, String Cod);
 	
 	void setRetencPerceps(List<RetPercInterface> list);
 

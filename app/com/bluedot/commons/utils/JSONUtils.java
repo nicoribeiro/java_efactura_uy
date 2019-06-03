@@ -49,4 +49,15 @@ public class JSONUtils
 		}
 		return merged;
 	}
+	
+	public static JSONObject createObjectList(JSONArray list, long rowCount, int page, int pageSize) {
+		JSONObject result = new JSONObject();
+		
+		result.put("results", list);
+		result.put("count", rowCount);
+		result.put("page", page);
+		result.put("pageSize", pageSize);
+		
+		return result;
+	}
 }

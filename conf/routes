@@ -9,6 +9,10 @@ GET      /                                                       com.bluedot.efa
 GET      /assets/*file                                           controllers.Assets.versioned(path="/public", file: Asset)
 
 
+# Swagger
+GET      /swagger.json                                           controllers.ApiHelpController.getResources
+
+
 # API
 
 
@@ -68,14 +72,15 @@ GET      /api/v1/empresa/:rut/documentos/pdf                     com.bluedot.efa
 DELETE   /api/v1/empresa/:rut/documentos                         com.bluedot.efactura.controllers.DocumentController.anularDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
 
 # Retorna los documentos entrantes para una empresa
-GET      /api/v1/empresa/:rut/documentos/entrantes               com.bluedot.efactura.controllers.DocumentController.getDocumentosEntrantes(rut:String, fecha:String)
+GET      /api/v1/empresa/:rut/documentos/entrantes               com.bluedot.efactura.controllers.DocumentController.getDocumentosEntrantes(rut:String)
 
-# Retorna los documentos entrantes para una empresa
-GET      /api/v1/empresa/:rut/procesarEmailEntrantes               com.bluedot.efactura.controllers.DocumentController.procesarEmailEntrantes(rut:String)
+# Procesa los email entrantes para una empresa
+GET      /api/v1/empresa/:rut/procesarEmailEntrantes             com.bluedot.efactura.controllers.DocumentController.procesarEmailEntrantes(rut:String)
 
 
 # Envia por correo el documento a la empresa
-GET      /api/v1/empresa/:rut/documentos/enviarMailEmpresa       com.bluedot.efactura.controllers.DocumentController.enviarMailEmpresa(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+GET      /api/v1/empresa/:rut/documentos/enviarCfeEmpresa        com.bluedot.efactura.controllers.DocumentController.enviarCfeEmpresa(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+GET      /api/v1/empresa/:rut/documentos/enviarSobreEmpresa      com.bluedot.efactura.controllers.DocumentController.enviarSobreEmpresa(rut:String, idSobre:Long)
 
 
 # Session management

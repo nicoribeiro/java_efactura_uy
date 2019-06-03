@@ -10,6 +10,7 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
@@ -25,6 +26,7 @@ import javax.xml.crypto.dsig.dom.DOMValidateContext;
 import javax.xml.crypto.dsig.keyinfo.KeyInfo;
 import javax.xml.crypto.dsig.keyinfo.KeyInfoFactory;
 import javax.xml.crypto.dsig.keyinfo.X509Data;
+import javax.xml.crypto.dsig.keyinfo.X509IssuerSerial;
 import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
 import javax.xml.crypto.dsig.spec.TransformParameterSpec;
 import javax.xml.parsers.DocumentBuilder;
@@ -138,9 +140,11 @@ public class XmlSignature {
 		 * Create the KeyInfo containing the X509Data.
 		 */
 		KeyInfoFactory kif = fac.getKeyInfoFactory();
-		List x509Content = new ArrayList();
+		List<Object> x509Content = new ArrayList<Object>();
 		x509Content.add(cert.getSubjectX500Principal().getName());
 		x509Content.add(cert);
+		X509IssuerSerial issuer = kif.newX509IssuerSerial(cert.getIssuerX500Principal().getName(),cert.getSerialNumber());
+		x509Content.add(issuer);
 		X509Data xd = kif.newX509Data(x509Content);
 		KeyInfo ki = kif.newKeyInfo(Collections.singletonList(xd));
 
@@ -171,13 +175,13 @@ public class XmlSignature {
 
 		// Create a DOMValidateContext and specify a KeySelector
 		// and document context.
-		DOMValidateContext valContext = new DOMValidateContext(new X509KeySelector(), nl.item(0));
+		//DOMValidateContext valContext = new DOMValidateContext(new X509KeySelector(), nl.item(0));
 
 		// Unmarshal the XMLSignature.
-		XMLSignature XMLsignature = fac.unmarshalXMLSignature(valContext);
+		//XMLSignature XMLsignature = fac.unmarshalXMLSignature(valContext);
 
 		// Validate the XMLSignature.
-		boolean coreValidity = XMLsignature.validate(valContext);
+		//boolean coreValidity = XMLsignature.validate(valContext);
 
 		//System.out.println(XML.documentToString(docToSign));
 		
@@ -217,21 +221,21 @@ public class XmlSignature {
 		return outputStream;
 	}
 
-	public void veryfySignatures(String filepath) {
+	public static boolean veryfySignatures(Document doc) {
 
 		// cfeXMLSignatureValidateFile: VALIDAR LAS FIRMAS DE UN SOBRE ENTERO
 		// BUSCA TODOS LOS NODOS FIRMADOS Y LOS VALIDA
 		String certificate64 = "";
-		String contexString = "";
-		String cfeString = "";
+		//String contexString = "";
+		//String cfeString = "";
 		String digest;
 
 		try {
 			javax.xml.parsers.DocumentBuilderFactory dbFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
 			dbFactory.setNamespaceAware(true);
-			javax.xml.parsers.DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			org.w3c.dom.Document doc = dBuilder
-					.parse(new org.xml.sax.InputSource(new java.io.FileInputStream(filepath)));
+//			javax.xml.parsers.DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+//			org.w3c.dom.Document doc = dBuilder
+//					.parse(new org.xml.sax.InputSource(new java.io.FileInputStream(filepath)));
 
 			// Find Signatures
 			org.w3c.dom.NodeList nls = doc.getElementsByTagNameNS(javax.xml.crypto.dsig.XMLSignature.XMLNS,
@@ -259,13 +263,13 @@ public class XmlSignature {
 						signedNode.getParentNode());
 				java.io.StringWriter sw = new java.io.StringWriter();
 				transformer.transform(source, new javax.xml.transform.stream.StreamResult(sw));
-				contexString = sw.toString();
+				//contexString = sw.toString();
 
 				// Pasa el elemento aislado a String (para procesamiento futuro)
 				source = new javax.xml.transform.dom.DOMSource(signedNode);
 				sw = new java.io.StringWriter();
 				transformer.transform(source, new javax.xml.transform.stream.StreamResult(sw));
-				cfeString = sw.toString();
+				//cfeString = sw.toString();
 
 				/*
 				 * Si se intenta validar sobre el documento extraido y
@@ -350,9 +354,9 @@ public class XmlSignature {
 						if (!sv) {
 							errorMsg += "Error in signature validation. Certificate and signature don't match.";
 						}
-
+						
 						// Check the validation status of each Reference.
-						java.util.Iterator it = signature.getSignedInfo().getReferences().iterator();
+						Iterator<SignedInfo> it = signature.getSignedInfo().getReferences().iterator();
 						for (int j = 0; it.hasNext(); j++) {
 							javax.xml.crypto.dsig.Reference ref = (javax.xml.crypto.dsig.Reference) it.next();
 							boolean refValid = ref.validate(valContext);
@@ -373,6 +377,7 @@ public class XmlSignature {
 				} catch (Exception e) {
 					e.printStackTrace();
 					errorMsg += e.getMessage();
+					return false;
 				}
 
 				System.out.println(errorMsg);
@@ -393,12 +398,13 @@ public class XmlSignature {
 			// [!&ErrorMsg!] = e.getMessage();
 			e.printStackTrace();
 			System.err.println("Error capturado:" + e.getMessage());
+			return false;
 		}
 		// [!&Certificate64!] = certificate64;
 
 		// &ErrorMsg = &ErrorMsg
 		// &Certificate64 = &Certificate64
-
+		return true;
 	}
 
 }

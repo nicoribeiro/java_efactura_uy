@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import dgi.classes.recepcion.TipMonType;
-import dgi.classes.recepcion.Totales;
 
 public interface TotalesInterface {
 

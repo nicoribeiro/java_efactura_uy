@@ -86,7 +86,7 @@ public class Session extends Model<Session>
 		Session session = findByAuthToken(authToken);
 		
 		if (session==null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.SESSION_NOT_FOUND.withParams("authToken", authToken));
+			throw APIException.raise(APIErrors.SESSION_NOT_FOUND).withParams("authToken", authToken);
 		
 		return session;
 	}

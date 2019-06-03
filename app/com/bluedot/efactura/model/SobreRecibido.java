@@ -5,7 +5,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
 
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -20,11 +23,6 @@ public class SobreRecibido extends Sobre{
 	private static final long serialVersionUID = -2509429294768242581L;
 	
 	/**
-	 * Id que le otorga el emisor al sobre
-	 */
-	private Long idEmisor;
-	
-	/**
 	 * Fecha recibido por el sistema de correo
 	 */
 	private Date timestampRecibido;
@@ -34,6 +32,8 @@ public class SobreRecibido extends Sobre{
 	 */
 	private Date timestampProcesado;
 	
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "sobreRecibido", fetch = FetchType.LAZY)
+	private List<CFE> cfes;
 	
 	public SobreRecibido() {
 		super();
@@ -42,7 +42,8 @@ public class SobreRecibido extends Sobre{
 
 	public SobreRecibido(Empresa empresaEmisora, Empresa empresaReceptora, String nombreArchivo, int cantComprobantes,
 			List<CFE> cfes) {
-		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes, cfes);
+		super(empresaEmisora, empresaReceptora, nombreArchivo, cantComprobantes);
+		this.cfes = cfes;
 	}
 
 	public static List<SobreRecibido> findSobreRecibido(long idEmisor, Empresa empresaEmisora, Empresa empresaReceptora) {
@@ -55,7 +56,8 @@ public class SobreRecibido extends Sobre{
 		q.getCriteria().add(Restrictions.and
 
 				(		Restrictions.eq("empresaEmisora.id", empresaEmisora.getId()),
-						Restrictions.eq("empresaReceptora.id", empresaReceptora.getId())
+						Restrictions.eq("empresaReceptora.id", empresaReceptora.getId()),
+						Restrictions.eq("idEmisor", idEmisor)
 						));
 
 		
@@ -65,22 +67,13 @@ public class SobreRecibido extends Sobre{
 		
 		for (Iterator<Sobre> iterator = sobres.iterator(); iterator.hasNext();) {
 			Sobre sobre = iterator.next();
-			if (sobre instanceof SobreRecibido && ((SobreRecibido)sobre).getIdEmisor()==idEmisor)
+			if (sobre instanceof SobreRecibido)
 				 sobresRecibidos.add((SobreRecibido) sobre);
 		}
 		
 		return sobresRecibidos;
 	}
-
-	public long getIdEmisor() {
-		return idEmisor;
-	}
-
-
-	public void setIdEmisor(long idEmisor) {
-		this.idEmisor = idEmisor;
-	}
-
+	
 
 	public Date getTimestampRecibido() {
 		return timestampRecibido;
@@ -100,4 +93,15 @@ public class SobreRecibido extends Sobre{
 	public void setTimestampProcesado(Date timestampProcesado) {
 		this.timestampProcesado = timestampProcesado;
 	}
+	
+	public List<CFE> getCfes() {
+		if (cfes==null)
+			cfes = new LinkedList<CFE>();
+		return cfes;
+	}
+
+	public void setCfes(List<CFE> cfes) {
+		this.cfes = cfes;
+	}
+
 }

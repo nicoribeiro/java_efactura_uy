@@ -30,9 +30,20 @@ public class SendMail
 
 	public static void sendMail(String username, String password, String smtpHost, int smtpPort, String from, String recipient, String subject, String textVersion, String htmlVersion, Map<String, String> attachments, boolean logInstedOfSend) throws MessagingException
 	{
-		Address[] array = new Address[1];
-
-		array[0] = new InternetAddress(recipient);
+		Address[] array;
+		
+		if (recipient.contains(",")) {
+			String[] recipients = recipient.split(",");
+			array = new Address[recipients.length];
+			for (int i = 0; i < recipients.length; i++) {
+				array[i] = new InternetAddress(recipients[i]);
+			}
+		}
+		else {
+			array = new Address[1];
+			array[0] = new InternetAddress(recipient);
+		}
+		
 		sendMail(username, password, smtpHost, smtpPort, from, array, subject, textVersion, htmlVersion, attachments, logInstedOfSend);
 
 	}
@@ -71,7 +82,7 @@ public class SendMail
 		// Create a default MimeMessage object.
 		MimeMessage message = new MimeMessage(session);
 		Multipart multiPart;
-		if (attachments.size()>0)
+		if (attachments != null && attachments.size()>0)
 			multiPart = new MimeMultipart("mixed");
 		else
 			multiPart = new MimeMultipart("alternative");
@@ -98,25 +109,16 @@ public class SendMail
 		}
 		
 		// Add attachments if any
+		String attachmentsNames = "";
 		if (attachments!=null)
-//			try {
-				for (Iterator<String> iterator = attachments.keySet().iterator(); iterator.hasNext();) {
-					String filename = iterator.next();
-					MimeBodyPart attachmnetPart = new PreencodedMimeBodyPart("base64");
-//					DataSource source = new ByteArrayDataSource(attachments.get(filename), "application/octet-stream");
-//					attachmnetPart.setDataHandler(new DataHandler(source));
-					attachmnetPart.setContent(Base64.getEncoder().encodeToString(attachments.get(filename).getBytes()), "application/octet-stream");  
-					attachmnetPart.setFileName(filename);
-					multiPart.addBodyPart(attachmnetPart);
-				}
-//			} catch (IOException e) {
-				/*TODO usar esto para loggear Exceptions: 
-				* logger.error("Error", e);
-				* 
-				* Esto aplica para todo el proyecto no solo para este metodo
-				*/
-//				e.printStackTrace();
-//			}
+			for (Iterator<String> iterator = attachments.keySet().iterator(); iterator.hasNext();) {
+				String filename = iterator.next();
+				MimeBodyPart attachmnetPart = new PreencodedMimeBodyPart("base64");
+				attachmnetPart.setContent(Base64.getEncoder().encodeToString(attachments.get(filename).getBytes()), "application/octet-stream");  
+				attachmnetPart.setFileName(filename);
+				attachmentsNames = attachmentsNames.equals("")? filename : attachmentsNames + ", " + filename;
+				multiPart.addBodyPart(attachmnetPart);
+			}
 		
 		message.setContent(multiPart);
 		message.saveChanges();
@@ -133,17 +135,20 @@ public class SendMail
 		{
 			mails.append(address.toString() + " ");
 		}
-
+		
+		logger.info("HOST: " + smtpHost);
+		logger.info("FROM: " + from);
+		logger.info("SUBJECT: " + subject);
+		logger.info("TO: " + mails);
+		logger.info("BODY-TEXT: " + textVersion);
+		logger.info("BODY-HTML: " + htmlVersion);
+		logger.info("ATTACHMENTS: " + attachmentsNames);
+		
 		if (logInstedOfSend)
-		{
-			logger.info("HOST: " + smtpHost);
-			logger.info("FROM: " + from);
-			logger.info("SUBJECT: " + subject);
-			logger.info("TO: " + mails);
-			logger.info("BODY-TEXT: " + textVersion);
-			logger.info("BODY-HTML: " + htmlVersion);
-		} else
-			logger.info("Sent message successfully to: " + mails);
+			logger.info("Message wasn't sent, only logged");
+		else
+			logger.info("Message sent successfully to: " + mails);
+		
 
 	}
 

@@ -14,16 +14,17 @@ import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.frontend.ClientProxy;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
+import org.apache.wss4j.common.crypto.Crypto;
 import org.apache.wss4j.dom.handler.WSHandlerConstants;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.ObjectPool;
-import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.commons.Commons.DgiService;
+import com.bluedot.efactura.model.FirmaDigital;
+import com.bluedot.efactura.pool.wrappers.WSPersonaGetActEmpresarialSoapPortWrapper;
 
 import dgi.soap.rut.WSPersonaGetActEmpresarialSoapPort;
-import play.Play;
 
 public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPortWrapper>
 {
@@ -33,9 +34,8 @@ public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPortWrap
 	{
 		if (instance == null)
 		{
-
-			CallbackHandler passwordCallback = Commons.getPasswordCallback();
-			instance = new WSRutPool(Play.application().configuration().getString(Constants.SECURITY_FILE), Commons.getCetificateAlias(), passwordCallback,
+			CallbackHandler passwordCallback = FirmaDigital.getPasswordCallback();
+			instance = new WSRutPool(FirmaDigital.KEY_ALIAS, passwordCallback,
 					Commons.getURL(DgiService.Rut));
 		}
 
@@ -47,13 +47,11 @@ public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPortWrap
 		throw new CloneNotSupportedException();
 	}
 
-	private final String securityPropertiesPath;
 	private final String certificateAlias;
 	private final CallbackHandler passwordCallback;
 	private final String serviceURL;
 
-	private WSRutPool(String securityPropertiesPath, String keystoreAlias, CallbackHandler passwordCallback, String serviceURL) {
-		this.securityPropertiesPath = Objects.requireNonNull(securityPropertiesPath, "Security properties path is required");
+	private WSRutPool(String keystoreAlias, CallbackHandler passwordCallback, String serviceURL) {
 		this.certificateAlias = Objects.requireNonNull(keystoreAlias, "Certificate alias is required");
 		this.passwordCallback = Objects.requireNonNull(passwordCallback, "Password callback is required");
 		this.serviceURL = serviceURL;
@@ -72,10 +70,13 @@ public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPortWrap
 
 		Endpoint cxfEndpoint = ClientProxy.getClient(port).getEndpoint();
 
+		Crypto customMerlin = new CustomMerlin();
+		
 		Map<String, Object> outProps = new HashMap<>();
 		outProps.put(WSHandlerConstants.ACTION, WSHandlerConstants.SIGNATURE);
 		outProps.put(WSHandlerConstants.USER, certificateAlias);
-		outProps.put(WSHandlerConstants.SIG_PROP_FILE, securityPropertiesPath);
+		outProps.put(WSHandlerConstants.SIG_PROP_REF_ID, "CustomMerlin");
+		outProps.put("CustomMerlin", customMerlin);
 		outProps.put(WSHandlerConstants.SIG_KEY_ID, "DirectReference");
 		outProps.put(WSHandlerConstants.PW_CALLBACK_REF, passwordCallback);
 

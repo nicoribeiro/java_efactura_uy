@@ -79,7 +79,7 @@ public class NotificationChannelController extends AbstractController
 				}
 
 				if (type == null)
-					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("type"));
+					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("type");
 
 				NotificationChannel notificationChannel = null;
 
@@ -88,14 +88,14 @@ public class NotificationChannelController extends AbstractController
 					case MAIL:
 						String email = notificationChannelJson.get("email").asText();
 						if (email == null)
-							throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("email"));
+							throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("email");
 		
 						for (NotificationChannel notiChannel : user.getNotificationChannels())
 						{
 							if (notiChannel instanceof Email)
 							{
 								if (email.equals(((Email) notiChannel).getEmail()))
-									throw APIException.raise(APIErrors.EMAIL_EXISTS.withParams(email));
+									throw APIException.raise(APIErrors.EMAIL_EXISTS).withParams(email);
 							}
 						}
 		
@@ -104,13 +104,13 @@ public class NotificationChannelController extends AbstractController
 					case SMS:
 						String phone = notificationChannelJson.get("phone").asText();
 						if (phone == null)
-							throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("phone"));
+							throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("phone");
 						for (NotificationChannel notiChannel : user.getNotificationChannels())
 						{
 							if (notiChannel instanceof SMS)
 							{
 								if (phone.equals(((SMS) notiChannel).getPhone()))
-									throw APIException.raise(APIErrors.PHONE_EXISTS.withParams(phone));
+									throw APIException.raise(APIErrors.PHONE_EXISTS).withParams(phone);
 							}
 						}
 		
@@ -122,7 +122,7 @@ public class NotificationChannelController extends AbstractController
 
 				notificationChannel.save();
 
-				notificationChannel.sendValidationKey(MessagingHelper.getValidationHost(request().host()));
+				notificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(request().host()));
 				
 				return Promise.<Result> pure(created());
 			}
@@ -196,7 +196,7 @@ public class NotificationChannelController extends AbstractController
 				if (!user.getNotificationChannels().contains(notificationChannel))
 					throw APIException.raise(APIErrors.UNAUTHORIZED).setDetailMessage("Notification Channel does not belog to you");
 
-				notificationChannel.sendValidationKey(MessagingHelper.getValidationHost(request().host()));
+				notificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(request().host()));
 
 				return Promise.<Result> pure(ok());
 

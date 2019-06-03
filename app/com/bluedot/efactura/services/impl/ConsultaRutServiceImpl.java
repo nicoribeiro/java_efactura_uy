@@ -7,8 +7,8 @@ import java.security.cert.CertificateException;
 import java.util.Objects;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.efactura.pool.WSPersonaGetActEmpresarialSoapPortWrapper;
 import com.bluedot.efactura.pool.WSRutPool;
+import com.bluedot.efactura.pool.wrappers.WSPersonaGetActEmpresarialSoapPortWrapper;
 import com.bluedot.efactura.services.ConsultaRutService;
 
 import dgi.soap.rut.WSPersonaGetActEmpresarialExecute;

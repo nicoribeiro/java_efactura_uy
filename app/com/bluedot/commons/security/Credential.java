@@ -73,7 +73,7 @@ public class Credential extends Model<Credential>
 		Credential credential = findByKey(key);
 		
 		if (credential==null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.CREDENTIAL_NOT_FOUND.withParams("key", key));
+			throw APIException.raise(APIErrors.CREDENTIAL_NOT_FOUND).withParams("key", key);
 		
 		return credential;
 	}

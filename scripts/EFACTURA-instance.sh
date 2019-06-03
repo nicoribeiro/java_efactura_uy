@@ -7,6 +7,7 @@ APP_NAME=java_efactura_uy
 REMOTE_DIR=/srv/$APP_NAME
 CONF=$SCRIPTS_HOME/../conf
 PORT=9000
+JAVA_OPTS="export JAVA_OPTS=-XX:+CMSClassUnloadingEnabled\ -XX:+UseConcMarkSweepGC\ -XX:NewSize=1024m\ -XX:MaxNewSize=1024m\ -XX:SurvivorRatio=6\ -Xmx2g\ -Xms2g"
 
 #LOG functions
 LOG() {
@@ -51,8 +52,9 @@ start() {
         else
                 INFO "No $APP_NAME instances running on $INSTANCE_NAME"
                 INFO "Starting instance $INSTANCE_NAME..."
+		INFO "$JAVA_OPTS"
                 APP_NAME_VERSION=$(ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort "ls $REMOTE_DIR/$SERVER_GROUP")
-                ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort "echo 'nohup $REMOTE_DIR/$SERVER_GROUP/$APP_NAME_VERSION/bin/$APP_NAME -Dhttp.port=$PORT -Dconfig.file=$REMOTE_DIR/$SERVER_GROUP/$APP_NAME_VERSION/conf/application.conf >> /var/log/srv/$APP_NAME.log 2>&1 &' | bash"
+                ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort "echo '$JAVA_OPTS; nohup $REMOTE_DIR/$SERVER_GROUP/$APP_NAME_VERSION/bin/$APP_NAME -Dhttp.port=$PORT -Dconfig.file=$REMOTE_DIR/$SERVER_GROUP/$APP_NAME_VERSION/conf/application.conf >> /var/log/srv/$APP_NAME.log 2>&1 &' | bash"
                 sleep 2
 
                 cant=$(ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort "ps -ef | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l")

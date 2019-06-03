@@ -2,6 +2,7 @@ package com.bluedot.efactura.strategy.builder;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
-import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.model.RetencionPercepcion;
 
 import dgi.classes.recepcion.RetPercResg;
 import dgi.classes.recepcion.TipMonType;
@@ -41,9 +42,10 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 
 			item.setNroLinDet(i);
 
-			item.setIndFact(new BigInteger(Commons.safeGetString(itemJson,"IndFact")));
+			if (itemJson.has("IndFact"))
+				item.setIndFact(new BigInteger(Commons.safeGetString(itemJson,"IndFact")));
 
-			JSONArray retencionesJSON = Commons.safeGetJSONArray(itemJson,"Retenciones");
+			JSONArray retencionesJSON = Commons.safeGetJSONArray(itemJson,"RetencPercep");
 
 			if (retencionesJSON.length() > 5)
 				throw APIException.raise(APIErrors.MALFORMED_CFE).setDetailMessage(
@@ -56,22 +58,30 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 			for (int j = 0; j < retencionesJSON.length(); j++) {
 				RetPercResg retencion = new RetPercResg();
 				JSONObject retencionJSON = retencionesJSON.getJSONObject(j);
-				
+				RetencionPercepcion retencionPercepcion = new RetencionPercepcion();
+				retencionPercepcion.save();
 				
 				if (retencionJSON.optString("CodRet") == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("CodRet"));
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("CodRet");
 				retencion.setCodRet(retencionJSON.getString("CodRet"));
-
-				if (retencionJSON.optString("Tasa") == null)
+				retencionPercepcion.setCodigo(retencionJSON.getString("CodRet"));
+				
+				if (retencionJSON.has("Tasa") && retencionJSON.optString("Tasa")!= null){
 					retencion.setTasa(new BigDecimal(retencionJSON.getString("Tasa")));
-
+					retencionPercepcion.setTasa(Double.parseDouble(retencionJSON.getString("Tasa")));
+				}
+				
 				if (retencionJSON.optString("MntSujetoaRet") == null)
 					throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("MntSujetoaRet");
 				retencion.setMntSujetoaRet(new BigDecimal(retencionJSON.getString("MntSujetoaRet")));
-
+				retencionPercepcion.setMontoSujeto(Double.parseDouble(retencionJSON.getString("MntSujetoaRet")));
+				
 				if (retencionJSON.optString("ValRetPerc") == null)
 					throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("ValRetPerc");
 				retencion.setValRetPerc(new BigDecimal(retencionJSON.getString("ValRetPerc")));
+				retencionPercepcion.setValor(Double.parseDouble(retencionJSON.getString("ValRetPerc")));
+				
+				strategy.getCFE().getRetencionesPercepciones().add(retencionPercepcion);
 
 				retenciones.add(new RetPercResgWrapper(retencion));
 
@@ -92,19 +102,22 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 		TipMonType moneda = TipMonType.fromValue(totalesJson.getString("TpoMoneda"));
 
 		if (moneda == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("TpoMoneda"))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TpoMoneda")
 					.setDetailMessage("El campo TpoMoneda no es ninguno de los conocidos, ver tabla de monedas.");
 
 		totales.setTpoMoneda(moneda);
-
+		strategy.getCFE().setMoneda(moneda);
+		
 		/*
 		 * Tipo de cambio
 		 */
 		if (moneda != TipMonType.UYU)
-			if (totalesJson.has("TpoCambio"))
-				totales.setTpoCambio(new BigDecimal(totalesJson.getString("TpoCambio")));
-			else
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("totales.TpoCambio"));
+			if (totalesJson.has("TpoCambio")){
+				DecimalFormat df = new DecimalFormat("####0.000");
+				totales.setTpoCambio(new BigDecimal(df.format(totalesJson.getDouble("TpoCambio"))));
+				strategy.getCFE().setTipoCambio(totales.getTpoCambio().doubleValue());
+			}else
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("totales.TpoCambio");
 		
 		
 		List<ItemInterface> items = strategy.getItem();

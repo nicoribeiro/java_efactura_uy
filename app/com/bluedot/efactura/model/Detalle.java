@@ -29,9 +29,13 @@ public class Detalle extends Model<Detalle> {
 	 */
 	private int nroLinea;
 	
+	private String tpoCod;
+	
 	private String codItem;
 
 	private String nombreItem;
+	
+	private String descripcionItem;
 
 	private double cantidad;
 
@@ -47,15 +51,11 @@ public class Detalle extends Model<Detalle> {
 
 	private double recargoMonto;
 
-	private double tasaRecepPercep;
-
-	private double montoSujetoRecepPercep;
-
 	/**
 	 * montoItem=Precio*cantidad - descuento + recargo
 	 */
 	private double montoItem;
-
+	
 	public Detalle() {
 		super();
 	}
@@ -160,22 +160,6 @@ public class Detalle extends Model<Detalle> {
 		this.recargoMonto = recargoMonto;
 	}
 
-	public double getTasaRecepPercep() {
-		return tasaRecepPercep;
-	}
-
-	public void setTasaRecepPercep(double tasaRecepPercep) {
-		this.tasaRecepPercep = tasaRecepPercep;
-	}
-
-	public double getMontoSujetoRecepPercep() {
-		return montoSujetoRecepPercep;
-	}
-
-	public void setMontoSujetoRecepPercep(double montoSujetoRecepPercep) {
-		this.montoSujetoRecepPercep = montoSujetoRecepPercep;
-	}
-
 	public double getMontoItem() {
 		return montoItem;
 	}
@@ -190,6 +174,22 @@ public class Detalle extends Model<Detalle> {
 
 	public void setCodItem(String codItem) {
 		this.codItem = codItem;
+	}
+
+	public String getDescripcionItem() {
+		return descripcionItem;
+	}
+
+	public void setDescripcionItem(String descripcionItem) {
+		this.descripcionItem = descripcionItem;
+	}
+
+	public String getTpoCod() {
+		return tpoCod;
+	}
+
+	public void setTpoCod(String tpoCod) {
+		this.tpoCod = tpoCod;
 	}
 
 }

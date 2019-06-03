@@ -10,6 +10,8 @@ import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.play4jpa.jpa.db.Tx;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -17,7 +19,14 @@ import play.mvc.Security;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
+@Api(value = "Operaciones de Pais") 
 public class PaisesController extends AbstractController {
+	
+	
+	@ApiOperation(value = "Encontrar un Pais por id",
+		    notes = "Retorna un pais",
+		    response = Pais.class
+		    )
 	
 	public Promise<Result> getPais(int id) throws APIException {
 		

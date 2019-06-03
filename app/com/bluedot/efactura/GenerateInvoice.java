@@ -160,10 +160,11 @@ public class GenerateInvoice {
 			printPageNumber(doc,docWriter, bf, cb);
 			generateTotales(cb);
 			generateCaeData(cb);
-			generateAdenda(cb);
+			generateAdendaDatosInternos(cb);
 			generateReferencia(cb);
-			generateEntrega(cb);
-			generateReceptor(cb);
+			generateAdendaEntrega(cb);
+			generateAdendaReceptor(cb);
+			generateAdendaNotas(cb);
 			
 			total.setFontAndSize(bf, 8);
 			total.beginText();
@@ -215,9 +216,18 @@ public class GenerateInvoice {
 		/*
 		 * Datos del Emisor
 		 */
+		/*
+		 * Aca no se puede usar todos los datos de cfe.getEmpresaEmisora() porque pueden haber cambiado, puedo usar los datos del generador_json 
+		 * o desde el XML que se envia a DGI. Como el XML esta dentro del sobre prefiero usar los datos del generador_json 
+		 * 
+		 * Los datos que pueden cambiar son direccion, localidad, departamento y codigoPostal
+		 * 
+		 */
+		JSONObject generador = new JSONObject(cfe.getGeneradorJson());
+		
 		createHeadings(bf, cb, emisor_x, emisor_y, cfe.getEmpresaEmisora().getRazon());
-		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize, cfe.getEmpresaEmisora().getDireccion() + " CP " + cfe.getEmpresaEmisora().getCodigoPostal());
-		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 2, cfe.getEmpresaEmisora().getLocalidad()+ " - Uruguay") ;
+		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize, generador.getJSONObject("Encabezado").getJSONObject("Emisor").getString("DomFiscal") + " CP " + cfe.getEmpresaEmisora().getCodigoPostal());
+		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 2, generador.getJSONObject("Encabezado").getJSONObject("Emisor").getString("Ciudad") + " - Uruguay") ;
 		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 3, cfe.getEmpresaEmisora().getTelefono());
 		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 4, cfe.getEmpresaEmisora().getPaginaWeb());
 
@@ -269,16 +279,22 @@ public class GenerateInvoice {
 		case eRemito_Contingencia:
 		case eResguardo:
 		case eResguardo_Contingencia:
-
+			/*
+			 * Aca no se puede usar todos los datos de cfe.getEmpresaReceptora() porque pueden haber cambiado, puedo usar los datos del generador_json 
+			 * o desde el XML que se envia a DGI. Como el XML esta dentro del sobre prefiero usar los datos del generador_json 
+			 * 
+			 * Los datos que pueden cambiar son direccion, localidad, departamento 
+			 * 
+			 */
+			JSONObject generador = new JSONObject(cfe.getGeneradorJson());
+			
 			createHeadings(bf, cb, receptor_x + 50, receptor_y, "RUC COMPRADOR", PdfContentByte.ALIGN_CENTER);
 			createHeadings(bf, cb, receptor_x + 50, receptor_y - headerRowSize, cfe.getEmpresaReceptora().getRut(),
 					PdfContentByte.ALIGN_CENTER);
-			
-			
-			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, cfe.getEmpresaReceptora().getDireccion(),
+			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DirRecep"),
 					PdfContentByte.ALIGN_LEFT);
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4,
-					cfe.getEmpresaReceptora().getLocalidad() + " - " + cfe.getEmpresaReceptora().getDepartamento(), PdfContentByte.ALIGN_LEFT);
+					cfe.getEmpresaReceptora().getLocalidad() + " - " + generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DeptoRecep"), PdfContentByte.ALIGN_LEFT);
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, cfe.getEmpresaReceptora().getRazon(),
 					PdfContentByte.ALIGN_LEFT);
 			break;
@@ -392,7 +408,7 @@ public class GenerateInvoice {
 			
 	}
 	
-	public int printLongDesc(PdfContentByte cb, int y, String input, int maxLineLength,int columns, int column) {
+	public int printLongDesc(PdfContentByte cb, int y, String input, int maxLineLength, int columns, int column) {
 	
 		int columnWidth = pageWidth / columns;
 
@@ -680,15 +696,15 @@ public class GenerateInvoice {
 		/*
 		 * CAE DATA
 		 */
-		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "DATOS CAE", 3, 2);
+		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "DATOS CAE", 6, 5);
 
-		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "IVA al día ", PdfContentByte.ALIGN_LEFT, 3, 2);
-		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 4, "ID: " + cfe.getCae().getNro(), PdfContentByte.ALIGN_LEFT, 3, 2);
-		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 5, "Fecha Vencimiento: " + sdf.format(cfe.getCae().getFechaVencimiento()),
-				PdfContentByte.ALIGN_LEFT, 3, 2);
+		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "IVA al día ", PdfContentByte.ALIGN_LEFT, 6, 5);
+		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 4, "ID: " + cfe.getCae().getNro(), PdfContentByte.ALIGN_LEFT, 6, 5);
+		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 5, "Vence: " + sdf.format(cfe.getCae().getFechaVencimiento()),
+				PdfContentByte.ALIGN_LEFT, 6, 5);
 		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 6, "INICIO: " + cfe.getCae().getInicial(),
-				PdfContentByte.ALIGN_LEFT, 3, 2);
-		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 7, "FIN: " + cfe.getCae().getFin(), PdfContentByte.ALIGN_LEFT, 3, 2);
+				PdfContentByte.ALIGN_LEFT, 6, 5);
+		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 7, "FIN: " + cfe.getCae().getFin(), PdfContentByte.ALIGN_LEFT, 6, 5);
 
 		
 		
@@ -708,19 +724,19 @@ public class GenerateInvoice {
 		/*
 		 * REFERENCIA
 		 */
-		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "REFERENCIA", 3, 1);
+		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "REFERENCIA", 6, 4);
 		
 		if (cfe.getReferencia()==null){
 			if ( cfe.getRazonReferencia()!=null)
-				createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "Razon: " + cfe.getRazonReferencia(), PdfContentByte.ALIGN_LEFT, 3, 1);
+				createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "Razon: " + cfe.getRazonReferencia(), PdfContentByte.ALIGN_LEFT, 6, 4);
 		}else{
-			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "CFE Tipo: " + cfe.getReferencia().getTipo(), PdfContentByte.ALIGN_LEFT, 3, 1);
-			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 4, "CFE Serie: " + cfe.getReferencia().getSerie(), PdfContentByte.ALIGN_LEFT, 3, 1);
-			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 5, "CFE Nro: " + cfe.getReferencia().getNro(), PdfContentByte.ALIGN_LEFT, 3, 1);
+			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 3, "Tipo: " + cfe.getReferencia().getTipo(), PdfContentByte.ALIGN_LEFT, 6, 4);
+			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 4, "Serie: " + cfe.getReferencia().getSerie(), PdfContentByte.ALIGN_LEFT, 6, 4);
+			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 5, "Nro: " + cfe.getReferencia().getNro(), PdfContentByte.ALIGN_LEFT, 6, 4);
 		}
 	}
 	
-	public void generateEntrega(PdfContentByte cb)
+	public void generateAdendaEntrega(PdfContentByte cb)
 			throws MalformedURLException, IOException, DocumentException {
 		
 		int frameUp_y = pageHeight - headerHeight - detailsHeight;
@@ -765,7 +781,7 @@ public class GenerateInvoice {
 	/*
 	 * 5) Pie del comprobante.(solo ultima pagina)
 	 */
-	public void generateAdenda(PdfContentByte cb) {
+	public void generateAdendaDatosInternos(PdfContentByte cb) {
 
 		int frameUp_y = pageHeight - headerHeight - detailsHeight;
 		int frameDown_y = pageHeight - headerHeight - detailsHeight - adendaHeight;
@@ -780,7 +796,7 @@ public class GenerateInvoice {
 		for (int i = 0; i < array.length(); i++) {
 			try {
 				JSONObject jsonObject = array.getJSONObject(i);
-				if (jsonObject.get("Entrega")!=null)
+				if (jsonObject.has("Entrega") || jsonObject.has("Notas"))
 					array.remove(i);
 			} catch (JSONException e) {
 			}
@@ -788,11 +804,6 @@ public class GenerateInvoice {
 		}
 		
 		
-		/*
-		 * ADENDA
-		 */
-		
-
 		if (cfe.getAdenda() != null){
 			StringBuilder stringBuilder = new StringBuilder();
 			AdendaSerializer.convertAdenda(stringBuilder, array);
@@ -811,7 +822,7 @@ public class GenerateInvoice {
 		
 	}
 	
-	public void generateReceptor(PdfContentByte cb){
+	public void generateAdendaReceptor(PdfContentByte cb){
 		int frameUp_y = pageHeight - headerHeight - detailsHeight;
 		int frameDown_y = pageHeight - headerHeight - detailsHeight - adendaHeight;
 		
@@ -823,6 +834,35 @@ public class GenerateInvoice {
 		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 4, "Firma:", PdfContentByte.ALIGN_LEFT, 3, 2);
 		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 6, "Aclaración:", PdfContentByte.ALIGN_LEFT, 3, 2);
 		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 8, "Cédula:", PdfContentByte.ALIGN_LEFT, 3, 2);
+	}
+	
+	public void generateAdendaNotas(PdfContentByte cb){
+		int frameUp_y = pageHeight - headerHeight - detailsHeight - adendaHeight;
+		int frameDown_y = pageHeight - headerHeight - detailsHeight - adendaHeight - selloDigitalAndCAEDataHeight;
+		
+		
+		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "ADENDA - NOTAS",3,1);
+		
+		
+		if (cfe.getAdenda()==null)
+			return;
+		
+		JSONArray array = new JSONArray(cfe.getAdenda());
+		JSONObject notas = null; 
+		for (int i = 0; i < array.length(); i++) {
+			try {
+				if (array.getJSONObject(i).get("Notas")!=null) {
+					notas = array.getJSONObject(i);
+					break;
+				}
+			} catch (JSONException e) {
+			}
+			
+		}
+		
+		if (notas!=null)
+			 printLongDesc(cb, frameUp_y - detailsRowSize * (3) ,notas.getString("Notas"), 50, 3, 1);
+		
 	}
 
 	/*
@@ -902,7 +942,7 @@ public class GenerateInvoice {
 
 		cb.beginText();
 		cb.setFontAndSize(bf, 8);
-		cb.showTextAligned(PdfContentByte.ALIGN_RIGHT, "Pagina Nro " + docWriter.getPageNumber() + " de", 550, 25, 0);
+		cb.showTextAligned(PdfContentByte.ALIGN_RIGHT, "Pag " + docWriter.getPageNumber() + " de", 550, 25, 0);
 		cb.endText();
 		Image image = Image.getInstance(total);
 		image.setAbsolutePosition(560, 25);

@@ -47,7 +47,7 @@ public class UI extends Model<UI>{
 		UI ui = find.byId(id);
 
 		if (ui == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.UI_NO_ENCONTRADA.withParams("id", id));
+			throw APIException.raise(APIErrors.UI_NO_ENCONTRADA).withParams("id", id);
 		return ui;
 	}
 	
@@ -63,7 +63,7 @@ public class UI extends Model<UI>{
 		
 		UI ui = q.findUnique();
 		if (ui == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.UI_NO_ENCONTRADA.withParams("anio", anio));
+			throw APIException.raise(APIErrors.UI_NO_ENCONTRADA).withParams("anio", anio);
 		return ui;
 	}
 

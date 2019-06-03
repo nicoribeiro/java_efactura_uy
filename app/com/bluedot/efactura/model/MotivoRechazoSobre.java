@@ -14,7 +14,9 @@ public enum MotivoRechazoSobre {
 	
 	S06("No coinciden certificado de sobre y comprobantes"),
 	
-	S07("Sobre enviado supera el tamaño máximo admitido");
+	S07("Sobre enviado supera el tamaño máximo admitido"),
+	
+	S08("Sobre enviado ya existe en los registros de DGI");
 	
 	private String motivo;
 

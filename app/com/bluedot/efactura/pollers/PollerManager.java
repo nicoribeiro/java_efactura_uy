@@ -9,7 +9,9 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import play.Play;
+import com.google.inject.Provider;
+
+import play.Application;
 import play.inject.ApplicationLifecycle;
 import play.libs.F;
 
@@ -20,10 +22,14 @@ public class PollerManager {
 	private static ExecutorService executor = Executors.newFixedThreadPool(5);
 	
 	public static boolean shutdownInProgress = false;
+	
+	private Provider<Application> applicationProvider;
 
 	@Inject
-	public PollerManager(ApplicationLifecycle lifecycle) {
+	public PollerManager(ApplicationLifecycle lifecycle, Provider<Application> applicationProvider) {
 
+		this.applicationProvider = applicationProvider;
+		
 		lifecycle.addStopHook(() -> {
 			
 			shutdownInProgress = true;
@@ -48,9 +54,20 @@ public class PollerManager {
 	public void queue() {
 		Runnable runner; 
 		
-			logger.info("Encolador de Documentos: running");
-			runner = new EmailEntrantesRunner();
+		if (applicationProvider.get().configuration().getBoolean("EmailEntrantesPoller.run", false)){
+			logger.info("EmailEntrantesPoller: running");
+			runner = new EmailEntrantesPoller();
 			executor.execute(runner);
-		}
+		}else
+			logger.info("EmailEntrantesPoller: not running");
+		
+		if (applicationProvider.get().configuration().getBoolean("NotificationPoller.run", false)){
+			logger.info("NotificationPoller: running");
+			runner = new NotificationPoller();
+			executor.execute(runner);
+		}else
+			logger.info("NotificationPoller: not running");
+		
+	}
 
 }

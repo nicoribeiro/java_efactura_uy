@@ -20,11 +20,13 @@ public interface RecepcionService {
 
 	ReporteDiario generarReporteDiario(Date date, Empresa empresa) throws APIException;
 
-	void consultarResultados(Date date, Empresa empresa) throws APIException;
+//	void consultarResultados(Date date, Empresa empresa) throws APIException;
 
 	void reenviarSobre(SobreEmitido sobre) throws APIException;
 
-	void enviarMailEmpresa(CFE cfe) throws APIException;
+	void enviarCfeEmpresa(CFE cfe) throws APIException;
+
+	void enviarSobreEmpresa(SobreEmitido sobre) throws APIException;
 
 //	public class ResultadoConsulta {
 //		public TipoDoc tipoDoc;

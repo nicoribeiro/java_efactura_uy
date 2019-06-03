@@ -112,7 +112,7 @@ public class ReporteDiario extends Model<ReporteDiario>{
 		ReporteDiario reporteDiario = find.byId(id);
 
 		if (reporteDiario == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.REPORTE_DIARIO_NO_ENCONTRADO.withParams("id",id));
+			throw APIException.raise(APIErrors.REPORTE_DIARIO_NO_ENCONTRADO).withParams("id",id);
 		return reporteDiario;
 	}
 

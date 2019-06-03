@@ -1,4 +1,4 @@
-package com.bluedot.commons.utils;
+package com.bluedot.commons.utils.messaging;
 
 import java.util.Properties;
 
@@ -27,8 +27,8 @@ public class EmailReceiver {
      * @param port
      * @return a Properties object
      */
-    private Properties getServerProperties(String protocol, String host,
-            String port) {
+    public static Properties getServerProperties(String protocol, String host,
+            String port, boolean ssl) {
         Properties properties = new Properties();
  
         // server setting
@@ -36,6 +36,7 @@ public class EmailReceiver {
         properties.put(String.format("mail.%s.port", protocol), port);
  
         // SSL setting
+        if (ssl){
         properties.setProperty(
                 String.format("mail.%s.socketFactory.class", protocol),
                 "javax.net.ssl.SSLSocketFactory");
@@ -45,7 +46,7 @@ public class EmailReceiver {
         properties.setProperty(
                 String.format("mail.%s.socketFactory.port", protocol),
                 String.valueOf(port));
- 
+        }
         return properties;
     }
  
@@ -58,8 +59,8 @@ public class EmailReceiver {
      * @param password
      */
     public void downloadEmails(String protocol, String host, String port,
-            String userName, String password) {
-        Properties properties = getServerProperties(protocol, host, port);
+            String userName, String password, boolean ssl) {
+        Properties properties = getServerProperties(protocol, host, port, ssl);
         Session session = Session.getDefaultInstance(properties);
  
         try {
@@ -163,6 +164,6 @@ public class EmailReceiver {
         String password = "your_email_password";
  
         EmailReceiver receiver = new EmailReceiver();
-        receiver.downloadEmails(protocol, host, port, userName, password);
+        receiver.downloadEmails(protocol, host, port, userName, password, true);
     }
 }

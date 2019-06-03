@@ -5,6 +5,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,16 +29,19 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.utils.Tuple;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
 import dgi.classes.recepcion.CFEDefType.EFact;
+import dgi.classes.recepcion.CFEDefType.ERem;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.TipMonType;
@@ -76,10 +82,16 @@ public class CFE extends Model<CFE>{
 	private Titular titular;
 	
 	/**
-	 * Sobre que contiene el CFE
+	 * Sobre que contiene el CFE cuando es emitido por el Sistema
 	 */
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
-	private SobreEmitido sobre;
+	private SobreEmitido sobreEmitido;
+	
+	/**
+	 * Sobre que contiene el CFE cuando fue recibido por el sistema
+	 */
+	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
+	private SobreRecibido sobreRecibido;
 	
 	/**
 	 * Reporte diario en el que se reporto el CFE
@@ -182,12 +194,6 @@ public class CFE extends Model<CFE>{
 	private List<MotivoRechazoCFE> motivo;
 	
 	/**
-	 * El CFE en formato xml
-	 */
-	@Type(type="text")
-	private String xml;
-	
-	/**
 	 * Lineas del CFE
 	 */
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="cfe", fetch=FetchType.LAZY)
@@ -201,6 +207,9 @@ public class CFE extends Model<CFE>{
 	
 	@Transient
 	private EResg eresguardo;
+	
+	@Transient
+	private ERem eremito;
 	
 	@Type(type="text")
 	private String generadorJson;
@@ -224,6 +233,9 @@ public class CFE extends Model<CFE>{
 	@Type(type="text")
 	private String adenda;
 
+	@OneToMany
+	private List<RetencionPercepcion> retencionesPercepciones; 
+	
 	public CFE() {
 		super();
 	}
@@ -252,40 +264,104 @@ public class CFE extends Model<CFE>{
 		CFE cfe = find.byId(id);
 
 		if (cfe == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO.withParams("id", id));
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("id", id);
 		return cfe;
 	}
-
 	
-	public static CFE findById(Empresa empresa, TipoDoc tipo, String serie, long nro, boolean throwExceptionWhenMissing) throws APIException
+	public static List<CFE> findById(Empresa empresa, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, DireccionDocumento direccion, boolean throwExceptionWhenMissing) throws APIException
 	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 		
+		switch (direccion) {
+		case AMBOS:
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("DireccionDocumento", direccion.name());
+		case EMITIDO:
+			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
+			q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
+			break;
+		case RECIBIDO:
+			q.getCriteria().add(Restrictions.eq("empresaReceptora", empresa));
+			q.getCriteria().add(Restrictions.isNotNull("sobreRecibido"));
+			break;
+		}
 			
-			q.getCriteria().createAlias("empresaEmisora", "empresa", JoinType.LEFT_OUTER_JOIN);
 			
-			q.getCriteria().add(Restrictions.and
-					
-					(		Restrictions.eq("empresa.id", empresa.getId()), 
-							Restrictions.eq("tipo",tipo), 
-							Restrictions.eq("serie", serie), 
-							Restrictions.eq("nro", nro)
-					));
+		q.getCriteria().add(Restrictions.and
+		(		 
+			Restrictions.eq("tipo",tipo), 
+			Restrictions.eq("serie", serie), 
+			Restrictions.eq("nro", nro)
+		));
 		
-		CFE cfe =  q.findUnique();
-		if (cfe == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO.withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro));
+		if (estado!=null)
+			q.getCriteria().add(Restrictions.eq("estado", estado));
+		
+		List<CFE> cfe =  q.findList();
+		if ((cfe == null || cfe.size()==0)&& throwExceptionWhenMissing)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro);
 		return cfe;
 	}
 	
-	public static CFE findByGeneradorId(Empresa empresa, String id) {
+	public static CFE findByGeneradorId(Empresa empresa, String id, DireccionDocumento direccion) throws APIException {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
+		switch (direccion) {
+		case AMBOS:
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("DireccionDocumento", direccion.name());
+		case EMITIDO:
+			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
+			q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
+			break;
+		case RECIBIDO:
+			q.getCriteria().add(Restrictions.eq("empresaReceptora", empresa));
+			q.getCriteria().add(Restrictions.isNotNull("sobreRecibido"));
+			break;
+		}
+		
 		q.getCriteria().add(Restrictions.eq("generadorId", id));
 
 		CFE cfe = q.findUnique();
 		return cfe;
 	}
+	
+	
+	public static Tuple<List<CFE>,Long> find(Empresa empresa, Date fromDate, Date toDate, int page, int pageSize, DireccionDocumento direccion)
+	{
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+
+		Criterion dateCriteria = null;
+		
+		if (fromDate != null)
+			if (toDate==null)
+				dateCriteria = Restrictions.ge("fecha", fromDate);
+			else
+				dateCriteria = Restrictions.between("fecha", fromDate, toDate);
+		else
+			if (toDate!=null)
+				dateCriteria = Restrictions.le("fecha", toDate);
+		
+		if (dateCriteria!=null)
+			q.getCriteria().add(dateCriteria);
+		
+		switch (direccion) {
+		case AMBOS:
+			q.getCriteria().add( Restrictions.or( Restrictions.eq("empresaReceptora", empresa), Restrictions.eq("empresaEmisora", empresa))   );
+			break;
+		case EMITIDO:
+			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa)  );
+			break;
+		case RECIBIDO:
+			q.getCriteria().add( Restrictions.eq("empresaReceptora", empresa));
+			break;
+		}
+		
+		long rowCount = q.findRowCount();
+		
+		List<CFE> list =  page > 0 && pageSize > 0 ? q.findPage(page, pageSize) : q.findList();
+		
+		return new Tuple<List<CFE>, Long>(list, rowCount);
+	}
+	
 
 	public Empresa getEmpresaEmisora() {
 		return empresaEmisora;
@@ -311,12 +387,12 @@ public class CFE extends Model<CFE>{
 		this.titular = titular;
 	}
 
-	public SobreEmitido getSobre() {
-		return sobre;
+	public SobreEmitido getSobreEmitido() {
+		return sobreEmitido;
 	}
 
-	public void setSobre(SobreEmitido sobre) {
-		this.sobre = sobre;
+	public void setSobreEmitido(SobreEmitido sobreEmitido) {
+		this.sobreEmitido = sobreEmitido;
 	}
 
 	public ReporteDiario getReporteDiario() {
@@ -445,14 +521,6 @@ public class CFE extends Model<CFE>{
 
 	public void setEstado(EstadoACKCFEType estado) {
 		this.estado = estado;
-	}
-
-	public String getXml() {
-		return xml;
-	}
-
-	public void setXml(String xml) {
-		this.xml = xml;
 	}
 
 	public List<Detalle> getDetalle() {
@@ -727,6 +795,32 @@ public class CFE extends Model<CFE>{
 
 	public void setAdenda(String adenda) {
 		this.adenda = adenda;
+	}
+
+	public ERem getEremito() {
+		return eremito;
+	}
+
+	public void setEremito(ERem eremito) {
+		this.eremito = eremito;
+	}
+
+	public Sobre getSobreRecibido() {
+		return sobreRecibido;
+	}
+
+	public void setSobreRecibido(SobreRecibido sobreRecibido) {
+		this.sobreRecibido = sobreRecibido;
+	}
+	
+	public List<RetencionPercepcion> getRetencionesPercepciones() {
+		if (retencionesPercepciones==null)
+			retencionesPercepciones = new LinkedList<RetencionPercepcion>();
+		return retencionesPercepciones;
+	}
+
+	public void setRetencionesPercepciones(List<RetencionPercepcion> retencionesPercepciones) {
+		this.retencionesPercepciones = retencionesPercepciones;
 	}
 
 }

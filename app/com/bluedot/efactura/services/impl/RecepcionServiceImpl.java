@@ -2,13 +2,10 @@ package com.bluedot.efactura.services.impl;
 
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeFactory;
@@ -19,23 +16,24 @@ import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.notificationChannels.MessagingHelper;
-import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.commons.Commons;
-import com.bluedot.efactura.commons.EfacturaSecurity;
 import com.bluedot.efactura.interceptors.InterceptorContextHolder;
 import com.bluedot.efactura.interceptors.NamespacesInterceptor;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.MotivoRechazoCFE;
+import com.bluedot.efactura.model.MotivoRechazoSobre;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
-import com.bluedot.efactura.pool.WSEFacturaSoapPortWrapper;
 import com.bluedot.efactura.pool.WSRecepcionPool;
+import com.bluedot.efactura.pool.wrappers.WSEFacturaSoapPortWrapper;
+import com.bluedot.efactura.respuestas.Respuestas;
+import com.bluedot.efactura.respuestas.Respuestas.Respuesta;
 import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.strategy.report.SummaryStrategy;
 import com.sun.istack.logging.Logger;
@@ -60,7 +58,6 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTEResponse;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBREResponse;
-import play.Play;
 
 public class RecepcionServiceImpl implements RecepcionService {
 
@@ -130,7 +127,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 		SobreEmitido sobre = new SobreEmitido(cfe.getEmpresaEmisora(), cfe.getEmpresaReceptora(), "", 1, null);
 		sobre.getCfes().add(cfe);
 		sobre.setFecha(new Date());
-		cfe.setSobre(sobre);
+		cfe.setSobreEmitido(sobre);
 		sobre.save();
 
 		/*
@@ -210,10 +207,10 @@ public class RecepcionServiceImpl implements RecepcionService {
 			allDocument = XML
 					.loadXMLFromString(NamespacesInterceptor.doNamespaceChanges(XML.documentToString(allDocument)));
 
-			allDocument = SignatureInterceptor.signDocument(dbf, allDocument, "ns0:CFE", "DGICFE:CFE_Adenda");
+			allDocument = SignatureInterceptor.signDocument(dbf, allDocument, "ns0:CFE", "DGICFE:CFE_Adenda", sobre.getEmpresaEmisora().getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
 
 			sobre.setXmlEmpresa(XML.documentToString(allDocument));
-			
+			sobre.update();
 			
 		} catch (TransformerFactoryConfigurationError | Exception e) {
 			e.printStackTrace();
@@ -263,13 +260,13 @@ public class RecepcionServiceImpl implements RecepcionService {
 				if (RUCemisor == null)
 					RUCemisor = rucEmisor;
 				else if (!RUCemisor.equals(rucEmisor))
-					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("RUCemisor"))
+					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("RUCemisor")
 							.setDetailMessage("Cannot have many RUCemisor values on one envelope");
 
 				if (RUCreceptor == null)
 					RUCreceptor = rucReceptor;
 				else if (!RUCemisor.equals(rucReceptor))
-					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE.withParams("RUCreceptor"))
+					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("RUCreceptor")
 							.setDetailMessage("Cannot have many RUCreceptor on one envelope");
 
 			}
@@ -282,9 +279,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 			caratula.setRUCEmisor(RUCemisor);
 			caratula.setRutReceptor(RUCreceptor);
 			caratula.setVersion("1.0");
-			caratula.setX509Certificate(EfacturaSecurity.getCertificate(Commons.getCetificateAlias(),
-					Commons.getCertificatePassword(), Commons.getKeyStore()));
-
+			caratula.setX509Certificate(sobre.getEmpresaEmisora().getFirmaDigital().getCertificateEncoded());
+			
 			envioCFE.setCaratula(caratula);
 		} catch (Exception e) {
 			throw APIException.raise(e);
@@ -359,8 +355,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			caratula.setRUCEmisor(RUCemisor);
 			caratula.setRutReceptor(RUCreceptor);
 			caratula.setVersion("1.0");
-			caratula.setX509Certificate(EfacturaSecurity.getCertificate(Commons.getCetificateAlias(),
-					Commons.getCertificatePassword(), Commons.getKeyStore()));
+			caratula.setX509Certificate(sobre.getEmpresaEmisora().getFirmaDigital().getCertificateEncoded());
 
 			signed.setCaratula(caratula);
 		} catch (Exception e) {
@@ -407,12 +402,14 @@ public class RecepcionServiceImpl implements RecepcionService {
 				WSRecepcionPool.getInstance().checkIn(portWrapper);
 			} catch (Throwable e) {
 				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
+			} finally{
+				/*
+				 * Borramos el contexto
+				 */
+				InterceptorContextHolder.clear();
 			}
 
-			/*
-			 * Borramos el contexto
-			 */
-			InterceptorContextHolder.clear();
+			
 
 			ACKSobredefType ACKSobre = (ACKSobredefType) XML.unMarshall(XML.loadXMLFromString(response.getXmlData()),
 					ACKSobredefType.class);
@@ -420,14 +417,40 @@ public class RecepcionServiceImpl implements RecepcionService {
 			if (ACKSobre == null)
 				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
 
-			sobre.setRespuesta_dgi(response.getXmlData());
-
-			sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
-
-			sobre.setEstado(ACKSobre.getDetalle().getEstado());
-
-			switch (sobre.getEstado()) {
+			try {
+				/*
+				 * Pruebo si se parseo bien la respuesta
+				 */
+				ACKSobre.getDetalle().getEstado();
+			} catch (Throwable e) {
+				/*
+				 * Intento parsear la respuesta ahora pensando que fue un error
+				 */
+				Respuestas respuestas = (Respuestas) XML.unMarshall(XML.loadXMLFromString(response.getXmlData()),
+						Respuestas.class);
+				
+				if (respuestas == null)
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				
+				Respuesta respuesta = respuestas.getRespuesta().iterator().next();
+				
+				if (respuesta == null)
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				
+				if (respuesta.getCodigo().intValue()==108) {
+					throw APIException.raise(APIErrors.SOBRE_YA_ENVIADO);
+				}else
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				
+			}
+			
+			switch (ACKSobre.getDetalle().getEstado()) {
 			case AS:
+				
+				sobre.setRespuesta_dgi(response.getXmlData());
+				sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
+				sobre.setEstadoDgi(ACKSobre.getDetalle().getEstado());
+				
 				sobre.setToken(ACKSobre.getDetalle().getParamConsulta().getToken());
 				sobre.setFechaConsulta(
 						ACKSobre.getDetalle().getParamConsulta().getFechahora().toGregorianCalendar().getTime());
@@ -435,7 +458,14 @@ public class RecepcionServiceImpl implements RecepcionService {
 			case BA:
 				break;
 			case BS:
-				throw APIException.raise(APIErrors.SOBRE_RECHAZADO);
+				
+				if (sobreEnviadoAnteriormente(ACKSobre))
+					throw APIException.raise(APIErrors.SOBRE_YA_ENVIADO);
+				else{
+					sobre.setRespuesta_dgi(response.getXmlData());
+					sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
+					sobre.setEstadoDgi(ACKSobre.getDetalle().getEstado());
+				}
 			}
 
 			return ACKSobre;
@@ -445,43 +475,20 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 	}
 
-	private void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
-		try {
-
-			Map<String, String> attachments = new TreeMap<String, String>();
-
-			attachments.put(sobre.getNombreArchivo(), sobre.getXmlEmpresa());
-			sobre.update();
-
-			Empresa empresa = sobre.getEmpresaEmisora();
-
-			String subject = Play.application().configuration().getString("mail.subject").replace("<cfe>",
-					sobre.getNombreArchivo());
-
-			String body = Play.application().configuration().getString("mail.body")
-					.replace("<nombre>", empresa.getNombreComercial())
-					.replace("<mail>", empresa.getMailNotificaciones()).replace("<tel>", empresa.getTelefono())
-					.replace("<nl>", "\n");
-
-			new MessagingHelper()
-					.withCustomConfig(empresa.getFromEnvio(), empresa.getHostRecepcion(), Integer.parseInt(empresa.getPuertoRecepcion()),
-							empresa.getUserRecepcion(), empresa.getPassRecepcion())
-					.withAttachment(attachments)
-					.sendEmail(sobre.getEmpresaReceptora().getMailRecepcion(), body, null, subject, false);
-
-		} catch (Exception e) {
-			throw APIException.raise(e);
-		}
-
+	private boolean sobreEnviadoAnteriormente(ACKSobredefType ACKSobre) {
+		if (ACKSobre.getDetalle()!=null && ACKSobre.getDetalle().getMotivosRechazo().size()==1 && ACKSobre.getDetalle().getMotivosRechazo().get(0).getMotivo().equals(MotivoRechazoSobre.S08.name()))
+			return true;
+		else
+			return false;
 	}
 
 	@Override
 	public Data consultaResultadoSobre(String token, Long idReceptor) throws APIException {
 
 		if (token == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("token"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("token");
 		if (idReceptor == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("idReceptor"));
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("idReceptor");
 
 		try {
 			WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
@@ -510,9 +517,18 @@ public class RecepcionServiceImpl implements RecepcionService {
 	@Override
 	public void consultaResultadoSobre(SobreEmitido sobre) throws APIException {
 		try {
-			if (sobre.getToken() == null || sobre.getIdReceptor() == null)
-				return;
+			if (sobre.getToken() == null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("token");
+				
+			if (sobre.getIdReceptor() == null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("idReceptor");
 
+			/*
+			 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
+			 * parametros a los Interceptors
+			 */
+			InterceptorContextHolder.setEmpresa(sobre.getEmpresaEmisora());
+			
 			Data result = consultaResultadoSobre(sobre.getToken(), sobre.getIdReceptor());
 
 			sobre.setResultado_dgi(result.getXmlData());
@@ -533,7 +549,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 						 * Envio a la empresa
 						 */
 						if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null)
-							this.enviarSobreEmpresa(sobre);
+							Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora(), sobre.getNombreArchivo(), sobre.getXmlEmpresa());
+//							this.enviarSobreEmpresa(sobre);
 					}else{
 						for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
 								.iterator(); iterator2.hasNext();) {
@@ -550,6 +567,11 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 		} catch (Exception e) {
 			throw APIException.raise(e);
+		}finally{
+			/*
+			 * Borramos el contexto
+			 */
+			InterceptorContextHolder.clear();
 		}
 
 	}
@@ -559,7 +581,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 	public ReporteDiario generarReporteDiario(Date fecha, Empresa empresa) throws APIException {
 		try {
 			if (fecha == null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER.withParams("fecha"));
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("fecha");
 
 			long hours = ((new Date()).getTime()-fecha.getTime())/1000/60/60;
 			
@@ -627,7 +649,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			
 			reporteDiario.setTimestampEnviado(new Date());
 			
-			Data data = sendReporte(reporteString, fecha);
+			Data data = sendReporte(reporteString, fecha, reporteDiario.getEmpresa());
 
 			reporteDiario.setRespuesta(data.getXmlData());
 
@@ -648,8 +670,15 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 	}
 
-	private Data sendReporte(String reporte, Date date) throws APIException {
+	private Data sendReporte(String reporte, Date date, Empresa empresa) throws APIException {
 		try {
+			
+			/*
+			 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
+			 * parametros a los Interceptors
+			 */
+			InterceptorContextHolder.setEmpresa(empresa);
+			
 			WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
 
 			WSEFacturaEFACRECEPCIONREPORTE input = new WSEFacturaEFACRECEPCIONREPORTE();
@@ -664,6 +693,11 @@ public class RecepcionServiceImpl implements RecepcionService {
 			return output.getDataout();
 		} catch (Throwable e) {
 			throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
+		}finally{
+			/*
+			 * Borramos el contexto
+			 */
+			InterceptorContextHolder.clear();
 		}
 	}
 
@@ -687,18 +721,18 @@ public class RecepcionServiceImpl implements RecepcionService {
 	// }
 	// }
 
-	@Override
-	public void consultarResultados(Date date, Empresa empresa) throws APIException {
-
-		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, date);
-
-		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
-			SobreEmitido sobre = iterator.next();
-			this.consultaResultadoSobre((SobreEmitido) sobre);
-
-		}
-
-	}
+//	@Override
+//	public void consultarResultados(Date date, Empresa empresa) throws APIException {
+//
+//		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, date);
+//
+//		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
+//			SobreEmitido sobre = iterator.next();
+//			this.consultaResultadoSobre((SobreEmitido) sobre);
+//
+//		}
+//
+//	}
 
 	@Override
 	public void reenviarSobre(SobreEmitido sobre) throws APIException {
@@ -708,8 +742,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 	}
 
 	@Override
-	public void enviarMailEmpresa(CFE cfe) throws APIException {
-		SobreEmitido sobre = cfe.getSobre();
+	public void enviarCfeEmpresa(CFE cfe) throws APIException {
+		SobreEmitido sobre = cfe.getSobreEmitido();
 		
 		if (sobre.getEmpresaReceptora().isEmisorElectronico()){
 			if (sobre.getXmlEmpresa()==null){
@@ -722,9 +756,14 @@ public class RecepcionServiceImpl implements RecepcionService {
 					e.printStackTrace();
 				}
 			}
-			enviarSobreEmpresa(cfe.getSobre());
+			enviarSobreEmpresa(sobre);
 		}
 		
+	}
+
+	@Override
+	public void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
+		Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora(), sobre.getNombreArchivo(), sobre.getXmlEmpresa());
 	}
 
 	// @Override

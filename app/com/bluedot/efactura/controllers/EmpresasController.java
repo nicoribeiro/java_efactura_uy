@@ -5,11 +5,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -24,8 +26,8 @@ import org.w3c.dom.NodeList;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
-import com.bluedot.commons.hazelcast.Mutex;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
@@ -33,6 +35,7 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.bluedot.efactura.services.ConsultaRutService;
@@ -40,6 +43,7 @@ import com.bluedot.efactura.services.impl.ConsultaRutServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
+import io.swagger.annotations.Api;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -47,16 +51,17 @@ import play.mvc.Security;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
+@Api(value = "Operaciones de Empresa") 
 public class EmpresasController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(EmpresasController.class);
 
-	private Mutex mutex;
-	
-	@Inject
-	public EmpresasController(Mutex mutex){
-		this.mutex = mutex;
-	}
+//	private Mutex mutex;
+//	
+//	@Inject
+//	public EmpresasController(Mutex mutex){
+//		this.mutex = mutex;
+//	}
 	
 	public Promise<Result> darInformacionRut(String idrut) throws APIException {
 		//TODO tomar este consulta rut de un factory
@@ -81,7 +86,7 @@ public class EmpresasController extends AbstractController {
 			// http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
 			doc.getDocumentElement().normalize();
 
-			NodeList nList = doc.getElementsByTagName("RucEmisoresMail.RucEmisoresMailItem");
+			NodeList nList = doc.getElementsByTagName("RucEmisoresTransicionMail.RucEmisoresTransicionMailItem");
 
 			for (int temp = 0; temp < nList.getLength(); temp++) {
 
@@ -101,7 +106,7 @@ public class EmpresasController extends AbstractController {
 
 					Empresa empresa = Empresa.findByRUT(rut);
 					if ( empresa == null) {
-						empresa = new Empresa(rut, null, null, null, null, null, 0, null);
+						empresa = new Empresa(rut, null, null, null, null, null);
 						empresa.save();
 					}else{
 						empresa.update();
@@ -129,6 +134,19 @@ public class EmpresasController extends AbstractController {
 		return json(json.toString());
 	}
 	
+	
+	
+	
+	
+//		@ApiOperation( 
+//		     nickname = "GetEmpresa", 
+//		     value = "Get Empresa", 
+//		     notes = "Obtener una Empresa por RUT", 
+//		     httpMethod = "GET", 
+//		     response = Empresa.class
+//		 ) 
+	
+		
 	public Promise<Result> getEmpresaByRut(String rut) throws APIException {
 		
 		Empresa empresa = Empresa.findByRUT(rut, true);
@@ -178,9 +196,7 @@ public class EmpresasController extends AbstractController {
 		String departamento = empresaJson.has("departamento") ? empresaJson.findPath("departamento").asText() : null;
 		String direccion = empresaJson.has("direccion") ? empresaJson.findPath("direccion").asText() : null;
 		String nombreComercial = empresaJson.has("nombreComercial") ? empresaJson.findPath("nombreComercial").asText() : null;
-		Integer diasAvisoVencimiento = empresaJson.has("diasAvisoVencimiento") ? empresaJson.findPath("diasAvisoVencimiento").asInt() : null;
 		String localidad = empresaJson.has("localidad") ? empresaJson.findPath("localidad").asText() : null;
-		String vencimientoFirma = empresaJson.has("vencimientoFirma") ? empresaJson.findPath("vencimientoFirma").asText() : null;
 		Integer codigoSucursal = empresaJson.has("codigoSucursal") ? empresaJson.findPath("codigoSucursal").asInt() : null;
 		String logoPath = empresaJson.has("logoPath") ? empresaJson.findPath("logoPath").asText() : null;
 		String paginaWeb = empresaJson.has("paginaWeb") ? empresaJson.findPath("paginaWeb").asText() : null;
@@ -195,6 +211,9 @@ public class EmpresasController extends AbstractController {
 		String userRecepcion = empresaJson.has("userRecepcion") ? empresaJson.findPath("userRecepcion").asText() : null;
 		String mailNotificaciones = empresaJson.has("mailNotificaciones") ? empresaJson.findPath("mailNotificaciones").asText() : null;
 		String fromEnvio = empresaJson.has("fromEnvio") ? empresaJson.findPath("fromEnvio").asText() : null;
+		
+		String certificado = empresaJson.has("certificado") ? empresaJson.findPath("certificado").asText() : null;
+		String privateKey = empresaJson.has("privateKey") ? empresaJson.findPath("privateKey").asText() : null;
 		
 		if (hostRecepcion != null)
 			empresa.setHostRecepcion(hostRecepcion);
@@ -235,9 +254,6 @@ public class EmpresasController extends AbstractController {
 		if (nombreComercial != null)
 			empresa.setNombreComercial(nombreComercial);
 		
-		if (diasAvisoVencimiento != null)
-			empresa.setDiasAvisoVencimiento(diasAvisoVencimiento);
-		
 		if (localidad != null)
 			empresa.setLocalidad(localidad);
 		
@@ -246,9 +262,6 @@ public class EmpresasController extends AbstractController {
 		
 		if (razon != null)
 			empresa.setRazon(razon);
-		
-		if (vencimientoFirma != null)
-			empresa.setVencimientoFirma(DateHandler.fromStringToDate(vencimientoFirma, new SimpleDateFormat("yyyy-MM-dd")));
 		
 		if (logoPath!=null){
 			Path path = Paths.get(logoPath);
@@ -259,7 +272,39 @@ public class EmpresasController extends AbstractController {
 			}
 			
 		}
+		
+		if (certificado != null){
+			if (privateKey ==null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("privateKey");
 			
+			FirmaDigital firmaDigital = new FirmaDigital();
+			
+			firmaDigital.setCertificate(certificado);
+			firmaDigital.setPrivateKey(privateKey);
+			try {
+				
+				KeyStore keystore = firmaDigital.getKeyStore();
+			
+			
+				if(keystore.getCertificate(FirmaDigital.KEY_ALIAS).getType().equals("X.509")){
+					X509Certificate certificate  = (X509Certificate) keystore.getCertificate(FirmaDigital.KEY_ALIAS);
+					
+					firmaDigital.setValidaHasta(certificate.getNotAfter());
+					firmaDigital.setValidaDesde(certificate.getNotBefore());
+					
+					if (empresa.getFirmaDigital()!=null)
+						empresa.getFirmaDigital().delete();
+					
+					firmaDigital.setEmpresa(empresa);
+					firmaDigital.save();
+					
+	            }
+			} catch (IOException | GeneralSecurityException e) {
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("certificado invalido o clave privada invalida");
+			}
+			
+			
+		}
 		
 		empresa.update();
 		

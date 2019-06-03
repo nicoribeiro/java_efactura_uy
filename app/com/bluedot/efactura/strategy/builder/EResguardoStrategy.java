@@ -14,8 +14,8 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.Pais;
-import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.TipoDocumento;
 
 import dgi.classes.recepcion.CAEDataType;
@@ -23,7 +23,6 @@ import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.EResg.Detalle;
 import dgi.classes.recepcion.CFEDefType.EResg.Encabezado;
 import dgi.classes.recepcion.Emisor;
-import dgi.classes.recepcion.IdDocFact;
 import dgi.classes.recepcion.IdDocResg;
 import dgi.classes.recepcion.ItemResg;
 import dgi.classes.recepcion.ReceptorResg;
@@ -160,7 +159,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 
 	@Override
 	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String rznSocRecep,
-			String dirRecep, String ciudadRecep, String deptoRecep) throws APIException {
+			String dirRecep, String ciudadRecep, String deptoRecep, boolean update) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
 		if (tipoDocRecep != null)
@@ -183,9 +182,9 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 				Pais pais = Pais.findByCodigo(codPaisRecep, true);
 				cfe.setTitular(getOrCreateTitular(pais, tipoDocRecep, docRecep));
 			} else {
-				if (rznSocRecep != null && dirRecep != null && ciudadRecep != null && deptoRecep != null)
+				if (rznSocRecep != null && dirRecep != null && ciudadRecep != null)
 					cfe.setEmpresaReceptora(
-							getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep));
+							Empresa.getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep, update));
 			}
 
 	}

@@ -8,6 +8,8 @@ import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.ReporteDiario;
 
+import dgi.classes.entreEmpresas.CFEEmpresasType;
+
 public class EfacturaJSONSerializerProvider extends JSONSerializerProvider {
 
 	public static JSONSerializer<Pais> getPaisSerializer() {
@@ -28,6 +30,10 @@ public class EfacturaJSONSerializerProvider extends JSONSerializerProvider {
 
 	public static JSONSerializer<ReporteDiario> getReporteDiarioSerializer() {
 		return new ReporteDiarioSerializer<ReporteDiario>(getEmpresaSerializer());
+	}
+	
+	public static JSONSerializer<CFEEmpresasType> getCFEEmpresasTypeSerializer() {
+		return new CFEEmpresasTypeSerializer<CFEEmpresasType>();
 	}
 
 }

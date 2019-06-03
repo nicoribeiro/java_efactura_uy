@@ -154,7 +154,7 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		User user = find.query().ieq("emailAddress", emailAddress).findUnique();
 		
 		if (user==null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.USER_NOT_FOUND.withParams("emailAddress", emailAddress));
+			throw APIException.raise(APIErrors.USER_NOT_FOUND).withParams("emailAddress", emailAddress);
 		
 		return user;
 	}
@@ -376,7 +376,7 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		User user = find.byId(id);
 
 		if (user == null && throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.USER_NOT_FOUND.withParams("id", id));
+			throw APIException.raise(APIErrors.USER_NOT_FOUND).withParams("id", id);
 
 		return user;
 	}

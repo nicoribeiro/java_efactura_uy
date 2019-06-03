@@ -8,13 +8,13 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.model.Empresa;
 
-public class EmailEntrantesRunner extends PollerRunner {
+public class EmailEntrantesPoller extends PollerRunner {
 	
-	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l * 10l;
+	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l* 5l;
 	
-	static Logger logger = LoggerFactory.getLogger(EmailEntrantesRunner.class);
+	static Logger logger = LoggerFactory.getLogger(EmailEntrantesPoller.class);
 
-	public EmailEntrantesRunner() {
+	public EmailEntrantesPoller() {
 		super(logger,SLEEP_TIME_IN_MILLIS);
 	}
 

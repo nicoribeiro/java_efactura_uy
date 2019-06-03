@@ -61,32 +61,4 @@ public class CommonStrategy {
 
 	}
 
-	public Empresa getOrCreateEmpresa(String docRecep, String rznSocRecep, String dirRecep, String ciudadRecep,
-			String deptoRecep) {
-		Empresa empresa = Empresa.findByRUT(docRecep);
-		
-		if (empresa == null) {
-			/*
-			 * Si la empresa no existe la registro como nueva en el sistema
-			 */
-			empresa = new Empresa(docRecep, rznSocRecep, null, dirRecep, ciudadRecep, deptoRecep, 0, null);
-			empresa.save();
-		}else{
-			/*
-			 * Si la empresa existe veo si puedo actualizar algun dato
-			 */
-			if (empresa.getDepartamento()==null)
-				empresa.setDepartamento(deptoRecep);
-			if (empresa.getLocalidad()==null)
-				empresa.setLocalidad(ciudadRecep);
-			if (empresa.getDireccion()==null)
-				empresa.setDireccion(dirRecep);
-			if (empresa.getRazon()==null)
-				empresa.setRazon(rznSocRecep);
-			empresa.update();
-		}
-			
-		
-		return empresa;
-	}
 }

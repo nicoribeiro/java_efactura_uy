@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import dgi.classes.recepcion.RetPerc;
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.recepcion.TotalesResg;
 import dgi.classes.recepcion.TotalesResg.RetencPercep;

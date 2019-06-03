@@ -9,10 +9,16 @@ PROYECT_DIR=$GITREPO
 BUILDS=$BASE/builds
 MINOR=$(cat $CONFIG/minor.conf)
 MAJOR=$(cat $CONFIG/major.conf)
-INCREMENT=1
+INCREMENT=0
 VERSION=$MAJOR.$(($MINOR + $INCREMENT))
 BUILD_LOG=$BUILDS/build.log
 BUILD_NAME=java_efactura_uy-$VERSION.zip
+
+
+if [ ! -d "$BUILDS" ]; then
+	# Control will enter here if $BUILDS doesn't exist.
+	mkdir $BUILDS
+fi
 
 # Increment minor version
 echo $(($MINOR + $INCREMENT)) > $CONFIG/minor.conf

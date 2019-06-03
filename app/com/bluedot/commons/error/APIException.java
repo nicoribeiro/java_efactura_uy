@@ -22,7 +22,7 @@ public class APIException extends Throwable
 	}
 	
 	private APIException(APIErrors error) {
-		super(error.message);
+		super(error.i18nKey);
 		this.error = error;
 		this.log = true;
 	}
@@ -35,6 +35,8 @@ public class APIException extends Throwable
 	private String detailMessage= "";
 	private APIErrors error;
 	private boolean log;
+	private Object[] args;
+	private String message;
 	
 	/*
 	 * 400 Bad Request
@@ -89,7 +91,7 @@ public class APIException extends Throwable
 		EMAIL_EXISTS(19,  200, true), 
 		PHONE_EXISTS(20,  200, true),
 		SETTING_SCHEMA_ERROR(21,  200, true),
-		
+		ATTACHMENT_NOT_FOUND(22, 200, true),
 		
 		
 		 
@@ -117,12 +119,13 @@ public class APIException extends Throwable
 		HAY_CFE_SIN_RESPUESTA(116, 200, true),
 		FALTA_TIPO_CAMBIO(117,  404, true), 
 		TEMPRANO_PARA_GENERAR_REPORTE(118,  404, true), 
+		SOBRE_YA_ENVIADO(119,  404, true), 
+		RESPUESTA_NO_ENCONTRADA(120,  404, true)
 		;
 
 
 		int code;
 		int httpCode;
-		String message;
 		String i18nKey;
 		boolean log;
 		
@@ -135,20 +138,9 @@ public class APIException extends Throwable
 			this.i18nKey = name();
 		}
 		
-		public APIErrors withParams(Object... args){
-			message = Messages.get(i18nKey, args);
-			return this;
-		}
-		
 		public int code()
 		{
 			return code;
-		}
-		public String message()
-		{
-			if (message==null)
-				message = Messages.get(i18nKey);
-			return message;
 		}
 		
 		public int httpCode()
@@ -175,6 +167,17 @@ public class APIException extends Throwable
 	}
 	
 	
+	public APIException withParams(Object... args){
+		message = Messages.get(error.i18nKey, args);
+		return this;
+	}
+	
+	public String getInternalMessage()
+	{
+		if (message==null)
+			message = Messages.get(error.i18nKey);
+		return message;
+	}
 	
 	public String getDetailMessage()
 	{
@@ -216,7 +219,7 @@ public class APIException extends Throwable
 	@Override
 	public String getMessage()
 	{
-		return getDetailMessage() != null ? getDetailMessage() : "";
+		return  getJSONObject().toString();
 	}
 
 	public boolean isLog() {
@@ -231,8 +234,9 @@ public class APIException extends Throwable
 	{
 		JSONObject jsonError = new JSONObject();
 		jsonError.put("result_code", error.code);
-		jsonError.put("result_message", error.name());
-		jsonError.put("result_detail", getMessage());
+		jsonError.put("result_name", error.name());
+		jsonError.put("result_message", getInternalMessage());
+		jsonError.put("result_detail", getDetailMessage());
 		
 		return jsonError;
 	}
