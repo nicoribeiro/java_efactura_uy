@@ -133,6 +133,18 @@ QJp161GYY+VC/GpuiPsxSURf0Z8oRm0=
 
 6 - you should have a file called {fantasyName}.cer
 
+7 - Check the certificate, but first get the [root certificate](https://www.iddigital.com.uy/media/filer_public/fe/dc/fedc3f9e-b61e-46be-9135-49373fec567c/acrn.crt) \(acrn.crt\) and the [ca certificate](https://www.iddigital.com.uy/media/filer_public/ed/5a/ed5a37ea-5fe2-457d-8584-19f10c5c102c/abitab.crt) \(abitab.crt\)
+
+```
+openssl verify -CAfile acrn.crt -untrusted abitab.crt {fantasyName}.cer
+```
+
+Output should be:
+
+```
+{fantasyName}.cer: OK
+```
+
 #### Computing Resource
 
 Follow [this](https://linuxconfig.org/how-to-install-ubuntu-18-04-bionic-beaver) tutorial to install Ubuntu 18.04 LTS
@@ -246,8 +258,6 @@ Te first time activator takes several minutes because of dependency download
 To interact with the backend we recommend using [postman](https://www.getpostman.com/) and download the complete API Collection.
 
 After install, goto Import, then Import from link, and use this link \(collection is in spanish\) [https://www.getpostman.com/collections/d7dd8b7d073379f16454](https://www.getpostman.com/collections/d7dd8b7d073379f16454)
-
-
 
 * Create a User using User/SignUp POST
 * SignIn using User/SingIn POST
