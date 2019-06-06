@@ -1,4 +1,4 @@
-# Biblioteca de Comunicación efactura Uruguay
+# Biblioteca de Comunicación efactura Uruguay | Electronic Invoice Uruguay
 
 This project aims to wrapper the Uruguayan's efactura protocol and communication with DGI \(Direccion General Impositiva\) and provide a simple REST API with json.
 
