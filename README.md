@@ -1,7 +1,6 @@
 # Biblioteca de Comunicación efactura Uruguay
 
-This project aims to wrapper the Uruguayan's efactura protocol and communication with DGI (Direccion General Impositiva) and provide a simple REST API with json.
-
+This project aims to wrapper the Uruguayan's efactura protocol and communication with DGI \(Direccion General Impositiva\) and provide a simple REST API with json.
 
 ## Getting Started
 
@@ -10,7 +9,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 * Signing Certificate
-* Computing resource (VM, server, etc). We would be using a VM with Ubuntu 18.04 for purpose of this howto.
+* Computing resource \(VM, server, etc\). We would be using a VM with Ubuntu 18.04 for purpose of this howto.
 * Java 8
 * sbt
 * play4jpa
@@ -33,19 +32,27 @@ replace whats inside {} with your actual company information:
 ```
 openssl req  -new -newkey rsa:2048 -nodes -keyout mykey.pem -out myreq.pem -subj '/CN={FantasyName}/O={CompanyName},SERIALNUMBER=RUC{RUC}/ST={City}/C=UY'
 ```
+
 2 - Verify the signature:
+
 ```
 openssl req -in myreq.pem -noout -verify -key mykey.pem
 ```
+
 Output:
+
 ```
 verify OK
 ```
+
 3 - Check information
+
 ```
 openssl req -in myreq.pem -noout -text
 ```
-Output (check just the header):
+
+Output \(check just the header\):
+
 ```
 Certificate Request:
     Data:
@@ -92,16 +99,16 @@ Certificate Request:
          a5:83:0a:f5:6a:a2:3a:bb:89:6d:5a:3d:2e:2c:18:a7:f1:40:
          9a:75:eb:51:98:63:e5:42:fc:6a:6e:88:fb:31:49:44:5f:d1:
          9f:28:46:6d
-
-
 ```
+
 4 - Go to [Abitab](https://www.iddigital.com.uy/es/solicitud-de-certificado/empresa/facturacion_electronica/) webpage, select Request PKCS10 and fill the forms. When the page ask you for your PKCS10 request do:
 
 ```
 cat myreq.pem
-``` 
+```
 
 copy and paste the result, should look like this:
+
 ```
 -----BEGIN CERTIFICATE REQUEST-----
 MIICszCCAZsCAQAwbjEaMBgGA1UEAwwRTUFSVkVMT1VTIENPTVBBTlkxLjAsBgNV
@@ -137,11 +144,13 @@ To install:
 ```
 sudo apt install openjdk-8-jdk-headless
 ```
+
 then check
 
 ```
 java -version
 ```
+
 output:
 
 ```
@@ -168,20 +177,20 @@ git clone https://github.com/nicoribeiro/play4jpa.git
 cd play4jpa
 sbt publishLocal
 ```
-sbt downloads all dependencies, build and publish the artifact to the local repository so other projects (such as this) can use the artifact. First build takes several minutes to download all deps.
 
+sbt downloads all dependencies, build and publish the artifact to the local repository so other projects \(such as this\) can use the artifact. First build takes several minutes to download all deps.
 
 #### Unlimited strength JCE policy installed
 
-* Go to the Oracle Java SE download page http://www.oracle.com/technetwork/java/javase/downloads/index.html
-* Scroll down ... Under "Additional Resources" section you will find "Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy File"
+* Go to the Oracle Java SE download page [http://www.oracle.com/technetwork/java/javase/downloads/index.html](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+* Scroll down ... Under "Additional Resources" section you will find "Java Cryptography Extension \(JCE\) Unlimited Strength Jurisdiction Policy File"
 * Download the version that matches your installed JVM E.g. UnlimitedJCEPolicyJDK7.zip
 * Unzip the downloaded zip 
-* Copy local_policy.jar and US_export_policy.jar to the $JAVA_HOME/jre/lib/security (Note: these jars will be already there so you have to overwrite them)
+* Copy local\_policy.jar and US\_export\_policy.jar to the $JAVA\_HOME/jre/lib/security \(Note: these jars will be already there so you have to overwrite them\)
 
 #### Database
 
-You must create a blank database with a user and a password with complete privileges over that database 
+You must create a blank database with a user and a password with complete privileges over that database
 
 ### Installing
 
@@ -190,6 +199,7 @@ Clone this repo
 ```
 git clone https://github.com/nicoribeiro/java_efactura_uy.git
 ```
+
 ## Config
 
 ```
@@ -199,34 +209,52 @@ vi conf/application.conf
 Config the database connection:
 
 For postgres
+
 ```
 db.default.driver=org.postgresql.Driver
 db.default.url="jdbc:postgresql://{ip}:{port, default 5432}/{dbname}"
 ```
 
 For Mysql
+
 ```
 default.driver = com.mysql.cj.jdbc.Driver
 default.url="jdbc:mysql://{ip}:{port, default 3306}/{dbname}"
 ```
 
 For all
+
 ```
 db.default.username={dbuser}
 db.default.password="{dbpass}"
 ```
 
 ## Run
+
 ```
 cd java_efactura_uy
 ```
+
 ```
 ./activator -jvm-debug 9999 "run 9000"
 ```
-Te first time activator takes several minutes because of dependency download 
+
+Te first time activator takes several minutes because of dependency download
+
+## First Steps
+
+To interact with the backend we recommend using [postman](https://www.getpostman.com/) and download the complete API Collection.
+
+After install, goto Import, then Import from link, and use this link \(collection is in spanish\) [https://www.getpostman.com/collections/d7dd8b7d073379f16454](https://www.getpostman.com/collections/d7dd8b7d073379f16454)
 
 
 
+* Create a User using User/SignUp POST
+* SignIn using User/SingIn POST
+* Import Companies with efactura
+* Add your Company
+* Configure your certificate
+* Complete DGI challenge to become a valid efactura member
 
 ## Deployment
 
@@ -237,19 +265,17 @@ ToDo
 * [PlayFramework](https://www.playframework.com/) - The web framework used
 * [SBT](https://www.scala-sbt.org/) - Dependency Management
 
-
-
 ## Contributing
 
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
 
 ## Authors
 
-* **Nicolas Ribeiro** - *Initial work* - [Bluedot](https://github.com/nicoribeiro)
+* **Nicolas Ribeiro** - _Initial work_ - [Bluedot](https://github.com/nicoribeiro)
 
 See also the list of [contributors](https://github.com/nicoribeiro/java_efactura_uy/contributors) who participated in this project.
 
@@ -263,4 +289,5 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Notes
 
-A hack to work around the issue on relative namespaces used in the service. This is achieved via a modified C14nHelper class in the project's classpath (giving it higher precedence and being loaded instead of the default one). The only modification there is a hardcoded short-circuit in namespaceIsAbsolute method.
+A hack to work around the issue on relative namespaces used in the service. This is achieved via a modified C14nHelper class in the project's classpath \(giving it higher precedence and being loaded instead of the default one\). The only modification there is a hardcoded short-circuit in namespaceIsAbsolute method.
+
