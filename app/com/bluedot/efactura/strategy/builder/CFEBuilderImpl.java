@@ -385,7 +385,11 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		
 		emisor.setRUCEmisor(Commons.safeGetString(emisorJson, "RUCEmisor"));
 		
-		emisor.setNomComercial(Commons.safeGetString(emisorJson, "NomComercial"));
+		/*
+		 * Campo Opcional
+		 */
+		if (emisorJson.has("NomComercial"))
+			emisor.setNomComercial(Commons.safeGetString(emisorJson, "NomComercial"));
 
 		emisor.setRznSoc(Commons.safeGetString(emisorJson, "RznSoc"));
 
