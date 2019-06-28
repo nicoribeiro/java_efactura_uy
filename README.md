@@ -1,4 +1,4 @@
-# Biblioteca de Comunicación efactura Uruguay | Electronic Invoice Uruguay
+# Biblioteca de Comunicación efactura Uruguay \| Electronic Invoice Uruguay
 
 This project aims to wrapper the Uruguayan's efactura protocol and communication with DGI \(Direccion General Impositiva\) and provide a simple REST API with json.
 
@@ -259,7 +259,6 @@ FIwsIONGl1p3A8CgxkqI/UAih3JaGOqcpcdaCIzkBaR9uYQ1X4k2Vg5APRLouzVy
 7a8IVk6wuy6pm+T7HT4LY8ibS5FEZlfAFLSW8NwsVz9SBK2Vqn1N0PIMn5xA6NZV
 c7o835DLAFshEWfC7TIe3g==
 -----END CERTIFICATE-----
-
 ```
 
 #### Computing Resource
@@ -376,12 +375,14 @@ To interact with the backend we recommend using [postman](https://www.getpostman
 
 After install, goto Import, then Import from link, and use this link \(collection is in spanish\) [https://www.getpostman.com/collections/d7dd8b7d073379f16454](https://www.getpostman.com/collections/d7dd8b7d073379f16454)
 
-* Create a User using User/SignUp POST
-* SignIn using User/SingIn POST
-* Import Companies with efactura
+* Create a User using `User/SignUp` POST
+* SignIn using `User/SingIn` POST
+* Initialize Database using `App/Init Database` POST
+* Import Companies using `Empresa/Cargar Empresas desde XML DGI`POST
 * Add your Company
 * Configure your certificate
 * Complete DGI challenge to become a valid efactura member
+* Import CAEs using `Empresa/Agregar CAE` POST
 
 ## Deployment
 
