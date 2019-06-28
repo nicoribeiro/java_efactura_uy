@@ -42,6 +42,11 @@ public class UI extends Model<UI>{
 	public static UI findById(Integer id) {
 		return find.byId(id);
 	}
+	
+	public static long count(){
+		DefaultQuery<UI> q = (DefaultQuery<UI>) find.query();
+		return q.findRowCount();
+	}
 
 	public static UI findById(Integer id, boolean throwExceptionWhenMissing) throws APIException {
 		UI ui = find.byId(id);

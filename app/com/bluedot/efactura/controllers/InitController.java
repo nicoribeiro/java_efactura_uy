@@ -7,14 +7,16 @@ import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.efactura.model.IVA;
 import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.Pais;
+import com.bluedot.efactura.model.UI;
 
+import play.libs.F.Promise;
 import play.mvc.Controller;
 import play.mvc.Result;
 import views.html.index;
 
-public class Application extends Controller {
+public class InitController extends Controller {
 
-    public Result index() {
+	public Promise<Result> initDatabase() {
         
     	try {
 			DatabaseExecutor.syncDatabaseAction(new PromiseBlock<Void>() {
@@ -45,6 +47,16 @@ public class Application extends Controller {
 						iva.save();
 					}
 					
+					if (UI.count() == 0) {
+						UI ui = new UI(2016, 3.2431);
+						ui.save();
+						ui = new UI(2017, 3.5079);
+						ui.save();
+						ui = new UI(2018, 3.7287);
+						ui.save();
+						ui = new UI(2019, 4.0275);
+						ui.save();
+					}
 					
 					ThreadMan.forceTransactionFlush();
 					
@@ -56,10 +68,8 @@ public class Application extends Controller {
 			t.printStackTrace();
 		}
     	
+    	return Promise.<Result> pure(ok());
     	
-    	
-    	
-    	return ok(index.render("Your new application is ready."));
     }
 
 }
