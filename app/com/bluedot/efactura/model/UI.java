@@ -19,6 +19,8 @@ public class UI extends Model<UI>{
 	 */
 	private static final long serialVersionUID = 2902990737843920656L;
 
+	public static final int MAX_UI = 10000;
+
 	@Id
 	@GeneratedValue
 	private int id;

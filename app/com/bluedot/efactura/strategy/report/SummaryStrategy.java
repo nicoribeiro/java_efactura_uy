@@ -3,7 +3,9 @@ package com.bluedot.efactura.strategy.report;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -19,6 +21,7 @@ import com.bluedot.efactura.model.IVA;
 import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.model.UI;
 
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.reporte.MontosFyT;
@@ -210,7 +213,7 @@ public interface SummaryStrategy {
 		return item;
 	}
 
-	static void sumarizarMontos(CFE cfe, SummaryDatatype summary) {
+	static void sumarizarMontos(CFE cfe, SummaryDatatype summary) throws APIException {
 		Monto monto = summary.monto;
 
 		double tipoCambio = 1;
@@ -235,11 +238,14 @@ public interface SummaryStrategy {
 		monto.totMntRetenido = safeAdd(monto.totMntRetenido, cfe.getTotMntRetenido()*tipoCambio);
 		monto.totValRetPerc = safeAdd(monto.totValRetPerc, cfe.getTotValRetPerc()*tipoCambio);
 		
-		// TODO sacar el monto de 10000 UI a un lado calculable
-		if (((cfe.getTotMntTotal() - cfe.getMntIVATasaBas() - cfe.getMntIVATasaMin() - cfe.getMntIVAOtra())*tipoCambio) > 34036)
-			summary.mayor10000UI++;
-
+		Date date = new Date();
+		Calendar calendar = new GregorianCalendar();
+		calendar.setTime(date);
+		int year = calendar.get(Calendar.YEAR);
+		UI ui = UI.findByAnio(year, true);
 		
+		if (((cfe.getTotMntTotal() - cfe.getMntIVATasaBas() - cfe.getMntIVATasaMin() - cfe.getMntIVAOtra())*tipoCambio) > ui.getCotizacion() * UI.MAX_UI)
+			summary.mayor10000UI++;
 
 	}
 
