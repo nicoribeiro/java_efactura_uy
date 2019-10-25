@@ -336,26 +336,42 @@ vi conf/application.conf
 
 Config the database connection:
 
-For postgres
+Postgres is the default database, so no need to do much just config IP, port, dbname
 
 ```
 db.default.driver=org.postgresql.Driver
 db.default.url="jdbc:postgresql://{ip}:{port, default 5432}/{dbname}"
 ```
 
-For Mysql
+Mysql is supported but you need to comment postgres driver and url and uncomment mysql lines
+
 
 ```
 default.driver = com.mysql.cj.jdbc.Driver
 default.url="jdbc:mysql://{ip}:{port, default 3306}/{dbname}"
 ```
 
-For all
+
+Regardless the engine you must config username and password
 
 ```
 db.default.username={dbuser}
 db.default.password="{dbpass}"
 ```
+
+if you use mysql an additional step is needed, go to build.sbt
+
+```
+vi build.sbt
+```
+
+and uncomment the mysql dependency line
+
+```
+"mysql" % "mysql-connector-java" ...
+```
+
+you can also comment the postgres line but is optional 
 
 ## Run
 
