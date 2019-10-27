@@ -225,6 +225,11 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 					
 					logger.info("Procesando Adjunto: " + attachment.getName());
 					
+					if (!attachment.getName().toUpperCase().endsWith("XML")) {
+						logger.info("El Adjunto no tiene extension XML, no se procesa el adjunto");
+						break;
+					}
+						
 					Document document = XML.loadXMLFromString(attachment.getPayload());
 					
 					logger.debug("Attachment payload: " + attachment.getPayload());
@@ -284,8 +289,10 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						Empresa empresaReceptoraCandidata = Empresa
 								.findByRUT(envioCFEEntreEmpresas.getCaratula().getRutReceptor(), true);
 
-						if (empresaReceptoraCandidata.getId() != empresa.getId())
+						if (empresaReceptoraCandidata.getId() != empresa.getId()) {
+							logger.info("La empresa receptora no es igual a la empresa local, no se procesa el adjunto");
 							break;
+						}
 
 						List<Sobre> sobres = SobreRecibido.findByNombre(attachment.getName());
 						
