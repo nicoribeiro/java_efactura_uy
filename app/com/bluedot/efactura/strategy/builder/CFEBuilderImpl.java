@@ -3,12 +3,14 @@ package com.bluedot.efactura.strategy.builder;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -153,7 +155,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		 */
 		if (moneda != TipMonType.UYU)
 			if (totalesJson.has("TpoCambio")){
-				DecimalFormat df = new DecimalFormat("####0.000");
+				DecimalFormat df = new DecimalFormat("####0.000", DecimalFormatSymbols.getInstance(Locale.US));
 				totales.setTpoCambio(new BigDecimal(df.format(totalesJson.getDouble("TpoCambio"))));
 				strategy.getCFE().setTipoCambio(totales.getTpoCambio().doubleValue());
 			}else
