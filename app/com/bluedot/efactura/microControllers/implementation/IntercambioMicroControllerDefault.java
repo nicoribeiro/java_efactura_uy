@@ -212,7 +212,8 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				/*
 				 * Envio la respuesta al emisor
 				 */
-				Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora(), respuestaSobre.getNombreArchivo(), respuestaSobre.getPayload());
+				if (sobreRecibido.getEmpresaEmisora().getMailRecepcion()!=null && !sobreRecibido.getEmpresaEmisora().getMailRecepcion().isEmpty())
+					Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora(), respuestaSobre.getNombreArchivo(), respuestaSobre.getPayload());
 				
 				sobreRecibido.setAckSobredefType(ackSobredefType);
 				
