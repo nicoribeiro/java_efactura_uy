@@ -359,7 +359,7 @@ db.default.username={dbuser}
 db.default.password="{dbpass}"
 ```
 
-if you use mysql an additional step is needed, go to build.sbt
+if you use mysql 2 additional steps are needed, go to build.sbt
 
 ```
 vi build.sbt
@@ -372,6 +372,24 @@ and uncomment the mysql dependency line
 ```
 
 you can also comment the postgres line but is optional 
+
+Then you must change de hibernate dialect, go to persistence.xml under conf/META-INF
+
+```
+vi conf/META-INF/persistence.xml
+```
+
+uncomment the mysql dialect line
+
+```
+<property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect" />
+```
+
+and comment the postgres dialect line
+
+```
+<!-- 			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" /> --> 
+```
 
 ## Run
 
