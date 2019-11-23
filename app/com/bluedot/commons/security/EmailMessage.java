@@ -26,7 +26,7 @@ public class EmailMessage extends Model<EmailMessage> {
 	private static final long serialVersionUID = -8701151304733591795L;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.SEQUENCE,generator="email_message_seq")
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="email_message_seq")
 	@SequenceGenerator(name = "email_message_seq", sequenceName = "email_message_seq" )
 	private long id;
 

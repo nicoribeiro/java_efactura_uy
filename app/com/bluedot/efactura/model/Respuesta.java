@@ -23,7 +23,7 @@ public class Respuesta extends Model<Respuesta> {
 	private static final long serialVersionUID = 5867483952743687539L;
 	
 	@Id
-	@GeneratedValue(strategy=GenerationType.SEQUENCE,generator="respuestas_seq")
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="respuestas_seq")
 	@SequenceGenerator(name = "respuestas_seq", sequenceName = "respuestas_seq" )
 	private int id;
 

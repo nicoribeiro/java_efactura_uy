@@ -27,7 +27,7 @@ public class Attachment extends Model<Attachment> {
 	private static final long serialVersionUID = 6770091807939153590L;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.SEQUENCE,generator="attachment_seq")
+	@GeneratedValue(strategy=GenerationType.AUTO,generator="attachment_seq")
 	@SequenceGenerator(name = "attachment_seq", sequenceName = "attachment_seq" )
 	private int id;
 
