@@ -24,6 +24,19 @@ public class DateHandler
 		SimpleDateFormat formateador = new SimpleDateFormat("dd-MM-yyyy");
 		return formateador.format(ahora);
 	}
+	
+	/**
+	 * Get System Date
+	 * @return a <b>STRING</b> with the provided format
+	 */
+	public static String nowDate(SimpleDateFormat sdf)
+	{
+		Date ahora = new Date();
+		return sdf.format(ahora);
+	}
+	
+	
+	
 
 	/**
 	 * Get System Time 

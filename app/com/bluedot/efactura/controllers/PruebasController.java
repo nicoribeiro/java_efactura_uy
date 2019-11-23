@@ -1,24 +1,22 @@
 package com.bluedot.efactura.controllers;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
 
-import dgi.classes.recepcion.CFEDefType.EFact;
-import dgi.classes.recepcion.CFEDefType.EResg;
-import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 
 public abstract class PruebasController extends AbstractController {
@@ -31,16 +29,12 @@ public abstract class PruebasController extends AbstractController {
 	protected String caeActual;
 	protected HashMap<TipoDoc, TipoDoc> tiposDoc = new HashMap<TipoDoc, TipoDoc>();
 	protected EfacturaMicroControllersFactory factory;
-	protected Empresa empresa;
 	
 	public PruebasController() {
 		super();
 		try {
 			factory = (new EfacturaMicroControllersFactoryBuilder()).getMicroControllersFactory();
-			//TODO ver de inicializar esto bien
-			empresa = new Empresa();
 		} catch (APIException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -77,19 +71,15 @@ public abstract class PruebasController extends AbstractController {
 		}
 	}
 
-	protected JSONObject execute(TipoDoc tipoDoc, EFact[] efacturas, boolean ultimoEsAnulado) throws APIException {
+	protected JSONObject execute(Empresa empresa, TipoDoc tipoDoc, CFE[] efacturas, boolean ultimoEsAnulado) throws APIException {
 		if (tiposDoc.containsKey(tipoDoc)) {
 			int correctos = 0;
 			for (int i = 0; i < efacturas.length; i++) {
-				EFact eFactura = efacturas[i];
 				try {
-					CFE cfe = new CFE();
-					cfe.setTipo(tipoDoc);
-					cfe.setEfactura(eFactura);
 					if (i==efacturas.length-1 && ultimoEsAnulado){
-						cfe.setEstado(EstadoACKCFEType.BE);
+						efacturas[i].setEstado(EstadoACKCFEType.BE);
 					}
-					factory.getServiceMicroController(empresa).enviar(cfe);
+					factory.getServiceMicroController(empresa).enviar(efacturas[i]);
 					correctos++;
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -102,54 +92,6 @@ public abstract class PruebasController extends AbstractController {
 		return null;
 	}
 
-	protected JSONObject execute(TipoDoc tipoDoc, EResg[] eResguardos, boolean ultimoEsAnulado) throws APIException {
-		if (tiposDoc.containsKey(tipoDoc)) {
-			int correctos = 0;
-			for (int i = 0; i < eResguardos.length; i++) {
-				EResg eResguardo = eResguardos[i];
-				try {
-					CFE cfe = new CFE();
-					cfe.setTipo(tipoDoc);
-					cfe.setEresguardo(eResguardo);
-					if (i==eResguardos.length-1 && ultimoEsAnulado){
-						cfe.setEstado(EstadoACKCFEType.BE);
-					}
-					factory.getServiceMicroController(empresa).enviar(cfe);
-					correctos++;
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			logger.info(tipoDoc + " Correctos:" + correctos);
-			return generarJSONResultado(tipoDoc, eResguardos.length, correctos);
-		}
-		return null;
-
-	}
-
-	protected JSONObject execute(TipoDoc tipoDoc, ETck[] eTickets, boolean ultimoEsAnulado) throws APIException {
-		if (tiposDoc.containsKey(tipoDoc)) {
-			int correctos = 0;
-			for (int i = 0; i < eTickets.length; i++) {
-				ETck eticket = eTickets[i];
-				try {
-					CFE cfe = new CFE();
-					cfe.setTipo(tipoDoc);
-					cfe.setEticket(eticket);
-					if (i==eTickets.length-1 && ultimoEsAnulado){
-						cfe.setEstado(EstadoACKCFEType.BE);
-					}
-					factory.getServiceMicroController(empresa).enviar(cfe);
-					correctos++;
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			logger.info(tipoDoc + " Correctos:" + correctos);
-			return generarJSONResultado(tipoDoc, eTickets.length, correctos);
-		}
-		return null;
-	}
 
 	private JSONObject generarJSONResultado(TipoDoc tipoDoc, int totalRegistros, int correctos) {
 		JSONObject result = new JSONObject();
@@ -160,31 +102,29 @@ public abstract class PruebasController extends AbstractController {
 		return result;
 	}
 
-	//TODO mover a un commons
-	protected JSONArray concatArray(JSONArray... arrs) throws JSONException {
-	    JSONArray result = new JSONArray();
-	    for (JSONArray arr : arrs) {
-	        for (int i = 0; i < arr.length(); i++) {
-	            result.put(arr.get(i));
-	        }
-	    }
-	    return result;
-	}
-
-	protected JSONObject getEncabezado(JSONObject encabezadoJSON, JSONObject object) {
+	protected JSONObject getEncabezado(JSONObject encabezadoJSON, JSONObject config, TipoDoc tipoDoc) {
 		JSONObject newEncabezado = new JSONObject(encabezadoJSON, JSONObject.getNames(encabezadoJSON));
-		if (object.has("MntBruto") && object.getInt("MntBruto") == 1) {
-			newEncabezado.put("MntBruto", 1);
-		}
+		
+		JSONObject idDoc = new JSONObject();
+		
+		idDoc.put("TipoCFE", tipoDoc.value);
+		
+		if (config!=null && config.has("MntBruto") && config.getInt("MntBruto") == 1) {
+			idDoc.put("MntBruto", 1);
+		}else
+			idDoc.put("MntBruto", 0);
+		
+		idDoc.put("FmaPago", 2);
+		
+		idDoc.put("FchEmis", DateHandler.nowDate(new SimpleDateFormat("yyyy-MM-dd")));
+		
+		newEncabezado.put("IdDoc", idDoc);
+		
 	
-		if (object.has("FmaPago")) {
-			newEncabezado.put("FmaPago", object.getInt("FmaPago"));
+		if (config!=null && config.has("FmaPago")) {
+			newEncabezado.put("FmaPago", config.getInt("FmaPago"));
 		}
 		
-		if (object.has("Adenda")) {
-			newEncabezado.put("Adenda", object.getString("Adenda"));
-		}
-	
 		return newEncabezado;
 	}
 

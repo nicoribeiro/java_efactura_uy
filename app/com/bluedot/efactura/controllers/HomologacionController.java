@@ -9,19 +9,21 @@ import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.IO;
+import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.efactura.MODO_SISTEMA;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import dgi.classes.recepcion.CFEDefType.EFact;
-import dgi.classes.recepcion.CFEDefType.ETck;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 
 public class HomologacionController extends PruebasController {
 
+	private Empresa empresa;
+	
 	public HomologacionController() {
 
 		try {
@@ -42,6 +44,10 @@ public class HomologacionController extends PruebasController {
 			JsonNode jsonNode = request().body().asJson();
 			
 			JSONObject encabezadoJSON = new JSONObject(jsonNode.toString());
+			
+			String rut = encabezadoJSON.getJSONObject("Emisor").getString("RUCEmisor");
+			
+			empresa = Empresa.findByRUT(rut, true);
 
 			JSONArray tiposDocArray = encabezadoJSON.getJSONArray("tiposDoc");
 			
@@ -68,7 +74,7 @@ public class HomologacionController extends PruebasController {
 
 				JSONObject result = new JSONObject();
 
-				JSONArray aux = concatArray(resultFacturas, resultTickets);
+				JSONArray aux = JSONUtils.concatArray(resultFacturas, resultTickets);
 
 				result.put("resultado", aux);
 
@@ -93,10 +99,13 @@ public class HomologacionController extends PruebasController {
 		/*
 		 * Son + 1 porque repito el ultimo para anularlo
 		 */
-		EFact[] eFacturas = new EFact[detalleJSON.getJSONArray("111").length()+1];
-		EFact[] eFacturas_credito = new EFact[detalleJSON.getJSONArray("112").length()+1];
-		EFact[] eFacturas_debito = new EFact[detalleJSON.getJSONArray("113").length()+1];
-		EFact[] eFacturas_contingencia = new EFact[detalleJSON.getJSONArray("211").length()];
+		CFE[] eFacturas = new CFE[detalleJSON.getJSONArray("111").length()+1];
+		CFE[] eFacturas_credito = new CFE[detalleJSON.getJSONArray("112").length()+1];
+		CFE[] eFacturas_debito = new CFE[detalleJSON.getJSONArray("113").length()+1];
+		CFE[] eFacturas_contingencia = new CFE[detalleJSON.getJSONArray("211").length()];
+		
+		JSONObject result;
+		JSONArray resultado = new JSONArray();
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(111))) {
 			/*
@@ -109,7 +118,7 @@ public class HomologacionController extends PruebasController {
 
 				factura = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eFactura);
 				encabezado.put("Receptor", receptor);
 				factura.put("Encabezado", encabezado);
 
@@ -118,9 +127,8 @@ public class HomologacionController extends PruebasController {
 				/*
 				 * Create Efact object from json description
 				 */
-				//TODO en todos estos create no se asigna la serie y el nro de CFE, para acerlo ver aceptarDocumento en DocumentController
 				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura, factura, true);
-				eFacturas[i] = eFactura.getEfactura();
+				eFacturas[i] = eFactura;
 
 			}
 			
@@ -128,8 +136,12 @@ public class HomologacionController extends PruebasController {
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
 			CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura, factura, true);
-			eFacturas[detalleJSON.getJSONArray("111").length()] = eFactura.getEfactura();
+			eFacturas[detalleJSON.getJSONArray("111").length()] = eFactura;
 		}
+		
+		result = execute(empresa, TipoDoc.eFactura, eFacturas, true);
+		if (result != null)
+			resultado.put(result);
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(112))) {
 			/*
@@ -144,7 +156,7 @@ public class HomologacionController extends PruebasController {
 
 				notaCredito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Credito_de_eFactura);
 				encabezado.put("Receptor", receptor);
 				notaCredito.put("Encabezado", encabezado);
 				notaCredito.put("Referencia", referencia);
@@ -154,7 +166,7 @@ public class HomologacionController extends PruebasController {
 				 * Create Nota de credito object from json description
 				 */
 				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, true);
-				eFacturas_credito[i] = eFactura.getEfactura();
+				eFacturas_credito[i] = eFactura;
 
 			}
 			
@@ -162,8 +174,12 @@ public class HomologacionController extends PruebasController {
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
 			CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eFactura, notaCredito, true);
-			eFacturas_credito[detalleJSON.getJSONArray("112").length()] = eFactura.getEfactura();
+			eFacturas_credito[detalleJSON.getJSONArray("112").length()] = eFactura;
 		}
+		
+		result = execute(empresa, TipoDoc.Nota_de_Credito_de_eFactura, eFacturas_credito, true);
+		if (result != null)
+			resultado.put(result);
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(113))) {
 			/*
@@ -178,7 +194,7 @@ public class HomologacionController extends PruebasController {
 
 				notaDebito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Debito_de_eFactura);
 				encabezado.put("Receptor", receptor);
 				notaDebito.put("Encabezado", encabezado);
 				notaDebito.put("Referencia", referencia);
@@ -188,7 +204,7 @@ public class HomologacionController extends PruebasController {
 				 * Create Nota de debito object from json description
 				 */
 				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, true);
-				eFacturas_debito[i] = eFactura.getEfactura();;
+				eFacturas_debito[i] = eFactura;
 
 			}
 			
@@ -196,8 +212,12 @@ public class HomologacionController extends PruebasController {
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
 			CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eFactura, notaDebito, true);
-			eFacturas_debito[detalleJSON.getJSONArray("113").length()] = eFactura.getEfactura();
+			eFacturas_debito[detalleJSON.getJSONArray("113").length()] = eFactura;
 		}
+		
+		result = execute(empresa, TipoDoc.Nota_de_Debito_de_eFactura, eFacturas_debito, true);
+		if (result != null)
+			resultado.put(result);
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(211))) {
 			/*
@@ -211,7 +231,7 @@ public class HomologacionController extends PruebasController {
 
 				JSONObject efactura = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eFactura_Contingencia);
 				encabezado.put("Receptor", receptor);
 				efactura.put("Encabezado", encabezado);
 
@@ -221,31 +241,13 @@ public class HomologacionController extends PruebasController {
 				 * Create Efactura object from json description
 				 */
 				CFE eFactura = factory.getCFEMicroController(empresa).create(TipoDoc.eFactura_Contingencia, efactura, true);
-				eFacturas_contingencia[i] = eFactura.getEfactura();
+				eFacturas_contingencia[i] = eFactura;
 
 			}
 			factory.setModo(MODO_SISTEMA.NORMAL);
 		}
 
-		/*
-		 * Call the service
-		 */
-		JSONObject result;
-		JSONArray resultado = new JSONArray();
-
-		result = execute(TipoDoc.eFactura, eFacturas, true);
-		if (result != null)
-			resultado.put(result);
-
-		result = execute( TipoDoc.Nota_de_Credito_de_eFactura, eFacturas_credito, true);
-		if (result != null)
-			resultado.put(result);
-
-		result = execute( TipoDoc.Nota_de_Debito_de_eFactura, eFacturas_debito, true);
-		if (result != null)
-			resultado.put(result);
-
-		result = execute( TipoDoc.eFactura_Contingencia, eFacturas_contingencia, false);
+		result = execute(empresa, TipoDoc.eFactura_Contingencia, eFacturas_contingencia, false);
 		if (result != null)
 			resultado.put(result);
 
@@ -257,11 +259,14 @@ public class HomologacionController extends PruebasController {
 		/*
 		 * Son + 1 porque repito el ultimo para anularlo
 		 */
-		ETck[] eTickets = new ETck[detalleJSON.getJSONArray("101").length()+1];
-		ETck[] eTickets_credito = new ETck[detalleJSON.getJSONArray("102").length()+1];
-		ETck[] etickets_debito = new ETck[detalleJSON.getJSONArray("103").length()+1];
-		ETck[] eTicket_contingencia = new ETck[detalleJSON.getJSONArray("201").length()];
+		CFE[] eTickets = new CFE[detalleJSON.getJSONArray("101").length()+1];
+		CFE[] eTickets_credito = new CFE[detalleJSON.getJSONArray("102").length()+1];
+		CFE[] etickets_debito = new CFE[detalleJSON.getJSONArray("103").length()+1];
+		CFE[] eTicket_contingencia = new CFE[detalleJSON.getJSONArray("201").length()];
 
+		JSONObject result;
+		JSONArray resultado = new JSONArray();
+		
 		if (tiposDoc.containsKey(TipoDoc.fromInt(101))) {
 			/*
 			 * eTickets
@@ -273,7 +278,7 @@ public class HomologacionController extends PruebasController {
 
 				ticket = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eTicket);
 				encabezado.put("Receptor", receptor);
 				ticket.put("Encabezado", encabezado);
 
@@ -283,7 +288,7 @@ public class HomologacionController extends PruebasController {
 				 * Create ETck object from json description
 				 */
 				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket, ticket, true);
-				eTickets[i] = eTicket.getEticket();
+				eTickets[i] = eTicket;
 
 			}
 			
@@ -291,10 +296,12 @@ public class HomologacionController extends PruebasController {
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
 			CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket, ticket, true);
-			eTickets[detalleJSON.getJSONArray("101").length()] = eTicket.getEticket();
-			
-			
+			eTickets[detalleJSON.getJSONArray("101").length()] = eTicket;
 		}
+		
+		result = execute(empresa, TipoDoc.eTicket, eTickets, true);
+		if (result != null)
+			resultado.put(result);
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(102))) {
 			/*
@@ -309,7 +316,7 @@ public class HomologacionController extends PruebasController {
 
 				notaCredito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Credito_de_eTicket);
 				encabezado.put("Receptor", receptor);
 				notaCredito.put("Encabezado", encabezado);
 				notaCredito.put("Referencia", referencia);
@@ -319,7 +326,7 @@ public class HomologacionController extends PruebasController {
 				 * Create Nota de credito object from json description
 				 */
 				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eTicket, notaCredito, true);
-				eTickets_credito[i] = eTicket.getEticket();
+				eTickets_credito[i] = eTicket;
 
 			}
 			
@@ -327,8 +334,12 @@ public class HomologacionController extends PruebasController {
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
 			CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eTicket,notaCredito, true);
-			eTickets[detalleJSON.getJSONArray("102").length()] = eTicket.getEticket();
+			eTickets[detalleJSON.getJSONArray("102").length()] = eTicket;
 		}
+		
+		result = execute(empresa, TipoDoc.Nota_de_Debito_de_eTicket, eTickets_credito, true);
+		if (result != null)
+			resultado.put(result);
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(103))) {
 			/*
@@ -343,7 +354,7 @@ public class HomologacionController extends PruebasController {
 
 				notaDebito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Debito_de_eTicket);
 				encabezado.put("Receptor", receptor);
 				notaDebito.put("Encabezado", encabezado);
 				notaDebito.put("Referencia", referencia);
@@ -353,7 +364,7 @@ public class HomologacionController extends PruebasController {
 				 * Create Nota de debito object from json description
 				 */
 				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eTicket, notaDebito, true);
-				etickets_debito[i] = eTicket.getEticket();
+				etickets_debito[i] = eTicket;
 
 			}
 			
@@ -361,8 +372,12 @@ public class HomologacionController extends PruebasController {
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
 			CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Debito_de_eTicket,notaDebito, true);
-			etickets_debito[detalleJSON.getJSONArray("103").length()] = eTicket.getEticket();
+			etickets_debito[detalleJSON.getJSONArray("103").length()] = eTicket;
 		}
+		
+		result = execute(empresa, TipoDoc.Nota_de_Debito_de_eTicket, etickets_debito, true);
+		if (result != null)
+			resultado.put(result);
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(201))) {
 			/*
@@ -376,7 +391,7 @@ public class HomologacionController extends PruebasController {
 
 				JSONObject ticket = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eTicket_Contingencia);
 				encabezado.put("Receptor", receptor);
 				ticket.put("Encabezado", encabezado);
 
@@ -386,31 +401,13 @@ public class HomologacionController extends PruebasController {
 				 * Create Efactura object from json description
 				 */
 				CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.eTicket_Contingencia, ticket, true);
-				eTicket_contingencia[i] = eTicket.getEticket();;
+				eTicket_contingencia[i] = eTicket;
 
 			}
 			factory.setModo(MODO_SISTEMA.NORMAL);
 		}
 
-		/*
-		 * Call the service
-		 */
-		JSONObject result;
-		JSONArray resultado = new JSONArray();
-
-		result = execute( TipoDoc.eTicket, eTickets, true);
-		if (result != null)
-			resultado.put(result);
-
-		result = execute( TipoDoc.Nota_de_Debito_de_eTicket, eTickets_credito, true);
-		if (result != null)
-			resultado.put(result);
-
-		result = execute( TipoDoc.Nota_de_Debito_de_eTicket, etickets_debito, true);
-		if (result != null)
-			resultado.put(result);
-
-		result = execute( TipoDoc.eTicket_Contingencia, eTicket_contingencia, false);
+		result = execute(empresa, TipoDoc.eTicket_Contingencia, eTicket_contingencia, false);
 		if (result != null)
 			resultado.put(result);
 

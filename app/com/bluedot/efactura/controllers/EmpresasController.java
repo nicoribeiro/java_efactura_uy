@@ -101,7 +101,7 @@ public class EmpresasController extends AbstractController {
 					logger.info("Procesando RUT: " + rut + " " + (temp + 1) + "/" + nList.getLength());
 
 					String denominacion = eElement.getElementsByTagName("DENOMINACION").item(0).getTextContent();
-					String fechaInicio = eElement.getElementsByTagName("FECHA_INICIO").item(0).getTextContent();
+					//String fechaInicio = eElement.getElementsByTagName("FECHA_INICIO").item(0).getTextContent();
 					String mail = eElement.getElementsByTagName("MAIL").item(0).getTextContent();
 
 					Empresa empresa = Empresa.findByRUT(rut);
