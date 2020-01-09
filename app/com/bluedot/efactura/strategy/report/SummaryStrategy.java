@@ -238,7 +238,7 @@ public interface SummaryStrategy {
 		monto.totMntRetenido = safeAdd(monto.totMntRetenido, cfe.getTotMntRetenido()*tipoCambio);
 		monto.totValRetPerc = safeAdd(monto.totValRetPerc, cfe.getTotValRetPerc()*tipoCambio);
 		
-		Date date = new Date();
+		Date date = cfe.getFecha();
 		Calendar calendar = new GregorianCalendar();
 		calendar.setTime(date);
 		int year = calendar.get(Calendar.YEAR);
