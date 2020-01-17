@@ -15,9 +15,10 @@ GET      /swagger.json                                           controllers.Api
 
 # API
 
-
+# Retorna los resultado de los documentos con fecha :fecha
 GET      /api/v1/empresa/:rut/resultados/:fecha                  com.bluedot.efactura.controllers.DocumentController.resultadoDocumentosFecha(rut:String, fecha: String)
 
+# Genera el Reporte Diario correspondiente a la fecha :fecha
 POST     /api/v1/empresa/:rut/reporteDiario/:fecha               com.bluedot.efactura.controllers.DocumentController.generarReporteDiario(rut:String, fecha: String, cantReportes:Integer?=1)
 
 # Cambia el Modo de Ejecucion del Sistema
@@ -26,17 +27,15 @@ POST     /api/v1/modo/:modo                                      com.bluedot.efa
 
 # Ejecuta el Set de pruebas de testing
 POST     /api/v1/pruebas/testing                                 com.bluedot.efactura.controllers.TestingController.generarPrueba()
+
 # Ejecuta el Set de pruebas de homologacion
 POST     /api/v1/pruebas/homologacion                            com.bluedot.efactura.controllers.HomologacionController.generarPrueba()
+
 # Ejecuta el Set de pruebas de intercambio
 POST     /api/v1/pruebas/intercambio                             com.bluedot.efactura.controllers.HomologacionController_Intercambio.ingresoSobre()	
 
-
-
 # Retorna el Pais
 GET      /api/v1/pais/:id                                        com.bluedot.efactura.controllers.PaisesController.getPais(id:Integer)
-
-
 
 # Pregunta a la DGI por el rut
 GET      /api/v1/rut/:rut                                        com.bluedot.efactura.controllers.EmpresasController.darInformacionRut(rut:String)
@@ -76,7 +75,6 @@ GET      /api/v1/empresa/:rut/documentos/entrantes               com.bluedot.efa
 
 # Procesa los email entrantes para una empresa
 GET      /api/v1/empresa/:rut/procesarEmailEntrantes             com.bluedot.efactura.controllers.DocumentController.procesarEmailEntrantes(rut:String)
-
 
 # Envia por correo el documento a la empresa
 GET      /api/v1/empresa/:rut/documentos/enviarCfeEmpresa        com.bluedot.efactura.controllers.DocumentController.enviarCfeEmpresa(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
