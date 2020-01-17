@@ -95,7 +95,7 @@ public class ReporteDiario extends Model<ReporteDiario>{
 		
 		for (Iterator<ReporteDiario> iterator = reportes.iterator(); iterator.hasNext();) {
 			ReporteDiario reporteDiario = iterator.next();
-			if (reporteDiario.getSecuencial() > secuencial)
+			if (reporteDiario.getSecuencial() > secuencial && reporteDiario.getEstado()!=null && reporteDiario.getEstado()==EstadoACKRepType.AR)
 				secuencial = reporteDiario.getSecuencial();
 		}
 		

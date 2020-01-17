@@ -579,6 +579,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 	// TODO agregar mutex en los cfe y sobres
 	@Override
 	public ReporteDiario generarReporteDiario(Date fecha, Empresa empresa) throws APIException {
+		
+		ReporteDiario reporteDiario = null;
 		try {
 			if (fecha == null)
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("fecha");
@@ -606,7 +608,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			 * Creo el Reporte Diario
 			 */
 			ReporteDefType reporte = new ReporteDefType();
-			ReporteDiario reporteDiario = new ReporteDiario(empresa, fecha);
+			reporteDiario = new ReporteDiario(empresa, fecha);
 			reporteDiario.save();
 			reporteDiario.setReporteDefType(reporte);
 
@@ -664,6 +666,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 			return reporteDiario;
 
+		} catch (APIException e) {
+			throw e;
 		} catch (Exception e) {
 			throw APIException.raise(e);
 		}

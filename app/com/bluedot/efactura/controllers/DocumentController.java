@@ -444,6 +444,11 @@ public class DocumentController extends AbstractController {
 
 			if (reporte != null)
 				reporteJSON = EfacturaJSONSerializerProvider.getReporteDiarioSerializer().objectToJson(reporte);
+			else {
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+				reporteJSON.put("fecha", sdf.format(DateHandler.add(date, i, Calendar.DAY_OF_MONTH)));
+			}
+				
 
 			if (error != null)
 				reportes.put(JSONUtils.merge(reporteJSON, error));
