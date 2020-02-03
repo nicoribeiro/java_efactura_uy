@@ -315,8 +315,6 @@ public class TestingController extends PruebasController {
 	private JSONArray getReferencia(ETck eTck) {
 		JSONArray result = new JSONArray();
 		JSONObject referencia = new JSONObject();
-		referencia.put("FechaCFEref",
-				simpleDateFormat.format(eTck.getEncabezado().getIdDoc().getFchEmis().toGregorianCalendar().getTime()));
 		referencia.put("NroCFERef", String.valueOf(eTck.getEncabezado().getIdDoc().getNro()));
 		referencia.put("Serie", eTck.getEncabezado().getIdDoc().getSerie());
 		referencia.put("TpoDocRef", String.valueOf(eTck.getEncabezado().getIdDoc().getTipoCFE()));
@@ -328,8 +326,6 @@ public class TestingController extends PruebasController {
 	private JSONArray getReferencia(EFact eFact) {
 		JSONArray result = new JSONArray();
 		JSONObject referencia = new JSONObject();
-		referencia.put("FechaCFEref",
-				simpleDateFormat.format(eFact.getEncabezado().getIdDoc().getFchEmis().toGregorianCalendar().getTime()));
 		referencia.put("NroCFERef", String.valueOf(eFact.getEncabezado().getIdDoc().getNro()));
 		referencia.put("Serie", eFact.getEncabezado().getIdDoc().getSerie());
 		referencia.put("TpoDocRef", String.valueOf(eFact.getEncabezado().getIdDoc().getTipoCFE()));
