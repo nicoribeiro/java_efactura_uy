@@ -6,6 +6,7 @@ import java.text.ParseException;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CAE;
@@ -73,6 +74,19 @@ public interface CAEMicroController {
 			throws APIException, DatatypeConfigurationException, IOException;
 	
 	void addCAE(CAE cae) throws APIException;
+
+	/**
+	 * Crea un cae a partir de un JSONObject
+	 * @param caeJson
+	 * @return
+	 */
+	CAE getCAEfromJson(JSONObject caeJson);
+
+	/**
+	 * Anula los caes con TipoDoc = tipo
+	 * @param tipo
+	 */
+	void anularCAEs(TipoDoc tipo);
 
 
 }

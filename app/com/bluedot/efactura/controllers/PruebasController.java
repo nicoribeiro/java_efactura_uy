@@ -13,6 +13,8 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
+import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
+import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
@@ -23,10 +25,6 @@ public abstract class PruebasController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(PruebasController.class);
 	
-	protected String path;
-	protected String detalle;
-	protected String caeHomologacion;
-	protected String caeActual;
 	protected HashMap<TipoDoc, TipoDoc> tiposDoc = new HashMap<TipoDoc, TipoDoc>();
 	protected EfacturaMicroControllersFactory factory;
 	
@@ -39,28 +37,18 @@ public abstract class PruebasController extends AbstractController {
 		}
 	}
 
-	protected void switchToHomologacionCAE() {
-//		try {
-			//TODO ver esto 
-//			IO.writeFile("resources/conf/cae.json", caeHomologacion);
-//			CAEManagerImpl.getInstance().refreshMap();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		} catch (APIException e) {
-//			e.printStackTrace();
-//		}
-	}
-
-	protected void switchToStandarCAE() {
-		//TODO ver esto
-//		try {
-//			IO.writeFile("resources/conf/cae.json", caeActual);
-//			CAEManagerImpl.getInstance().refreshMap();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		} catch (APIException e) {
-//			e.printStackTrace();
-//		}
+	protected void setHomologacionCAE(Empresa empresa, JSONArray caes) throws APIException {
+		
+		CAEMicroController caeMicroController = factory.getCAEMicroController(empresa);
+		
+		for (int i = 0; i < caes.length(); i++) {
+			
+			CAE cae = caeMicroController.getCAEfromJson(caes.getJSONObject(i));
+			
+			caeMicroController.anularCAEs(cae.getTipo());
+			
+			caeMicroController.addCAE(cae);
+		}
 	}
 
 	protected void loadTiposDoc(JSONArray tiposDocArray) {
@@ -119,7 +107,6 @@ public abstract class PruebasController extends AbstractController {
 		idDoc.put("FchEmis", DateHandler.nowDate(new SimpleDateFormat("yyyy-MM-dd")));
 		
 		newEncabezado.put("IdDoc", idDoc);
-		
 	
 		if (config!=null && config.has("FmaPago")) {
 			newEncabezado.put("FmaPago", config.getInt("FmaPago"));

@@ -8,8 +8,6 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -29,14 +27,12 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
-import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
-import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.bluedot.efactura.services.ConsultaRutService;
 import com.bluedot.efactura.services.impl.ConsultaRutServiceImpl;
@@ -177,9 +173,7 @@ public class EmpresasController extends AbstractController {
 		
 		CAEMicroController caeMicroController = factory.getCAEMicroController(empresa);
 		
-		Date fechaVencimiento = DateHandler.fromStringToDate(caeJson.getString("FVD"), new SimpleDateFormat("yyyy-MM-dd"));
-		
-		CAE cae = new CAE(empresa, caeJson.getLong("NA"), TipoDoc.fromInt(caeJson.getInt("TCFE")), caeJson.getString("Serie"), caeJson.getLong("DNro"), caeJson.getLong("HNro"), fechaVencimiento);
+		CAE cae = caeMicroController.getCAEfromJson(caeJson);
 		
 		caeMicroController.addCAE(cae);
 		

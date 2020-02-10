@@ -20,6 +20,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
@@ -291,6 +292,23 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		return Math.floor(((float)usados/totales)*100);
 	}
 
-	
+	@Override
+	public CAE getCAEfromJson(JSONObject caeJson) {
+		
+		Date fechaVencimiento = DateHandler.fromStringToDate(caeJson.getString("FVD"), new SimpleDateFormat("yyyy-MM-dd"));
+		
+		CAE cae = new CAE(empresa, caeJson.getLong("NA"), TipoDoc.fromInt(caeJson.getInt("TCFE")), caeJson.getString("Serie"), caeJson.getLong("DNro"), caeJson.getLong("HNro"), fechaVencimiento);
+		
+		return cae;
+	}
 
+	@Override
+	public void anularCAEs(TipoDoc tipo) {
+		if (caesMap.get(tipo)!=null)
+			for (Iterator<CAE> iterator = caesMap.get(tipo).iterator(); iterator.hasNext();) {
+				CAE cae =  iterator.next();
+				cae.setFechaAnulado(new Date());
+				cae.update();
+			}
+	}
 }

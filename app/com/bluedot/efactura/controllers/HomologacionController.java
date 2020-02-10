@@ -8,6 +8,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.IO;
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.efactura.MODO_SISTEMA;
@@ -15,25 +17,22 @@ import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.play4jpa.jpa.db.Tx;
 
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
+import play.mvc.Security;
 
+@ErrorMessage
+@Tx
+@Security.Authenticated(Secured.class)
 public class HomologacionController extends PruebasController {
 
 	private Empresa empresa;
 	
 	public HomologacionController() {
-
-		try {
-			path = "resources/conf/cae_" + System.currentTimeMillis() + ".json";
-			caeHomologacion = IO.readFile("resources/json/cae_homologacion.json", Charset.defaultCharset());
-			caeActual = IO.readFile("resources/conf/cae.json", Charset.defaultCharset());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
+		super();
 	}
 
 	@BodyParser.Of(BodyParser.Json.class)
@@ -51,20 +50,19 @@ public class HomologacionController extends PruebasController {
 
 			JSONArray tiposDocArray = encabezadoJSON.getJSONArray("tiposDoc");
 			
-			detalle = IO.readFile(encabezadoJSON.getString("Detalle"), Charset.defaultCharset());
+			String detalle = IO.readFile(encabezadoJSON.getString("Detalle"), Charset.defaultCharset());
 
 			loadTiposDoc(tiposDocArray);
 
 			try {
-				/*
-				 * Guardo una copia del cae actual por seguridad
-				 */
-				IO.writeFile(path, caeActual);
 
-				/*
-				 * Uso el CAE con la numeracion de Homologacion
-				 */
-				switchToHomologacionCAE();
+				String caeHomologacion;
+				
+				caeHomologacion = IO.readFile("resources/json/cae_homologacion.json", Charset.defaultCharset());
+				
+				JSONObject data = new JSONObject(caeHomologacion);
+				
+				setHomologacionCAE(empresa, data.getJSONArray("data"));
 
 				JSONObject detalleJSON = new JSONObject(detalle);
 
@@ -80,18 +78,12 @@ public class HomologacionController extends PruebasController {
 
 				return json(result.toString());
 
-			} catch (JSONException | IOException | APIException e) {
+			} catch (JSONException e) {
 				throw APIException.raise(e);
-			} finally {
-				/*
-				 * Uso el CAE con la numeracion de Homologacion
-				 */
-				switchToStandarCAE();
-			}
+			} 
 		} catch (JSONException | IOException e) {
 			throw APIException.raise(e);
 		} 
-
 	}
 
 	private JSONArray eFacturas(JSONObject detalleJSON, JSONObject encabezadoJSON) throws APIException {
@@ -152,14 +144,19 @@ public class HomologacionController extends PruebasController {
 			for (int i = 0; i < detalleJSON.getJSONArray("112").length(); i++) {
 				JSONObject object = detalleJSON.getJSONArray("112").getJSONObject(i);
 				JSONArray detalle = object.getJSONArray("Detalle");
+				
 				referencia = object.getJSONObject("Referencia");
-
+				referencia.put("NroLinRef", 1);
+				JSONArray referenciaArray = new JSONArray();
+				referenciaArray.put(referencia);
+				
 				notaCredito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
 				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Credito_de_eFactura);
+				
 				encabezado.put("Receptor", receptor);
 				notaCredito.put("Encabezado", encabezado);
-				notaCredito.put("Referencia", referencia);
+				notaCredito.put("Referencia", referenciaArray);
 				notaCredito.put("Detalle", detalle);
 
 				/*
@@ -190,14 +187,20 @@ public class HomologacionController extends PruebasController {
 			for (int i = 0; i < detalleJSON.getJSONArray("113").length(); i++) {
 				JSONObject object = detalleJSON.getJSONArray("113").getJSONObject(i);
 				JSONArray detalle = object.getJSONArray("Detalle");
+				
 				referencia = object.getJSONObject("Referencia");
-
+				referencia.put("NroLinRef", 1);
+				JSONArray referenciaArray = new JSONArray();
+				referenciaArray.put(referencia);
+				
 				notaDebito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
 				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Debito_de_eFactura);
+				
+				
 				encabezado.put("Receptor", receptor);
 				notaDebito.put("Encabezado", encabezado);
-				notaDebito.put("Referencia", referencia);
+				notaDebito.put("Referencia", referenciaArray);
 				notaDebito.put("Detalle", detalle);
 
 				/*
@@ -312,14 +315,18 @@ public class HomologacionController extends PruebasController {
 			for (int i = 0; i < detalleJSON.getJSONArray("102").length(); i++) {
 				JSONObject object = detalleJSON.getJSONArray("102").getJSONObject(i);
 				JSONArray detalle = object.getJSONArray("Detalle");
+				
 				referencia = object.getJSONObject("Referencia");
-
+				referencia.put("NroLinRef", 1);
+				JSONArray referenciaArray = new JSONArray();
+				referenciaArray.put(referencia);
+				
 				notaCredito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
 				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Credito_de_eTicket);
 				encabezado.put("Receptor", receptor);
 				notaCredito.put("Encabezado", encabezado);
-				notaCredito.put("Referencia", referencia);
+				notaCredito.put("Referencia", referenciaArray);
 				notaCredito.put("Detalle", detalle);
 
 				/*
@@ -334,10 +341,10 @@ public class HomologacionController extends PruebasController {
 			 * Este es el CFE que se va a anular, lo que hace es repetir los datos del ultimo
 			 */
 			CFE eTicket = factory.getCFEMicroController(empresa).create(TipoDoc.Nota_de_Credito_de_eTicket,notaCredito, true);
-			eTickets[detalleJSON.getJSONArray("102").length()] = eTicket;
+			eTickets_credito[detalleJSON.getJSONArray("102").length()] = eTicket;
 		}
 		
-		result = execute(empresa, TipoDoc.Nota_de_Debito_de_eTicket, eTickets_credito, true);
+		result = execute(empresa, TipoDoc.Nota_de_Credito_de_eTicket, eTickets_credito, true);
 		if (result != null)
 			resultado.put(result);
 
@@ -350,14 +357,18 @@ public class HomologacionController extends PruebasController {
 			for (int i = 0; i < detalleJSON.getJSONArray("103").length(); i++) {
 				JSONObject object = detalleJSON.getJSONArray("103").getJSONObject(i);
 				JSONArray detalle = object.getJSONArray("Detalle");
+				
 				referencia = object.getJSONObject("Referencia");
+				referencia.put("NroLinRef", 1);
+				JSONArray referenciaArray = new JSONArray();
+				referenciaArray.put(referencia);
 
 				notaDebito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
 				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Debito_de_eTicket);
 				encabezado.put("Receptor", receptor);
 				notaDebito.put("Encabezado", encabezado);
-				notaDebito.put("Referencia", referencia);
+				notaDebito.put("Referencia", referenciaArray);
 				notaDebito.put("Detalle", detalle);
 
 				/*
