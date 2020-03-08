@@ -12,8 +12,11 @@ import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.JSONUtils;
+import com.bluedot.efactura.Constants;
+import com.bluedot.efactura.Environment;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
@@ -22,6 +25,7 @@ import com.play4jpa.jpa.db.Tx;
 
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.ETck;
+import play.Play;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
@@ -43,6 +47,12 @@ public class TestingController extends PruebasController {
 	@BodyParser.Of(BodyParser.Json.class)
 	public Promise<Result> generarPrueba() throws APIException {
 
+		Environment env = Environment.valueOf(Play.application().configuration().getString(Constants.ENVIRONMENT));
+		
+		if (env==Environment.produccion) {
+			throw APIException.raise(APIErrors.NO_SOPORTADO_EN_PRODUCCION);
+		}
+		
 		JsonNode jsonNode = request().body().asJson();
 
 		JSONObject encabezadoJSON = new JSONObject(jsonNode.toString());

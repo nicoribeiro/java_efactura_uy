@@ -18,6 +18,8 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.XML;
+import com.bluedot.efactura.Constants;
+import com.bluedot.efactura.Environment;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.InterceptorContextHolder;
 import com.bluedot.efactura.interceptors.NamespacesInterceptor;
@@ -58,6 +60,7 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONREPORTEResponse;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBRE;
 import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBREResponse;
+import play.Play;
 
 public class RecepcionServiceImpl implements RecepcionService {
 
@@ -585,11 +588,13 @@ public class RecepcionServiceImpl implements RecepcionService {
 			if (fecha == null)
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("fecha");
 
-			long hours = ((new Date()).getTime()-fecha.getTime())/1000/60/60;
+			Environment env = Environment.valueOf(Play.application().configuration().getString(Constants.ENVIRONMENT));
 			
-			if (hours <= 43)
-				throw APIException.raise(APIErrors.TEMPRANO_PARA_GENERAR_REPORTE).setDetailMessage("Debe esperar al menos " + (43-hours) + " horas mas para generar el reporte.");
-			
+			if (env==Environment.produccion) {
+				long hours = ((new Date()).getTime()-fecha.getTime())/1000/60/60;
+				if (hours <= 43)
+					throw APIException.raise(APIErrors.TEMPRANO_PARA_GENERAR_REPORTE).setDetailMessage("Debe esperar al menos " + (43-hours) + " horas mas para generar el reporte.");
+			}
 
 			/*
 			 * Chequeo que todos los CFE tengan respuesta o esten anulados

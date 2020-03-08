@@ -120,7 +120,8 @@ public class APIException extends Throwable
 		FALTA_TIPO_CAMBIO(117,  404, true), 
 		TEMPRANO_PARA_GENERAR_REPORTE(118,  404, true), 
 		SOBRE_YA_ENVIADO(119,  404, true), 
-		RESPUESTA_NO_ENCONTRADA(120,  404, true)
+		RESPUESTA_NO_ENCONTRADA(120,  404, true),
+		NO_SOPORTADO_EN_PRODUCCION(121,  404, true)
 		;
 
 

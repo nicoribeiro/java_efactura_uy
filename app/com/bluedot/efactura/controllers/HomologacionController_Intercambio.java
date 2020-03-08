@@ -1,6 +1,5 @@
 package com.bluedot.efactura.controllers;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.xml.bind.JAXBException;
@@ -16,18 +15,17 @@ import org.xml.sax.SAXException;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.XML;
-import com.bluedot.efactura.microControllers.implementation.CFEMicroControllerDefault;
-import com.bluedot.efactura.microControllers.implementation.IntercambioMicroControllerDefault;
-import com.bluedot.efactura.microControllers.interfaces.IntercambioMicroController;
+import com.bluedot.efactura.Constants;
+import com.bluedot.efactura.Environment;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.istack.logging.Logger;
 
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
-import dgi.classes.respuestas.cfe.ACKCFEdefType;
-import dgi.classes.respuestas.sobre.ACKSobredefType;
+import play.Play;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
@@ -47,6 +45,12 @@ public class HomologacionController_Intercambio extends AbstractController {
 	public Promise<Result> ingresoSobre() throws APIException, TransformerConfigurationException, TransformerFactoryConfigurationError, TransformerException {
 		try {
 
+			Environment env = Environment.valueOf(Play.application().configuration().getString(Constants.ENVIRONMENT));
+			
+			if (env==Environment.produccion) {
+				throw APIException.raise(APIErrors.NO_SOPORTADO_EN_PRODUCCION);
+			}
+			
 			JsonNode jsonNode = request().body().asJson();
 
 			JSONObject jsonObject = new JSONObject(jsonNode.toString());
