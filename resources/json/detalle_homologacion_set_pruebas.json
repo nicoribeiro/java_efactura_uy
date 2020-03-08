@@ -112,7 +112,7 @@
 	        "Referencia":{
 	        	"TpoDocRef": "101",
 	        	"Serie":"A",
-	        	"NroCFERef":"2",
+	        	"NroCFERef":"2"
 	        },"Receptor":{
 				"TipoDocRecep":"3",
 				"CodPaisRecep":"UY",
@@ -164,7 +164,7 @@
 	        "Referencia":{
 	        	"TpoDocRef": "101",
 	        	"Serie":"A",
-	        	"NroCFERef":"4",
+	        	"NroCFERef":"4"
 	        },"Receptor":{
 				"TipoDocRecep":"3",
 				"CodPaisRecep":"UY",
@@ -371,7 +371,7 @@
 	        "Referencia":{
 	        	"TpoDocRef": "111",
 	        	"Serie":"A",
-	        	"NroCFERef":"2",
+	        	"NroCFERef":"2"
 	        },"Receptor":{
 				"TipoDocRecep":"2",
 				"CodPaisRecep":"UY",
@@ -427,7 +427,7 @@
 	        "Referencia":{
 	        	"TpoDocRef": "111",
 	        	"Serie":"A",
-	        	"NroCFERef":"4",
+	        	"NroCFERef":"4"
 	        },"Receptor":{
 				"TipoDocRecep":"2",
 				"CodPaisRecep":"UY",
