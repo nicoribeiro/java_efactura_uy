@@ -249,10 +249,10 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		
 		if (cae.getFin() == 0)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Fin").setDetailMessage("Fin no puede ser 0");		
-		
+		/*
 		if (cae.getSiguiente() != cae.getInicial())
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Siguiente").setDetailMessage("Siguiente debe ser = a Inicial");
-		
+		*/
 		if (cae.getTipo() == null)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Tipo").setDetailMessage("El CAE debe tener Tipo");
 		
@@ -297,7 +297,13 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		
 		Date fechaVencimiento = DateHandler.fromStringToDate(caeJson.getString("FVD"), new SimpleDateFormat("yyyy-MM-dd"));
 		
-		CAE cae = new CAE(empresa, caeJson.getLong("NA"), TipoDoc.fromInt(caeJson.getInt("TCFE")), caeJson.getString("Serie"), caeJson.getLong("DNro"), caeJson.getLong("HNro"), fechaVencimiento);
+		final long dNro = caeJson.getLong("DNro");
+		long siguiente = dNro;
+		if (caeJson.has("Siguiente")) {
+			siguiente = caeJson.getLong("Siguiente");
+		}
+		
+		CAE cae = new CAE(empresa, caeJson.getLong("NA"), TipoDoc.fromInt(caeJson.getInt("TCFE")), caeJson.getString("Serie"), dNro, caeJson.getLong("HNro"), fechaVencimiento, siguiente);
 		
 		return cae;
 	}

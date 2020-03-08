@@ -75,7 +75,7 @@ public class CAE extends Model<CAE>{
 		super();
 	}
 
-	public CAE(Empresa empresa, long nro, TipoDoc tipo, String serie, long inicial, long fin, Date fechaVencimiento) {
+	public CAE(Empresa empresa, long nro, TipoDoc tipo, String serie, long inicial, long fin, Date fechaVencimiento, long siguiente) {
 		super();
 		this.empresa = empresa;
 		this.nro = nro;
@@ -84,7 +84,7 @@ public class CAE extends Model<CAE>{
 		this.inicial = inicial;
 		this.fin = fin;
 		this.fechaVencimiento = fechaVencimiento;
-		this.siguiente = inicial;
+		this.siguiente = siguiente;
 	}
 
 	public int getId() {

@@ -70,7 +70,10 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		//TODO mutex
 		builder.asignarId();
 		
-		recepcionService.sendCFE(cfe);
+		if (cfe.getEstado() == null || (cfe.getEstado() !=null  && cfe.getEstado() != EstadoACKCFEType.BE))
+			recepcionService.sendCFE(cfe);
+		else
+			ThreadMan.forceTransactionFlush();
 
 	}
 	
