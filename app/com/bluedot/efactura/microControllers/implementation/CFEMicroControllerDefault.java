@@ -1,5 +1,7 @@
 package com.bluedot.efactura.microControllers.implementation;
 
+import java.util.UUID;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -106,6 +108,8 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		 */
 		if (Commons.safeGetJSONObject(encabezadoJSON,"IdDoc").has("id"))
   			cfeBuilder.getCFE().setGeneradorId(Commons.safeGetJSONObject(encabezadoJSON,"IdDoc").getString("id"));
+		else
+			cfeBuilder.getCFE().setGeneradorId(UUID.randomUUID().toString());
 		
 		/*
 		 * Ordinal

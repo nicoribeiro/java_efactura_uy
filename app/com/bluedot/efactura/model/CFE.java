@@ -5,9 +5,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -322,6 +319,24 @@ public class CFE extends Model<CFE>{
 
 		CFE cfe = q.findUnique();
 		return cfe;
+	}
+	
+	public static List<CFE> findByEmpresaEmisoraAndDate(Empresa empresaEmisora, Date fecha) throws APIException
+	{
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+			
+			q.getCriteria().createAlias("empresaEmisora", "empresa", JoinType.LEFT_OUTER_JOIN);
+			
+			q.getCriteria().add(Restrictions.and
+					
+					(		Restrictions.eq("empresa.id", empresaEmisora.getId()), 
+							Restrictions.eq("fecha", fecha)
+					));
+		
+		List<CFE> cfes = q.findList();
+		
+		return cfes;
+		
 	}
 	
 	

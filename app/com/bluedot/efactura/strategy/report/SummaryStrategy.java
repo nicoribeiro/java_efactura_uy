@@ -19,7 +19,6 @@ import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.IVA;
 import com.bluedot.efactura.model.IndicadorFacturacion;
-import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.UI;
 
@@ -149,47 +148,43 @@ public interface SummaryStrategy {
 		protected BigDecimal totValRetPerc = new BigDecimal("0");
 	}
 
-	static SummaryDatatype getSummary(Empresa empresa, TipoDoc tipo, Date date, List<SobreEmitido> sobres) throws APIException {
+	static SummaryDatatype getSummary(Empresa empresa, TipoDoc tipo, Date date, List<CFE> cfes) throws APIException {
 		SummaryDatatype summary = new SummaryDatatype();
 		summary.fecha = date;
 
-		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
-			SobreEmitido sobreEmitido = (SobreEmitido) iterator.next();
+		for (Iterator<CFE> iterator2 = cfes.iterator(); iterator2.hasNext();) {
+			CFE cfe = iterator2.next();
 
-			for (Iterator<CFE> iterator2 = sobreEmitido.getCfes().iterator(); iterator2.hasNext();) {
-				CFE cfe = iterator2.next();
+			if (cfe.getTipo() == tipo) {
 
-				if (cfe.getTipo() == tipo) {
+				RDUItem item = getRDUItem(cfe.getSerie(), cfe.getNro());
+				summary.rngDocsUtil.getRDUItem().add(item);
 
-					RDUItem item = getRDUItem(cfe.getSerie(), cfe.getNro());
-					summary.rngDocsUtil.getRDUItem().add(item);
-
-					if (cfe.getEstado() != null)
-						switch (cfe.getEstado()) {
-						case AE:
-							summary.cantDocEmitidos++;
-							sumarizarMontos(cfe, summary);
-							break;
-						case BE:
-						case CE:
-							summary.cantDocRechazados++;
-							RDAItem itemAnul = getRDAItem(cfe.getSerie(), cfe.getNro());
-							summary.rngDocsAnulados.getRDAItem().add(itemAnul);
-							break;
-						}
-					else {
-						/*
-						 * No tiene estado. Si tiene generador_id entonces esta esperando por la respuesta o anulacion
-						 */
-						if (cfe.getGeneradorId()!=null)
-							throw APIException.raise(APIErrors.HAY_CFE_SIN_RESPUESTA);
-						
-						summary.cantDocSinRespuesta++;
+				if (cfe.getEstado() != null)
+					switch (cfe.getEstado()) {
+					case AE:
+						summary.cantDocEmitidos++;
+						sumarizarMontos(cfe, summary);
+						break;
+					case BE:
+					case CE:
+						summary.cantDocRechazados++;
 						RDAItem itemAnul = getRDAItem(cfe.getSerie(), cfe.getNro());
 						summary.rngDocsAnulados.getRDAItem().add(itemAnul);
+						break;
 					}
-
+				else {
+					/*
+					 * No tiene estado. Si tiene generador_id entonces esta esperando por la respuesta o anulacion
+					 */
+					if (cfe.getGeneradorId()!=null)
+						throw APIException.raise(APIErrors.HAY_CFE_SIN_RESPUESTA);
+					
+					summary.cantDocSinRespuesta++;
+					RDAItem itemAnul = getRDAItem(cfe.getSerie(), cfe.getNro());
+					summary.rngDocsAnulados.getRDAItem().add(itemAnul);
 				}
+
 			}
 		}
 		summary.cantDocUtilizados = summary.cantDocEmitidos + summary.cantDocRechazados + summary.cantDocSinRespuesta;
@@ -262,7 +257,7 @@ public interface SummaryStrategy {
 		return acumulado;
 	}
 
-	void buildSummary(Empresa empresa, ReporteDefType reporte, Date date, List<SobreEmitido> sobres) throws APIException;
+	void buildSummary(Empresa empresa, ReporteDefType reporte, Date date, List<CFE> cfes) throws APIException;
 
 	static MontosFyT getMontosFyT(SummaryDatatype summary) throws APIException {
 		try {
