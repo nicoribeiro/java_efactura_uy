@@ -59,33 +59,39 @@ public abstract class PruebasController extends AbstractController {
 		}
 	}
 
-	protected JSONObject execute(Empresa empresa, TipoDoc tipoDoc, CFE[] efacturas, boolean ultimoEsAnulado) throws APIException {
+	protected JSONObject execute(Empresa empresa, TipoDoc tipoDoc, CFE[] cfes, boolean ultimoEsAnulado) throws APIException {
 		if (tiposDoc.containsKey(tipoDoc)) {
 			int correctos = 0;
-			for (int i = 0; i < efacturas.length; i++) {
+			int anulados = 0;
+			for (int i = 0; i < cfes.length; i++) {
 				try {
-					if (i==efacturas.length-1 && ultimoEsAnulado){
-						efacturas[i].setEstado(EstadoACKCFEType.BE);
-					}
-					factory.getServiceMicroController(empresa).enviar(efacturas[i]);
-					correctos++;
+					if (i==cfes.length-1 && ultimoEsAnulado){
+						cfes[i].setEstado(EstadoACKCFEType.BE);
+						anulados++;
+					} else
+						correctos++;
+					cfes[i].save();
+					factory.getServiceMicroController(empresa).enviar(cfes[i]);
+					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
 			}
 			logger.info(tipoDoc + " Correctos:" + correctos);
-			return generarJSONResultado(tipoDoc, efacturas.length, correctos);
+			logger.info(tipoDoc + " Anulados:" + anulados);
+			return generarJSONResultado(tipoDoc, cfes.length, correctos, anulados);
 		}
 		return null;
 	}
 
 
-	private JSONObject generarJSONResultado(TipoDoc tipoDoc, int totalRegistros, int correctos) {
+	private JSONObject generarJSONResultado(TipoDoc tipoDoc, int totalRegistros, int correctos, int anulados) {
 		JSONObject result = new JSONObject();
 		JSONObject aux = new JSONObject();
 		aux.put("totales", totalRegistros);
 		aux.put("correctos", correctos);
+		aux.put("anulados", anulados);
 		result.put(tipoDoc.name(), aux);
 		return result;
 	}
@@ -109,7 +115,9 @@ public abstract class PruebasController extends AbstractController {
 		newEncabezado.put("IdDoc", idDoc);
 	
 		if (config!=null && config.has("FmaPago")) {
-			newEncabezado.put("FmaPago", config.getInt("FmaPago"));
+			final int fmaPago = config.getInt("FmaPago");
+			newEncabezado.put("FmaPago", fmaPago);
+			idDoc.put("FmaPago", fmaPago);
 		}
 		
 		return newEncabezado;
