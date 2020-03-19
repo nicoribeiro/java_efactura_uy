@@ -28,6 +28,7 @@ import com.bluedot.commons.utils.XmlSignature;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
+import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;
 
@@ -57,7 +58,12 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 				 * Get the XMLData from the WSEFacturaEFACRECEPCIONSOBRE
 				 */
 				List list = message.getContent(java.util.List.class);
+				
+				
 				if (list.get(0) instanceof WSEFacturaEFACRECEPCIONSOBRE){
+					/*
+					 * Es un sobre con CFEs dentro
+					 */
 					SobreEmitido sobre = InterceptorContextHolder.getSobreEmitido();
 					if (sobre.isReenvio())
 						return;
@@ -65,8 +71,12 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 				}
 				
 				if (list.get(0) instanceof WSEFacturaEFACRECEPCIONREPORTE){
+					/*
+					 * Es un reporte diario
+					 */
 					Empresa empresa = InterceptorContextHolder.getEmpresa();
-					signReporte(message, empresa);
+					ReporteDiario reporteDiario = InterceptorContextHolder.getReporteDiario();
+					signReporte(message, empresa, reporteDiario);
 				}
 				
 				
@@ -78,7 +88,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 
 	}
 
-	private  void signReporte(Message message, Empresa empresa) throws TransformerFactoryConfigurationError, APIException, Exception{
+	private void signReporte(Message message, Empresa empresa, ReporteDiario reporteDiario) throws TransformerFactoryConfigurationError, APIException, Exception{
 		List list = message.getContent(java.util.List.class);
 		
 		WSEFacturaEFACRECEPCIONREPORTE sobre = (WSEFacturaEFACRECEPCIONREPORTE) list.get(0);
@@ -86,12 +96,12 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		Data data = sobre.getDatain();
 		
 		/*
-		 * Instantiate the document (Caratula + CFE)
+		 * Instantiate the report
 		 */
 		Document allDocument= XML.loadXMLFromString(data.getXmlData());
 		
 		/*
-		 * Isolate the CFE 
+		 * Isolate the Reporte 
 		 */
 		Document cfeDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Node unsignedNode = allDocument.getElementsByTagName("Reporte").item(0);
@@ -105,7 +115,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 
 		
 		/*
-		 * Sign the CFE
+		 * Firmar el Reporte
 		 */
 		XmlSignature xmlSignature = new XmlSignature(FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD, keystore);
 		xmlSignature.sign(cfeDocument);
@@ -117,8 +127,11 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		 */
 		Node signedNode = cfeDocument.getDocumentElement();
 		unsignedNode = allDocument.getElementsByTagName("Reporte").item(0);
-		data.setXmlData(XML.documentToString(signedNode));
+		String documentString = XML.documentToString(signedNode);
+		data.setXmlData(documentString);
 		message.setContent(List.class, list);
+		
+		reporteDiario.setXml(documentString);
 
 		
 	}

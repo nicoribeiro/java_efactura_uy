@@ -654,7 +654,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			
 			reporteDiario.setTimestampEnviado(new Date());
 			
-			Data data = sendReporte(reporteString, fecha, reporteDiario.getEmpresa());
+			Data data = sendReporte(reporteDiario, fecha, reporteDiario.getEmpresa());
 
 			reporteDiario.setRespuesta(data.getXmlData());
 
@@ -677,20 +677,21 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 	}
 
-	private Data sendReporte(String reporte, Date date, Empresa empresa) throws APIException {
+	private Data sendReporte(ReporteDiario reporteDiario, Date date, Empresa empresa) throws APIException {
 		try {
-			
+						
 			/*
 			 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
 			 * parametros a los Interceptors
 			 */
 			InterceptorContextHolder.setEmpresa(empresa);
+			InterceptorContextHolder.setReporteDiario(reporteDiario);
 			
 			WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
 
 			WSEFacturaEFACRECEPCIONREPORTE input = new WSEFacturaEFACRECEPCIONREPORTE();
 			Data data = new Data();
-			data.setXmlData(reporte);
+			data.setXmlData(reporteDiario.getXml());
 			input.setDatain(data);
 
 			WSEFacturaEFACRECEPCIONREPORTEResponse output = portWrapper.getPort().efacrecepcionreporte(input);
