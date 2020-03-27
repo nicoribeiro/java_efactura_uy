@@ -74,12 +74,12 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 				}
 				
 				if (retencionJSON.optString("MntSujetoaRet") == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("MntSujetoaRet");
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("MntSujetoaRet").setDetailMessage("MntSujetoaRet");
 				retencion.setMntSujetoaRet(new BigDecimal(retencionJSON.getString("MntSujetoaRet")));
 				retencionPercepcion.setMontoSujeto(Double.parseDouble(retencionJSON.getString("MntSujetoaRet")));
 				
 				if (retencionJSON.optString("ValRetPerc") == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("ValRetPerc");
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("ValRetPerc").setDetailMessage("ValRetPerc");
 				retencion.setValRetPerc(new BigDecimal(retencionJSON.getString("ValRetPerc")));
 				retencionPercepcion.setValor(Double.parseDouble(retencionJSON.getString("ValRetPerc")));
 				

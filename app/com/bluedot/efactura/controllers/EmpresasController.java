@@ -269,7 +269,7 @@ public class EmpresasController extends AbstractController {
 		
 		if (certificado != null){
 			if (privateKey ==null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("privateKey");
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("privateKey").setDetailMessage("privateKey");
 			
 			FirmaDigital firmaDigital = new FirmaDigital();
 			

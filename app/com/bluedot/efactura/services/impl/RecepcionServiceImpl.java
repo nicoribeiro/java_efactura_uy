@@ -521,10 +521,10 @@ public class RecepcionServiceImpl implements RecepcionService {
 	public void consultaResultadoSobre(SobreEmitido sobre) throws APIException {
 		try {
 			if (sobre.getToken() == null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("token");
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("token").setDetailMessage("Falta el parametro token");
 				
 			if (sobre.getIdReceptor() == null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("idReceptor");
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("idReceptor").setDetailMessage("Falta el parametro idReceptor");
 
 			/*
 			 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
