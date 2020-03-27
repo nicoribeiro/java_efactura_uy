@@ -1,7 +1,10 @@
 package com.bluedot.efactura.controllers;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -96,7 +99,7 @@ public abstract class PruebasController extends AbstractController {
 		return result;
 	}
 
-	protected JSONObject getEncabezado(JSONObject encabezadoJSON, JSONObject config, TipoDoc tipoDoc) {
+	protected JSONObject getEncabezado(JSONObject encabezadoJSON, JSONObject config, TipoDoc tipoDoc, Boolean shuffleDates) {
 		JSONObject newEncabezado = new JSONObject(encabezadoJSON, JSONObject.getNames(encabezadoJSON));
 		
 		JSONObject idDoc = new JSONObject();
@@ -110,8 +113,17 @@ public abstract class PruebasController extends AbstractController {
 		
 		idDoc.put("FmaPago", 2);
 		
-		idDoc.put("FchEmis", DateHandler.nowDate(new SimpleDateFormat("yyyy-MM-dd")));
+		Date fechaEmision;
 		
+		if (shuffleDates) {
+			int randomNum = ThreadLocalRandom.current().nextInt(1, 10);
+			fechaEmision = DateHandler.minus(new Date(), randomNum, Calendar.DAY_OF_MONTH);
+		}
+		else
+			fechaEmision = new Date();
+			
+		idDoc.put("FchEmis", (new SimpleDateFormat("yyyy-MM-dd")).format(fechaEmision));
+			
 		newEncabezado.put("IdDoc", idDoc);
 	
 		if (config!=null && config.has("FmaPago")) {

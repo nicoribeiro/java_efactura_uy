@@ -121,7 +121,7 @@ public class HomologacionController extends PruebasController {
 
 				factura = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eFactura);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eFactura, false);
 				encabezado.put("Receptor", receptor);
 				factura.put("Encabezado", encabezado);
 
@@ -163,7 +163,7 @@ public class HomologacionController extends PruebasController {
 				
 				notaCredito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Credito_de_eFactura);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Credito_de_eFactura, false);
 				
 				encabezado.put("Receptor", receptor);
 				notaCredito.put("Encabezado", encabezado);
@@ -206,7 +206,7 @@ public class HomologacionController extends PruebasController {
 				
 				notaDebito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Debito_de_eFactura);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Debito_de_eFactura, false);
 				
 				
 				encabezado.put("Receptor", receptor);
@@ -245,7 +245,7 @@ public class HomologacionController extends PruebasController {
 
 				JSONObject efactura = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eFactura_Contingencia);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eFactura_Contingencia, false);
 				encabezado.put("Receptor", receptor);
 				efactura.put("Encabezado", encabezado);
 
@@ -292,7 +292,7 @@ public class HomologacionController extends PruebasController {
 
 				ticket = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eTicket);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eTicket, false);
 				encabezado.put("Receptor", receptor);
 				ticket.put("Encabezado", encabezado);
 
@@ -334,7 +334,7 @@ public class HomologacionController extends PruebasController {
 				
 				notaCredito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Credito_de_eTicket);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Credito_de_eTicket, false);
 				encabezado.put("Receptor", receptor);
 				notaCredito.put("Encabezado", encabezado);
 				notaCredito.put("Referencia", referenciaArray);
@@ -376,7 +376,7 @@ public class HomologacionController extends PruebasController {
 
 				notaDebito = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Debito_de_eTicket);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.Nota_de_Debito_de_eTicket, false);
 				encabezado.put("Receptor", receptor);
 				notaDebito.put("Encabezado", encabezado);
 				notaDebito.put("Referencia", referenciaArray);
@@ -413,7 +413,7 @@ public class HomologacionController extends PruebasController {
 
 				JSONObject ticket = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eTicket_Contingencia);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eTicket_Contingencia, false);
 				encabezado.put("Receptor", receptor);
 				ticket.put("Encabezado", encabezado);
 

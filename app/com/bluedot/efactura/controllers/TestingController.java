@@ -98,7 +98,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomResguardoDetail();
 
 				JSONObject resguardo = new JSONObject();
-				resguardo.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eResguardo));
+				resguardo.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eResguardo, true));
 				resguardo.put("Detalle", detalleJSON);
 
 				/*
@@ -142,7 +142,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(null);
 
 				JSONObject factura = new JSONObject();
-				factura.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eFactura));
+				factura.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eFactura, true));
 				factura.put("Detalle", detalleJSON);
 
 				/*
@@ -171,7 +171,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaCredito = new JSONObject();
-				notaCredito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Credito_de_eFactura));
+				notaCredito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Credito_de_eFactura, false));
 				notaCredito.put("Detalle", detalleJSON);
 				
 				JSONArray referencia = getReferencia(eFacturas[i].getEfactura());
@@ -202,7 +202,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaDebito = new JSONObject();
-				notaDebito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Debito_de_eFactura));
+				notaDebito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Debito_de_eFactura, false));
 				notaDebito.put("Detalle", detalleJSON);
 
 				JSONArray referencia = getReferencia(eFacturas[i].getEfactura());
@@ -246,7 +246,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(null);
 
 				JSONObject ticket = new JSONObject();
-				ticket.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eTicket));
+				ticket.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eTicket, true));
 				ticket.put("Detalle", detalleJSON);
 
 				/*
@@ -272,7 +272,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaCredito = new JSONObject();
-				notaCredito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Credito_de_eTicket));
+				notaCredito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Credito_de_eTicket, false));
 				notaCredito.put("Detalle", detalleJSON);
 
 				JSONArray referencia = getReferencia(eTickets[i].getEticket());
@@ -300,7 +300,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaDebito = new JSONObject();
-				notaDebito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Debito_de_eTicket));
+				notaDebito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Debito_de_eTicket, false));
 				notaDebito.put("Detalle", detalleJSON);
 
 				JSONArray referencia = getReferencia(eTickets[i].getEticket());
