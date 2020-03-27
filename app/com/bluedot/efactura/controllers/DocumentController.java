@@ -180,6 +180,9 @@ public class DocumentController extends AbstractController {
 
 			JSONObject error = null;
 
+			if (cfe.getFecha()==null)
+				cfe.setFecha(new Date());
+			
 			try {
 				factory.getServiceMicroController(empresa).enviar(cfe);
 			} catch (APIException e) {

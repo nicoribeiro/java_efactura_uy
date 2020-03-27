@@ -111,7 +111,7 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 	@Override
 	public void setIdDoc() throws APIException{
 		try {
-			IdDocFact idDocFact = caeMicroController.getIdDocFact(cfe.getTipo(), cfe.isIndMontoBruto(), cfe.getFormaDePago().value);
+			IdDocFact idDocFact = caeMicroController.getIdDocFact(cfe.getTipo(), cfe.isIndMontoBruto(), cfe.getFormaDePago().value, cfe.getFecha());
 			getEncabezado().setIdDoc(idDocFact);
 			cfe.setSerie(idDocFact.getSerie());
 			cfe.setNro(idDocFact.getNro().intValue());

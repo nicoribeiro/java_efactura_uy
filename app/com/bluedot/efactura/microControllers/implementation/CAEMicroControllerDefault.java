@@ -167,7 +167,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 	
 	@Override
-	public synchronized IdDocFact getIdDocFact(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago) throws DatatypeConfigurationException, IOException, JSONException, APIException
+	public synchronized IdDocFact getIdDocFact(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago, Date fchEmis) throws DatatypeConfigurationException, IOException, JSONException, APIException
 	{
 		IdDocFact iddoc = new IdDocFact();
 
@@ -187,7 +187,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Fecha
 		 */
-		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(fchEmis));
 		iddoc.setFchEmis(date);
 
 		return iddoc;

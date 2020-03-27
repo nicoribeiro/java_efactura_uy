@@ -2,6 +2,7 @@ package com.bluedot.efactura.microControllers.interfaces;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Date;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 
@@ -46,7 +47,7 @@ public interface CAEMicroController {
 	 * @throws DatatypeConfigurationException
 	 * @throws IOException
 	 */
-	IdDocFact getIdDocFact(TipoDoc tipo, boolean montosIncluyenIva, int formaPago)
+	IdDocFact getIdDocFact(TipoDoc tipo, boolean montosIncluyenIva, int formaPago, Date fchEmis)
 			throws APIException, DatatypeConfigurationException, IOException;
 
 	/**
