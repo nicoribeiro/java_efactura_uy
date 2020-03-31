@@ -348,9 +348,9 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		
 		try {
 			if (idDocJson.has("FchEmis"))
-				strategy.getCFE().setFecha(simpleDateFormat.parse(idDocJson.getString("FchEmis")));
+				strategy.getCFE().setFechaEmision(simpleDateFormat.parse(idDocJson.getString("FchEmis")));
 			else
-				strategy.getCFE().setFecha(new Date());
+				strategy.getCFE().setFechaEmision(new Date());
 		} catch (JSONException | ParseException e) {
 			throw APIException.raise(e);
 		}

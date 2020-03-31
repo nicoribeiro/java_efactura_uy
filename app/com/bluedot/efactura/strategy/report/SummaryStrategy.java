@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -114,19 +115,18 @@ public interface SummaryStrategy {
 	}
 
 	public class SummaryDatatype {
-		protected Date fecha = null;
 		int cantDocUtilizados = 0;
 		int cantDocRechazados = 0;
 		int cantDocSinRespuesta = 0;
 		int cantDocEmitidos = 0;
 		int mayor10000UI = 0;
-		Monto monto = new Monto();
+		HashMap<Date, Monto> montos = new HashMap<Date, Monto>();
 		RngDocsAnulados rngDocsAnulados = new RngDocsAnulados();
 		RngDocsUtil rngDocsUtil = new RngDocsUtil();
 	}
 
 	public class Monto {
-
+		protected Date fecha = null;
 		protected BigDecimal totMntNoGrv = new BigDecimal("0");
 		protected BigDecimal totMntExpyAsim = new BigDecimal("0");
 		protected BigDecimal totMntImpPerc = new BigDecimal("0");
@@ -148,9 +148,9 @@ public interface SummaryStrategy {
 		protected BigDecimal totValRetPerc = new BigDecimal("0");
 	}
 
-	static SummaryDatatype getSummary(Empresa empresa, TipoDoc tipo, Date date, List<CFE> cfes) throws APIException {
+	static SummaryDatatype getSummary(Empresa empresa, TipoDoc tipo, List<CFE> cfes) throws APIException {
 		SummaryDatatype summary = new SummaryDatatype();
-		summary.fecha = date;
+		//summary.fecha = date;
 
 		for (Iterator<CFE> iterator2 = cfes.iterator(); iterator2.hasNext();) {
 			CFE cfe = iterator2.next();
@@ -209,8 +209,15 @@ public interface SummaryStrategy {
 	}
 
 	static void sumarizarMontos(CFE cfe, SummaryDatatype summary) throws APIException {
-		Monto monto = summary.monto;
+		Monto monto = summary.montos.get(cfe.getFechaEmision());
 
+		if (monto == null) {
+			monto = new Monto();
+			monto.fecha = cfe.getFechaEmision();
+			summary.montos.put(cfe.getFechaEmision(), monto);
+		}
+			
+		
 		double tipoCambio = 1;
 		
 		if (cfe.getMoneda()!=TipMonType.UYU)
@@ -233,7 +240,7 @@ public interface SummaryStrategy {
 		monto.totMntRetenido = safeAdd(monto.totMntRetenido, cfe.getTotMntRetenido()*tipoCambio);
 		monto.totValRetPerc = safeAdd(monto.totValRetPerc, cfe.getTotValRetPerc()*tipoCambio);
 		
-		Date date = cfe.getFecha();
+		Date date = cfe.getFechaEmision();
 		Calendar calendar = new GregorianCalendar();
 		calendar.setTime(date);
 		int year = calendar.get(Calendar.YEAR);
@@ -257,54 +264,71 @@ public interface SummaryStrategy {
 		return acumulado;
 	}
 
-	void buildSummary(Empresa empresa, ReporteDefType reporte, Date date, List<CFE> cfes) throws APIException;
+	void buildSummary(Empresa empresa, ReporteDefType reporte, List<CFE> cfes) throws APIException;
 
 	static MontosFyT getMontosFyT(SummaryDatatype summary) throws APIException {
+		MontosFyT montos = new MontosFyT();
+		for (Iterator<Date> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
+			Date fecha = iterator.next();
+			montos.getMntsFyTItem().add(getMontosFyTItem(summary.montos.get(fecha)));
+		}
+		return montos;
+	}
+	
+	static MntsFyTItem getMontosFyTItem(Monto monto) throws APIException {
 		try {
-			MontosFyT montos = new MontosFyT();
+			
 			MntsFyTItem item = new MntsFyTItem();
 
 			// TODO sacar el id de sucursal para un lado comun
 			item.setCodSuc(new BigInteger("2"));
 			XMLGregorianCalendar date = DatatypeFactory.newInstance()
-					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(summary.fecha));
+					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
 			item.setFecha(date);
-			item.setIVATasaBas(summary.monto.ivaTasaBas);
-			item.setIVATasaMin(summary.monto.ivaTasaMin);
+			item.setIVATasaBas(monto.ivaTasaBas);
+			item.setIVATasaMin(monto.ivaTasaMin);
 
-			item.setMntIVAOtra(summary.monto.mntIVAOtra);
-			item.setMntIVATasaBas(summary.monto.mntIVATasaBas);
-			item.setMntIVATasaMin(summary.monto.mntIVATasaMin);
+			item.setMntIVAOtra(monto.mntIVAOtra);
+			item.setMntIVATasaBas(monto.mntIVATasaBas);
+			item.setMntIVATasaMin(monto.mntIVATasaMin);
 
-			item.setTotMntExpyAsim(summary.monto.totMntExpyAsim);
-			item.setTotMntImpPerc(summary.monto.totMntImpPerc);
-			item.setTotMntIVAenSusp(summary.monto.totMntIVAenSusp);
-			item.setTotMntIVAOtra(summary.monto.totMntIVAOtra);
-			item.setTotMntIVATasaBas(summary.monto.totMntIVATasaBas);
-			item.setTotMntIVATasaMin(summary.monto.totMntIVATasaMin);
-			item.setTotMntNoGrv(summary.monto.totMntNoGrv);
-			item.setTotMntRetenido(summary.monto.totMntRetenido);
-			item.setTotMntTotal(summary.monto.totMntTotal);
-			montos.getMntsFyTItem().add(item);
-			return montos;
+			item.setTotMntExpyAsim(monto.totMntExpyAsim);
+			item.setTotMntImpPerc(monto.totMntImpPerc);
+			item.setTotMntIVAenSusp(monto.totMntIVAenSusp);
+			item.setTotMntIVAOtra(monto.totMntIVAOtra);
+			item.setTotMntIVATasaBas(monto.totMntIVATasaBas);
+			item.setTotMntIVATasaMin(monto.totMntIVATasaMin);
+			item.setTotMntNoGrv(monto.totMntNoGrv);
+			item.setTotMntRetenido(monto.totMntRetenido);
+			item.setTotMntTotal(monto.totMntTotal);
+			
+			return item;
 		} catch (DatatypeConfigurationException e) {
 			throw APIException.raise(e);
 		}
 	}
 
 	static MontosRes getMontosResg(SummaryDatatype summary) throws APIException {
+		MontosRes montos = new MontosRes();
+		for (Iterator<Date> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
+			Date fecha = iterator.next();
+			montos.getMntsResItem().add(getMontosResItem(summary.montos.get(fecha)));
+		}
+		return montos;
+	}
+	
+	static MntsResItem getMontosResItem(Monto monto) throws APIException {
 		try {
-			MontosRes montos = new MontosRes();
+			
 			MntsResItem item = new MntsResItem();
 
 			// TODO sacar el id de sucursal para un lado comun
 			item.setCodSuc(new BigInteger("2"));
 			XMLGregorianCalendar date = DatatypeFactory.newInstance()
-					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(summary.fecha));
+					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
 			item.setFecha(date);
-			item.setTotMntRetenido(summary.monto.totValRetPerc);
-			montos.getMntsResItem().add(item);
-			return montos;
+			item.setTotMntRetenido(monto.totValRetPerc);
+			return item;
 		} catch (DatatypeConfigurationException e) {
 			throw APIException.raise(e);
 		}

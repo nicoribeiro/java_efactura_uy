@@ -109,7 +109,10 @@ public class CFE extends Model<CFE>{
 	private long nro;
 	
 	@Temporal(TemporalType.DATE)
-	private Date fecha;
+	private Date fechaEmision;
+	
+	@Temporal(TemporalType.DATE)
+	private Date fechaGeneracion;
 	
 	/**
 	 * Periodo para servicios
@@ -235,20 +238,7 @@ public class CFE extends Model<CFE>{
 	
 	public CFE() {
 		super();
-	}
-
-	public CFE(Empresa empresaEmisora, TipoDoc tipo, String serie, long nro, Date fecha, boolean indMontoBruto,
-			FormaDePago formaDePago, TipMonType moneda, int cantLineas) {
-		super();
-		this.empresaEmisora = empresaEmisora;
-		this.tipo = tipo;
-		this.serie = serie;
-		this.nro = nro;
-		this.fecha = fecha;
-		this.indMontoBruto = indMontoBruto;
-		this.formaDePago = formaDePago;
-		this.moneda = moneda;
-		this.cantLineas = cantLineas;
+		setFechaGeneracion(new Date());
 	}
 	
 	private static Finder<Integer, CFE> find = new Finder<Integer, CFE>(Integer.class, CFE.class);
@@ -321,7 +311,7 @@ public class CFE extends Model<CFE>{
 		return cfe;
 	}
 	
-	public static List<CFE> findByEmpresaEmisoraAndDate(Empresa empresaEmisora, Date fecha) throws APIException
+	public static List<CFE> findByEmpresaEmisoraAndFechaGeneracion(Empresa empresaEmisora, Date fechaGeneracion) throws APIException
 	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 			
@@ -330,7 +320,7 @@ public class CFE extends Model<CFE>{
 			q.getCriteria().add(Restrictions.and
 					
 					(		Restrictions.eq("empresa.id", empresaEmisora.getId()), 
-							Restrictions.eq("fecha", fecha)
+							Restrictions.eq("fechaGeneracion", fechaGeneracion)
 					));
 		
 		List<CFE> cfes = q.findList();
@@ -340,20 +330,20 @@ public class CFE extends Model<CFE>{
 	}
 	
 	
-	public static Tuple<List<CFE>,Long> find(Empresa empresa, Date fromDate, Date toDate, int page, int pageSize, DireccionDocumento direccion)
+	public static Tuple<List<CFE>,Long> find(Empresa empresa, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion)
 	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
 		Criterion dateCriteria = null;
 		
-		if (fromDate != null)
-			if (toDate==null)
-				dateCriteria = Restrictions.ge("fecha", fromDate);
+		if (desdeFechaEmision != null)
+			if (hastaFechaEmision==null)
+				dateCriteria = Restrictions.ge("fechaEmision", desdeFechaEmision);
 			else
-				dateCriteria = Restrictions.between("fecha", fromDate, toDate);
+				dateCriteria = Restrictions.between("fechaEmision", desdeFechaEmision, hastaFechaEmision);
 		else
-			if (toDate!=null)
-				dateCriteria = Restrictions.le("fecha", toDate);
+			if (hastaFechaEmision!=null)
+				dateCriteria = Restrictions.le("fechaEmision", hastaFechaEmision);
 		
 		if (dateCriteria!=null)
 			q.getCriteria().add(dateCriteria);
@@ -450,12 +440,12 @@ public class CFE extends Model<CFE>{
 		this.nro = nro;
 	}
 
-	public Date getFecha() {
-		return fecha;
+	public Date getFechaEmision() {
+		return fechaEmision;
 	}
 
-	public void setFecha(Date fecha) {
-		this.fecha = fecha;
+	public void setFechaEmision(Date fechaEmision) {
+		this.fechaEmision = fechaEmision;
 	}
 
 	public Date getFacturadoDesde() {
@@ -836,6 +826,14 @@ public class CFE extends Model<CFE>{
 
 	public void setRetencionesPercepciones(List<RetencionPercepcion> retencionesPercepciones) {
 		this.retencionesPercepciones = retencionesPercepciones;
+	}
+
+	public Date getFechaGeneracion() {
+		return fechaGeneracion;
+	}
+
+	public void setFechaGeneracion(Date fechaGeneracion) {
+		this.fechaGeneracion = fechaGeneracion;
 	}
 
 }

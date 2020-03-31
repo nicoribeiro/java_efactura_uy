@@ -36,7 +36,7 @@ public class CommonStrategy {
 			monto = monto*cfe.getTipoCambio();
 		
 		Calendar cal = Calendar.getInstance();
-		cal.setTime(cfe.getFecha());
+		cal.setTime(cfe.getFechaEmision());
 		int anio = cal.get(Calendar.YEAR);
 
 		UI ui = UI.findByAnio(anio, true);

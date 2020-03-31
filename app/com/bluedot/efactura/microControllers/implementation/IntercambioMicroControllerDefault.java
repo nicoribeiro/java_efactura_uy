@@ -401,7 +401,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		ack.setSerie(cfe.getSerie());
 		
 		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(cfe.getFecha());
+		cal.setTime(cfe.getFechaEmision());
 		try {
 			ack.setFechaCFE(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 		} catch (DatatypeConfigurationException e) {

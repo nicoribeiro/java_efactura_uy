@@ -254,7 +254,7 @@ public class GenerateInvoice {
 		createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize, cfe.getTipo().friendlyName);
 		createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 2, cfe.getSerie() + " " + cfe.getNro());
 		createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 3, cfe.getFormaDePago().toString());
-		createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 4, sdf.format(cfe.getFecha()));
+		createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 4, sdf.format(cfe.getFechaEmision()));
 
 		/*
 		 * Identificacion del RECEPTOR
@@ -571,7 +571,7 @@ public class GenerateInvoice {
 		if (cfe.getQr()==null){
 			BufferedImage qr = generateQR(cfe.getEmpresaEmisora().getRut(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(),
 				cfe.getTotMntTotal(),
-				cfe.getFecha(), cfe.getHash());
+				cfe.getFechaEmision(), cfe.getHash());
 			cfe.setQrAsImage(qr);
 			
 			/*

@@ -600,7 +600,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			 * Chequeo que todos los CFE tengan respuesta o esten anulados
 			 */
 				
-			List<CFE> cfes = CFE.findByEmpresaEmisoraAndDate(empresa, fecha);
+			List<CFE> cfes = CFE.findByEmpresaEmisoraAndFechaGeneracion(empresa, fecha);
 			for (CFE cfe : cfes) {
 				if (cfe.getEstado()==null && cfe.getGeneradorId()!=null)
 					throw APIException.raise(APIErrors.HAY_CFE_SIN_RESPUESTA).setDetailMessage("serie:" + cfe.getSerie() + " nro:" + cfe.getNro() + " tipo:" + cfe.getTipo().value);
@@ -645,7 +645,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			for (TipoDoc tipoDoc : TipoDoc.values()) {
 				SummaryStrategy strategy = new SummaryStrategy.Builder().withTipo(tipoDoc).build();
 				if (strategy != null)
-					strategy.buildSummary(empresa, reporte, fecha, cfes);
+					strategy.buildSummary(empresa, reporte, cfes);
 			}
 
 			String reporteString = XML.objectToString(reporte);
