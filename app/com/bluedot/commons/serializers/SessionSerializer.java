@@ -8,7 +8,7 @@ import com.bluedot.commons.security.Session;
 public class SessionSerializer<T> extends JSONSerializer<Session> {
 
 	@Override
-	public JSONObject objectToJson(Session session) throws JSONException {
+	public JSONObject objectToJson(Session session, boolean shrinkSerializarion) throws JSONException {
 		JSONObject sessionJSON = new JSONObject();
 
 		sessionJSON.put("creationTimestamp", session.getCreationTimestamp());

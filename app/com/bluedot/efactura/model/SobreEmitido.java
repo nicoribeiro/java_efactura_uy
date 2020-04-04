@@ -23,7 +23,11 @@ import com.play4jpa.jpa.models.DefaultQuery;
 
 import dgi.classes.recepcion.EnvioCFE;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 @Entity
+@ApiModel(value = "SobreEmitido", parent = Sobre.class)
 public class SobreEmitido extends Sobre{
 	
 	/**
@@ -70,9 +74,11 @@ public class SobreEmitido extends Sobre{
 	
 	private String token;
 	
+	@ApiModelProperty(hidden = true)
 	@Transient
 	private EnvioCFE envioCFE;
 	
+	@ApiModelProperty(hidden = true)
 	@Transient
 	private boolean reenvio = false;
 	

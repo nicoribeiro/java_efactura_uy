@@ -32,7 +32,7 @@ public class SettingsSerializer<T> extends JSONSerializer<Settings>
 	}
 
 	@Override
-	public JSONObject objectToJson(Settings settings) throws JSONException
+	public JSONObject objectToJson(Settings settings, boolean shrinkSerializarion) throws JSONException
 	{
 		if (accountACL != null)
 			switch (accountACL)

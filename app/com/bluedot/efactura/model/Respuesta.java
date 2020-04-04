@@ -14,7 +14,10 @@ import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
+import io.swagger.annotations.ApiModel;
+
 @Entity
+@ApiModel
 public class Respuesta extends Model<Respuesta> {
 
 	/**

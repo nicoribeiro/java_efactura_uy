@@ -43,8 +43,11 @@ import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
+@ApiModel
 public class CFE extends Model<CFE>{
 	
 	/**
@@ -199,15 +202,19 @@ public class CFE extends Model<CFE>{
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="cfe", fetch=FetchType.LAZY)
 	private List<Detalle> detalle;
 
+	@ApiModelProperty(hidden = true)
 	@Transient
 	private EFact efactura;
 	
+	@ApiModelProperty(hidden = true)
 	@Transient
 	private ETck eticket;
 	
+	@ApiModelProperty(hidden = true)
 	@Transient
 	private EResg eresguardo;
 	
+	@ApiModelProperty(hidden = true)
 	@Transient
 	private ERem eremito;
 	
@@ -222,6 +229,7 @@ public class CFE extends Model<CFE>{
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private CAE cae;
 	
+	@ApiModelProperty(hidden = true)
 	@Lob
 	private byte[] qr;
 	
@@ -732,7 +740,7 @@ public class CFE extends Model<CFE>{
 		this.qr = qr;
 	}
 
-	public BufferedImage getQrAsImage() {
+	public BufferedImage qrAsImage() {
         InputStream in = new ByteArrayInputStream(qr);
         try {
 			return ImageIO.read(in);
@@ -741,7 +749,7 @@ public class CFE extends Model<CFE>{
         return null;
     }
 
-    public void setQrAsImage(BufferedImage image) {
+    public void qrAsImage(BufferedImage image) {
         try {
         	ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageIO.write(image, "PNG" /* for instance */, out);
@@ -810,7 +818,7 @@ public class CFE extends Model<CFE>{
 		this.eremito = eremito;
 	}
 
-	public Sobre getSobreRecibido() {
+	public SobreRecibido getSobreRecibido() {
 		return sobreRecibido;
 	}
 

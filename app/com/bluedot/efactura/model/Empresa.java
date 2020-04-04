@@ -25,6 +25,7 @@ import com.play4jpa.jpa.models.Model;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+
 @Entity
 @ApiModel
 public class Empresa extends Model<Empresa>{

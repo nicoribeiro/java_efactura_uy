@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -43,6 +44,9 @@ public class ReportController extends AbstractController {
 		super();
 	}
 	
+	@ApiOperation(value = "Generar Reporte Diario",
+		    response = ReporteDiario.class
+		    )
 	public Promise<Result> generarReporteDiario(String rut, String fecha, int cantReportes) throws APIException {
 
 		if (cantReportes < 1)

@@ -9,7 +9,10 @@ import javax.persistence.ManyToOne;
 
 import com.play4jpa.jpa.models.Model;
 
+import io.swagger.annotations.ApiModel;
+
 @Entity
+@ApiModel
 public class Detalle extends Model<Detalle> {
 
 	/**

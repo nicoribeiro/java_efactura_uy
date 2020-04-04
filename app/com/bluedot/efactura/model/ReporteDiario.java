@@ -29,8 +29,11 @@ import com.play4jpa.jpa.models.Model;
 
 import dgi.classes.reporte.ReporteDefType;
 import dgi.classes.respuestas.reporte.EstadoACKRepType;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
+@ApiModel
 public class ReporteDiario extends Model<ReporteDiario>{
 	
 	/**
@@ -61,6 +64,7 @@ public class ReporteDiario extends Model<ReporteDiario>{
 	@Type(type="text")
 	private String respuesta;
 	
+	@ApiModelProperty(hidden = true)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="reporteDiario", fetch=FetchType.LAZY)
 	private List<CFE> cfes;
 	
@@ -72,9 +76,11 @@ public class ReporteDiario extends Model<ReporteDiario>{
 	@Enumerated(EnumType.STRING)
 	private EstadoACKRepType estado;
 	
+	@ApiModelProperty(hidden = true)
 	@Enumerated(EnumType.STRING)
 	private MotivoRechazoReporte motivo;
 	
+	@ApiModelProperty(hidden = true)
 	@Transient
 	private ReporteDefType reporteDefType;
 	

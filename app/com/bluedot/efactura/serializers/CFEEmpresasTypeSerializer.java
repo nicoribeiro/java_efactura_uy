@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.serializers.JSONSerializer;
 import com.bluedot.commons.utils.XML;
-import com.bluedot.efactura.microControllers.implementation.ServiceMicroControllerDefault;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
 
@@ -20,7 +19,7 @@ public class CFEEmpresasTypeSerializer<T> extends JSONSerializer<CFEEmpresasType
 	final static Logger logger = LoggerFactory.getLogger(CFEEmpresasTypeSerializer.class);
 	
 	@Override
-	public JSONObject objectToJson(CFEEmpresasType cfe) throws JSONException {
+	public JSONObject objectToJson(CFEEmpresasType cfe, boolean shrinkSerializarion) throws JSONException {
 		JSONObject cfeJson = new JSONObject();
 		
 		try {

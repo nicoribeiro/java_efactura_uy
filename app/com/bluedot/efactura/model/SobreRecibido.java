@@ -14,7 +14,11 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import com.play4jpa.jpa.models.DefaultQuery;
+
+import io.swagger.annotations.ApiModel;
+
 @Entity
+@ApiModel(value = "SobreRecibido", parent = Sobre.class)
 public class SobreRecibido extends Sobre{
 
 	/**

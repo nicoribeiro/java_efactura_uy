@@ -10,7 +10,7 @@ public class PaisSerializer<T> extends JSONSerializer<Pais>
 {
 	
 	@Override
-	public JSONObject objectToJson(Pais p) throws JSONException
+	public JSONObject objectToJson(Pais p, boolean shrinkSerializarion) throws JSONException
 	{
 		
 		JSONObject pais = new JSONObject();

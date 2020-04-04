@@ -572,7 +572,7 @@ public class GenerateInvoice {
 			BufferedImage qr = generateQR(cfe.getEmpresaEmisora().getRut(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(),
 				cfe.getTotMntTotal(),
 				cfe.getFechaEmision(), cfe.getHash());
-			cfe.setQrAsImage(qr);
+			cfe.qrAsImage(qr);
 			
 			/*
 			 * Si quisieramos guardar a archivo el qr seria asi:

@@ -22,14 +22,22 @@ public class ReporteDiarioSerializer<T> extends JSONSerializer<ReporteDiario> {
 	
 	
 	@Override
-	public JSONObject objectToJson(ReporteDiario reporteDiario) throws JSONException {
+	public JSONObject objectToJson(ReporteDiario reporteDiario, boolean shrinkSerializarion) throws JSONException {
 		JSONObject reporte = new JSONObject();
 		
-		reporte.put("secuencial", reporteDiario.getSecuencial());
-		reporte.put("empresa", empresaSerializer.objectToJson(reporteDiario.getEmpresa()));
-		reporte.put("fecha", onlyDateFormatter.format(reporteDiario.getFecha()));
-		reporte.put("timestamp_enviado", timestampFormatter.format(reporteDiario.getTimestampEnviado()));
-		reporte.put("estado", reporteDiario.getEstado().name());
+		reporte.put("id", reporteDiario.getId());
+		
+		if (!shrinkSerializarion) {
+			reporte.put("empresa", empresaSerializer.objectToJson(reporteDiario.getEmpresa()));
+			reporte.put("fecha", onlyDateFormatter.format(reporteDiario.getFecha()));
+			reporte.put("secuencial", reporteDiario.getSecuencial());
+			reporte.put("timestampEnviado", timestampFormatter.format(reporteDiario.getTimestampEnviado()));
+			reporte.put("xml", reporteDiario.getXml());
+			reporte.put("respuesta", reporteDiario.getRespuesta());
+			reporte.put("estado", reporteDiario.getEstado().name());
+			//reporte.put("motivo", reporteDiario.getMotivo().name());
+			reporte.put("idReceptor", reporteDiario.getIdReceptor());
+		}
 		
 		return reporte;
 	}

@@ -36,10 +36,13 @@ import com.play4jpa.jpa.models.Model;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @MappedSuperclass
+@ApiModel(value = "Sobre", subTypes = { SobreEmitido.class, SobreRecibido.class })
 public abstract class Sobre extends Model<Sobre> {
 
 	/**
@@ -124,9 +127,11 @@ public abstract class Sobre extends Model<Sobre> {
 //	@Type(type="text")
 //	private String resultado_empresa;
 	
+	@ApiModelProperty(hidden = true)
 	@Transient
 	EnvioCFEEntreEmpresas envioCFEEntreEmpresas;
 	
+	@ApiModelProperty(hidden = true)
 	@Transient
 	ACKSobredefType ackSobredefType;
 	
@@ -149,6 +154,7 @@ public abstract class Sobre extends Model<Sobre> {
 	 * 
 	 * Es el email en el que vino el sobre
 	 */
+	@ApiModelProperty(hidden = true)
 	@OneToMany
 	private List<EmailMessage> emails;
 

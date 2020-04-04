@@ -44,6 +44,7 @@ import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import play.Play;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
@@ -89,6 +90,9 @@ public class DocumentController extends AbstractController {
 		return json(OK);
 	}
 
+	@ApiOperation(value = "Crear CFE",
+		    response = CFE.class
+		    )
 	@BodyParser.Of(BodyParser.Json.class)
 	public Promise<Result> aceptarDocumento(String rut) throws APIException {
 		// TODO meter mutex
