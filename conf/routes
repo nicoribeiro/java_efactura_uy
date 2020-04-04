@@ -19,7 +19,7 @@ GET      /swagger.json                                           controllers.Api
 GET      /api/v1/empresa/:rut/resultados/:fecha                  com.bluedot.efactura.controllers.DocumentController.resultadoDocumentosFecha(rut:String, fecha: String)
 
 # Genera el Reporte Diario correspondiente a la fecha :fecha
-POST     /api/v1/empresa/:rut/reporteDiario/:fecha               com.bluedot.efactura.controllers.DocumentController.generarReporteDiario(rut:String, fecha: String, cantReportes:Integer?=1)
+POST     /api/v1/empresa/:rut/reporteDiario/:fecha               com.bluedot.efactura.controllers.ReportController.generarReporteDiario(rut:String, fecha: String, cantReportes:Integer?=1)
 
 # Cambia el Modo de Ejecucion del Sistema
 # Modos Validos: NORMAL, CONTINGENCIA 

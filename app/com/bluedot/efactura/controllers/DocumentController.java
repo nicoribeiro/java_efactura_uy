@@ -416,53 +416,6 @@ public class DocumentController extends AbstractController {
 
 	}
 
-	public Promise<Result> generarReporteDiario(String rut, String fecha, int cantReportes) throws APIException {
-
-		if (cantReportes < 1)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("cantReportes", cantReportes);
-
-		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
-
-		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
-
-		JSONArray reportes = new JSONArray();
-
-		for (int i = 0; i < cantReportes; i++) {
-			JSONObject error = null;
-			ReporteDiario reporte = null;
-			try {
-
-				reporte = factory.getServiceMicroController(empresa)
-						.generarReporteDiario(DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
-
-			} catch (APIException e) {
-				logger.error("APIException:", e);
-				error = e.getJSONObject();
-			}
-
-			JSONObject reporteJSON = new JSONObject();
-
-			if (reporte != null)
-				reporteJSON = EfacturaJSONSerializerProvider.getReporteDiarioSerializer().objectToJson(reporte);
-			else {
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-				reporteJSON.put("fecha", sdf.format(DateHandler.add(date, i, Calendar.DAY_OF_MONTH)));
-			}
-				
-
-			if (error != null)
-				reportes.put(JSONUtils.merge(reporteJSON, error));
-			else
-				reportes.put(JSONUtils.merge(reporteJSON, new JSONObject(OK)));
-
-		}
-
-		return json(reportes.toString());
-	}
-
 	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print)
 			throws APIException {
 
@@ -520,52 +473,5 @@ public class DocumentController extends AbstractController {
 		}
 		return pdf;
 	}
-
-	// public Promise<Result> printDocumento(String rut, int nro, String serie,
-	// int idTipoDoc, boolean print)
-	// throws APIException {
-	//
-	// Empresa empresa = Empresa.findByRUT(rut, true);
-	//
-	// TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
-	//
-	// CFE cfe = CFE.findById(empresa, tipo, serie, nro, true);
-	//
-	// GenerateInvoice generateInvoice = new GenerateInvoice(cfe, new
-	// JSONObject(), empresa);
-	//
-	// try {
-	// File tempFile = File.createTempFile("345", ".pdf");
-	//
-	// ByteArrayOutputStream byteArrayOutputStream =
-	// generateInvoice.createPDF();
-	//
-	// try (OutputStream outputStream = new FileOutputStream(tempFile)) {
-	// byteArrayOutputStream.writeTo(outputStream);
-	// }
-	//
-	//// https://pdfbox.apache.org/index.html
-	// http://stackoverflow.com/questions/29755305/itext-direct-printing
-	// http://stackoverflow.com/questions/18636622/pdfbox-how-to-print-pdf-with-specified-printer
-	//// byte[] pdfbyte = byteArrayOutputStream.toByteArray();
-	//// //System.out.println(pdf);
-	//// InputStream bis = new ByteArrayInputStream(pdfbyte);
-	//// SimpleDoc pdfp = new SimpleDoc(bis, DocFlavor.BYTE_ARRAY.AUTOSENSE,
-	// null);
-	//// DocPrintJob printjob= printService.createPrintJob();
-	//// printjob.print(pdfp, new HashPrintRequestAttributeSet());
-	//// bis.close();
-	//
-	// return Promise.<Result>pure(ok());
-	//
-	// } catch (IOException | PrinterException e) {
-	// throw APIException.raise(e);
-	// }
-	//
-	// }
-	//
-	// private void print(){
-	//
-	// }
 
 }
