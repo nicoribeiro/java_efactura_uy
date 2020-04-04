@@ -50,7 +50,7 @@ GET      /api/v1/empresa                                         com.bluedot.efa
 POST     /api/v1/empresa/cargar                                  com.bluedot.efactura.controllers.EmpresasController.cargarEmpresas(path:String)
 
 # Agrega un CAE a la empresa
-POST     /api/v1/empresa/:rut/cae                                com.bluedot.efactura.controllers.EmpresasController.addCAE(rut:String)
+POST     /api/v1/empresa/:rut/cae                                com.bluedot.efactura.controllers.CAEController.addCAE(rut:String)
 
 # Edita una Empresa
 PUT      /api/v1/empresa/:rut                                    com.bluedot.efactura.controllers.EmpresasController.editarEmpresa(rut:String)	

@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -33,7 +32,6 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.DireccionDocumento;
 import com.bluedot.efactura.model.Empresa;
-import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.Sobre;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.TipoDoc;

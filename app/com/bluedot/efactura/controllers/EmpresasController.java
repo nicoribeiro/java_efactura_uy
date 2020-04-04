@@ -27,10 +27,6 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
-import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
-import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
@@ -152,25 +148,6 @@ public class EmpresasController extends AbstractController {
 		JSONArray json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresas);
 		
 		return json(json.toString());
-	}
-	
-	//TODO agregar validacion de que el usuario tiene permisos sobre esta emepresa
-	public Promise<Result> addCAE(String rut) throws APIException {
-		Empresa empresa = Empresa.findByRUT(rut,true);
-		
-		JsonNode jsonNode = request().body().asJson();
-
-		JSONObject caeJson = new JSONObject(jsonNode.toString());
-		
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder()).getMicroControllersFactory();
-		
-		CAEMicroController caeMicroController = factory.getCAEMicroController(empresa);
-		
-		CAE cae = caeMicroController.getCAEfromJson(caeJson);
-		
-		caeMicroController.addCAE(cae);
-		
-		return json(OK);
 	}
 	
 	//TODO permisis de edicion 
