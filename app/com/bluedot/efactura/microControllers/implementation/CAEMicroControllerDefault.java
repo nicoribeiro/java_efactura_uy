@@ -57,7 +57,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	public CAEMicroControllerDefault(Empresa empresa){
 		super(empresa);
 		caesMap = new HashMap<TipoDoc, List<CAE>>();
-		for (Iterator<CAE> iterator = empresa.getCAEs().iterator(); iterator.hasNext();) {
+		for (Iterator<CAE> iterator = empresa.getCaes().iterator(); iterator.hasNext();) {
 			CAE cae = iterator.next();
 			if (cae.getFechaAnulado() == null && (new Date()).before(cae.getFechaVencimiento()) && cae.getSiguiente() <= cae.getFin()){
 				/*
@@ -260,7 +260,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Serie").setDetailMessage("La Serie no puede ser vacia");
 		
 		cae.save();
-		empresa.getCAEs().add(cae);
+		empresa.getCaes().add(cae);
 		addCAEtoMap(cae);
 		
 	}

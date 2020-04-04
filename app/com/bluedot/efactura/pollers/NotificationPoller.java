@@ -36,7 +36,7 @@ public class NotificationPoller extends PollerRunner {
 		for (Empresa empresa : empresas) {
 			if (empresa.getFirmaDigital() != null)
 				checkFechaVencimientoFirma(empresa);
-			if (empresa.getCAEs() != null && !empresa.getCAEs().isEmpty())
+			if (empresa.getCaes() != null && !empresa.getCaes().isEmpty())
 				try {
 					checkCAEs(empresa);
 				} catch (APIException e) {

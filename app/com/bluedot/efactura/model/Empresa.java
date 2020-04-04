@@ -22,7 +22,11 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 @Entity
+@ApiModel
 public class Empresa extends Model<Empresa>{
 
 	/**
@@ -66,15 +70,19 @@ public class Empresa extends Model<Empresa>{
 	
 	private int offsetMail;
 	
+	@ApiModelProperty(hidden = true)
 	@Lob
 	private byte[] logo;
 	
+	@ApiModelProperty(hidden = true)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="empresa", fetch=FetchType.LAZY)
-	private List<CAE> CAEs;
+	private List<CAE> caes;
 	
+	@ApiModelProperty(hidden = true)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="empresaEmisora", fetch=FetchType.LAZY)
 	private List<SobreEmitido> sobresEmitidos;
 	
+	@ApiModelProperty(hidden = true)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="empresaReceptora", fetch=FetchType.LAZY)
 	private List<SobreRecibido> sobresRecibidos;
 	
@@ -86,6 +94,7 @@ public class Empresa extends Model<Empresa>{
 	
 	private String resolucion;
 	
+	@ApiModelProperty(hidden = true)
 	@OneToOne(mappedBy="empresa")
 	private FirmaDigital firmaDigital;
 
@@ -241,12 +250,12 @@ public class Empresa extends Model<Empresa>{
 		this.mailRecepcion = mailRecepcion;
 	}
 
-	public List<CAE> getCAEs() {
-		return CAEs;
+	public List<CAE> getCaes() {
+		return caes;
 	}
 
-	public void setCAEs(List<CAE> cAEs) {
-		CAEs = cAEs;
+	public void setCaes(List<CAE> caes) {
+		this.caes = caes;
 	}
 
 	public List<SobreEmitido> getSobresEmitidos() {
@@ -273,7 +282,8 @@ public class Empresa extends Model<Empresa>{
 		this.emisorElectronico = emisorElectronico;
 	}
 	
-	public BufferedImage getLogoAsImage() {
+	
+	public BufferedImage logoAsImage() {
         InputStream in = new ByteArrayInputStream(logo);
         try {
 			return ImageIO.read(in);
@@ -282,7 +292,7 @@ public class Empresa extends Model<Empresa>{
         return null;
     }
 
-    public void setLogoAsImage(BufferedImage image) {
+    public void setLogo(BufferedImage image) {
         try {
         	ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageIO.write(image, "PNG" /* for instance */, out);
