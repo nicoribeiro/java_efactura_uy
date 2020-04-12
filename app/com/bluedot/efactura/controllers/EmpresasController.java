@@ -8,7 +8,9 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -27,6 +29,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
+import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
@@ -81,6 +84,14 @@ public class EmpresasController extends AbstractController {
 
 			NodeList nList = doc.getElementsByTagName("RucEmisoresTransicionMail.RucEmisoresTransicionMailItem");
 
+			List<Empresa> empresas = Empresa.findAll();
+			
+			HashMap<String, Empresa> empresasMap = new HashMap<String, Empresa>();
+			
+			for (Empresa empresa : empresas) {
+				empresasMap.put(empresa.getRut(), empresa);
+			}
+			
 			for (int temp = 0; temp < nList.getLength(); temp++) {
 
 				Node nNode = nList.item(temp);
@@ -97,17 +108,26 @@ public class EmpresasController extends AbstractController {
 					//String fechaInicio = eElement.getElementsByTagName("FECHA_INICIO").item(0).getTextContent();
 					String mail = eElement.getElementsByTagName("MAIL").item(0).getTextContent();
 
-					Empresa empresa = Empresa.findByRUT(rut);
+					Empresa empresa = empresasMap.get(rut);
+					
 					if ( empresa == null) {
 						empresa = new Empresa(rut, null, null, null, null, null);
+						empresa.setEmisorElectronico(true);
+						empresa.setMailRecepcion(mail);
+						empresa.setRazon(denominacion);
+						empresasMap.put(rut, empresa);
 						empresa.save();
 					}else{
-						empresa.update();
+						if (!empresa.isEmisorElectronico() || !Objects.equals(empresa.getMailRecepcion(), mail) || !Objects.equals(empresa.getRazon(), denominacion)) {
+							empresa.setEmisorElectronico(true);
+							empresa.setMailRecepcion(mail);
+							empresa.setRazon(denominacion);
+							empresa.update();
+						}
 					}
 					
-					empresa.setEmisorElectronico(true);
-					empresa.setMailRecepcion(mail);
-					empresa.setRazon(denominacion);
+					if (temp % 1000 == 0) 
+						ThreadMan.forceTransactionFlush();
 
 				}
 			}
