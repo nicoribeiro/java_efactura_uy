@@ -239,7 +239,7 @@ public class Empresa extends Model<Empresa>{
 		this.departamento = departamento;
 	}
 
-	public int getCodigoSucursal() {
+	public Integer getCodigoSucursal() {
 		return codigoSucursal;
 	}
 
