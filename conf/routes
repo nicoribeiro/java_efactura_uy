@@ -86,6 +86,9 @@ POST     /api/v1/pruebas/testing                                 com.bluedot.efa
 # Ejecuta el Set de pruebas de homologacion
 POST     /api/v1/pruebas/homologacion                            com.bluedot.efactura.controllers.HomologacionController.generarPrueba()
 
+# Ejecuta el set adenda de homologacion
+POST     /api/v1/pruebas/homologacion_adenda                     com.bluedot.efactura.controllers.HomologacionController_Adenda.generarPrueba()
+
 # Ejecuta el Set de pruebas de intercambio
 POST     /api/v1/pruebas/intercambio                             com.bluedot.efactura.controllers.HomologacionController_Intercambio.ingresoSobre()	
 
