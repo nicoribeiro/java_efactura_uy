@@ -321,15 +321,26 @@ public class CFE extends Model<CFE>{
 	
 	public static List<CFE> findByEmpresaEmisoraAndFechaGeneracion(Empresa empresaEmisora, Date fechaGeneracion) throws APIException
 	{
+		return findByEmpresaEmisoraAndFechaGeneracion(empresaEmisora, fechaGeneracion, false);
+	}
+	
+	public static List<CFE> findByEmpresaEmisoraAndFechaGeneracion(Empresa empresaEmisora, Date fechaGeneracion, boolean soloEmitidos) throws APIException
+	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 			
-			q.getCriteria().createAlias("empresaEmisora", "empresa", JoinType.LEFT_OUTER_JOIN);
+			q.getCriteria().createAlias("empresaEmisora", "empresaEmis", JoinType.LEFT_OUTER_JOIN);
 			
 			q.getCriteria().add(Restrictions.and
 					
-					(		Restrictions.eq("empresa.id", empresaEmisora.getId()), 
+					(		Restrictions.eq("empresaEmis.id", empresaEmisora.getId()), 
 							Restrictions.eq("fechaGeneracion", fechaGeneracion)
 					));
+			/*
+			 * Esto filtra los CFE que la empresaEmisora = empresaReceptora (facturas autoemitidas)
+			 */
+			if (soloEmitidos)
+				q.getCriteria().add(Restrictions.isNull("sobreRecibido"));
+			
 		
 		List<CFE> cfes = q.findList();
 		

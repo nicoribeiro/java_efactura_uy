@@ -597,10 +597,10 @@ public class RecepcionServiceImpl implements RecepcionService {
 			}
 
 			/*
-			 * Chequeo que todos los CFE tengan respuesta o esten anulados
+			 * Chequeo que todos los CFE emitidos tengan respuesta o esten anulados
 			 */
 				
-			List<CFE> cfes = CFE.findByEmpresaEmisoraAndFechaGeneracion(empresa, fecha);
+			List<CFE> cfes = CFE.findByEmpresaEmisoraAndFechaGeneracion(empresa, fecha, true);
 			for (CFE cfe : cfes) {
 				if (cfe.getEstado()==null && cfe.getGeneradorId()!=null)
 					throw APIException.raise(APIErrors.HAY_CFE_SIN_RESPUESTA).setDetailMessage("serie:" + cfe.getSerie() + " nro:" + cfe.getNro() + " tipo:" + cfe.getTipo().value);
