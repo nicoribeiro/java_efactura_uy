@@ -13,8 +13,6 @@ public class CAESerializer<T> extends JSONSerializer<CAE> {
 
 	JSONSerializer<Empresa> empresaSerializer;
 	
-	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	
 	public CAESerializer(JSONSerializer<Empresa> empresaSerializer) {
 		this.empresaSerializer = empresaSerializer;
 	}

@@ -51,7 +51,7 @@ public class SobreSerializer<T> extends JSONSerializer<Sobre> {
 			SobreEmitido sobreEmitido = (SobreEmitido) sobre;
 			sobreJson.put("estadoDgi", sobreEmitido.getEstadoDgi());
 			sobreJson.put("xmlDgi", sobreEmitido.getXmlDgi());
-			sobreJson.put("fechaConsulta", sobreEmitido.getFechaConsulta());
+			sobreJson.put("fechaConsulta", sdf.format(sobreEmitido.getFechaConsulta()));
 			sobreJson.put("respuesta_dgi", sobreEmitido.getRespuesta_dgi());
 			sobreJson.put("resultado_dgi", sobreEmitido.getResultado_dgi());
 			sobreJson.put("idReceptor", sobreEmitido.getIdReceptor());
@@ -61,8 +61,8 @@ public class SobreSerializer<T> extends JSONSerializer<Sobre> {
 		
 		if (sobre instanceof SobreRecibido) {
 			SobreRecibido sobreRecibido = (SobreRecibido) sobre;
-			sobreJson.put("timestampRecibido", sobreRecibido.getTimestampRecibido());
-			sobreJson.put("timestampProcesado", sobreRecibido.getTimestampRecibido());
+			sobreJson.put("timestampRecibido", sdf.format(sobreRecibido.getTimestampRecibido()));
+			sobreJson.put("timestampProcesado", sdf.format(sobreRecibido.getTimestampRecibido()));
 			sobreJson.put("cfes", cfeSerializer.objectToJson(sobreRecibido.getCfes(), true));
 		}
 		
