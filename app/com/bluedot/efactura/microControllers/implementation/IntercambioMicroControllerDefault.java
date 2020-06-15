@@ -43,6 +43,7 @@ import dgi.classes.respuestas.cfe.RechazoCFEDGIType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Caratula;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Detalle;
+import play.Play;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 import dgi.classes.respuestas.sobre.RechazoSobreType;
 
@@ -236,16 +237,6 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				ACKSobredefType ackSobredefType = sobreRecibido.getAckSobredefType();
 				
 				sobreRecibido.setCantComprobantes(envioCFEEntreEmpresas.getCFEAdendas().size());
-				//TODO aca hay que reactivar la respuesta pero con una previa autorizacion de administracion
-//				Respuesta respuestaCfes = new Respuesta();
-//				sobreRecibido.setRespuestaCfes(respuestaCfes);
-//				/*
-//				 * solo se asigna el id
-//				 * ver: https://stackoverflow.com/questions/25862537/hibernate-persist-vs-save-method
-//				 */
-//				play.db.jpa.JPA.em().persist(respuestaCfes);
-//				sobreRecibido.update();
-//				respuestaCfes.setNombreArchivo("ME_" + respuestaCfes.getId() + "_" + sobreRecibido.getNombreArchivo());
 				
 				/*
 				 * Si el sobre no fue rechazado con errores S0X entonces proceso los CFE internos
@@ -266,20 +257,36 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 						i++;
 					}
 					
-					/*
-					 * Serializo el XML respuesta
-					 */
-//					DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-//					dbf.setNamespaceAware(true);
-//					Document allDocument = XML.marshall(ackcfEdefType);
-//					allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
-//					respuestaCfes.setPayload(XML.documentToString(allDocument));
-//					respuestaCfes.update();
+					boolean responderAutomaticamenteCFE = Play.application().configuration().getBoolean("responderAutomaticamenteCFE", false);
 					
-					/*
-					 * Envio la respuesta al emisor
-					 */
-//					Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora(), respuestaCfes.getNombreArchivo(), respuestaCfes.getPayload());
+					if (responderAutomaticamenteCFE) {
+						//TODO aca tendria que haber autorizacion/rechazo de administracion, ahora se envia automaticamente
+						Respuesta respuestaCfes = new Respuesta();
+						sobreRecibido.setRespuestaCfes(respuestaCfes);
+						/*
+						 * solo se asigna el id
+						 * ver: https://stackoverflow.com/questions/25862537/hibernate-persist-vs-save-method
+						 */
+						play.db.jpa.JPA.em().persist(respuestaCfes);
+						sobreRecibido.update();
+						respuestaCfes.setNombreArchivo("ME_" + respuestaCfes.getId() + "_" + sobreRecibido.getNombreArchivo());
+						
+						
+						/*
+						 * Serializo el XML respuesta
+						 */
+						DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+						dbf.setNamespaceAware(true);
+						Document allDocument = XML.marshall(ackcfEdefType);
+						allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
+						respuestaCfes.setPayload(XML.documentToString(allDocument));
+						respuestaCfes.update();
+						
+						/*
+						 * Envio la respuesta al emisor
+						 */
+						Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora(), respuestaCfes.getNombreArchivo(), respuestaCfes.getPayload());
+					}
 					
 					return ackcfEdefType;
 				}
