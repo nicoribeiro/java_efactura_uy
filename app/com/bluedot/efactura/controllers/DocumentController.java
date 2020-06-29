@@ -142,12 +142,20 @@ public class DocumentController extends AbstractController {
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia");
 			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
 			break;
-
+		case eFactura_Venta_por_Cuenta_Ajena:
+		case eTicket_Venta_por_Cuenta_Ajena:
+		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
+		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
+		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:	
+		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
+			if (!document.has("CompFiscal"))
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("CompFiscal");
+			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
+			break;
 		case eFactura_Contingencia:
+		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 		case eFactura_Exportacion:
 		case eFactura_Exportacion_Contingencia:
-		case eFactura_Venta_por_Cuenta_Ajena:
-		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 		case eRemito:
 		case eRemito_Contingencia:
 		case eRemito_de_Exportacion:
@@ -156,21 +164,16 @@ public class DocumentController extends AbstractController {
 		case Nota_de_Credito_de_eFactura_Contingencia:
 		case Nota_de_Credito_de_eFactura_Exportacion:
 		case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
-		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
 		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 		case Nota_de_Credito_de_eTicket_Contingencia:
-		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
 		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 		case Nota_de_Debito_de_eFactura_Contingencia:
 		case Nota_de_Debito_de_eFactura_Exportacion:
 		case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
-		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
 		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 		case Nota_de_Debito_de_eTicket_Contingencia:
-		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
 		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 		case eTicket_Contingencia:
-		case eTicket_Venta_por_Cuenta_Ajena:
 		case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 			throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage(tipo.toString());
 		}

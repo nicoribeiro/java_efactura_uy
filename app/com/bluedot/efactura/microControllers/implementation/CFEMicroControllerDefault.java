@@ -91,6 +91,11 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		 * Referencia
 		 */
 		cfeBuilder.buildReferencia(empresa, docJSON.has("Referencia") ?  Commons.safeGetJSONArray(docJSON,"Referencia") : null);
+		
+		/*
+		 * Complemento Fiscal
+		 */
+		cfeBuilder.buildComplementoFiscal(docJSON.has("CompFiscal") ?  Commons.safeGetJSONObject(docJSON,"CompFiscal") : null);
 
 		/*
 		 * CAEData

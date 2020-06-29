@@ -19,6 +19,7 @@ import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.TipoDocumento;
 
 import dgi.classes.recepcion.CAEDataType;
+import dgi.classes.recepcion.ComplFiscalType;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.EResg.Detalle;
 import dgi.classes.recepcion.CFEDefType.EResg.Encabezado;
@@ -187,5 +188,12 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 							Empresa.getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep, update));
 			}
 
+	}
+	
+	@Override
+	public ComplFiscalType getComplementoFiscal() {
+		if (cfe.getEfactura().getComplFiscal() == null)
+			cfe.getEfactura().setComplFiscal(new ComplFiscalType());
+		return cfe.getEfactura().getComplFiscal();
 	}
 }

@@ -26,6 +26,8 @@ public class CFEBuiderRemito extends CFEBuilderImpl implements CFEBuiderInterfac
 	@Override
 	public void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws APIException {
 
+		strategy.getCFE().setCantLineas(detalleJson.length());
+		
 		for (int i = 1; i <= detalleJson.length(); i++) {
 			ItemRemWrapper item = (ItemRemWrapper) strategy.createItem();
 			JSONObject itemJson = detalleJson.getJSONObject(i - 1);

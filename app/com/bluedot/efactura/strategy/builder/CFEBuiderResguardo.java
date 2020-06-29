@@ -38,6 +38,10 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 	@Override
 	public void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws APIException {
 
+		strategy.getCFE().setCantLineas(detalleJson.length());
+		
+		strategy.getCFE().setTotMntRetenido(new Double(0));
+		
 		for (int i = 1; i <= detalleJson.length(); i++) {
 			ItemResgWrapper item = (ItemResgWrapper) strategy.createItem();
 			JSONObject itemJson = detalleJson.getJSONObject(i - 1);
@@ -52,8 +56,6 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 			if (retencionesJSON.length() > 5)
 				throw APIException.raise(APIErrors.MALFORMED_CFE).setDetailMessage(
 						"Se aceptan hasta 5 rentenciones por item, se enviaron " + retencionesJSON.length());
-			
-			
 			
 			List<RetPercInterface> retenciones = item.getRetencPerceps();
 			
@@ -82,6 +84,8 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("ValRetPerc").setDetailMessage("ValRetPerc");
 				retencion.setValRetPerc(new BigDecimal(retencionJSON.getString("ValRetPerc")));
 				retencionPercepcion.setValor(Double.parseDouble(retencionJSON.getString("ValRetPerc")));
+				
+				strategy.getCFE().setTotMntRetenido(strategy.getCFE().getTotMntRetenido() + retencionPercepcion.getValor());
 				
 				strategy.getCFE().getRetencionesPercepciones().add(retencionPercepcion);
 

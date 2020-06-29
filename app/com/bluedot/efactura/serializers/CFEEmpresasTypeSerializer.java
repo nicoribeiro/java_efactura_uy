@@ -49,6 +49,9 @@ public class CFEEmpresasTypeSerializer<T> extends JSONSerializer<CFEEmpresasType
 		
 		cfeJson.put("Detalle", strategy.getDetalle(cfe));
 		
+		if (strategy.hayCompFiscal(cfe))
+			cfeJson.put("CompFiscal", strategy.getCompFiscal(cfe));
+		
 		JSONArray referencias = strategy.getReferencia(cfe);
 		if (referencias.length() > 0)
 			cfeJson.put("Referencia", referencias);

@@ -21,6 +21,7 @@ import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EFact.Detalle;
 import dgi.classes.recepcion.CFEDefType.EFact.Encabezado;
+import dgi.classes.recepcion.ComplFiscalType;
 import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.IdDocFact;
 import dgi.classes.recepcion.ItemDetFact;
@@ -44,15 +45,21 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 			this.cfe.setEfactura(new EFact());
 		
 		switch (cfe.getTipo()) {
-		case eFactura:
-		case eFactura_Contingencia:
-		case Nota_de_Credito_de_eFactura:
-		case Nota_de_Credito_de_eFactura_Contingencia:
-		case Nota_de_Debito_de_eFactura:
-		case Nota_de_Debito_de_eFactura_Contingencia:
-			break;
-		default:
-			throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage("Estrategia para el tipo: " + cfe.getTipo().friendlyName);
+			case eFactura:
+			case eFactura_Contingencia:
+			case Nota_de_Credito_de_eFactura:
+			case Nota_de_Credito_de_eFactura_Contingencia:
+			case Nota_de_Debito_de_eFactura:
+			case Nota_de_Debito_de_eFactura_Contingencia:
+			case eFactura_Venta_por_Cuenta_Ajena:
+			case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+				break;
+			default:
+				throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage("Estrategia para el tipo: " + cfe.getTipo().friendlyName);
 		}
 		
 		
@@ -204,5 +211,10 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 		
 	}
 
-	
+	@Override
+	public ComplFiscalType getComplementoFiscal() {
+		if (cfe.getEfactura().getComplFiscal() == null)
+			cfe.getEfactura().setComplFiscal(new ComplFiscalType());
+		return cfe.getEfactura().getComplFiscal();
+	}
 }

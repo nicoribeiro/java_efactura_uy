@@ -15,4 +15,10 @@ public interface CFEEmpresasStrategy {
 
 	long getTimestampFirma(CFEEmpresasType cfe);
 
+	JSONObject getCompFiscal(CFEEmpresasType cfe);
+
+	boolean hayCompFiscal(CFEEmpresasType cfe);
+	
+	JSONObject getTotales(CFEEmpresasType cfe);
+
 }

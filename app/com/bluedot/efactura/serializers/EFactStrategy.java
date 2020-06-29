@@ -5,14 +5,16 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.strategy.builder.CFEBuilderImpl;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
+import dgi.classes.recepcion.ComplFiscalType;
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.ItemDetFact;
 import dgi.classes.recepcion.ReferenciaTipo.Referencia;
 
-public class EFactStrategy implements CFEEmpresasStrategy {
+public class EFactStrategy extends CommonStrategy {
 
 	@Override
 	public JSONObject getEncabezado(CFEEmpresasType cfe) {
@@ -21,8 +23,6 @@ public class EFactStrategy implements CFEEmpresasStrategy {
 		JSONObject idDoc = new JSONObject();
 		JSONObject receptor = new JSONObject();
 		JSONObject emisor = new JSONObject();
-		
-		JSONObject totales = new JSONObject();
 		
 		EFact documento = cfe.getCFE().getEFact();
 		
@@ -41,11 +41,6 @@ public class EFactStrategy implements CFEEmpresasStrategy {
 		receptor.put("RznSocRecep", documento.getEncabezado().getReceptor().getRznSocRecep());
 		receptor.put("DirRecep", documento.getEncabezado().getReceptor().getDirRecep());
 		
-		totales.put("TpoMoneda", String.valueOf(documento.getEncabezado().getTotales().getTpoMoneda()));
-		
-		if (!String.valueOf(documento.getEncabezado().getTotales().getTpoMoneda()).equals("UYU"))	
-			totales.put("TpoCambio", String.valueOf(documento.getEncabezado().getTotales().getTpoCambio()));
-		
 		emisor.put("CdgDGISucur", documento.getEncabezado().getEmisor().getCdgDGISucur());
 		emisor.put("Ciudad", documento.getEncabezado().getEmisor().getCiudad());
 		emisor.put("Departamento", documento.getEncabezado().getEmisor().getDepartamento());
@@ -54,12 +49,10 @@ public class EFactStrategy implements CFEEmpresasStrategy {
 		emisor.put("RznSoc", documento.getEncabezado().getEmisor().getRznSoc());
 		emisor.put("NomComercial", documento.getEncabezado().getEmisor().getNomComercial());
 		
-		
-		
 		encabezado.put("IdDoc", idDoc);
 		encabezado.put("Receptor", receptor);
 		encabezado.put("Emisor", emisor);
-		encabezado.put("Totales", totales);
+		encabezado.put("Totales", getTotales(cfe));
 		
 		return encabezado;
 	}
@@ -92,7 +85,6 @@ public class EFactStrategy implements CFEEmpresasStrategy {
 	public JSONArray getDetalle(CFEEmpresasType cfe) {
 		JSONArray detalle = new JSONArray();
 		
-		
 		List<ItemDetFact> items = cfe.getCFE().getEFact().getDetalle().getItems();
 		
 		for (ItemDetFact itemDetFact : items) {
@@ -124,6 +116,42 @@ public class EFactStrategy implements CFEEmpresasStrategy {
 	public long getTimestampFirma(CFEEmpresasType cfe) {
 		EFact documento = cfe.getCFE().getEFact();
 		return documento.getTmstFirma().toGregorianCalendar().getTimeInMillis();
+	}
+	
+	@Override
+	public ComplFiscalType getComplementoFiscalType(CFEEmpresasType cfe) {
+		return cfe.getCFE().getEFact().getComplFiscal();
+	}
+
+	@Override
+	public boolean hayCompFiscal(CFEEmpresasType cfe) {
+		EFact documento = cfe.getCFE().getEFact();
+		TipoDoc tipoDoc = TipoDoc.fromInt(documento.getEncabezado().getIdDoc().getTipoCFE().intValue());
+		
+		switch (tipoDoc) {
+			case eFactura_Venta_por_Cuenta_Ajena:
+			case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+				return true;
+		default:
+			break;
+		}
+		return false;
+	}
+	
+	@Override
+	public JSONObject getTotales(CFEEmpresasType cfe) {
+		JSONObject totales = new JSONObject();
+		
+		totales.put("TpoMoneda", String.valueOf(cfe.getCFE().getEFact().getEncabezado().getTotales().getTpoMoneda()));
+		
+		if (!String.valueOf(cfe.getCFE().getEFact().getEncabezado().getTotales().getTpoMoneda()).equals("UYU"))	
+			totales.put("TpoCambio", String.valueOf(cfe.getCFE().getEFact().getEncabezado().getTotales().getTpoCambio()));
+		
+		return totales;
 	}
 
 }

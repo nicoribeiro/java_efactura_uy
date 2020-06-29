@@ -23,6 +23,7 @@ import dgi.classes.recepcion.CFEDefType.ERem;
 import dgi.classes.recepcion.CFEDefType.ERem.Detalle;
 import dgi.classes.recepcion.CFEDefType.ERem.Encabezado;
 import dgi.classes.recepcion.CFEDefType.ERem.Encabezado.Totales;
+import dgi.classes.recepcion.ComplFiscalType;
 import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.IdDocRem;
 import dgi.classes.recepcion.ItemRem;
@@ -182,10 +183,17 @@ public class ERemitoStrategy extends CommonStrategy implements CFEStrategy {
 				Pais pais = Pais.findByCodigo(codPaisRecep, true);
 				cfe.setTitular(getOrCreateTitular(pais, tipoDocRecep, docRecep));
 			} else {
-				if (rznSocRecep != null && dirRecep != null && ciudadRecep != null && deptoRecep != null)
+				if (rznSocRecep != null && dirRecep != null && ciudadRecep != null)
 					cfe.setEmpresaReceptora(
 							Empresa.getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep, update));
 			}
 
+	}
+
+	@Override
+	public ComplFiscalType getComplementoFiscal() {
+		if (cfe.getEfactura().getComplFiscal() == null)
+			cfe.getEfactura().setComplFiscal(new ComplFiscalType());
+		return cfe.getEfactura().getComplFiscal();
 	}
 }

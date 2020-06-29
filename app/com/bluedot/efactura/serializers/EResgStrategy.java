@@ -1,5 +1,7 @@
 package com.bluedot.efactura.serializers;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -23,8 +25,6 @@ public class EResgStrategy implements CFEEmpresasStrategy {
 		JSONObject receptor = new JSONObject();
 		JSONObject emisor = new JSONObject();
 		
-		JSONObject totales = new JSONObject();
-		
 		EResg documento = cfe.getCFE().getEResg();
 		
 		idDoc.put("Nro", documento.getEncabezado().getIdDoc().getNro());
@@ -40,11 +40,6 @@ public class EResgStrategy implements CFEEmpresasStrategy {
 		receptor.put("RznSocRecep", documento.getEncabezado().getReceptor().getRznSocRecep());
 		receptor.put("DirRecep", documento.getEncabezado().getReceptor().getDirRecep());
 		
-		totales.put("TpoMoneda", String.valueOf(documento.getEncabezado().getTotales().getTpoMoneda()));
-		
-		if (!String.valueOf(documento.getEncabezado().getTotales().getTpoMoneda()).equals("UYU"))	
-			totales.put("TpoCambio", String.valueOf(documento.getEncabezado().getTotales().getTpoCambio()));
-		
 		emisor.put("CdgDGISucur", documento.getEncabezado().getEmisor().getCdgDGISucur());
 		emisor.put("Ciudad", documento.getEncabezado().getEmisor().getCiudad());
 		emisor.put("Departamento", documento.getEncabezado().getEmisor().getDepartamento());
@@ -56,7 +51,7 @@ public class EResgStrategy implements CFEEmpresasStrategy {
 		encabezado.put("IdDoc", idDoc);
 		encabezado.put("Receptor", receptor);
 		encabezado.put("Emisor", emisor);
-		encabezado.put("Totales", totales);
+		encabezado.put("Totales", getTotales(cfe));
 		
 		return encabezado;
 	}
@@ -88,7 +83,6 @@ public class EResgStrategy implements CFEEmpresasStrategy {
 	@Override
 	public JSONArray getDetalle(CFEEmpresasType cfe) {
 		JSONArray detalle = new JSONArray();
-		
 		
 		List<ItemResg> items = cfe.getCFE().getEResg().getDetalle().getItems();
 		
@@ -122,6 +116,62 @@ public class EResgStrategy implements CFEEmpresasStrategy {
 	public long getTimestampFirma(CFEEmpresasType cfe) {
 		EResg documento = cfe.getCFE().getEResg();
 		return documento.getTmstFirma().toGregorianCalendar().getTimeInMillis();
+	}
+
+	@Override
+	public JSONObject getCompFiscal(CFEEmpresasType cfe) {
+		return null;
+	}
+	
+	@Override
+	public boolean hayCompFiscal(CFEEmpresasType cfe) {
+		return false;
+	}
+
+	@Override
+	public JSONObject getTotales(CFEEmpresasType cfe) {
+		JSONObject totales = new JSONObject();
+		
+		EResg documento = cfe.getCFE().getEResg();
+		
+		totales.put("TpoMoneda", String.valueOf(documento.getEncabezado().getTotales().getTpoMoneda()));
+		
+		if (!String.valueOf(documento.getEncabezado().getTotales().getTpoMoneda()).equals("UYU"))	
+			totales.put("TpoCambio", String.valueOf(documento.getEncabezado().getTotales().getTpoCambio()));
+		
+		BigDecimal MntTotRetenido = new BigDecimal(0);
+		
+		HashMap<String, Double> hashMap = new HashMap<>();
+		
+		List<ItemResg> items = cfe.getCFE().getEResg().getDetalle().getItems();
+		for (ItemResg itemResg : items) {
+			for (RetPercResg retPercResg : itemResg.getRetencPerceps()) {
+				
+				if (!hashMap.containsKey(retPercResg.getCodRet()))
+					hashMap.put(retPercResg.getCodRet(), new Double(0));
+				
+				hashMap.put(retPercResg.getCodRet(), hashMap.get(retPercResg.getCodRet()) + retPercResg.getValRetPerc().doubleValue());
+				
+				MntTotRetenido = MntTotRetenido.add(retPercResg.getValRetPerc());
+			}
+		}
+		
+		JSONArray retenPerceps = new JSONArray();
+		
+		for (String key : hashMap.keySet()) {
+			JSONObject retencionPercepcion = new JSONObject();
+			retencionPercepcion.put("CodRet", key);
+			retencionPercepcion.put("ValRetPerc", hashMap.get(key));
+			retenPerceps.put(retencionPercepcion);
+		}
+	
+		totales.put("RetencPercep", retenPerceps);
+		
+		totales.put("MntTotRetenido", String.valueOf(MntTotRetenido));
+		
+		totales.put("CantLinDet", String.valueOf(cfe.getCFE().getEResg().getDetalle().getItems().size()));
+		
+		return totales;
 	}
 
 }

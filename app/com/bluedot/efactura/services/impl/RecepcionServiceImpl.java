@@ -84,6 +84,12 @@ public class RecepcionServiceImpl implements RecepcionService {
 		case Nota_de_Credito_de_eFactura_Contingencia:
 		case Nota_de_Debito_de_eFactura:
 		case Nota_de_Debito_de_eFactura_Contingencia:
+		case eFactura_Venta_por_Cuenta_Ajena:
+		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
+		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
+		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 			cfeDefType.setEFact(cfe.getEfactura());
 			break;
 		case eResguardo:
@@ -96,26 +102,20 @@ public class RecepcionServiceImpl implements RecepcionService {
 		case Nota_de_Debito_de_eTicket_Contingencia:
 		case Nota_de_Credito_de_eTicket:
 		case Nota_de_Credito_de_eTicket_Contingencia:
-			cfeDefType.setETck(cfe.getEticket());
-			break;
-		case eFactura_Exportacion:
-		case eFactura_Exportacion_Contingencia:
-		case eFactura_Venta_por_Cuenta_Ajena:
-		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-		case eRemito:
-		case eRemito_Contingencia:
-		case eRemito_de_Exportacion:
-		case eRemito_de_Exportacion_Contingencia:
 		case eTicket_Venta_por_Cuenta_Ajena:
 		case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
 		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
-		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
 		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
-		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			cfeDefType.setETck(cfe.getEticket());
+			break;
+		case eFactura_Exportacion:
+		case eFactura_Exportacion_Contingencia:
+		case eRemito:
+		case eRemito_Contingencia:
+		case eRemito_de_Exportacion:
+		case eRemito_de_Exportacion_Contingencia:
 		case Nota_de_Debito_de_eFactura_Exportacion:
 		case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
 		case Nota_de_Credito_de_eFactura_Exportacion:

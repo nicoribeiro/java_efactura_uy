@@ -28,6 +28,8 @@ public interface CFEBuiderInterface {
 	void buildReferencia(Empresa empresaEmisora, JSONArray referencia) throws APIException;
 
 	void buildTimestampFirma(Long timestamp) throws APIException;
+	
+	void buildComplementoFiscal(JSONObject complementoFiscalJson) throws APIException;
 
 	CFE getCFE();
 

@@ -18,6 +18,7 @@ import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.TipoDocumento;
 
 import dgi.classes.recepcion.CAEDataType;
+import dgi.classes.recepcion.ComplFiscalType;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.CFEDefType.ETck.Detalle;
 import dgi.classes.recepcion.CFEDefType.ETck.Encabezado;
@@ -44,16 +45,22 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 			this.cfe.setEticket(new ETck());
 
 		switch (cfe.getTipo()) {
-		case eTicket:
-		case eTicket_Contingencia:
-		case Nota_de_Credito_de_eTicket:
-		case Nota_de_Credito_de_eTicket_Contingencia:
-		case Nota_de_Debito_de_eTicket:
-		case Nota_de_Debito_de_eTicket_Contingencia:
-			break;
-		default:
-			throw APIException.raise(APIErrors.NOT_SUPPORTED)
-					.setDetailMessage("Estrategia para el tipo: " + cfe.getTipo().friendlyName);
+			case eTicket:
+			case eTicket_Contingencia:
+			case Nota_de_Credito_de_eTicket:
+			case Nota_de_Credito_de_eTicket_Contingencia:
+			case Nota_de_Debito_de_eTicket:
+			case Nota_de_Debito_de_eTicket_Contingencia:
+			case eTicket_Venta_por_Cuenta_Ajena:
+			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+				break;
+			default:
+				throw APIException.raise(APIErrors.NOT_SUPPORTED)
+						.setDetailMessage("Estrategia para el tipo: " + cfe.getTipo().friendlyName);
 		}
 
 	}
@@ -214,5 +221,11 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 		}
 	}
 	
+	@Override
+	public ComplFiscalType getComplementoFiscal() {
+		if (cfe.getEfactura().getComplFiscal() == null)
+			cfe.getEfactura().setComplFiscal(new ComplFiscalType());
+		return cfe.getEfactura().getComplFiscal();
+	}
 	
 }

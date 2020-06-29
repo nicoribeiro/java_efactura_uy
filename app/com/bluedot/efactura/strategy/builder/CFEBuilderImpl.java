@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -34,6 +35,8 @@ import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.TipoDocumento;
 
+import dgi.classes.recepcion.ComplFiscalDataType;
+import dgi.classes.recepcion.ComplFiscalType;
 import dgi.classes.recepcion.Emisor;
 import dgi.classes.recepcion.ReferenciaTipo;
 import dgi.classes.recepcion.ReferenciaTipo.Referencia;
@@ -503,6 +506,11 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	@Override
 	public void asignarId() throws APIException {
 		strategy.setIdDoc();
+	}
+
+	@Override
+	public void buildComplementoFiscal(JSONObject complementoFiscalJson) throws APIException {
+		
 	}
 
 }

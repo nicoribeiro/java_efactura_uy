@@ -22,8 +22,6 @@ public class ERemStrategy implements CFEEmpresasStrategy {
 		JSONObject receptor = new JSONObject();
 		JSONObject emisor = new JSONObject();
 		
-		JSONObject totales = new JSONObject();
-		
 		ERem documento = cfe.getCFE().getERem();
 		
 		idDoc.put("Nro", documento.getEncabezado().getIdDoc().getNro());
@@ -50,7 +48,7 @@ public class ERemStrategy implements CFEEmpresasStrategy {
 		encabezado.put("IdDoc", idDoc);
 		encabezado.put("Receptor", receptor);
 		encabezado.put("Emisor", emisor);
-		encabezado.put("Totales", totales);
+		encabezado.put("Totales", getTotales(cfe));
 		
 		return encabezado;
 	}
@@ -113,6 +111,25 @@ public class ERemStrategy implements CFEEmpresasStrategy {
 	public long getTimestampFirma(CFEEmpresasType cfe) {
 		ERem documento = cfe.getCFE().getERem();
 		return documento.getTmstFirma().toGregorianCalendar().getTimeInMillis();
+	}
+
+	@Override
+	public JSONObject getCompFiscal(CFEEmpresasType cfe) {
+		return null;
+	}
+	
+	@Override
+	public boolean hayCompFiscal(CFEEmpresasType cfe) {
+		return false;
+	}
+
+	@Override
+	public JSONObject getTotales(CFEEmpresasType cfe) {
+		JSONObject totales = new JSONObject();
+		
+		totales.put("CantLinDet", String.valueOf(cfe.getCFE().getERem().getDetalle().getItems().size()));
+		
+		return totales;
 	}
 
 }
