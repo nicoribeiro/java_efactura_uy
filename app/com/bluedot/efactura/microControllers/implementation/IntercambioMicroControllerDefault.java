@@ -205,6 +205,9 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				
 				Document allDocument = XML.marshall(ackSobredefType);
 
+				if (empresa.getFirmaDigital()==null)
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("FirmaDigital").setDetailMessage("La Empresa no tiene Firma Digital");
+				
 				allDocument = SignatureInterceptor.signDocument(dbf, allDocument,"ACKSobre",null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
 				
 				respuestaSobre.setPayload(XML.documentToString(allDocument));
