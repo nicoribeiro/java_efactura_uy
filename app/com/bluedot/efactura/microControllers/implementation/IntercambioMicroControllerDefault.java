@@ -1,6 +1,7 @@
 package com.bluedot.efactura.microControllers.implementation;
 
 import java.math.BigInteger;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
@@ -247,7 +248,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				if (ackSobredefType.getDetalle().getMotivosRechazo().size()==0){
 					
 					ACKCFEdefType ackcfEdefType = new ACKCFEdefType();
-					addCaratula(ackcfEdefType, envioCFEEntreEmpresas, filename);
+					addCaratula(empresa, ackcfEdefType, envioCFEEntreEmpresas, filename);
 					ackcfEdefType.setVersion("1.0");
 					
 					/*
@@ -410,10 +411,9 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		ack.setNroCFE(new BigInteger(String.valueOf(cfe.getNro())));
 		ack.setSerie(cfe.getSerie());
 		
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(cfe.getFechaEmision());
 		try {
-			ack.setFechaCFE(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
+			ack.setFechaCFE(DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(cfe.getFechaEmision())));
+			ack.setTmstCFE(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 		} catch (DatatypeConfigurationException e) {
 			throw APIException.raise(e);
 		}
@@ -449,7 +449,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		
 	}
 
-	private void addCaratula(ACKCFEdefType ackcfEdefType, EnvioCFEEntreEmpresas envioCFEEntreEmpresas, String filename) throws DatatypeConfigurationException {
+	private void addCaratula(Empresa empresa, ACKCFEdefType ackcfEdefType, EnvioCFEEntreEmpresas envioCFEEntreEmpresas, String filename) throws DatatypeConfigurationException {
 		dgi.classes.respuestas.cfe.ACKCFEdefType.Caratula caratula = new dgi.classes.respuestas.cfe.ACKCFEdefType.Caratula();
 
 		caratula.setFecHRecibido(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
@@ -459,8 +459,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		caratula.setIDRespuesta(new BigInteger("1"));
 		caratula.setIDEmisor(envioCFEEntreEmpresas.getCaratula().getIdemisor());
 		caratula.setNomArch(filename);
-		//TODO sacar RUT para afuera
-		caratula.setRUCReceptor("215071660012");
+		caratula.setRUCReceptor(empresa.getRut());
 		caratula.setRUCEmisor(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
 		
 		caratula.setCantenSobre(BigInteger.ZERO);
