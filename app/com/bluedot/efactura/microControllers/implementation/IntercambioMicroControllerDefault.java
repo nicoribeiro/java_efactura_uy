@@ -326,8 +326,15 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
  		cfe.setEstado(EstadoACKCFEType.AE);
  		RechazoCFEDGIType rechazo = null;
  		
-		
- 		
+ 		//TODO HACK!!!!
+		if (ordinal == 2 || ordinal == 4 || ordinal == 6 || ordinal == 8) {
+			cfe.setEstado(EstadoACKCFEType.BE);
+			rechazo = new RechazoCFEDGIType();
+			rechazo.setMotivo("E02");
+			rechazo.setGlosa("Tipo y No de CFE ya existe en los registros");
+			cfe.getMotivo().add(MotivoRechazoCFE.E02);
+		}
+	
  		/*
 		 * CONTROLES CFE
 		 * 
