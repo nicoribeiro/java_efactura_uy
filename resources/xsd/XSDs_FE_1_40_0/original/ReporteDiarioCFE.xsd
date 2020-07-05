@@ -1,0 +1,1912 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Comprobante Fiscal Electrónico - DGI
+El presente documento define el esquema XML que debe ser utilizado
+para realizar los envios del Reporte Diario consolidado de CFE a DGI
+FUA:  23/02/18
+Version: 1.37.6i
+ -->
+<xs:schema xmlns:ns1="http://cfe.dgi.gub.uy" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="DGITypes.xsd"/>
+	<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+	<xs:complexType name="Montos_FyT">
+		<xs:sequence>
+			<xs:element name="Mnts_FyT_Item" maxOccurs="2000">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Fecha" type="ns1:FechaType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Fecha de Comprobante: Campo A-C5 de Formato de los CFE
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CodSuc" type="ns1:CodSucType" minOccurs="1"/>
+                        <xs:element name="IndPagCta3ros" type="ns1:IndPagCta3rosType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntNoGrv" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntExpyAsim" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntImpPerc" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntIVAenSusp" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntIVATasaMin" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntIVATasaBas" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntIVAOtra" type="ns1:MontoType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>
+                                   Total Monto IVA Otra tasa / IVA sobre fictos
+								</xs:documentation>
+							</xs:annotation>
+                        </xs:element>
+						<xs:element name="MntIVATasaMin" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="MntIVATasaBas" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="MntIVAOtra" type="ns1:MontoType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>
+                                   Monto IVA Otra tasa / IVA sobre fictos
+								</xs:documentation>
+							</xs:annotation>
+                        </xs:element>
+						<xs:element name="IVATasaMin" type="ns1:TasaIVAType" minOccurs="0" maxOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Valida contra tabla
+								</xs:documentation>
+							</xs:annotation></xs:element>
+						<xs:element name="IVATasaBas" type="ns1:TasaIVAType" minOccurs="0" maxOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Valida contra tabla
+								</xs:documentation>
+							</xs:annotation></xs:element>
+						<xs:element name="TotMntTotal" type="ns1:MontoType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Suma de totales
+								</xs:documentation>
+							</xs:annotation></xs:element>
+						<xs:element name="TotMntRetenido" type="ns1:Monto_admite_negType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>
+									Importe del concepto en los
+									comprobantes emitidos informados por
+									fecha y sucursal.
+								</xs:documentation>
+							</xs:annotation></xs:element>
+						<xs:element name="TotMntCredFisc" type="ns1:Monto_admite_negType" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Montos_FExp">
+		<xs:sequence>
+			<xs:element name="Mnts_FExp_Item" maxOccurs="1000">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Fecha" type="ns1:FechaType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Fecha de Comprobante: Campo A-C5 de Formato de los CFE
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CodSuc" type="ns1:CodSucType" minOccurs="1"/>
+                        <xs:element name="IndPagCta3ros" type="ns1:IndPagCta3rosType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntExpyAsim" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntTotal" type="ns1:MontoType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Suma de totales
+								</xs:documentation>
+							</xs:annotation></xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Montos_Rem">
+		<xs:sequence>
+			<xs:element name="Mnts_Rem_Item" maxOccurs="1000">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Fecha" type="ns1:FechaType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Fecha de Comprobante: Campo A-C5 de Formato de los CFE
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CodSuc" type="ns1:CodSucType" minOccurs="1"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Montos_Rem_Exp">
+		<xs:sequence>
+			<xs:element name="Mnts_Rem_Exp_Item" maxOccurs="1000">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Fecha" type="ns1:FechaType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Fecha de Comprobante: Campo A-C5 de Formato de los CFE
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CodSuc" type="ns1:CodSucType" minOccurs="1"/>
+						<xs:element name="TotMntExpyAsim" type="ns1:Monto_admite_negType" minOccurs="1" maxOccurs="1"/>
+						<xs:element name="TotMntTotal" type="ns1:Monto_admite_negType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Suma de totales
+								</xs:documentation>
+							</xs:annotation></xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Montos_Res">
+		<xs:sequence>
+			<xs:element name="Mnts_Res_Item" maxOccurs="1000">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Fecha" type="ns1:FechaType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Fecha de Comprobante: Campo A-C5 de Formato de los CFE
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CodSuc" type="ns1:CodSucType" minOccurs="1"/>
+						<xs:element name="TotMntRetenido" type="ns1:Monto_admite_negType" minOccurs="0"/>
+						<xs:element name="TotMntCredFisc" type="ns1:Monto_admite_negType" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Montos_Bol">
+		<xs:sequence>
+			<xs:element name="Mnts_Bol_Item" maxOccurs="1000">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Fecha" type="ns1:FechaType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Fecha de Comprobante: Campo A-C5 de Formato de los CFE
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CodSuc" type="ns1:CodSucType" minOccurs="1"/>
+						<xs:element name="TotMntNoGrv" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntIVAenSusp" type="ns1:MontoType" minOccurs="0" maxOccurs="1"/>
+						<xs:element name="TotMntTotal" type="ns1:MontoType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Suma de totales
+								</xs:documentation>
+							</xs:annotation></xs:element>
+						<xs:element name="TotMntRetenido" type="ns1:Monto_admite_negType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>
+									Importe del concepto en los
+									comprobantes emitidos informados por
+									fecha y sucursal.
+								</xs:documentation>
+							</xs:annotation></xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RngDocsUtil">
+		<xs:sequence>
+			<xs:element name="RDU_Item" minOccurs="0" maxOccurs="10000">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Serie" type="ns1:SerieType" maxOccurs="1" minOccurs="1"/>
+						<xs:element name="NroDesde" maxOccurs="1" minOccurs="1">
+							<xs:simpleType>
+								<xs:restriction base="xs:positiveInteger">
+									<xs:totalDigits value="7"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="NroHasta" maxOccurs="1" minOccurs="1">
+						<xs:simpleType>
+								<xs:restriction base="xs:positiveInteger">
+									<xs:totalDigits value="7"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RngDocsAnulados">
+		<xs:sequence>
+			<xs:element name="RDA_Item" minOccurs="0" maxOccurs="10000">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Serie" type="ns1:SerieType" maxOccurs="1" minOccurs="1"/>
+						<xs:element name="NroDesde" maxOccurs="1" minOccurs="1">
+							<xs:simpleType>
+								<xs:restriction base="xs:positiveInteger">
+									<xs:totalDigits value="7"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="NroHasta" type="xs:positiveInteger" maxOccurs="1" minOccurs="1"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RsmnData_Tck">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_FyT"
+				minOccurs="0" />
+			<xs:element name="CantDocsUtil" minOccurs="1"
+				type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos y anulados por tipo de
+						comprobante. Si no hay comprobantes utilizados
+						se debe registrar 0. No corresponde informar los
+						CFC utilizados.
+
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsMay_topeUI" minOccurs="0"
+				maxOccurs="1" type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE y CFC con montos totales,
+						excluido el IVA, mayores al tope establecido,
+						que deben enviarse a la DGI uno a uno en
+						oportunidad de la emisión. Si no hay documentos
+						emitidos se debe registrar 0
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsAnulados" minOccurs="0"
+				maxOccurs="1" type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE anulados por tipo de
+						comprobante. Refiere a comprobantes no emitidos
+						y no a los emitidos que se anulan con una Nota
+						de Crédito. Si no hay comprobantes anulados se
+						debe registrar 0. No corresponde informar los
+						CFC anulados.
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsEmi" type="xs:nonNegativeInteger"
+				minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0. No corresponde informar la
+						cantidad de CFC emitidos.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+            <xs:element name="RngDocsUtil" type="ns1:RngDocsUtil"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos utilizados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsAnulados"
+				type="ns1:RngDocsAnulados" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos anulados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>	
+	<xs:complexType name="RsmnData_Tck_Cont">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_FyT"
+				minOccurs="0" />
+			<xs:element name="CantDocsMay_topeUI" minOccurs="0"
+				maxOccurs="1" type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE y CFC con montos totales,
+						excluido el IVA, mayores al tope establecido,
+						que deben enviarse a la DGI uno a uno en
+						oportunidad de la emisión. Si no hay documentos
+						emitidos se debe registrar 0
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantCFCEmi" type="xs:nonNegativeInteger" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFC emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0. No corresponde informar la
+						cantidad de CFE emitidos.
+					</xs:documentation>
+				</xs:annotation></xs:element>
+		</xs:sequence>
+	</xs:complexType>	
+	<xs:complexType name="RsmnData_Fac">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_FyT"
+				minOccurs="0" />
+			<xs:element name="CantDocsUtil" minOccurs="1"
+				type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos y anulados por tipo de
+						comprobante. Si no hay comprobantes utilizados
+						se debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsAnulados" minOccurs="0"
+				maxOccurs="1" type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE anulados por tipo de
+						comprobante. Refiere a comprobantes no emitidos
+						y no a los emitidos que se anulan con una Nota
+						de Crédito
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsEmi" type="xs:nonNegativeInteger"
+				minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsUtil" type="ns1:RngDocsUtil"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos utilizados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsAnulados"
+				type="ns1:RngDocsAnulados" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos anulados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RsmnData_Fac_Exp">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_FExp"
+				minOccurs="0" />
+			<xs:element name="CantDocsUtil" minOccurs="1"
+				type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos y anulados por tipo de
+						comprobante. Si no hay comprobantes utilizados
+						se debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>
+
+			</xs:element>
+			<xs:element name="CantDocsAnulados" minOccurs="0"
+				maxOccurs="1" type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE anulados por tipo de
+						comprobante. Refiere a comprobantes no emitidos
+						y no a los emitidos que se anulan con una Nota
+						de Crédito
+					</xs:documentation>
+				</xs:annotation>
+
+			</xs:element>
+			<xs:element name="CantDocsEmi" type="xs:nonNegativeInteger"
+				minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsUtil" type="ns1:RngDocsUtil"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos utilizados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsAnulados"
+				type="ns1:RngDocsAnulados" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos anulados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="RsmnData_Fac_Cont">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_FyT"
+				minOccurs="0" />
+			<xs:element name="CantCFCEmi" type="xs:nonNegativeInteger" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFC emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RsmnData_Fac_Exp_Cont">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_FExp"
+				minOccurs="0" />
+
+
+
+			<xs:element name="CantCFCEmi" type="xs:nonNegativeInteger" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFC emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+		<xs:complexType name="RsmnData_Rem_Exp">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_Rem_Exp"
+				minOccurs="0" />
+			<xs:element name="CantDocsUtil" minOccurs="1"
+				type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos y anulados por tipo de
+						comprobante. Si no hay comprobantes utilizados
+						se debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>
+
+			</xs:element>
+			<xs:element name="CantDocsAnulados" minOccurs="0"
+				maxOccurs="1" type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE anulados por tipo de
+						comprobante. Refiere a comprobantes no emitidos
+						y no a los emitidos que se anulan con una Nota
+						de Crédito
+					</xs:documentation>
+				</xs:annotation>
+
+			</xs:element>
+			<xs:element name="CantDocsEmi" type="xs:nonNegativeInteger"
+				minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsUtil" type="ns1:RngDocsUtil"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos utilizados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsAnulados"
+				type="ns1:RngDocsAnulados" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos anulados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RsmnData_Rem_Exp_Cont">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_Rem_Exp"
+				minOccurs="0" />
+			<xs:element name="CantCFCEmi" type="xs:nonNegativeInteger" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFC emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="RsmnData_Rem">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_Rem"
+				minOccurs="0" />
+			<xs:element name="CantDocsUtil" minOccurs="1"
+				type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos y anulados por tipo de
+						comprobante. Si no hay comprobantes utilizados
+						se debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsAnulados" minOccurs="0"
+				type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE anulados por tipo de
+						comprobante. Refiere a comprobantes no emitidos
+						y no a los emitidos que se anulan con una Nota
+						de Crédito
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsEmi" type="xs:nonNegativeInteger"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+            <xs:element name="RngDocsUtil" type="ns1:RngDocsUtil"
+				maxOccurs="1" minOccurs="0" />			<xs:element name="RngDocsAnulados"
+				type="ns1:RngDocsAnulados" maxOccurs="1" minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RsmnData_Rem_Cont">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_Rem"
+				minOccurs="0" />
+			<xs:element name="CantCFCEmi"
+				type="xs:nonNegativeInteger" maxOccurs="1" minOccurs="1">
+                <xs:annotation>
+                	<xs:documentation>
+                		Cantidad de CFC emitidos por tipo de
+                		comprobante. Si no hay documentos emitidos se
+                		debe registrar 0.
+                	</xs:documentation>
+                </xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RsmnData_Resg">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_Res"
+				minOccurs="0" />
+			<xs:element name="CantDocsUtil" minOccurs="1"
+				type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos y anulados por tipo de
+						comprobante. Si no hay comprobantes utilizados
+						se debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsAnulados" minOccurs="0"
+				type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE anulados por tipo de
+						comprobante. Refiere a comprobantes no emitidos
+						y no a los emitidos que se anulan con una Nota
+						de Crédito
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsEmi" type="xs:nonNegativeInteger"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+            <xs:element name="RngDocsUtil" type="ns1:RngDocsUtil"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos utilizados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsAnulados"
+				type="ns1:RngDocsAnulados" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos anulados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RsmnData_Resg_Cont">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_Res"
+				minOccurs="0" />
+			<xs:element name="CantCFCEmi" type="xs:nonNegativeInteger" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFC emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RsmnData_Bol">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_Bol"
+				minOccurs="0" />
+			<xs:element name="CantDocsUtil" minOccurs="1"
+				type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos y anulados por tipo de
+						comprobante. Si no hay comprobantes utilizados
+						se debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsAnulados" minOccurs="0"
+				maxOccurs="1" type="xs:nonNegativeInteger">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE anulados por tipo de
+						comprobante. Refiere a comprobantes no emitidos
+						y no a los emitidos que se anulan con una Nota
+						de Crédito
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CantDocsEmi" type="xs:nonNegativeInteger"
+				minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFE emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsUtil" type="ns1:RngDocsUtil"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos utilizados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RngDocsAnulados"
+				type="ns1:RngDocsAnulados" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Rango de documentos anulados
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RsmnData_Bol_Cont">
+		<xs:sequence>
+			<xs:element name="Montos" type="ns1:Montos_Bol"
+				minOccurs="0" />
+			<xs:element name="CantCFCEmi" type="xs:nonNegativeInteger" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad de CFC emitidos por tipo de
+						comprobante. Si no hay documentos emitidos se
+						debe registrar 0.
+					</xs:documentation>
+				</xs:annotation></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="Reporte" type="ns1:ReporteDefType"/>
+	<xs:complexType name="ReporteDefType">
+		<xs:sequence>
+			<xs:element name="Caratula" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Resumen de Informacion Enviada
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="RUCEmisor"
+							type="ns1:RUCType">
+							<xs:annotation>
+								<xs:documentation>
+									RUT Emisor de los CFE
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="FechaResumen">
+							<xs:annotation>
+								<xs:documentation>
+									AAAA-MM-DD; Fecha válida entre
+									2011-10-01 y 2050-12-31
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:FechaType">
+									<xs:minInclusive value="2011-10-01"/>
+									<xs:maxInclusive value="2050-12-31"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+                        <xs:element name="IDEmisor" type="ns1:IDRecEmiType" maxOccurs="1" minOccurs="0">
+						</xs:element>
+                        <xs:element name="SecEnvio">
+							<xs:annotation>
+								<xs:documentation>
+									El primer envío del día trae el
+									numero1. Si se desea corregir
+									información se debe enviar el
+									archivo completo con secuencia de
+									envío =secuencia anterior +1.
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:minInclusive value="0"/>
+									<xs:totalDigits value="2"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="TmstFirmaEnv"
+							type="ns1:FechaHoraType">
+							<xs:annotation>
+								<xs:documentation>
+									Fecha y Hora de la Firma del Archivo
+									de Envio
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CantComprobantes">
+							<xs:annotation>
+								<xs:documentation>
+									Cantidad total de todos los tipos de
+									CFE utilizados (emitidos más
+									anulados) y de todos los tipos de
+									CFC emitidos. Si C7=0, puede
+									omitirse la Zona B Resumen.
+
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:minInclusive value="0"/>
+									<xs:totalDigits value="10"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="version" use="required"
+						fixed="1.0">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:maxLength value="3"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 101 e-Ticket 102 Nota de
+									Crédito de e-Ticket 103 Nota de
+									Débito de e-Ticket CÓDIGO CFC 201
+									e-Ticket Contingencia 202 Nota de
+									Crédito de e-Ticket Contingencia 203
+									Nota de Débito de e-Ticket
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="101"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+            <xs:element name="Rsmn_Tck_Nota_Credito" minOccurs="0">
+	<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 101 e-Ticket 102 Nota de
+									Crédito de e-Ticket 103 Nota de
+									Débito de e-Ticket CÓDIGO CFC 201
+									e-Ticket Contingencia 202 Nota de
+									Crédito de e-Ticket Contingencia 203
+									Nota de Débito de e-Ticket
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="102"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck_Nota_Debito" minOccurs="0">
+					<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 101 e-Ticket 102 Nota de
+									Crédito de e-Ticket 103 Nota de
+									Débito de e-Ticket CÓDIGO CFC 201
+									e-Ticket Contingencia 202 Nota de
+									Crédito de e-Ticket Contingencia 203
+									Nota de Débito de e-Ticket
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="103"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck_Cont" minOccurs="0">
+					<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 101 e-Ticket 102 Nota de
+									Crédito de e-Ticket 103 Nota de
+									Débito de e-Ticket CÓDIGO CFC 201
+									e-Ticket Contingencia 202 Nota de
+									Crédito de e-Ticket Contingencia 203
+									Nota de Débito de e-Ticket
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="201"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck_Cont_Nota_Credito"
+				minOccurs="0">
+					<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 101 e-Ticket 102 Nota de
+									Crédito de e-Ticket 103 Nota de
+									Débito de e-Ticket CÓDIGO CFC 201
+									e-Ticket Contingencia 202 Nota de
+									Crédito de e-Ticket Contingencia 203
+									Nota de Débito de e-Ticket
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="202"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck_Cont_Nota_Debito"
+				minOccurs="0">
+					<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 101 e-Ticket 102 Nota de
+									Crédito de e-Ticket 103 Nota de
+									Débito de e-Ticket CÓDIGO CFC 201
+									e-Ticket Contingencia 202 Nota de
+									Crédito de e-Ticket Contingencia 203
+									Nota de Débito de e-Ticket
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="203"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck_CtaAj" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Código CFE 131 e-Ticket Cta Aj 132 Nota de
+									Crédito de e-Ticket Cta Aj 133 Nota de
+									Débito de e-Ticket Cta Aj CÓDIGO CFC 231
+									e-Ticket Cta Aj Contingencia 232 Nota de
+									Crédito de e-Ticket Cta Aj Contingencia 233
+									Nota de Débito de e-Ticket Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="131"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+            <xs:element name="Rsmn_Tck_Nota_Credito_CtaAj" minOccurs="0">
+	<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Código CFE 131 e-Ticket Cta Aj 132 Nota de
+									Crédito de e-Ticket Cta Aj 133 Nota de
+									Débito de e-Ticket Cta Aj CÓDIGO CFC 231
+									e-Ticket Cta Aj Contingencia 232 Nota de
+									Crédito de e-Ticket Cta Aj Contingencia 233
+									Nota de Débito de e-Ticket Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="132"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck_Nota_Debito_CtaAj" minOccurs="0">
+					<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Código CFE 131 e-Ticket Cta Aj 132 Nota de
+									Crédito de e-Ticket Cta Aj 133 Nota de
+									Débito de e-Ticket Cta Aj CÓDIGO CFC 231
+									e-Ticket Cta Aj Contingencia 232 Nota de
+									Crédito de e-Ticket Cta Aj Contingencia 233
+									Nota de Débito de e-Ticket Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="133"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck_CtaAj_Cont" minOccurs="0">
+					<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Código CFE 131 e-Ticket Cta Aj 132 Nota de
+									Crédito de e-Ticket Cta Aj 133 Nota de
+									Débito de e-Ticket Cta Aj CÓDIGO CFC 231
+									e-Ticket Cta Aj Contingencia 232 Nota de
+									Crédito de e-Ticket Cta Aj Contingencia 233
+									Nota de Débito de e-Ticket Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="231"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck_CtaAj_Cont_Nota_Credito"
+				minOccurs="0">
+					<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Código CFE 131 e-Ticket Cta Aj 132 Nota de
+									Crédito de e-Ticket Cta Aj 133 Nota de
+									Débito de e-Ticket Cta Aj CÓDIGO CFC 231
+									e-Ticket Cta Aj Contingencia 232 Nota de
+									Crédito de e-Ticket Cta Aj Contingencia 233
+									Nota de Débito de e-Ticket Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="232"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Tck_CtaAj_Cont_Nota_Debito"
+				minOccurs="0">
+					<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Código CFE 131 e-Ticket Cta Aj 132 Nota de
+									Crédito de e-Ticket Cta Aj 133 Nota de
+									Débito de e-Ticket Cta Aj CÓDIGO CFC 231
+									e-Ticket Cta Aj Contingencia 232 Nota de
+									Crédito de e-Ticket Cta Aj Contingencia 233
+									Nota de Débito de e-Ticket Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+
+								<xs:restriction base="ns1:CFEType">
+
+									<xs:enumeration value="233"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Tck_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			
+			<xs:element name="Rsmn_Fac" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 111 e-Factura 112 Nota de
+									Crédito de e-Factura 113 Nota de
+									Débito de e-Factura CÓDIGO CFC 211
+									e-Factura Contingencia 212 Nota de
+									Crédito de e-Factura Contingencia
+									213 Nota de Débito de e-Factura
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="111"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			
+			<xs:element name="Rsmn_Fac_Nota_Credito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 111 e-Factura 112 Nota de
+									Crédito de e-Factura 113 Nota de
+									Débito de e-Factura CÓDIGO CFC 211
+									e-Factura Contingencia 212 Nota de
+									Crédito de e-Factura Contingencia
+									213 Nota de Débito de e-Factura
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="112"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Nota_Debito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 111 e-Factura 112 Nota de
+									Crédito de e-Factura 113 Nota de
+									Débito de e-Factura CÓDIGO CFC 211
+									e-Factura Contingencia 212 Nota de
+									Crédito de e-Factura Contingencia
+									213 Nota de Débito de e-Factura
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="113"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Cont" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 111 e-Factura 112 Nota de
+									Crédito de e-Factura 113 Nota de
+									Débito de e-Factura CÓDIGO CFC 211
+									e-Factura Contingencia 212 Nota de
+									Crédito de e-Factura Contingencia
+									213 Nota de Débito de e-Factura
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="211"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Cont_Nota_Credito"
+				minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 111 e-Factura 112 Nota de
+									Crédito de e-Factura 113 Nota de
+									Débito de e-Factura CÓDIGO CFC 211
+									e-Factura Contingencia 212 Nota de
+									Crédito de e-Factura Contingencia
+									213 Nota de Débito de e-Factura
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="212"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Cont_Nota_Debito"
+				minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 111 e-Factura 112 Nota de
+									Crédito de e-Factura 113 Nota de
+									Débito de e-Factura CÓDIGO CFC 211
+									e-Factura Contingencia 212 Nota de
+									Crédito de e-Factura Contingencia
+									213 Nota de Débito de e-Factura
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="213"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_CtaAj" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 141 e-Factura Cta Aj 142 Nota de
+									Crédito de e-Factura Cta Aj 143 Nota de
+									Débito de e-Factura Cta Aj CÓDIGO CFC 241
+									e-Factura Cta Aj Contingencia 242 Nota de
+									Crédito de e-Factura Cta Aj Contingencia
+									243 Nota de Débito de e-Factura Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="141"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			
+			<xs:element name="Rsmn_Fac_Nota_Credito_CtaAj" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 141 e-Factura Cta Aj 142 Nota de
+									Crédito de e-Factura Cta Aj 143 Nota de
+									Débito de e-Factura Cta Aj CÓDIGO CFC 241
+									e-Factura Cta Aj Contingencia 242 Nota de
+									Crédito de e-Factura Cta Aj Contingencia
+									243 Nota de Débito de e-Factura Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="142"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Nota_Debito_CtaAj" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 141 e-Factura Cta Aj 142 Nota de
+									Crédito de e-Factura Cta Aj 143 Nota de
+									Débito de e-Factura Cta Aj CÓDIGO CFC 241
+									e-Factura Cta Aj Contingencia 242 Nota de
+									Crédito de e-Factura Cta Aj Contingencia
+									243 Nota de Débito de e-Factura Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="143"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_CtaAj_Cont" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 141 e-Factura Cta Aj 142 Nota de
+									Crédito de e-Factura Cta Aj 143 Nota de
+									Débito de e-Factura Cta Aj CÓDIGO CFC 241
+									e-Factura Cta Aj Contingencia 242 Nota de
+									Crédito de e-Factura Cta Aj Contingencia
+									243 Nota de Débito de e-Factura Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="241"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_CtaAj_Cont_Nota_Credito"
+				minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 141 e-Factura Cta Aj 142 Nota de
+									Crédito de e-Factura Cta Aj 143 Nota de
+									Débito de e-Factura Cta Aj CÓDIGO CFC 241
+									e-Factura Cta Aj Contingencia 242 Nota de
+									Crédito de e-Factura Cta Aj Contingencia
+									243 Nota de Débito de e-Factura Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="242"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+
+			</xs:element>
+			<xs:element name="Rsmn_Fac_CtaAj_Cont_Nota_Debito"
+				minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 141 e-Factura Cta Aj 142 Nota de
+									Crédito de e-Factura Cta Aj 143 Nota de
+									Débito de e-Factura Cta Aj CÓDIGO CFC 241
+									e-Factura Cta Aj Contingencia 242 Nota de
+									Crédito de e-Factura Cta Aj Contingencia
+									243 Nota de Débito de e-Factura Cta Aj
+									Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="243"/>
+
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			
+			<xs:element name="Rsmn_Fac_Exp" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 121 e-Factura Exp 
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="121"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Exp"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Exp_Nota_Credito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo 122 Nota de Crédito de e-Factura Exp 
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="122"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Exp"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Exp_Nota_Debito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									123 Nota de Débito de e-Factura Exp 
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="123"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Exp"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Exp_Cont" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									221 e-Factura Exp Contingencia 
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="221"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Exp_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Exp_Cont_Nota_Credito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									222 Nota de Crédito de e-Factura Exp Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="222"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Exp_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Fac_Exp_Cont_Nota_Debito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									223 Nota de Débito de e-Factura Exp Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="223"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Fac_Exp_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Rem" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Tipos de Comprobantes Fiscales
+									Electronicos 181 e-Remito 281
+									e-Remito Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="181"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Rem"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Rem_Cont" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Tipos de Comprobantes Fiscales
+									Electronicos 181 e-Remito 281
+									e-Remito Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="281"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Rem_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Rem_Exp" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 124 Remito Exportación 224 Remito Exportación Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="124"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Rem_Exp"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Rem_Exp_Cont" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 124 Remito Exportación 224 Remito Exportación Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="224"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Rem_Exp_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="Rsmn_Resg" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Tipos de Comprobantes Fiscales
+									Electronicos 182 e-Resguardo 282
+									e-Resguardo Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="182"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Resg"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="Rsmn_Resg_Cont" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Tipos de Comprobantes Fiscales
+									Electronicos 182 e-Resguardo 282
+									e-Resguardo Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="282"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Resg_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Bol" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 151 e-Boleta de entrada
+                                    152 Nota de	Crédito de e-Boleta de entrada
+                                    113 Nota de	Débito de e-Boleta de entrada
+                                    Código CFC 251 e-Boleta de entrada Contingencia
+                                    252 Nota de	Crédito de e-Boleta de entrada Contingencia
+                                    253 Nota de	Débito de e-Boleta de entrada Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="151"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Bol"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Bol_Nota_Credito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 151 e-Boleta de entrada
+                                    152 Nota de	Crédito de e-Boleta de entrada
+                                    113 Nota de	Débito de e-Boleta de entrada
+                                    Código CFC 251 e-Boleta de entrada Contingencia
+                                    252 Nota de	Crédito de e-Boleta de entrada Contingencia
+                                    253 Nota de	Débito de e-Boleta de entrada Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="152"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Bol"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Bol_Nota_Debito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 151 e-Boleta de entrada
+                                    152 Nota de	Crédito de e-Boleta de entrada
+                                    113 Nota de	Débito de e-Boleta de entrada
+                                    Código CFC 251 e-Boleta de entrada Contingencia
+                                    252 Nota de	Crédito de e-Boleta de entrada Contingencia
+                                    253 Nota de	Débito de e-Boleta de entrada Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="153"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Bol"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Bol_Cont" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 151 e-Boleta de entrada
+                                    152 Nota de	Crédito de e-Boleta de entrada
+                                    113 Nota de	Débito de e-Boleta de entrada
+                                    Código CFC 251 e-Boleta de entrada Contingencia
+                                    252 Nota de	Crédito de e-Boleta de entrada Contingencia
+                                    253 Nota de	Débito de e-Boleta de entrada Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="251"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Bol_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Bol_Cont_Nota_Credito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 151 e-Boleta de entrada
+                                    152 Nota de	Crédito de e-Boleta de entrada
+                                    113 Nota de	Débito de e-Boleta de entrada
+                                    Código CFC 251 e-Boleta de entrada Contingencia
+                                    252 Nota de	Crédito de e-Boleta de entrada Contingencia
+                                    253 Nota de	Débito de e-Boleta de entrada Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="252"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Bol_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rsmn_Bol_Cont_Nota_Debito" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TipoComp" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo CFE 151 e-Boleta de entrada
+                                    152 Nota de	Crédito de e-Boleta de entrada
+                                    113 Nota de	Débito de e-Boleta de entrada
+                                    Código CFC 251 e-Boleta de entrada Contingencia
+                                    252 Nota de	Crédito de e-Boleta de entrada Contingencia
+                                    253 Nota de	Débito de e-Boleta de entrada Contingencia
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns1:CFEType">
+									<xs:enumeration value="253"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RsmnData" type="ns1:RsmnData_Bol_Cont"
+							minOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+
+			
+			<xs:element ref="ds:Signature" minOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
+
+
+
+
+
+
+
+
+
+
+
+

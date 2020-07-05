@@ -1,0 +1,88 @@
+[version: 1.40.0]
+
+	1.40.0  - CFEType: Se agrega nuevo campo: Fecha valor
+			- CFEType: Se agrega nuevo campo: Indicador compra M/E para reventa
+			- DGITypes: Se define nuevo tipo para indicador compra M/E para reventa
+
+	1.39.3  - DGITypes: Se eliminan las monedas USS, USN y XXX
+	
+	1.39.2  - DGITypes: Se agrega un valor faltante ("FE" = Reliquidado) a EstadoACKCFEType
+			- ACKCFE_DGI: Se ajusta documentación de Estado por cambio en EstadoACKCFEType
+	
+	1.39.1  - Se ajusta ClauVenta en IdDoc_Rem_Exp p/permitir 1-3 letras A-Z|a-z o N/A
+	
+	1.39.0  - Primera versión de XSD vinculada al FormatoCFE_v20
+	
+			- CFEType: IndFact sólo aceptará estos valores de acuerdo al tipo de Item:
+				* Item_Det_Fact: 1, 2, 3, 4, 5, 6, 7, 10, 11, 12 y 16
+				* Item_Det_Fact_Exp: 5, 6, 7 y 10				
+				* Item_Rem: 8
+				* Item_Rem_Exp: 5 y 8
+				* Item_Resg: 9
+				* Item_Det_Boleta: 5, 6, 7, 12, 13, 14 y 15
+			- CFEType: se ajustaron descripciones de valores 14 y 16 de IndFact
+			- CFEType: IndFactDR sólo aceptará valores 1, 2, 3, 4, 6, 7, 10, 11, 12, 13, 14, 15, 16
+			- CFEType: se ajustaron descripciones de valores 14 y 16 de IndFactDR
+			- CFEType: se agrega valor 3 como opción de MntBruto
+			- CFEType: se ajustó descripción de IndCobPropia
+			- CFEType: CAEEspecial admite ahora valores 1, 2, 3 o 4. Se agregó descripción.
+			
+			- CAEType: CAEEspecial admite ahora valores 1, 2, 3 o 4.
+			
+			- DGITypes: se ajustó descripción de IndCobPropiaType
+
+	1.38.4  - DGITypes: se actualiza tabla de monedas
+
+	1.38.3  - CFEType: faltaba IndCobPropia como campo opcional en IdDoc_Tck
+
+	1.38.2  - CFEType: se agregan valores 6 y 7 al campo IndFact de Item_Det_Boleta
+
+	1.38.1  - Ajustes varios en los XSD de CFEType, DGITypes, ReporteDiarioCFE.
+	
+	1.38.0  - Ajustes varios en los XSD de CFEType, DGITypes, ReporteDiarioCFE y CAEType.xsd.
+	        - Primera versión de XSD vinculada al FormatoCFE_v19
+
+	1.37.8	- CFEType: para restringir valores de ClauVenta a 1-3 letras A-Z|a-z o N/A
+	
+	1.37.7  - Se agrega ExcepcionesServicios.xsd	
+	        - DGITypes: para permitir los países SX (Saint Martin) y CW (Curaçao)	
+
+    1.37.6  - DGITypes: para volver a permitir las monedas UYI/UYR
+	        - CFEType: para restringir valores de ClauVenta a 1-3 letras A-Z|a-z o N/A
+
+    1.37.5  - CFEType: restringir valores de ClauVenta a 1-3 letras A-Z|a-z o N/A
+	
+	1.37.4	- CFEType: restringir valores de ClauVenta a 2/3 letras
+	
+	1.37.3	- DGITypes: pasar Glosa50Type a 100 caracteres
+			- DGITypes: incluir la Glosa del Motivo E09
+
+	1.37.2	- CFEType: poder poner Tipo de Documento extranjero en eBoleta
+
+	1.37.1	- CFEType: (DeptoRecep y PaisRecep de un receptor de eBoleta deben ser opcionales de acuerdo a cartilla)	
+	
+	1.37	- Se agrega tipo de CFE Boleta de Entrada
+	
+	1.36	- m-1193: se agrega motivo de rechazo en R06 para Reporte, en DGIType.xsd
+			- m-1289: Se ponen como opcionales los Montos_ de todos los resumenes del reporte, pues ahora se permite no enviar montos
+			
+	1.35	- En ReporteDiarioCFE.xsd, Tipo Montos_Rem_Exp, campos TotMntExpyAsim y TotMntTotal ahora admiten negativos (Monto_admite_negType)
+	
+	1.34-8	- En DGITypes.xsd Tipo RechazoSobreType se agrega elemento "Sobre enviado ya existe en los registros de DGI" en Glosa
+			- En DGITypes.xsd Tipo ObsCFCType se agrega elemento "Nº de CFC no fue autorizado según registros" en Glosa
+			
+	1.34-7	-Se agrega TotMntCredFisc en resumenes de reporte, en eTck, eFac, y Resg (como opcional)
+		-Se modifica obligatoriedad de TotMntRetenido en Resg. Se pone opcional (minOccurs = 0)
+			
+	1.34-6 agrega sobre 1.34-5
+		-Se pone ahora opcional el campo 125.1 MntTotCredFisc en el tipo de comprobante Resguardo
+		
+	Incidentes Mantis:
+	m-950:  MEJORA: Cambios Varios en XSDs - Formato_CFE-v14 y Formato_Respuesta-v10
+	m-890:  ACK: CantidadCFE=0
+	m-927:  Diferencia entre Esquemas XSDs e Instructivo para AckCFE.
+	m-625:  BUG: En xsd publicados hay 2 referencias diferentes a xmldsig-core-schema.xsd
+	m-1019: Inconsistencia entre Esquemas XSDs v1.33 y Cartilla/Instructivo "Formato_CFE_v13_23072014.pdf" (Remito Exp)
+	m-543:  En homologacion no se controla la cantidad de CFCs emitidos (en XSD debe ser obligatorio para CFC)	
+	m-1097: Campo MntExpoyAsim admite negativos
+	m-1100: Campo TotMntTotal en Remito Exportacion admite negativos

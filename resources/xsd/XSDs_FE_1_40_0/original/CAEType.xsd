@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Comprobante Fiscal Electrónico (CFE) - DGI
+El presente documento define el esquema XML del tipo correspondiente al CAE.
+FUA:  10/07/14 
+Version: 1.19
+  -->
+<xs:schema xmlns:ns0="http://cfe.dgi.gub.uy" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="DGITypes.xsd"/>
+	<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+	<xs:complexType name="CAEdefType">
+		<xs:sequence>
+			<xs:element name="TmstFrma" type="ns0:FechaHoraType"/>
+			<xs:element name="DA">
+				<xs:annotation>
+					<xs:documentation>Datos de Autorizacion</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="RucE" type="ns0:RUCType">
+							<xs:annotation>
+								<xs:documentation>RUC Emisor</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="TCFE" type="ns0:CFEType">
+							<xs:annotation>
+								<xs:documentation>Tipo CFE</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="Serie" type="ns0:SerieType">
+							<xs:annotation>
+								<xs:documentation>Serie CFE</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="DNro">
+							<xs:annotation>
+								<xs:documentation>Nro Inicial (Desde)</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns0:NroCFEType">
+									<xs:minInclusive value="1"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="HNro">
+							<xs:annotation>
+								<xs:documentation>Nro Final (Hasta)</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="ns0:NroCFEType">
+									<xs:minInclusive value="1"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="TA" type="xs:string" fixed="E">
+							<xs:annotation>
+								<xs:documentation>Tipo de Autorización</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="NA">
+							<xs:annotation>
+								<xs:documentation>Nro. de Autorización</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="11"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="FA" type="ns0:FechaType">
+							<xs:annotation>
+								<xs:documentation>Fecha Autorizacion en Formato AAAA-MM-DD</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="FVD" type="ns0:FechaType">
+							<xs:annotation>
+								<xs:documentation>Fecha de Vigencia de la Documentación</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+               			<xs:element name="CAEEspecial" minOccurs="0" maxOccurs="1">
+                            <xs:simpleType>
+								<xs:restriction base="xs:integer">
+                                    <xs:totalDigits value="1"/>
+                                    <xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+									<xs:enumeration value="3"/>
+									<xs:enumeration value="4"/>
+                                </xs:restriction>
+				            </xs:simpleType>
+			            </xs:element>
+               			<xs:element name="CausalCAEEsp" minOccurs="0" maxOccurs="1">
+                  	        <xs:simpleType>
+            		            <xs:restriction base="xs:integer">
+			          	    		<xs:totalDigits value="3"/>
+           		         		</xs:restriction>
+		            		</xs:simpleType>
+            			</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element ref="ds:Signature"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required" fixed="1.0">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="3"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+</xs:schema>
+
+
+

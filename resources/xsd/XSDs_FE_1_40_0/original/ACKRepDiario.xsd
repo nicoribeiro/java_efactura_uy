@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ACK de Reporte Diario - DGI
+El presente documento define el esquema XML que debe ser utilizado
+para realizar los envios de acuses de recibo del Reporte Diario consolidado de CFEs
+FUA: 10/07/14
+Version: 118
+-->
+<xs:schema xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ns1="http://cfe.dgi.gub.uy" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="DGITypes.xsd"/>
+	<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+	<xs:element name="ACKRepDiario" type="ns1:ACKRepDiariodefType"/>
+	<xs:complexType name="ACKRepDiariodefType">
+		<xs:sequence>
+			<xs:element name="Caratula" minOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="RUCReceptor" type="ns1:RUCType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Es el RUC del receptor del envío que se acusa.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="RUCEmisor" type="ns1:RUCType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Es el RUC del contribuyente que hizo el envío que se acusa (el emisor)</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="NomArch" minOccurs="1"
+							type="ns1:NomArchType">						</xs:element>
+						<xs:element name="FecHRecibido" type="ns1:FechaHoraType" minOccurs="1"/>
+						<xs:element name="IDEmisor" type="ns1:IDRecEmiType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Nro. asignado por el emisor al envío que se responde.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="IDReceptor" type="ns1:IDRecEmiType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Nro. asignado por el receptor al envío que se responde.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="Tmst" type="ns1:FechaHoraType" minOccurs="1"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Detalle" minOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Estado" type="ns1:EstadoACKRepType" minOccurs="1"/>
+						<xs:element name="MotivosRechazo" type="ns1:RechazoRepType" minOccurs="0" maxOccurs="30"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element ref="ds:Signature" minOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required" fixed="1.0">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="3"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+</xs:schema>
+
+

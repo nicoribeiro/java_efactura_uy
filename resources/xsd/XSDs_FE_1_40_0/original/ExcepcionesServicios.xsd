@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wmh="http://www.wmhelp.com/2003/eGenerator" elementFormDefault="qualified">
+  <xs:element name="Respuestas">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Respuesta"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Respuesta">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="codigo"/>
+        <xs:element name="descripcion" type="xs:string"/>
+        <xs:element name="detalle" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="codigo" type="codigoType"/>
+
+  	<xs:simpleType name="codigoType">
+  		<xs:restriction base="xs:integer">
+			<xs:enumeration value="1">
+				<xs:annotation>
+					<xs:documentation>El XML token recibido no está bien formado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="2">
+				<xs:annotation>
+					<xs:documentation>El IdReceptor debe ser un número positivo</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="3">
+				<xs:annotation>
+					<xs:documentation>El Token corresponde a otro IdReceptor</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="4">
+				<xs:annotation>
+					<xs:documentation>El Token corresponde a otro RUC</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="5">
+				<xs:annotation>
+					<xs:documentation>Error al validar el Certificado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="6">
+				<xs:annotation>
+					<xs:documentation>No se ha podido determinar el RUC del consumidor del Servicio Web</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="7">
+				<xs:annotation>
+					<xs:documentation>No se ha podido determinar el Documento del consumidor del Servicio Web</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="8">
+				<xs:annotation>
+					<xs:documentation>Usuario no válido</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="9">
+				<xs:annotation>
+					<xs:documentation>Usuario no autorizado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="10">
+				<xs:annotation>
+					<xs:documentation>Usuario no autorizado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="11">
+				<xs:annotation>
+					<xs:documentation>Sobre enviado supera el tamaño máximo admitido</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="12">
+				<xs:annotation>
+					<xs:documentation>Error al validar el Certificado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="13">
+				<xs:annotation>
+					<xs:documentation>Su envío aún no ha sido procesado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="99">
+				<xs:annotation>
+					<xs:documentation>Información aún no disponible</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="100">
+				<xs:annotation>
+					<xs:documentation>El método invocado ha detectado una excepción en su ejecución.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			
+			<xs:enumeration value="101">
+				<xs:annotation>
+					<xs:documentation>Error de Seguridad en la invocación</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="102">
+				<xs:annotation>
+					<xs:documentation>El método invocado ha detectado una excepción en su ejecución</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="103">
+				<xs:annotation>
+					<xs:documentation>El RUC no es Emisor Electrónico</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="104">
+				<xs:annotation>
+					<xs:documentation>El método invocado ha detectado una excepción en su ejecución o no existe un sobre con dicho Id Receptor para el RUC especificado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="105">
+				<xs:annotation>
+					<xs:documentation>El sobre con el Id Receptor especificado aún no ha sido procesado. Vuelva a consultar luego</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="108">
+				<xs:annotation>
+					<xs:documentation>Sobre duplicado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="109">
+				<xs:annotation>
+					<xs:documentation>Reporte duplicado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="111">
+				<xs:annotation>
+					<xs:documentation>RUCEmisor o IdEmisor exceden el largo permitido</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="201">
+				<xs:annotation>
+					<xs:documentation>Certificación: No se encontró postulación en estado requerido</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="202">
+				<xs:annotation>
+					<xs:documentation>Certificación: Postulación de tipo no esperado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="211">
+				<xs:annotation>
+					<xs:documentation>Certificación: No se encuentra el sobre</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="212">
+				<xs:annotation>
+					<xs:documentation>Certificación: El sobre incluye al menos un CFE que no tiene el CAE solicitado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="221">
+				<xs:annotation>
+					<xs:documentation>Certificación: No se encuentra el reporte</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="222">
+				<xs:annotation>
+					<xs:documentation>Certificación: Error inesperado en Gestión</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="223">
+				<xs:annotation>
+					<xs:documentation>Certificación: El reporte se encuentra gestionado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="224">
+				<xs:annotation>
+					<xs:documentation>Certificación: No se encontró el reporte en estado procesado</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="225">
+				<xs:annotation>
+					<xs:documentation>Certificación: Los comprobantes recibidos no cumplen con la cantidad exigida en la prueba de simulación. Envíe nuevamente la totalidad de los comprobantes y el Reporte.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="226">
+				<xs:annotation>
+					<xs:documentation>Certificación: Los comprobantes anulados recibidos no cumplen con la cantidad exigida en la prueba de simulación. Envíe nuevamente la totalidad de los comprobantes y el Reporte.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+			<xs:enumeration value="227">
+				<xs:annotation>
+					<xs:documentation>Certificación: Los comprobantes recibidos deben pertenecer al menos a dos fechas de emisión diferentes.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+
+		</xs:restriction>
+  	</xs:simpleType>
+</xs:schema>
+
+

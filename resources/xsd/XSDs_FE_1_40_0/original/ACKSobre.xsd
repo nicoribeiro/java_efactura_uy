@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ACK de Sobre de CFEs - DGI ( Comprobante Fiscal Electrónico)
+El presente documento define el esquema XML que debe ser utilizado
+para realizar los envios de acuses de recibo del Sobre de CFEs a DGI
+FUA:  02/05/17
+Version: 1.37
+-->
+<xs:schema xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ns1="http://cfe.dgi.gub.uy" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="DGITypes.xsd"/>
+	<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+	<xs:element name="ACKSobre" type="ns1:ACKSobredefType"/>
+	<xs:complexType name="ACKSobredefType">
+		<xs:sequence>
+			<xs:element name="Caratula" minOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="RUCReceptor" type="ns1:RUCType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Es el RUC del receptor del envío que se acusa.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="RUCEmisor" type="ns1:RUCType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Es el RUC del contribuyente que hizo el envío que se acusa (el emisor)</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="IDRespuesta" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Número único de identificación de la respuesta asignado por quien responde</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="10"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="NomArch" minOccurs="1"
+							type="ns1:NomArchType">						</xs:element>
+						<xs:element name="FecHRecibido" type="ns1:FechaHoraType" minOccurs="1"/>
+						<xs:element name="IDEmisor" type="ns1:IDRecEmiType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Nro. asignado por el emisor al envío que se responde.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="IDReceptor" type="ns1:IDRecEmiType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Nro. asignado por el receptor al envío que se responde.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CantidadCFE" minOccurs="1">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+									<xs:minInclusive value="0"/>
+									<xs:maxInclusive value="250"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Tmst" type="ns1:FechaHoraType" minOccurs="1"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Detalle" minOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Estado"
+							type="ns1:EstadoACKSobreType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Envío Recibido: AS - Sobre Recibido
+									Envío Rechazado: BS - Sobre
+									Rechazado
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="MotivosRechazo"
+							type="ns1:RechazoSobreType" minOccurs="0" maxOccurs="30" />
+						<xs:element name="ParamConsulta"
+							type="ns1:ParamConsultaType" minOccurs="0" maxOccurs="1">
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element ref="ds:Signature"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required" fixed="1.0">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="3"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="ParamConsultaType">
+		<xs:sequence>
+			<xs:element name="Token" type="xs:base64Binary" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Cadena de caracteres a invocar en la respuesta
+					</xs:documentation>
+				</xs:annotation></xs:element>
+			<xs:element name="Fechahora" type="ns1:FechaHoraType" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Fecha y hora a partir de la cual se puede
+						consultar el 2do mensaje (respuesta a
+						comprobantes).
+					</xs:documentation>
+				</xs:annotation></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
+
+

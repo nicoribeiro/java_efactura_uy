@@ -1,0 +1,4036 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Comprobante Fiscal Electrónico (CFE) - DGI
+El presente documento define el esquema XML que debe ser utilizado realizar el envío de CFEs a DGI.  
+Para la firma debe usarse X509IssuerSerial ( para la KeyInfo / X509Data ) que deberán corresponderse con el certificado incluido en el  EnvioCFE 
+FUA:  5/8/19
+Version: 1.39.1
+  -->
+<xs:schema xmlns:DGICFE="http://cfe.dgi.gub.uy" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="DGITypes.xsd"/>
+	<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+	<xs:import namespace="http://www.w3.org/2001/04/xmlenc#" schemaLocation="xenc-schema.xsd"/>
+	<xs:complexType name="CAEDataType">
+		<xs:annotation>
+			<xs:documentation>Referencia al CAE</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CAE_ID">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:totalDigits value="11"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="DNro">
+			
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:minInclusive value="1"/>
+						<xs:totalDigits value="7"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="HNro">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:totalDigits value="7"/>
+						<xs:minInclusive value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FecVenc" type="xs:date"/>
+			<xs:element name="CAEEspecial" minOccurs="0" maxOccurs="1">
+                <xs:simpleType>
+                    <xs:annotation>
+                        <xs:documentation>
+                            Se completa sólo si utiliza un CAE especial
+                            y se debe indicar el tipo utilizado 1: Exonerado
+                            2: IVA mínimo 3: Monotributo 4: Monotributo MIDES
+                        </xs:documentation>
+                    </xs:annotation>
+					<xs:restriction base="xs:integer">
+						<xs:totalDigits value="1"/>
+						<xs:enumeration value="1"/>
+						<xs:enumeration value="2"/>
+						<xs:enumeration value="3"/>
+						<xs:enumeration value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CausalCAEEsp" minOccurs="0" maxOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:totalDigits value="3"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+
+        </xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CFEDefType">
+		<xs:annotation>
+			<xs:documentation>Comprobante Fiscal Electronico</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="eTck">
+					<xs:annotation>
+						<xs:documentation>
+							Informacion Tributaria del CFE
+						</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="TmstFirma" type="DGICFE:FechaHoraType">
+								<xs:annotation>
+									<xs:documentation>
+										Fecha y Hora en que se Firmo el
+										CFE AAAA-MM-DDTHH:MI:SS
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Encabezado">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion y Totales del
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="IdDoc"
+											type="DGICFE:IdDoc_Tck">
+											<xs:annotation>
+												<xs:documentation>
+													Identificacion del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Emisor"
+											type="DGICFE:Emisor">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Emisor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Receptor"
+											type="DGICFE:Receptor_Tck" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Receptor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Totales"
+											type="DGICFE:Totales">
+											<xs:annotation>
+												<xs:documentation>
+													Montos Totales del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Detalle">
+								<xs:annotation>
+									<xs:documentation>
+										Detalle del CFE
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Item"
+											type="DGICFE:Item_Det_Fact" maxOccurs="700" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="SubTotInfo"
+								type="DGICFE:SubTotInfo" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Subtotales Informativos
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="DscRcgGlobal"
+								type="DGICFE:DscRcgGlobal" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Descuentos y/o Recargos que
+										auemntan o disminuyen la base
+										del impuesto
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="MediosPago"
+								type="DGICFE:MediosPago" minOccurs="0" />
+							<xs:element name="Referencia"
+								type="DGICFE:Referencia" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion de otros
+										documentos Referenciados por
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="CAEData"
+								type="DGICFE:CAEDataType" />
+							<xs:element name="Compl_Fiscal"
+								maxOccurs="1" minOccurs="0" type="DGICFE:Compl_FiscalType">
+
+							</xs:element>
+						</xs:sequence>
+
+					</xs:complexType>
+				</xs:element>
+
+				<xs:element name="eFact">
+					<xs:annotation>
+						<xs:documentation>
+							Informacion Tributaria del CFE
+						</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="TmstFirma" type="DGICFE:FechaHoraType">
+								<xs:annotation>
+									<xs:documentation>
+										Fecha y Hora en que se Firmo el
+										CFE AAAA-MM-DDTHH:MI:SS
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Encabezado">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion y Totales del
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="IdDoc"
+											type="DGICFE:IdDoc_Fact">
+											<xs:annotation>
+												<xs:documentation>
+													Identificacion del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Emisor"
+											type="DGICFE:Emisor">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Emisor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Receptor"
+											type="DGICFE:Receptor_Fact" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Receptor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Totales"
+											type="DGICFE:Totales">
+											<xs:annotation>
+												<xs:documentation>
+													Montos Totales del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Detalle">
+								<xs:annotation>
+									<xs:documentation>
+										Detalle del CFE
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Item"
+											type="DGICFE:Item_Det_Fact" maxOccurs="200" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="SubTotInfo"
+								type="DGICFE:SubTotInfo" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Subtotales Informativos
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="DscRcgGlobal"
+								type="DGICFE:DscRcgGlobal" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Descuentos y/o Recargos que
+										auemntan o disminuyen la base
+										del impuesto
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="MediosPago"
+								type="DGICFE:MediosPago" minOccurs="0" />
+							<xs:element name="Referencia"
+								type="DGICFE:Referencia" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion de otros
+										documentos Referenciados por
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="CAEData"
+								type="DGICFE:CAEDataType" />
+							<xs:element name="Compl_Fiscal"
+								type="DGICFE:Compl_FiscalType" maxOccurs="1" minOccurs="0">
+							</xs:element>
+						</xs:sequence>
+
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="eFact_Exp">
+				  <xs:annotation>
+				    <xs:documentation>
+							Informacion Tributaria del CFE
+						</xs:documentation>
+				  </xs:annotation>
+				  <xs:complexType>
+				    <xs:sequence>
+				      <xs:element name="TmstFirma"
+								type="DGICFE:FechaHoraType">
+				        <xs:annotation>
+				          <xs:documentation>
+										Fecha y Hora en que se Firmo el
+										CFE AAAA-MM-DDTHH:MI:SS
+									</xs:documentation>
+				        </xs:annotation>
+				      </xs:element>
+				      <xs:element name="Encabezado">
+				        <xs:annotation>
+				          <xs:documentation>
+										Identificacion y Totales del
+										Documento
+									</xs:documentation>
+				        </xs:annotation>
+				        <xs:complexType>
+				          <xs:sequence>
+				            <xs:element name="IdDoc"
+											type="DGICFE:IdDoc_Fact_Exp">
+				              <xs:annotation>
+				                <xs:documentation>
+													Identificacion del
+													CFE
+												</xs:documentation>
+				              </xs:annotation>
+				            </xs:element>
+				            <xs:element name="Emisor"
+											type="DGICFE:Emisor">
+				              <xs:annotation>
+				                <xs:documentation>
+													Datos del Emisor
+												</xs:documentation>
+				              </xs:annotation>
+				            </xs:element>
+				            <xs:element name="Receptor"
+											type="DGICFE:Receptor_Fact_Exp" minOccurs="0">
+				              <xs:annotation>
+				                <xs:documentation>
+													Datos del Receptor
+												</xs:documentation>
+				              </xs:annotation>
+				            </xs:element>
+				            <xs:element name="Totales"
+											type="DGICFE:Totales_Fact_Exp">
+				              <xs:annotation>
+				                <xs:documentation>
+													Montos Totales del
+													CFE
+												</xs:documentation>
+				              </xs:annotation>
+				            </xs:element>
+				          </xs:sequence>
+				        </xs:complexType>
+				      </xs:element>
+				      <xs:element name="Detalle">
+				        <xs:annotation>
+				          <xs:documentation>
+										Detalle del CFE
+									</xs:documentation>
+				        </xs:annotation>
+				        <xs:complexType>
+				          <xs:sequence>
+				            <xs:element name="Item"
+											type="DGICFE:Item_Det_Fact_Exp" maxOccurs="200" />
+				          </xs:sequence>
+				        </xs:complexType>
+				      </xs:element>
+				      <xs:element name="SubTotInfo"
+								type="DGICFE:SubTotInfo" minOccurs="0">
+				        <xs:annotation>
+				          <xs:documentation>
+										Subtotales Informativos
+									</xs:documentation>
+				        </xs:annotation>
+				      </xs:element>
+				      <xs:element name="DscRcgGlobal"
+								type="DGICFE:DscRcgGlobal" minOccurs="0">
+				        <xs:annotation>
+				          <xs:documentation>
+										Descuentos y/o Recargos que
+										auemntan o disminuyen la base
+										del impuesto
+									</xs:documentation>
+				        </xs:annotation>
+				      </xs:element>
+				      <xs:element name="MediosPago"
+								type="DGICFE:MediosPago" minOccurs="0" />
+				      <xs:element name="Referencia"
+								type="DGICFE:Referencia" minOccurs="0">
+				        <xs:annotation>
+				          <xs:documentation>
+										Identificacion de otros
+										documentos Referenciados por
+										Documento
+									</xs:documentation>
+				        </xs:annotation>
+				      </xs:element>
+				      <xs:element name="CAEData"
+								type="DGICFE:CAEDataType" />
+				    </xs:sequence>
+				  </xs:complexType>
+				</xs:element>
+				<xs:element name="eRem">
+					<xs:annotation>
+						<xs:documentation>
+							Informacion Tributaria del CFE
+						</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="TmstFirma"
+								type="DGICFE:FechaHoraType">
+								<xs:annotation>
+									<xs:documentation>
+										Fecha y Hora en que se Firmo el
+										CFE AAAA-MM-DDTHH:MI:SS
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Encabezado">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion y Totales del
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="IdDoc"
+											type="DGICFE:IdDoc_Rem">
+											<xs:annotation>
+												<xs:documentation>
+													Identificacion del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Emisor"
+											type="DGICFE:Emisor">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Emisor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Receptor"
+											type="DGICFE:Receptor_Rem" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Receptor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Totales">
+											<xs:annotation>
+												<xs:documentation>
+													Montos Totales del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element
+														name="CantLinDet">
+														<xs:annotation>
+															<xs:documentation>
+																Cantidad
+																de
+																lineas
+																del
+																detalle
+															</xs:documentation>
+														</xs:annotation>
+														<xs:simpleType>
+															<xs:restriction
+																base="DGICFE:LineasDetType">
+																<xs:totalDigits
+																	value="3" />
+																<xs:fractionDigits
+																	value="0" />
+																<xs:maxInclusive
+																	value="200" />
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Detalle">
+								<xs:annotation>
+									<xs:documentation>
+										Detalle del CFE
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Item"
+											type="DGICFE:Item_Rem" maxOccurs="200" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="SubTotInfo"
+								type="DGICFE:SubTotInfo" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Subtotales Informativos
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Referencia"
+								type="DGICFE:Referencia" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion de otros
+										documentos Referenciados por
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="CAEData"
+								type="DGICFE:CAEDataType" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="eRem_Exp">
+					<xs:annotation>
+						<xs:documentation>
+							Informacion Tributaria del CFE
+						</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="TmstFirma"
+								type="DGICFE:FechaHoraType">
+								<xs:annotation>
+									<xs:documentation>
+										Fecha y Hora en que se Firmo el
+										CFE AAAA-MM-DDTHH:MI:SS
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Encabezado">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion y Totales del
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="IdDoc"
+											type="DGICFE:IdDoc_Rem_Exp">
+											<xs:annotation>
+												<xs:documentation>
+													Identificacion del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Emisor"
+											type="DGICFE:Emisor">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Emisor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Receptor"
+											type="DGICFE:Receptor_Rem_Exp" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Receptor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Totales"
+											type="DGICFE:Totales_Rem_Exp">
+											<xs:annotation>
+												<xs:documentation>
+													Montos Totales del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Detalle">
+								<xs:annotation>
+									<xs:documentation>
+										Detalle del CFE
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Item"
+											type="DGICFE:Item_Rem_Exp" maxOccurs="200" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="SubTotInfo"
+								type="DGICFE:SubTotInfo" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Subtotales Informativos
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Referencia"
+								type="DGICFE:Referencia" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion de otros
+										documentos Referenciados por
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="CAEData"
+								type="DGICFE:CAEDataType" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="eResg">
+					<xs:annotation>
+						<xs:documentation>
+							Informacion Tributaria del CFE
+						</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="TmstFirma"
+								type="DGICFE:FechaHoraType">
+								<xs:annotation>
+									<xs:documentation>
+										Fecha y Hora en que se Firmo el
+										CFE AAAA-MM-DDTHH:MI:SS
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Encabezado">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion y Totales del
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="IdDoc"
+											type="DGICFE:IdDoc_Resg">
+											<xs:annotation>
+												<xs:documentation>
+													Identificacion del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Emisor"
+											type="DGICFE:Emisor">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Emisor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Receptor"
+											type="DGICFE:Receptor_Resg" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Receptor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Totales"
+											type="DGICFE:Totales_Resg">
+											<xs:annotation>
+												<xs:documentation>
+													Montos Totales del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Detalle">
+								<xs:annotation>
+									<xs:documentation>
+										Detalle del CFE
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Item"
+											type="DGICFE:Item_Resg" maxOccurs="200" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="SubTotInfo"
+								type="DGICFE:SubTotInfo" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Subtotales Informativos
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Referencia"
+								type="DGICFE:Referencia" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion de otros
+										documentos Referenciados por
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="CAEData"
+								type="DGICFE:CAEDataType" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="eBoleta">
+					<xs:annotation>
+						<xs:documentation>
+							Informacion Tributaria del CFE
+						</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="TmstFirma"
+								type="DGICFE:FechaHoraType">
+								<xs:annotation>
+									<xs:documentation>
+										Fecha y Hora en que se Firmo el
+										CFE AAAA-MM-DDTHH:MI:SS
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Encabezado">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion y Totales del
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="IdDoc" type="DGICFE:IdDoc_Boleta">
+											<xs:annotation>
+												<xs:documentation>
+													Identificacion del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Emisor"
+											type="DGICFE:Emisor">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Emisor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Receptor" type="DGICFE:Receptor_Boleta">
+											<xs:annotation>
+												<xs:documentation>
+													Datos del Receptor
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Totales"
+											type="DGICFE:Totales_Boleta">
+											<xs:annotation>
+												<xs:documentation>
+													Montos Totales del
+													CFE
+												</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Detalle">
+								<xs:annotation>
+									<xs:documentation>
+										Detalle del CFE
+									</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Item"
+											type="DGICFE:Item_Det_Boleta" maxOccurs="200" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="SubTotInfo"
+								type="DGICFE:SubTotInfo" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Subtotales Informativos
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="DscRcgGlobal"
+								type="DGICFE:DscRcgGlobal" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Descuentos y/o Recargos que
+										auemntan o disminuyen la base
+										del impuesto
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="MediosPago"
+								type="DGICFE:MediosPago" minOccurs="0" />
+							<xs:element name="Referencia"
+								type="DGICFE:Referencia" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>
+										Identificacion de otros
+										documentos Referenciados por
+										Documento
+									</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="CAEData"
+								type="DGICFE:CAEDataType" />
+						</xs:sequence>
+
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+            <xs:element ref="ds:Signature" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required" fixed="1.0">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="3"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DscRcgGlobal">
+		<xs:sequence>
+			<xs:element name="DRG_Item" minOccurs="0" maxOccurs="20">
+				<xs:annotation>
+					<xs:documentation>Descuentos y/o Recargos que aumentan o disminuyen la base del impuesto</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="NroLinDR">
+							<xs:annotation>
+								<xs:documentation>Numero Secuencial de Linea</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:positiveInteger">
+									<xs:maxInclusive value="20"/>
+									<xs:minInclusive value="1"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="TpoMovDR">
+							<xs:annotation>
+								<xs:documentation>Tipo de Movimiento</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="D">
+										<xs:annotation>
+											<xs:documentation>Descuento</xs:documentation>
+										</xs:annotation>
+									</xs:enumeration>
+									<xs:enumeration value="R">
+										<xs:annotation>
+											<xs:documentation>Recargo</xs:documentation>
+										</xs:annotation>
+									</xs:enumeration>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="TpoDR" type="DGICFE:TipoDRType">
+							<xs:annotation>
+								<xs:documentation>Tipo Descuento o Recargo</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CodDR" type="DGICFE:CodDescRecType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Código del Descuento/Recargo</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="GlosaDR">
+							<xs:annotation>
+								<xs:documentation>Descripcion del Descuento o Recargo</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:Glosa50Type">
+									<xs:maxLength value="50"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="ValorDR" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Monto del Descuento o Recargo</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="IndFactDR">
+							<xs:annotation>
+								<xs:documentation>
+									Indicador de facturación
+                                    1: Exento de IVA 2: Gravado a Tasa
+                                    Mínima 3: Gravado a Tasa Básica
+                                    4. Gravado a "Otra Tasa"/IVA sobre fictos
+                                    6: Producto o servicio no facturable
+                                    7: Producto o servicio no facturable negativo
+                                    10:	Exportación y asimiladas 11: Impuesto
+                                    percibido 12: IVA en suspenso 13: Sólo para
+                                    e-Boleta de entrada y sus notas de corrección
+                                    Ítem vendido por un no contribuyente
+                                    (valida que A-C60≠2)
+                                    14: Sólo para e-Boleta de entrada y sus notas
+                                    de corrección: Ítem vendido por un contribuyente
+                                    IVA Mínimo, Monotributo o Monotributo MIDES
+                                    (valida que A-C60=2)
+                                    15: Sólo para e-Boleta de entrada
+                                    y sus notas de corrección: Ítem vendido por
+                                    un contribuyente (valida que A-C60≠2)
+                                    16: Sólo para ítems vendidos por contribuyentes
+                                    con obligación IVA mínimo, Monotributo o
+                                    Monotributo MIDES
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction
+									base="xs:positiveInteger">									<xs:enumeration value="1"/>
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+									<xs:enumeration value="3"/>
+									<xs:enumeration value="4"/>
+									<xs:enumeration value="6"/>
+									<xs:enumeration value="7"/>
+									<xs:enumeration value="10"/>
+									<xs:enumeration value="11"/>
+									<xs:enumeration value="12"/>
+									<xs:enumeration value="13"/>
+									<xs:enumeration value="14"/>
+									<xs:enumeration value="15"/>
+									<xs:enumeration value="16"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Emisor">
+		<xs:sequence>
+			<xs:element name="RUCEmisor" type="DGICFE:RUCType">
+				<xs:annotation>
+					<xs:documentation>RUC del Emisor del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RznSoc" type="DGICFE:RznSocType">
+				<xs:annotation>
+					<xs:documentation>Nombre o Razon Social del Emisor</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="NomComercial" type="DGICFE:NomComercialType" minOccurs="0"/>
+			<xs:element name="GiroEmis" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Giro Comercial del Emisor Relevante para el CFE </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="60"/>
+						<xs:minLength value="0"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Telefono" minOccurs="0" maxOccurs="2">
+				<xs:annotation>
+					<xs:documentation>Telefono Emisor</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:FonoType">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CorreoEmisor" type="DGICFE:MailType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Correo Elect. de contacto en empresa del  emisor </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="EmiSucursal" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Sucursal que Emite el CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CdgDGISucur">
+				<xs:annotation>
+					<xs:documentation>Codigo de Sucursal Entregado por DGI</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:totalDigits value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="DomFiscal">
+				<xs:annotation>
+					<xs:documentation>Direccion de Origen (Domicilio Fiscal)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="70"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Ciudad" type="DGICFE:CiudadType">
+				<xs:annotation>
+					<xs:documentation>Ciudad de Origen</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Departamento" type="DGICFE:DeptoType">
+				<xs:annotation>
+					<xs:documentation>Departamento </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InfoAdicionalEmisor" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Otra informacion relativa al Emisor</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IdDoc_Fact">
+		<xs:sequence>
+			<xs:element name="TipoCFE">
+				<xs:annotation>
+					<xs:documentation>Tipo de CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:CFEType">
+						<xs:enumeration value="111"/>
+						<xs:enumeration value="112"/>
+						<xs:enumeration value="113"/>
+						<xs:enumeration value="141"/>
+						<xs:enumeration value="142"/>
+						<xs:enumeration value="143"/>
+						<xs:enumeration value="211"/>
+						<xs:enumeration value="212"/>
+						<xs:enumeration value="213"/>
+						<xs:enumeration value="241"/>
+						<xs:enumeration value="242"/>
+						<xs:enumeration value="243"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Serie" type="DGICFE:SerieType">
+				<xs:annotation>
+					<xs:documentation>Serie del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Nro" type="DGICFE:NroCFEType">
+				<xs:annotation>
+					<xs:documentation>Nro del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FchEmis" type="DGICFE:FechaType">
+				<xs:annotation>
+					<xs:documentation>Fecha Emision Contable del CFE (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PeriodoDesde" type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Periodo de Facturacion - Desde (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PeriodoHasta" type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Periodo Facturacion - Hasta (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntBruto" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica el uso de Montos Brutos en Detalle (IVA inc.)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:enumeration value="1">
+							<xs:annotation>
+								<xs:documentation>Monto de Lineas de Detalle  Corresponde a Valores Brutos (IVA + Impuestos Adicionales)</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="2">
+							<xs:annotation>
+								<xs:documentation>Líneas de detalle se expresan con IMEBA y adicionales incluidos</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="3">
+							<xs:annotation>
+								<xs:documentation>Líneas de detalle corresponden a ventas realizadas por contribuyentes con obligación IVA mínimo, Monotributo o Monotributo MIDES.</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+				</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FmaPago">
+				<xs:annotation>
+					<xs:documentation>Forma de Pago del CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:enumeration value="1">
+							<xs:annotation>
+								<xs:documentation>Pago Contado</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="2">
+							<xs:annotation>
+								<xs:documentation>Pago Credito</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FchVenc" type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Fecha de Vencimiento del Pago (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InfoAdicionalDoc" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Otra informacion relativa al Comprobante</xs:documentation>
+				</xs:annotation>
+            </xs:element>
+            <xs:element name="IVAalDia" type="DGICFE:IndIVAalDiaType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica que emisor NO está al día con el IVA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecProf" type="DGICFE:SecProfType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si la operación está amparada por el secreto profesional</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IndPagCta3ros" type="DGICFE:IndPagCta3rosType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si los montos facturados corresponden a un reintegro de gastos</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IndCobPropia" type="DGICFE:IndCobPropiaType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si los montos facturados corresponden a una cobranza propia o adelanto de precios. Corresponde utilizar el indicador de facturación 6 o 7.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IdDoc_Fact_Exp">
+		<xs:sequence>
+			<xs:element name="TipoCFE">
+				<xs:annotation>
+					<xs:documentation>
+						121 e-Factura Exportación 221 e-Factura
+						Exportación Contingencia 122 Nota de Crédito de
+						e-Factura Exportación 222 Nota de Crédito de
+						e-Factura Exportación Contingencia 123 Nota de
+						Débito de e-Factura Exportación 223 Nota de
+						Débito de e-Factura Exportación Contingencia
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:CFEType">
+						<xs:enumeration value="121"/>
+						<xs:enumeration value="122"/>
+						<xs:enumeration value="123"/>
+						<xs:enumeration value="221"/>
+						<xs:enumeration value="222"/>
+						<xs:enumeration value="223"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Serie" type="DGICFE:SerieType">
+				<xs:annotation>
+					<xs:documentation>Serie del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Nro" type="DGICFE:NroCFEType">
+				<xs:annotation>
+					<xs:documentation>Nro del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FchEmis" type="DGICFE:FechaType">
+				<xs:annotation>
+					<xs:documentation>
+						Fecha Emision Contable del CFE (AAAA-MM-DD)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PeriodoDesde"
+				type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Periodo de Facturacion - Desde (AAAA-MM-DD)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PeriodoHasta"
+				type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Periodo Facturacion - Hasta (AAAA-MM-DD)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntBruto" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Indica el uso de Montos Brutos en Detalle (IVA
+						inc.)
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:enumeration value="1">
+							<xs:annotation>
+								<xs:documentation>
+									Monto de Lineas de Detalle
+									Corresponde a Valores Brutos (IVA +
+									Impuestos Adicionales)
+								</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="2">
+							<xs:annotation>
+								<xs:documentation>Líneas de detalle se expresan con IMEBA y adicionales incluidos</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="3">
+							<xs:annotation>
+								<xs:documentation>Líneas de detalle corresponden a ventas realizadas por contribuyentes con obligación IVA mínimo, Monotributo o Monotributo MIDES.</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FmaPago">
+				<xs:annotation>
+					<xs:documentation>
+						Forma de Pago del CFE
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:enumeration value="1">
+							<xs:annotation>
+								<xs:documentation>
+									Pago Contado
+								</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="2">
+							<xs:annotation>
+								<xs:documentation>
+									Pago Credito
+								</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FchVenc" type="DGICFE:Fecha_d2000_Type"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Fecha de Vencimiento del Pago (AAAA-MM-DD)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ClauVenta" maxOccurs="1" minOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="3"/>
+               			<xs:pattern value="([a-z|A-Z]){1,3}"/>
+                    	<xs:pattern value="[N][\\/][A]"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="ModVenta" maxOccurs="1" minOccurs="0" type="DGICFE:ModVentaType">
+                <xs:annotation>
+                	<xs:documentation>
+                		1 - Régimen General 2 - Consignación 3 - Precio
+                		Revisable 4 - Bienes propios a exclaves
+                		aduaneros 90 - Otras transacciones
+
+Se controla programáticamente obligatoriedad para Factrura de exportación ( y no para sus notas de corrección, con obligatoriedad condicional.
+                	</xs:documentation>
+                </xs:annotation>
+			</xs:element>
+			<xs:element name="ViaTransp" maxOccurs="1" minOccurs="1" type="DGICFE:ViaTranspType">
+				<xs:annotation>
+					<xs:documentation>
+						1 - Marítimo 2 - Aéreo 3 - Terrestre 9 – Otro
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InfoAdicionalDoc" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Otra informacion relativa al Comprobante</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IVAalDia" type="DGICFE:IndIVAalDiaType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica que emisor NO está al día con el IVA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecProf" type="DGICFE:SecProfType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si la operación está amparada por el secreto profesional</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IndPagCta3ros" type="DGICFE:IndPagCta3rosType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si los montos facturados corresponden a un reintegro de gastos</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>	
+	<xs:complexType name="IdDoc_Rem">
+		<xs:sequence>
+			<xs:element name="TipoCFE">
+				<xs:annotation>
+					<xs:documentation>Tipo de CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:CFEType">
+						<xs:enumeration value="181"/>
+						<xs:enumeration value="281"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Serie" type="DGICFE:SerieType">
+				<xs:annotation>
+					<xs:documentation>Serie del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Nro" type="DGICFE:NroCFEType">
+				<xs:annotation>
+					<xs:documentation>Nro del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FchEmis" type="DGICFE:FechaType">
+				<xs:annotation>
+					<xs:documentation>
+						Fecha Emision Contable del CFE (AAAA-MM-DD)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TipoTraslado" type="DGICFE:TipoTrasladoType">
+				<xs:annotation>
+					<xs:documentation>Indica tipo de traslado de los bienes.
+                        1: Venta
+                        2: Traslados internos
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IndPropiedad" type="DGICFE:IndPropiedadType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indicador si mercadería es de terceros
+                        1: Bienes de terceros
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+            <xs:element name="TipoDocProp" type="DGICFE:DocType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo de Documento del Propietario de la mercadería transportada
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CodPaisProp" type="DGICFE:CodPaisType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Código de Pais según ISO 3166-1 alfa-2
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice maxOccurs="1" minOccurs="0">
+				<xs:element name="DocProp" type="DGICFE:NroDocType"
+					minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>
+							Nro de Doc. del Propietario
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DocPropExt" maxOccurs="1"
+					minOccurs="0">
+                    <xs:annotation>
+                    	<xs:documentation>
+                    		Corresponde al número del documento: Otros,
+                    		Pasaporte o DNI
+                    	</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+						<xs:restriction base="xs:string">
+
+							<xs:maxLength value="20"/>
+							<xs:whiteSpace value="collapse"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="RznSocProp" type="DGICFE:RznSocType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Nombre o Razon Social del Propietario
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InfoAdicionalDoc" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Otra informacion relativa al Comprobante</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecProf" type="DGICFE:SecProfType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si la operación está amparada por el secreto profesional</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IdDoc_Rem_Exp">
+		<xs:sequence>
+			<xs:element name="TipoCFE">
+				<xs:annotation>
+					<xs:documentation>Tipo de CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:CFEType">
+						<xs:enumeration value="124"/>
+						<xs:enumeration value="224"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Serie" type="DGICFE:SerieType">
+				<xs:annotation>
+					<xs:documentation>Serie del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Nro" type="DGICFE:NroCFEType">
+				<xs:annotation>
+					<xs:documentation>Nro del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FchEmis" type="DGICFE:FechaType">
+				<xs:annotation>
+					<xs:documentation>
+						Fecha Emision Contable del CFE (AAAA-MM-DD)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TipoTraslado" type="DGICFE:TipoTrasladoType">
+				<xs:annotation>
+					<xs:documentation>Indica tipo de traslado de los bienes.
+                    1: Venta
+                    2: Traslados internos
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IndPropiedad" type="DGICFE:IndPropiedadType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indicador si mercadería es de terceros
+                        1: Bienes de terceros
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+            <xs:element name="TipoDocProp" type="DGICFE:DocType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo de Documento del Propietario de la mercadería transportada
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CodPaisProp" type="DGICFE:CodPaisType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Código de Pais según ISO 3166-1 alfa-2
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice maxOccurs="1" minOccurs="0">
+				<xs:element name="DocProp" type="DGICFE:NroDocType"
+					minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>
+							Nro de Doc. del Propietario
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DocPropExt" maxOccurs="1"
+					minOccurs="0">
+                    <xs:annotation>
+                    	<xs:documentation>
+                    		Corresponde al número del documento: Otros,
+                    		Pasaporte o DNI
+                    	</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+						<xs:restriction base="xs:string">
+
+							<xs:maxLength value="20"/>
+							<xs:whiteSpace value="collapse"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="RznSocProp" type="DGICFE:RznSocType" maxOccurs="1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Nombre o Razon Social del Propietario
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ClauVenta" maxOccurs="1" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="3"/>
+               			<xs:pattern value="([a-z|A-Z]){1,3}"/>
+                    	<xs:pattern value="[N][\\/][A]"/>						
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="ModVenta" type="DGICFE:ModVentaType" maxOccurs="1" minOccurs="1"/>
+			<xs:element name="ViaTransp" type="DGICFE:ViaTranspType" maxOccurs="1" minOccurs="1"/>
+			<xs:element name="InfoAdicionalDoc" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Otra informacion relativa al Comprobante</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecProf" type="DGICFE:SecProfType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si la operación está amparada por el secreto profesional</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>	
+	<xs:complexType name="IdDoc_Resg">
+		<xs:sequence>
+			<xs:element name="TipoCFE">
+				<xs:annotation>
+					<xs:documentation>Tipo de CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:CFEType">
+						<xs:enumeration value="182"/>
+						<xs:enumeration value="282"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Serie" type="DGICFE:SerieType">
+				<xs:annotation>
+					<xs:documentation>Serie del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Nro" type="DGICFE:NroCFEType">
+				<xs:annotation>
+					<xs:documentation>Nro del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FchEmis" type="DGICFE:FechaType">
+				<xs:annotation>
+					<xs:documentation>Fecha Emision Contable del CFE (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+            <xs:element name="FchValor" type="DGICFE:FechaType"  minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Fecha Valor del CFE (AAAA-MM-DD)</xs:documentation>
+                </xs:annotation>
+            </xs:element>	
+			
+			<xs:element name="InfoAdicionalDoc" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Otra informacion relativa al Comprobante</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecProf" type="DGICFE:SecProfType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si la operación está amparada por el secreto profesional</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IdDoc_Tck">
+		<xs:sequence>
+			<xs:element name="TipoCFE">
+				<xs:annotation>
+					<xs:documentation>Tipo de CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:CFEType">
+						<xs:enumeration value="101"/>
+						<xs:enumeration value="102"/>
+						<xs:enumeration value="103"/>
+						<xs:enumeration value="131"/>
+						<xs:enumeration value="132"/>
+						<xs:enumeration value="133"/>
+						<xs:enumeration value="201"/>
+						<xs:enumeration value="202"/>
+						<xs:enumeration value="203"/>
+						<xs:enumeration value="231"/>
+						<xs:enumeration value="232"/>
+						<xs:enumeration value="233"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Serie" type="DGICFE:SerieType">
+				<xs:annotation>
+					<xs:documentation>Serie del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Nro" type="DGICFE:NroCFEType">
+				<xs:annotation>
+					<xs:documentation>Nro del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FchEmis" type="DGICFE:FechaType">
+				<xs:annotation>
+					<xs:documentation>Fecha Emision Contable del CFE (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PeriodoDesde" type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Periodo de Facturacion - Desde (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PeriodoHasta" type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Periodo Facturacion - Hasta (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntBruto" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica el uso de Montos Brutos en Detalle (IVA inc.)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:enumeration value="1">
+							<xs:annotation>
+								<xs:documentation>Monto de Lineas de Detalle  Corresponde a Valores Brutos (IVA + Impuestos Adicionales)</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="2">
+							<xs:annotation>
+								<xs:documentation>Líneas de detalle se expresan con IMEBA y adicionales incluidos</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="3">
+							<xs:annotation>
+								<xs:documentation>Líneas de detalle corresponden a ventas realizadas por contribuyentes con obligación IVA mínimo, Monotributo o Monotributo MIDES.</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FmaPago">
+				<xs:annotation>
+					<xs:documentation>Forma de Pago del CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:enumeration value="1">
+							<xs:annotation>
+								<xs:documentation>Pago Contado</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="2">
+							<xs:annotation>
+								<xs:documentation>Pago Credito</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FchVenc" type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Fecha de Vencimiento del Pago (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InfoAdicionalDoc" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Otra informacion relativa al Comprobante</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IVAalDia" type="DGICFE:IndIVAalDiaType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica que emisor NO está al día con el IVA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecProf" type="DGICFE:SecProfType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si la operación está amparada por el secreto profesional</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IndPagCta3ros" type="DGICFE:IndPagCta3rosType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si los montos facturados corresponden a un reintegro de gastos</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IndCobPropia" type="DGICFE:IndCobPropiaType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica si los montos facturados corresponden a una cobranza propia o adelanto de precios. Corresponde utilizar el indicador de facturación 6 o 7.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IdDoc_CompFisc">
+		<xs:sequence>
+			<xs:element name="TipoCFE" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Tipo de CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:CFEType">
+						<xs:enumeration value="131"/>
+						<xs:enumeration value="132"/>
+						<xs:enumeration value="133"/>
+						<xs:enumeration value="141"/>
+						<xs:enumeration value="142"/>
+						<xs:enumeration value="143"/>
+						<xs:enumeration value="231"/>
+						<xs:enumeration value="232"/>
+						<xs:enumeration value="233"/>
+						<xs:enumeration value="241"/>
+						<xs:enumeration value="242"/>
+						<xs:enumeration value="243"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Serie" type="DGICFE:SerieType" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Serie del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Nro" type="DGICFE:NroCFEType" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Nro del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+    <xs:complexType name="IdDoc_Boleta">
+		<xs:sequence>
+			<xs:element name="TipoCFE">
+				<xs:annotation>
+					<xs:documentation>Tipo de CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:CFEType">
+						<xs:enumeration value="151"/>
+						<xs:enumeration value="152"/>
+						<xs:enumeration value="153"/>
+						<xs:enumeration value="251"/>
+						<xs:enumeration value="252"/>
+						<xs:enumeration value="253"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Serie" type="DGICFE:SerieType">
+				<xs:annotation>
+					<xs:documentation>Serie del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Nro" type="DGICFE:NroCFEType">
+				<xs:annotation>
+					<xs:documentation>Nro del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FchEmis" type="DGICFE:FechaType">
+				<xs:annotation>
+					<xs:documentation>Fecha Emision Contable del CFE (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PeriodoDesde" type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Periodo de Facturacion - Desde (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PeriodoHasta" type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Periodo Facturacion - Hasta (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntBruto" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indica el uso de Montos Brutos en Detalle (IVA inc.)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:enumeration value="1">
+							<xs:annotation>
+								<xs:documentation>Monto de Lineas de Detalle  Corresponde a Valores Brutos (IVA + Impuestos Adicionales)</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="2">
+							<xs:annotation>
+								<xs:documentation>Líneas de detalle se expresan con IMEBA y adicionales incluidos</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="3">
+							<xs:annotation>
+								<xs:documentation>Líneas de detalle corresponden a ventas realizadas por contribuyentes con obligación IVA mínimo, Monotributo o Monotributo MIDES.</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FmaPago">
+				<xs:annotation>
+					<xs:documentation>Forma de Pago del CFE</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:enumeration value="1">
+							<xs:annotation>
+								<xs:documentation>Pago Contado</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+						<xs:enumeration value="2">
+							<xs:annotation>
+								<xs:documentation>Pago Credito</xs:documentation>
+							</xs:annotation>
+						</xs:enumeration>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="FchVenc" type="DGICFE:Fecha_d2000_Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Fecha de Vencimiento del Pago (AAAA-MM-DD)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InfoAdicionalDoc" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Otra informacion relativa al Comprobante</xs:documentation>
+				</xs:annotation>
+            </xs:element>
+			
+            <xs:element name="IndCompraMEReventa" type="DGICFE:IndCompraMEReventaType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Indica que la compra de M/E es para su reventa, por ejemplo Bancos, casas de cambio</xs:documentation>
+                </xs:annotation>
+            </xs:element>			
+			
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="Item_Det_Fact_Exp">
+		<xs:sequence>
+			<xs:element name="NroLinDet">
+				<xs:annotation>
+					<xs:documentation>Numero Secuencial de Linea</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CodItem" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Codificacion del Item</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TpoCod">
+							<xs:annotation>
+								<xs:documentation>Tipo de Codificacion</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="10"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Cod">
+							<xs:annotation>
+								<xs:documentation>Codigo de Item, para la Codificacion TpoCod</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="35"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="IndFact">
+				<xs:annotation>
+					<xs:documentation>
+						Indicador de Facturación (Item_Det_Fact_Exp)
+                        5: Entrega Gratuita. Por ejemplo docenas de trece
+                        6: Producto o servicio no facturable
+                        7: Producto o servicio no facturable negativo
+                        10: Exportación y asimiladas
+					</xs:documentation>
+				</xs:annotation>				<xs:simpleType>					<xs:restriction base="xs:positiveInteger">
+						<xs:totalDigits value="2"/>
+						<xs:fractionDigits value="0"/>
+						<xs:enumeration value="5"/>
+						<xs:enumeration value="6"/>
+						<xs:enumeration value="7"/>
+						<xs:enumeration value="10"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="NomItem">
+				<xs:annotation>
+					<xs:documentation>Nombre del Item</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="80"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="DscItem" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Descripcion adicional del Item</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1000"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Cantidad" type="DGICFE:Cant_admite_negType">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad del ítem. Se admite negativo sólo para
+						eliminar un ítem del propio CFE.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="UniMed">
+				<xs:annotation>
+					<xs:documentation>Unidad de Medida </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="PrecioUnitario" type="DGICFE:PrecioUnitarioType" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Precio Unitario </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DescuentoPct" type="DGICFE:PctType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Porcentaje de Descuento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DescuentoMonto" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Totaliza los descuentos otorgados al item</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubDescuento" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Distribucion del Descuento</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DescTipo">
+							<xs:annotation>
+								<xs:documentation>Indica si esta en 1 = $ o 2 = %</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:TipoDRType">
+									<xs:totalDigits value="1"/>
+									<xs:fractionDigits value="0"/>
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="DescVal" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor subdescuento por item</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="RecargoPct" type="DGICFE:PctType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Recargo en % al item</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RecargoMnt" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Totaliza los recargos otorgados al item</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubRecargo" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Tabla de Distribución del Recargo</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="RecargoTipo">
+							<xs:annotation>
+								<xs:documentation>Indica si esta en 1 = $ o 2 = %</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:TipoDRType">
+									<xs:totalDigits value="1"/>
+									<xs:fractionDigits value="0"/>
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RecargoVal" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor subdescuento por item</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="MontoItem" type="DGICFE:Monto_admite_negType">
+				<xs:annotation>
+					<xs:documentation>Monto por Linea de Detalle. Corresponde al Monto Neto, a menos que MntBruto Indique lo Contrario </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Item_Det_Fact">
+		<xs:sequence>
+			<xs:element name="NroLinDet">
+				<xs:annotation>
+					<xs:documentation>Numero Secuencial de Linea</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CodItem" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Codificacion del Item</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TpoCod">
+							<xs:annotation>
+								<xs:documentation>Tipo de Codificacion</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="10"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Cod">
+							<xs:annotation>
+								<xs:documentation>Codigo de Item, para la Codificacion TpoCod</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="35"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="IndFact">
+				<xs:annotation>
+					<xs:documentation>
+						Indicador de Facturación (Item_Det_Fact):
+                        1: Exento de IVA 2:	Gravado a Tasa Mínima
+                        3: Gravado a Tasa Básica 4. Gravado a "Otra Tasa"/IVA
+                        sobre fictos 5: Entrega Gratuita. Por ejemplo docenas
+                        de trece 6: Producto o servicio	no facturable
+                        7: Producto o servicio no facturable negativo
+                        10: Exportación y asimiladas 11: Impuesto percibido
+                        12: IVA en suspenso 16: Sólo para ítems vendidos
+                        por contribuyentes con obligación IVA mínimo,
+                        Monotributo o Monotributo MIDES
+					</xs:documentation>
+				</xs:annotation>
+
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:totalDigits value="2"/>
+						<xs:fractionDigits value="0"/>
+						<xs:enumeration value="1"/>
+						<xs:enumeration value="2"/>
+						<xs:enumeration value="3"/>
+						<xs:enumeration value="4"/>
+						<xs:enumeration value="5"/>
+						<xs:enumeration value="6"/>
+						<xs:enumeration value="7"/>
+						<xs:enumeration value="10"/>
+						<xs:enumeration value="11"/>
+						<xs:enumeration value="12"/>
+						<xs:enumeration value="16"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="IndAgenteResp" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indicador Agente Retenedor</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1"/>
+						<xs:enumeration value="R"/>
+						<xs:enumeration value="A"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="NomItem">
+				<xs:annotation>
+					<xs:documentation>Nombre del Item</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="80"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="DscItem" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Descripcion adicional del Item</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1000"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Cantidad" type="DGICFE:Cant_admite_negType">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad del ítem. Se admite negativo sólo para
+						eliminar un ítem del propio CFE.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="UniMed">
+				<xs:annotation>
+					<xs:documentation>Unidad de Medida </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="PrecioUnitario" type="DGICFE:PrecioUnitarioType" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Precio Unitario </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DescuentoPct" type="DGICFE:PctType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Porcentaje de Descuento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DescuentoMonto" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Totaliza los descuentos otorgados al item</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubDescuento" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Distribucion del Descuento</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DescTipo">
+							<xs:annotation>
+								<xs:documentation>Indica si esta en 1 = $ o 2 = %</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:TipoDRType">
+									<xs:totalDigits value="1"/>
+									<xs:fractionDigits value="0"/>
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="DescVal" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor subdescuento por item</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="RecargoPct" type="DGICFE:PctType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Recargo en % al item</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RecargoMnt" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Totaliza los recargos otorgados al item</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubRecargo" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Tabla de Distribución del Recargo</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="RecargoTipo">
+							<xs:annotation>
+								<xs:documentation>Indica si esta en 1 = $ o 2 = %</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:TipoDRType">
+									<xs:totalDigits value="1"/>
+									<xs:fractionDigits value="0"/>
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RecargoVal" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor subdescuento por item</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="RetencPercep" type="DGICFE:RetPerc" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Codigo de Retencion / Percepcion</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MontoItem" type="DGICFE:Monto_admite_negType">
+				<xs:annotation>
+					<xs:documentation>Monto por Linea de Detalle. Corresponde al Monto Neto, a menos que MntBruto Indique lo Contrario </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>	
+	<xs:complexType name="Item_Rem_Exp">
+		<xs:sequence>
+			<xs:element name="NroLinDet">
+				<xs:annotation>
+					<xs:documentation>
+						Numero Secuencial de Linea
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CodItem" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>
+						Codificacion del Item
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TpoCod">
+							<xs:annotation>
+								<xs:documentation>
+									Tipo de Codificacion
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="10"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Cod">
+							<xs:annotation>
+								<xs:documentation>
+									Codigo de Item, para la Codificacion
+									TpoCod
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="35"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="IndFact" maxOccurs="1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Indicador de Facturación (Item_Rem_Exp):
+                        5: Entrega gratuita: Por ejemplo docenas de trece
+                        8: Solo para remitos: Ítem a rebajar en remitos.
+                        En área de referencia se debe indicar el N° de
+                        remito que ajusta
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:totalDigits value="2"/>
+						<xs:fractionDigits value="0"/>
+						<xs:enumeration value="5"/>
+						<xs:enumeration value="8"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="NomItem">
+				<xs:annotation>
+					<xs:documentation>Nombre del Item</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="80"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="DscItem" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Descripcion adicional del Item
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1000"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Cantidad"
+				type="DGICFE:Cant_admite_negType">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad del ítem. Se admite negativo sólo para
+						eliminar un ítem del propio CFE.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="UniMed">
+				<xs:annotation>
+					<xs:documentation>
+						Unidad de Medida
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="PrecioUnitario"
+				type="DGICFE:PrecioUnitarioType" maxOccurs="1" minOccurs="1">
+			</xs:element>
+			<xs:element name="MontoItem" type="DGICFE:Monto_admite_negType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Item_Rem">
+		<xs:sequence>
+			<xs:element name="NroLinDet">
+				<xs:annotation>
+					<xs:documentation>Numero Secuencial de Linea</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CodItem" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Codificacion del Item</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TpoCod">
+							<xs:annotation>
+								<xs:documentation>Tipo de Codificacion</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="10"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Cod">
+							<xs:annotation>
+								<xs:documentation>Codigo de Item, para la Codificacion TpoCod</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="35"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="IndFact" maxOccurs="1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Indicador de Facturación (Item_Rem):
+                        8: Solo para remitos: Ítem a rebajar en remitos.
+                        En área de referencia se debe indicar el N° de
+                        remito que ajusta
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:totalDigits value="2"/>
+						<xs:fractionDigits value="0"/>
+						<xs:enumeration value="8"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="NomItem">
+				<xs:annotation>
+					<xs:documentation>Nombre del Item</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="80"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="DscItem" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Descripcion adicional del Item</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1000"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Cantidad" type="DGICFE:Cant_admite_negType">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad del ítem. Se admite negativo sólo para
+						eliminar un ítem del propio CFE.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="UniMed">
+				<xs:annotation>
+					<xs:documentation>Unidad de Medida </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>	
+	<xs:complexType name="Item_Resg">
+		<xs:sequence>
+			<xs:element name="NroLinDet">
+				<xs:annotation>
+					<xs:documentation>
+						Numero Secuencial de Linea
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+            <xs:element name="IndFact" maxOccurs="1" minOccurs="0">
+                <xs:annotation>
+                	<xs:documentation>
+                		Indicador de Facturación (Item_Resg):
+                        9: Solo para resguardos: Ítem a ajustar en resguardos.
+                		En área de referencia se debe indicar el N° de
+                		remito que ajusta
+                	</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+            		<xs:restriction base="xs:positiveInteger">
+						<xs:totalDigits value="2"/>
+						<xs:fractionDigits value="0"/>
+            			<xs:enumeration value="9"/>
+            		</xs:restriction>
+            	</xs:simpleType></xs:element>
+            <xs:element name="RetencPercep" type="DGICFE:RetPerc_Resg" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>
+						Codigo de Retencion / Percepcion
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Item_Det_Boleta">
+		<xs:sequence>
+			<xs:element name="NroLinDet">
+				<xs:annotation>
+					<xs:documentation>Numero Secuencial de Linea</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CodItem" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Codificacion del Item</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TpoCod">
+							<xs:annotation>
+								<xs:documentation>Tipo de Codificacion</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="10"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Cod">
+							<xs:annotation>
+								<xs:documentation>Codigo de Item, para la Codificacion TpoCod</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="35"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="IndFact">
+				<xs:annotation>
+					<xs:documentation>
+						Indicador de Facturación (Item_Det_Boleta):
+                        5: Entrega Gratuita. Por ejemplo docenas de trece
+                        6: Producto o servicio no facturable
+                        7: Producto o servicio no facturable negativo
+                        12: IVA en suspenso 13: Sólo para e-Boleta de entrada
+                        y sus notas de corrección: Ítem vendido por un
+                        no contribuyente (valida que A-C60≠2)
+                        14: Sólo para e-Boleta de entrada y sus notas
+                        de corrección: Ítem vendido por un contribuyente
+                        IVA Mínimo, Monotributo o Monotributo MIDES
+                        (valida que A-C60=2)
+                        15: Sólo para e-Boleta de entrada y sus
+                        notas de corrección: Ítem vendido por un
+                        contribuyente (valida que A-C60≠2)
+					</xs:documentation>
+				</xs:annotation>
+
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:totalDigits value="2"/>
+						<xs:fractionDigits value="0"/>
+						<xs:enumeration value="5"/>
+                        <xs:enumeration value="6"/>
+						<xs:enumeration value="7"/>
+                        <xs:enumeration value="12"/>
+                        <xs:enumeration value="13"/>
+						<xs:enumeration value="14"/>
+						<xs:enumeration value="15"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="IndAgenteResp" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indicador Agente Retenedor</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1"/>
+						<xs:enumeration value="R"/>
+						<xs:enumeration value="A"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="NomItem">
+				<xs:annotation>
+					<xs:documentation>Nombre del Item</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="80"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="DscItem" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Descripcion adicional del Item</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1000"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Cantidad" type="DGICFE:Cant_admite_negType">
+				<xs:annotation>
+					<xs:documentation>
+						Cantidad del ítem. Se admite negativo sólo para
+						eliminar un ítem del propio CFE.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="UniMed">
+				<xs:annotation>
+					<xs:documentation>Unidad de Medida </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="PrecioUnitario" type="DGICFE:PrecioUnitarioType" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Precio Unitario </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DescuentoPct" type="DGICFE:PctType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Porcentaje de Descuento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DescuentoMonto" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Totaliza los descuentos otorgados al item</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubDescuento" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Distribucion del Descuento</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DescTipo">
+							<xs:annotation>
+								<xs:documentation>Indica si esta en 1 = $ o 2 = %</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:TipoDRType">
+									<xs:totalDigits value="1"/>
+									<xs:fractionDigits value="0"/>
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="DescVal" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor subdescuento por item</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="RecargoPct" type="DGICFE:PctType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Recargo en % al item</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RecargoMnt" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Totaliza los recargos otorgados al item</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubRecargo" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Tabla de Distribución del Recargo</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="RecargoTipo">
+							<xs:annotation>
+								<xs:documentation>Indica si esta en 1 = $ o 2 = %</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:TipoDRType">
+									<xs:totalDigits value="1"/>
+									<xs:fractionDigits value="0"/>
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="RecargoVal" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor subdescuento por item</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="RetencPercep" type="DGICFE:RetPerc" minOccurs="0" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation>Codigo de Retencion / Percepcion</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MontoItem" type="DGICFE:Monto_admite_negType">
+				<xs:annotation>
+					<xs:documentation>Monto por Linea de Detalle. Corresponde al Monto Neto, a menos que MntBruto Indique lo Contrario </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MediosPago">
+		<xs:sequence>
+			<xs:element name="MedioPago" minOccurs="0" maxOccurs="40">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="NroLinMP">
+							<xs:annotation>
+								<xs:documentation>N° Línea o N° Secuencial</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:LineasMP">
+									<xs:minInclusive value="1"/>
+									<xs:maxInclusive value="40"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="CodMP" type="DGICFE:MedioPagoType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Código del Medio de Pago</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="GlosaMP" type="DGICFE:Glosa50Type">
+							<xs:annotation>
+								<xs:documentation>Identificación detallada del medio de pago.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="OrdenMP" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Ubicación para la impresión</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="2"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="ValorPago" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor del Medio de Pago</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Receptor_Fact">
+		<xs:sequence>
+			<xs:element name="TipoDocRecep" type="DGICFE:DocType" fixed="2" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo de Documento del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CodPaisRecep" type="DGICFE:CodPaisType"
+				fixed="UY" />
+			<xs:element name="DocRecep" type="DGICFE:NroDocType">
+				<xs:annotation>
+					<xs:documentation>
+						Nro de Doc. del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RznSocRecep" type="DGICFE:RznSocType">
+				<xs:annotation>
+					<xs:documentation>
+						Nombre o Razon Social del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DirRecep" type="DGICFE:DireccionType">
+				<xs:annotation>
+					<xs:documentation>
+						Domicilio del Receptor
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CiudadRecep" type="DGICFE:CiudadType">
+				<xs:annotation>
+					<xs:documentation>Ciudad</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeptoRecep" type="DGICFE:DeptoType"
+				minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Departamento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PaisRecep" type="DGICFE:PaisDscType" maxOccurs="1" minOccurs="0"/>
+			<xs:element name="CP" minOccurs="0"
+				type="DGICFE:CodPostalType">
+				<xs:annotation>
+					<xs:documentation>Codigo Postal</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="InfoAdicional" maxOccurs="1"
+				minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="150"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+            <xs:element name="LugarDestEnt" maxOccurs="1" minOccurs="0">				<xs:simpleType>					<xs:restriction base="xs:string">						<xs:maxLength value="100"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+            <xs:element name="CompraID" maxOccurs="1" minOccurs="0" type="DGICFE:CompraIDType">
+			</xs:element>					</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Receptor_Fact_Exp">
+		<xs:sequence>
+			<xs:element name="TipoDocRecep" type="DGICFE:DocType" maxOccurs="1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo de Documento del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CodPaisRecep" type="DGICFE:CodPaisType"
+				maxOccurs="1" minOccurs="0"/>
+			<xs:choice maxOccurs="1" minOccurs="0">
+				<xs:element name="DocRecep" type="DGICFE:NroDocType"
+					minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>
+							Nro de Doc. del Receptor
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DocRecepExt" maxOccurs="1"
+					minOccurs="0">
+                    <xs:annotation>
+                    	<xs:documentation>
+                    		Corresponde al número del documento: Otros,
+                    		Pasaporte o DNI
+                    	</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+						<xs:restriction base="xs:string">
+
+							<xs:maxLength value="20"/>
+							<xs:whiteSpace value="collapse"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="RznSocRecep" type="DGICFE:RznSocType" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Nombre o Razon Social del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DirRecep" type="DGICFE:DireccionType">
+				<xs:annotation>
+					<xs:documentation>
+						Domicilio del Receptor
+					</xs:documentation>
+				</xs:annotation>
+
+			</xs:element>
+			<xs:element name="CiudadRecep" type="DGICFE:CiudadType">
+				<xs:annotation>
+					<xs:documentation>Ciudad</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeptoRecep" type="DGICFE:DeptoType"
+				minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Departamento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PaisRecep" type="DGICFE:PaisDscType" maxOccurs="1" minOccurs="1"/>
+			<xs:element name="CP" minOccurs="0"
+				type="DGICFE:CodPostalType">
+				<xs:annotation>
+					<xs:documentation>Codigo Postal</xs:documentation>
+				</xs:annotation>
+
+			</xs:element>
+			<xs:element name="InfoAdicional" maxOccurs="1"
+				minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="150"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+            <xs:element name="LugarDestEnt" maxOccurs="1" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="100"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+            <xs:element name="CompraID" maxOccurs="1" minOccurs="0" type="DGICFE:CompraIDType">
+			</xs:element>
+					</xs:sequence>
+	</xs:complexType>	
+	<xs:complexType name="Receptor_Rem">
+		<xs:sequence>
+			<xs:element name="TipoDocRecep" type="DGICFE:DocType"  maxOccurs="1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo de Documento del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CodPaisRecep" type="DGICFE:CodPaisType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Código de Pais según ISO 3166-1 alfa-2
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice maxOccurs="1" minOccurs="0">
+				<xs:element name="DocRecep" type="DGICFE:NroDocType"
+					minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>
+							Nro de Doc. del Receptor
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DocRecepExt" maxOccurs="1"
+					minOccurs="0">
+                    <xs:annotation>
+                    	<xs:documentation>
+                    		Corresponde al número del documento: Otros,
+                    		Pasaporte o DNI
+                    	</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+						<xs:restriction base="xs:string">
+
+							<xs:maxLength value="20"/>
+							<xs:whiteSpace value="collapse"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="RznSocRecep" type="DGICFE:RznSocType">
+				<xs:annotation>
+					<xs:documentation>
+						Nombre o Razon Social del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DirRecep" type="DGICFE:DireccionType">
+				<xs:annotation>
+					<xs:documentation>
+						Domicilio del Receptor
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CiudadRecep" type="DGICFE:CiudadType">
+				<xs:annotation>
+					<xs:documentation>Ciudad</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeptoRecep" type="DGICFE:DeptoType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Departamento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+            <xs:element name="PaisRecep" type="DGICFE:PaisDscType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="CP" minOccurs="0"
+				type="DGICFE:CodPostalType">
+				<xs:annotation>
+					<xs:documentation>Codigo Postal</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="InfoAdicional" maxOccurs="1"
+				minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="150"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="LugarDestEnt" maxOccurs="1"
+				minOccurs="0">				<xs:simpleType>					<xs:restriction base="xs:string">						<xs:maxLength value="100"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CompraID" maxOccurs="1" minOccurs="0" type="DGICFE:CompraIDType">
+			</xs:element>					</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Receptor_Rem_Exp">
+		<xs:sequence>
+			<xs:element name="TipoDocRecep" type="DGICFE:DocType"  maxOccurs="1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo de Documento del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CodPaisRecep" type="DGICFE:CodPaisType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Código de Pais según ISO 3166-1 alfa-2
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice maxOccurs="1" minOccurs="0">
+				<xs:element name="DocRecep" type="DGICFE:NroDocType"
+					minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>
+							Nro de Doc. del Receptor
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DocRecepExt" maxOccurs="1"
+					minOccurs="0">
+                    <xs:annotation>
+                    	<xs:documentation>
+                    		Corresponde al número del documento: Otros,
+                    		Pasaporte o DNI
+                    	</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+						<xs:restriction base="xs:string">
+
+							<xs:maxLength value="20"/>
+							<xs:whiteSpace value="collapse"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="RznSocRecep" type="DGICFE:RznSocType">
+				<xs:annotation>
+					<xs:documentation>
+						Nombre o Razon Social del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DirRecep" type="DGICFE:DireccionType">
+				<xs:annotation>
+					<xs:documentation>
+						Domicilio del Receptor
+					</xs:documentation>
+				</xs:annotation>
+
+			</xs:element>
+			<xs:element name="CiudadRecep" type="DGICFE:CiudadType">
+				<xs:annotation>
+					<xs:documentation>Ciudad</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeptoRecep" type="DGICFE:DeptoType"
+				minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Departamento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+            <xs:element name="PaisRecep" type="DGICFE:PaisDscType" maxOccurs="1" minOccurs="1"/>
+            <xs:element name="CP" minOccurs="0"
+				type="DGICFE:CodPostalType">
+				<xs:annotation>
+					<xs:documentation>Codigo Postal</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InfoAdicional" maxOccurs="1"
+				minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="150"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="LugarDestEnt" maxOccurs="1"
+				minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="100"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CompraID" maxOccurs="1" minOccurs="0" type="DGICFE:CompraIDType">
+			</xs:element>
+					</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Receptor_Resg">
+		<xs:sequence>
+			<xs:element name="TipoDocRecep" type="DGICFE:DocType" maxOccurs="1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo de Documento del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CodPaisRecep" type="DGICFE:CodPaisType" maxOccurs="1" minOccurs="0"/>
+			<xs:choice maxOccurs="1" minOccurs="0">
+				<xs:element name="DocRecep" type="DGICFE:NroDocType"
+					minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>
+							Nro de Doc. del Receptor
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DocRecepExt" maxOccurs="1"
+					minOccurs="0">
+                    <xs:annotation>
+                    	<xs:documentation>
+                    		Corresponde al número del documento: Otros,
+                    		Pasaporte o DNI
+                    	</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+						<xs:restriction base="xs:string">
+
+							<xs:maxLength value="20"/>
+							<xs:whiteSpace value="collapse"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="RznSocRecep" type="DGICFE:RznSocType" maxOccurs="1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Nombre o Razon Social del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DirRecep" minOccurs="0"
+				type="DGICFE:DireccionType">
+				<xs:annotation>
+					<xs:documentation>
+						Domicilio del Receptor
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CiudadRecep" type="DGICFE:CiudadType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Ciudad</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeptoRecep" type="DGICFE:DeptoType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Departamento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+            <xs:element name="PaisRecep" type="DGICFE:PaisDscType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="CP" minOccurs="0"
+				type="DGICFE:CodPostalType">
+				<xs:annotation>
+					<xs:documentation>Codigo Postal</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="InfoAdicional" maxOccurs="1"
+				minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="150"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>					</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Receptor_Tck">
+		<xs:sequence>
+			<xs:element name="TipoDocRecep" type="DGICFE:DocType"  maxOccurs="1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo de Documento del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CodPaisRecep" type="DGICFE:CodPaisType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Código de Pais según ISO 3166-1 alfa-2
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>			<xs:choice maxOccurs="1" minOccurs="0">
+				<xs:element name="DocRecep" type="DGICFE:NroDocType"
+					minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>
+							Nro de Doc. del Receptor
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DocRecepExt" maxOccurs="1"
+					minOccurs="0">
+                    <xs:annotation>
+                    	<xs:documentation>
+                    		Corresponde al número del documento: Otros,
+                    		Pasaporte o DNI
+                    	</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+						<xs:restriction base="xs:string">
+
+							<xs:maxLength value="20"/>
+							<xs:whiteSpace value="collapse"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="RznSocRecep" type="DGICFE:RznSocType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Nombre o Razon Social del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DirRecep" minOccurs="0"
+				type="DGICFE:DireccionType">
+				<xs:annotation>
+					<xs:documentation>
+						Domicilio del Receptor
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CiudadRecep" type="DGICFE:CiudadType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Ciudad</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeptoRecep" type="DGICFE:DeptoType"
+				minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Departamento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PaisRecep" type="DGICFE:PaisDscType"
+				maxOccurs="1" minOccurs="0">
+			</xs:element>
+			<xs:element name="CP" minOccurs="0"
+				type="DGICFE:CodPostalType">
+				<xs:annotation>
+					<xs:documentation>Codigo Postal</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="InfoAdicional" maxOccurs="1"
+				minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="150"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+            <xs:element name="LugarDestEnt" maxOccurs="1" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="100"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+            <xs:element name="CompraID" maxOccurs="1" minOccurs="0" type="DGICFE:CompraIDType">
+            </xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Receptor_Boleta">
+		<xs:sequence>
+			<xs:element name="TipoDocRecep" maxOccurs="1" minOccurs="1" type="DGICFE:DocType">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo de Documento del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CodPaisRecep" maxOccurs="1" minOccurs="1" type="DGICFE:CodPaisType"/>
+            <xs:choice maxOccurs="1" minOccurs="0">
+				<xs:element name="DocRecep" type="DGICFE:NroDocType"
+					minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>
+							Nro de Doc. del Receptor
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DocRecepExt" maxOccurs="1"
+					minOccurs="0">
+                    <xs:annotation>
+                    	<xs:documentation>
+                    		Corresponde al número del documento: Otros,
+                    		Pasaporte o DNI
+                    	</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:maxLength value="20"/>
+							<xs:whiteSpace value="collapse"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="RznSocRecep" maxOccurs="1" minOccurs="1" type="DGICFE:RznSocType">
+				<xs:annotation>
+					<xs:documentation>
+						Nombre o Razon Social del Receptor
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DirRecep" maxOccurs="1" minOccurs="1" type="DGICFE:DireccionType">
+				<xs:annotation>
+					<xs:documentation>
+						Domicilio del Receptor
+					</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="CiudadRecep" maxOccurs="1" minOccurs="1" type="DGICFE:CiudadType">
+				<xs:annotation>
+					<xs:documentation>Ciudad</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeptoRecep" minOccurs="0" type="DGICFE:DeptoType">
+				<xs:annotation>
+					<xs:documentation>Departamento</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PaisRecep" minOccurs="0" type="DGICFE:PaisDscType"/>
+			<xs:element name="CP" minOccurs="0" type="DGICFE:CodPostalType">
+				<xs:annotation>
+					<xs:documentation>Codigo Postal</xs:documentation>
+				</xs:annotation>			</xs:element>
+			<xs:element name="InfoAdicional" maxOccurs="1" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="150"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+            <xs:element name="LugarDestEnt" maxOccurs="1" minOccurs="0">
+                <xs:simpleType>
+                     <xs:restriction base="xs:string">
+                     		<xs:maxLength value="100"/>
+                     </xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+            <xs:element name="CompraID" maxOccurs="1" minOccurs="0" type="DGICFE:CompraIDType">
+			</xs:element>
+        </xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Referencia">
+		<xs:sequence>
+			<xs:element name="Referencia" minOccurs="0" maxOccurs="40">
+				<xs:annotation>
+					<xs:documentation>Identificacion de otros documentos Referenciados por Documento</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="NroLinRef">
+							<xs:annotation>
+								<xs:documentation>Numero Secuencial de Linea de Referencia</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:LineasInfoRef">
+									<xs:maxInclusive value="40"/>
+									<xs:minInclusive value="1"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="IndGlobal" fixed="1" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Indica que se esta Referenciando un Conjunto de Documentos</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:nonNegativeInteger">
+									<xs:totalDigits value="1"/>
+									<xs:enumeration value="1">
+										<xs:annotation>
+											<xs:documentation>El Documento hace Referencia a un Conjunto de Documentos Tributarios del Mismo Tipo</xs:documentation>
+										</xs:annotation>
+									</xs:enumeration>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="TpoDocRef" type="DGICFE:CFEType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Tipo de Documento de Referencia ( CFE o CFC)</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="Serie" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Serie asignada al CFE</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="2"/>								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="NroCFERef" type="DGICFE:NroCFEType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Nro del CFE de Referencia</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="RazonRef" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Razon Explicita por la que se Referencia el Documento</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="90"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="FechaCFEref" type="DGICFE:FechaType" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>	
+	<xs:complexType name="RetPerc">
+		<xs:sequence>
+			<xs:element name="CodRet" type="DGICFE:CodRetType">
+				<xs:annotation>
+					<xs:documentation>Tipo de Impuesto o Retencion Adicional</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Tasa" minOccurs="0" type="DGICFE:PctType">
+				<xs:annotation>
+					<xs:documentation>Tasa vigente a la fecha del comprobante</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntSujetoaRet" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto sujeto a retención/percepción</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InfoAdicionalRet" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Información adicional relativa a retención/percepción7crédito</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ValRetPerc" type="DGICFE:MontoType">
+				<xs:annotation>
+					<xs:documentation>Valor de la retención/ percepción</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RetPerc_Resg">
+		<xs:sequence>
+			<xs:element name="CodRet" type="DGICFE:CodRetType">
+				<xs:annotation>
+					<xs:documentation>Tipo de Impuesto o Retencion Adicional</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Tasa" minOccurs="0" type="DGICFE:PctType">
+				<xs:annotation>
+					<xs:documentation>Tasa vigente a la fecha del comprobante</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntSujetoaRet" type="DGICFE:MontoType">
+				<xs:annotation>
+					<xs:documentation>Monto sujeto a retención/percepción</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InfoAdicionalRet" type="DGICFE:InfoAdicionalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Información adicional relativa a retención/percepción7crédito</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ValRetPerc" type="DGICFE:MontoType">
+				<xs:annotation>
+					<xs:documentation>Valor de la retención/ percepción</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SubTotInfo">
+		<xs:sequence>
+			<xs:element name="STI_Item" minOccurs="0" maxOccurs="20">
+				<xs:annotation>
+					<xs:documentation>Subtotales Informativos</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="NroSTI">
+							<xs:annotation>
+								<xs:documentation>Número de Subtotal </xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:positiveInteger">
+									<xs:minInclusive value="1"/>
+									<xs:maxInclusive value="20"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="GlosaSTI">
+							<xs:annotation>
+								<xs:documentation>Titulo del Subtotal</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="DGICFE:Glosa40Type">
+									<xs:maxLength value="40"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="OrdenSTI" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Ubicación para Impresión </xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:positiveInteger">
+									<xs:maxInclusive value="99"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="ValSubtotSTI" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor de la línea de subtotal</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Totales">
+		<xs:sequence>
+			<xs:element name="TpoMoneda" type="DGICFE:TipMonType">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo Moneda: ISO 4217 + ( UYI - Unidad Indexada
+						uruguaya, UYR - Unidad Indexada uruguaya)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TpoCambio" type="DGICFE:TipCambioType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Tipo de Cambio </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntNoGrv" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto No Gravado, menos desc. glb. mas recargos glv (de items no gravados)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntExpoyAsim" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Tot.Mnt exportacion y asimilados menos desc. glb. mas rec. glb. (correspondientes a esos items)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntImpuestoPerc" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Total Mnt. Imp. Percibido </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntIVaenSusp" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto IVA en Suspenso</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntNetoIvaTasaMin" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto Neto IVA Tasa Minima: Suma items grv a tasa min. menos desc. glb. mas rec. glb. (a esos items). Si indic. montos brutos = 1 entonces dividir por (1 + tasa min. vig.)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntNetoIVATasaBasica" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto Neto IVA Tasa Basica: Suma items grv a tasa basica menos desc. glb. mas rec. glb. (a esos items). Si indic. montos brutos = 1 entonces dividir por (1 + tasa basica vig.)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntNetoIVAOtra" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto Neto IVA Otra Tasa / Monto Neto IVA sobre Fictos:
+                    Importe neto del concepto en el CFE / Importe neto total de la operación cuando el IVA es sobre un ficto (x ej.: vta.autos usados, 5deOro, etc.).
+                    El IVA correspondiente está en el campo MntIVAOtra</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IVATasaMin" type="DGICFE:TasaIVAType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Tasa Minima Vigente</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IVATasaBasica" type="DGICFE:TasaIVAType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Tasa básica de IVA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntIVATasaMin" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto de IVA Tasa Min.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntIVATasaBasica" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto del IVA Tasa Basica</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntIVAOtra" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto de IVA Otra Tasa / Monto de IVA sobre Fictos:
+                    Importe del concepto en el CFE / Importe del IVA cuando es sobre un ficto (x ej.: vta.autos usados, 5deOro, etc.).
+                    El Importe total neto de la operación está en el campo MntNetoIVAOtra</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntTotal" type="DGICFE:MontoType">
+				<xs:annotation>
+					<xs:documentation>Monto Total del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntTotRetenido" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Monto Total Retenido / Percibido
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntTotCredFisc" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+                       Monto Total Creditos Fiscales
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CantLinDet">
+				<xs:annotation>
+					<xs:documentation>Nro de lineas del detalle</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:totalDigits value="3"/>
+						<xs:fractionDigits value="0"/>
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="RetencPercep" minOccurs="0" maxOccurs="20">
+				<xs:annotation>
+					<xs:documentation>Tabla de Retencion/Percepcion</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="CodRet" type="DGICFE:CodRetType">
+							<xs:annotation>
+								<xs:documentation>Código de retención / percepción</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="ValRetPerc" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor de la retención/ percepción</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="MontoNF" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto No Facturable </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntPagar" type="DGICFE:Monto_admite_negType">
+				<xs:annotation>
+					<xs:documentation>Monto Total a Pagar:  MntTotal + RetencPercepc + MontoNF</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Totales_Fact_Exp">
+		<xs:sequence>
+			<xs:element name="TpoMoneda" type="DGICFE:TipMonType">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo Moneda: ISO 4217 + ( UYI - Unidad Indexada
+						uruguaya, UYR - Unidad Indexada uruguaya)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TpoCambio" type="DGICFE:TipCambioType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Tipo de Cambio </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntExpoyAsim" type="DGICFE:Monto_admite_negType" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Tot.Mnt exportacion y asimilados menos desc. glb. mas rec. glb. (correspondientes a esos items)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntTotal" type="DGICFE:MontoType" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Monto Total del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CantLinDet" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Nro de lineas del detalle</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:totalDigits value="3"/>
+						<xs:fractionDigits value="0"/>
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="MontoNF" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto No Facturable </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntPagar" type="DGICFE:Monto_admite_negType" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Monto Total a Pagar:  MntTotal + RetencPercepc + MontoNF</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Totales_Rem_Exp">
+		<xs:sequence>
+			<xs:element name="TpoMoneda" type="DGICFE:TipMonType">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo Moneda: ISO 4217 + ( UYI - Unidad Indexada
+						uruguaya, UYR - Unidad Indexada uruguaya)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TpoCambio" type="DGICFE:TipCambioType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Tipo de Cambio </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntExpoyAsim" type="DGICFE:Monto_admite_negType" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Tot.Mnt exportacion y asimilados menos desc. glb. mas rec. glb. (correspondientes a esos items)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntTotal" type="DGICFE:Monto_admite_negType">
+				<xs:annotation>
+					<xs:documentation>Monto Total del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CantLinDet">
+				<xs:annotation>
+					<xs:documentation>Nro de lineas del detalle</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:totalDigits value="3"/>
+						<xs:fractionDigits value="0"/>
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="MntPagar" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto Total a Pagar:  MntTotal + RetencPercepc + MontoNF</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Totales_Resg">
+		<xs:sequence>
+			<xs:element name="TpoMoneda" type="DGICFE:TipMonType">
+				<xs:annotation>
+					<xs:documentation>Tipo Moneda</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TpoCambio" type="DGICFE:TipCambioType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Tipo de Cambio </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntTotRetenido" type="DGICFE:Monto_admite_negType">
+				<xs:annotation>
+					<xs:documentation>
+						Monto Total Retenido / Percibido
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntTotCredFisc" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+                       Monto Total Creditos Fiscales
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CantLinDet">
+				<xs:annotation>
+					<xs:documentation>Cantidad de lineas del Detalle</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:totalDigits value="3"/>
+						<xs:fractionDigits value="0"/>
+						<xs:maxInclusive value="200"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="RetencPercep" maxOccurs="20">
+				<xs:annotation>
+					<xs:documentation>Tabla de Retencion/Percepcion</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="CodRet" type="DGICFE:CodRetType">
+							<xs:annotation>
+								<xs:documentation>Código de la retención/ percepción</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="ValRetPerc" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor de la retención/ percepción</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Totales_Boleta">
+		<xs:sequence>
+			<xs:element name="TpoMoneda" type="DGICFE:TipMonType">
+				<xs:annotation>
+					<xs:documentation>
+						Tipo Moneda: ISO 4217 + ( UYI - Unidad Indexada
+						uruguaya, UYR - Unidad Indexada uruguaya)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TpoCambio" type="DGICFE:TipCambioType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Tipo de Cambio </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntNoGrv" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto No Gravado, menos desc. glb. mas recargos glv (de items no gravados)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntIVaenSusp" type="DGICFE:MontoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto IVA en Suspenso</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntTotal" type="DGICFE:MontoType">
+				<xs:annotation>
+					<xs:documentation>Monto Total del CFE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntTotRetenido" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Monto Total Retenido / Percibido
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CantLinDet">
+				<xs:annotation>
+					<xs:documentation>Nro de lineas del detalle</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="DGICFE:LineasDetType">
+						<xs:totalDigits value="3"/>
+						<xs:fractionDigits value="0"/>
+						<xs:maxInclusive value="700"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="RetencPercep" minOccurs="0" maxOccurs="20">
+				<xs:annotation>
+					<xs:documentation>Tabla de Retencion/Percepcion</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="CodRet" type="DGICFE:CodRetType">
+							<xs:annotation>
+								<xs:documentation>Código de retención / percepción</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="ValRetPerc" type="DGICFE:Monto_admite_negType">
+							<xs:annotation>
+								<xs:documentation>Valor de la retención/ percepción</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="MontoNF" type="DGICFE:Monto_admite_negType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Monto No Facturable </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntPagar" type="DGICFE:Monto_admite_negType">
+				<xs:annotation>
+					<xs:documentation>Monto Total a Pagar:  MntTotal + RetencPercepc + MontoNF</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosComplFiscType">
+		<xs:sequence>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Compl_Fiscal_DataType">
+		<xs:sequence>
+            <xs:element name="RUCEmisor" type="DGICFE:RUCType" maxOccurs="1" minOccurs="1">
+						</xs:element>
+            <xs:element name="TipoDocMdte" type="DGICFE:DocTypemasNIE" minOccurs="1" maxOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Tipo de Documento del Receptor
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+            <xs:element name="Pais" type="DGICFE:CodPaisType" maxOccurs="1" minOccurs="1">
+						</xs:element>
+            <xs:element name="DocMdte" minOccurs="1" maxOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Nro de Doc. del Receptor
+								</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="20"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+            <xs:element name="NombreMdte" type="DGICFE:RznSocType" maxOccurs="1" minOccurs="1">
+						</xs:element>
+        </xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Compl_FiscalType">
+		<xs:choice>
+			<xs:element name="Compl_Fiscal_Data"
+				type="DGICFE:Compl_Fiscal_DataType">
+			</xs:element>
+
+			<xs:element ref="xenc:EncryptedData"/>
+		</xs:choice>
+	</xs:complexType>
+</xs:schema>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

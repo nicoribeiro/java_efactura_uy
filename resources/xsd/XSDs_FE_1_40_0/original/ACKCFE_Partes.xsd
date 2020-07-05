@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ACK de CFEs  - DGI (Comprobante Fiscal Electrónico)
+El presente documento define el esquema XML que debe ser utilizado
+para realizar los envios de acuses de recibo de CFE a DGI
+FUA: 10/07/14
+Version: 118
+-->
+<xs:schema xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ns1="http://cfe.dgi.gub.uy" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="DGITypes.xsd"/>
+	<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+	<xs:complexType name="ACKCFEdefType">
+		<xs:sequence>
+			<xs:element name="Caratula" minOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="RUCReceptor" type="ns1:RUCType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Es el RUC del receptor del envío que se acusa.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="RUCEmisor" type="ns1:RUCType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Es el RUC del contribuyente que hizo el envío que se acusa (el emisor)</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="IDRespuesta" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Número único de identificación de la respuesta asignado por quien responde</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="10"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="NomArch" minOccurs="1"
+							type="ns1:NomArchType">						</xs:element>
+						<xs:element name="FecHRecibido" type="ns1:FechaHoraType" minOccurs="1"/>
+						<xs:element name="IDEmisor" type="ns1:IDRecEmiType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Nro. asignado por el emisor al envío que se responde.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="IDReceptor" type="ns1:IDRecEmiType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Nro. asignado por el receptor al envío que se responde.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="CantenSobre" minOccurs="1">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+									<xs:minInclusive value="0"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="CantResponden" minOccurs="1">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+									<xs:minInclusive value="0"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="CantCFEAceptados" minOccurs="0">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+									<xs:minInclusive value="0"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="CantCFERechazados" minOccurs="0">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+									<xs:minInclusive value="0"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="CantCFCAceptados" minOccurs="0">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+									<xs:minInclusive value="0"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="CantCFCObservados" minOccurs="0">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+									<xs:minInclusive value="0"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="CantOtrosRechazados" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Archivo con formato que no corresponde a CFE o CFC</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+									<xs:minInclusive value="0"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Tmst" type="ns1:FechaHoraType" minOccurs="1"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="ACKCFE_Det" minOccurs="1" maxOccurs="250">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Nro_ordinal" type="xs:integer"
+							minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									Nro. Ordinal asignado a cada
+									comprobante del sobre.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="TipoCFE" type="ns1:CFEType"
+							minOccurs="0" />
+						<xs:element name="Serie" type="ns1:SerieType"
+							minOccurs="0" />
+						<xs:element name="NroCFE" type="ns1:NroCFEType"
+							minOccurs="0" />
+						<xs:element name="FechaCFE" type="ns1:FechaType"
+							minOccurs="0" />
+						<xs:element name="TmstCFE"
+							type="ns1:FechaHoraType" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>
+									Fecha y hora de firma del CFE que se
+									acusa.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="Estado" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>
+									AE - Comprobante Recibido BE -
+									Comprobante Rechazado (CFE) CE -
+									Comprobante Observado (CFC)
+								</xs:documentation>
+							</xs:annotation>							<xs:simpleType>								<xs:restriction base="ns1:EstadoType">									<xs:enumeration value="AE"/>
+									<xs:enumeration value="BE"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>						<xs:element name="MotivosRechazoCF" type="ns1:RechazoCFE_PartesType" minOccurs="0" maxOccurs="10"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element ref="ds:Signature" minOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required" fixed="1.0">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="3"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:element name="ACKCFE" type="ns1:ACKCFEdefType"/>
+
+	<xs:simpleType name="EstadoType">
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+
+</xs:schema>
+
+
