@@ -1,5 +1,6 @@
 package com.bluedot.efactura.microControllers.implementation;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -7,10 +8,15 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.xml.XMLConstants;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -20,6 +26,8 @@ import org.w3c.dom.Document;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.XML;
+import com.bluedot.efactura.Constants;
+import com.bluedot.efactura.Environment;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
@@ -44,9 +52,9 @@ import dgi.classes.respuestas.cfe.RechazoCFEDGIType;
 import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Caratula;
 import dgi.classes.respuestas.sobre.ACKSobredefType.Detalle;
-import play.Play;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 import dgi.classes.respuestas.sobre.RechazoSobreType;
+import play.Play;
 
 public class IntercambioMicroControllerDefault implements IntercambioMicroController {
 
@@ -327,12 +335,16 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
  		RechazoCFEDGIType rechazo = null;
  		
  		//TODO HACK!!!!
-		if (ordinal == 2 || ordinal == 4 || ordinal == 6 || ordinal == 8) {
-			cfe.setEstado(EstadoACKCFEType.BE);
-			rechazo = new RechazoCFEDGIType();
-			rechazo.setMotivo("E02");
-			rechazo.setGlosa("Tipo y No de CFE ya existe en los registros");
-			cfe.getMotivo().add(MotivoRechazoCFE.E02);
+ 		Environment env = Environment.valueOf(Play.application().configuration().getString(Constants.ENVIRONMENT));
+		
+		if (env==Environment.test) {
+	 		if (ordinal == 2 || ordinal == 4 || ordinal == 6 || ordinal == 8) {
+				cfe.setEstado(EstadoACKCFEType.BE);
+				rechazo = new RechazoCFEDGIType();
+				rechazo.setMotivo("E05");
+				rechazo.setGlosa("No cumple validaciones (*) de Formato comprobantes");
+				cfe.getMotivo().add(MotivoRechazoCFE.E05);
+	 		}
 		}
 	
  		/*
@@ -383,6 +395,15 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
  		/*
 		 * E05
 		 */
+ 		
+ 		/*
+ 		 * TODO:
+ 		String xsdPath = "/resources/xsd/originales/EnvioCFE_entreEmpresasv1.32.xsd";
+ 		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = factory.newSchema(new File(xsdPath));
+        Validator validator = schema.newValidator();
+        validator.validate(new StreamSource(new File(xmlPath)));
+ 		*/
  		
  		/*
 		 * E07
