@@ -169,8 +169,6 @@ public class RecepcionServiceImpl implements RecepcionService {
 		sobre.setXmlDgi(xmlSobre);
 		enviarSobreDGI(sobre, xmlSobre);
 
-		
-
 	}
 
 	/**
@@ -379,103 +377,111 @@ public class RecepcionServiceImpl implements RecepcionService {
 	 * @throws APIException
 	 */
 	private ACKSobredefType enviarSobreDGI(SobreEmitido sobre, String xmlSobre) throws APIException {
+		/*
+		 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
+		 * parametros a los Interceptors
+		 */
+		InterceptorContextHolder.setSobreEmitido(sobre);
+
+		Data response;
 		try {
+			WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
 
+			WSEFacturaEFACRECEPCIONSOBRE input = new WSEFacturaEFACRECEPCIONSOBRE();
+			Data data = new Data();
+			data.setXmlData(xmlSobre);
+			input.setDatain(data);
+
+			WSEFacturaEFACRECEPCIONSOBREResponse output = portWrapper.getPort().efacrecepcionsobre(input);
+
+			response = output.getDataout();
+
+			logger.info("Respuesta: " + response.getXmlData());
+			
+			WSRecepcionPool.getInstance().checkIn(portWrapper);
+		} catch (Throwable e) {
+			throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
+		} finally{
 			/*
-			 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
-			 * parametros a los Interceptors
+			 * Borramos el contexto
 			 */
-			InterceptorContextHolder.setSobreEmitido(sobre);
+			InterceptorContextHolder.clear();
+		}
 
-			Data response;
+		
+
+		ACKSobredefType ACKSobre = null;
+		try {
+			ACKSobre = (ACKSobredefType) XML.unMarshall(XML.loadXMLFromString(response.getXmlData()), ACKSobredefType.class);
+		} catch (Throwable e2) {
+		}
+
+		try {
+			/*
+			 * Pruebo si se parseo bien la respuesta
+			 */
+			ACKSobre.getDetalle().getEstado();
+		} catch (Throwable e) {
+			/*
+			 * Intento parsear la respuesta ahora pensando que fue un error
+			 */
+			Respuestas respuestas;
 			try {
-				WSEFacturaSoapPortWrapper portWrapper = WSRecepcionPool.getInstance().checkOut();
-
-				WSEFacturaEFACRECEPCIONSOBRE input = new WSEFacturaEFACRECEPCIONSOBRE();
-				Data data = new Data();
-				data.setXmlData(xmlSobre);
-				input.setDatain(data);
-
-				WSEFacturaEFACRECEPCIONSOBREResponse output = portWrapper.getPort().efacrecepcionsobre(input);
-
-				response = output.getDataout();
-
-				logger.info("Respuesta: " + response.getXmlData());
-				
-				WSRecepcionPool.getInstance().checkIn(portWrapper);
-			} catch (Throwable e) {
-				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
-			} finally{
-				/*
-				 * Borramos el contexto
-				 */
-				InterceptorContextHolder.clear();
-			}
-
-			
-
-			ACKSobredefType ACKSobre = (ACKSobredefType) XML.unMarshall(XML.loadXMLFromString(response.getXmlData()),
-					ACKSobredefType.class);
-
-			if (ACKSobre == null)
+				respuestas = (Respuestas) XML.unMarshall(XML.loadXMLFromString(response.getXmlData()), Respuestas.class);
+			} catch (Throwable e1) {
 				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
-
-			try {
-				/*
-				 * Pruebo si se parseo bien la respuesta
-				 */
-				ACKSobre.getDetalle().getEstado();
-			} catch (Throwable e) {
-				/*
-				 * Intento parsear la respuesta ahora pensando que fue un error
-				 */
-				Respuestas respuestas = (Respuestas) XML.unMarshall(XML.loadXMLFromString(response.getXmlData()),
-						Respuestas.class);
-				
-				if (respuestas == null)
-					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
-				
-				Respuesta respuesta = respuestas.getRespuesta().iterator().next();
-				
-				if (respuesta == null)
-					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
-				
-				if (respuesta.getCodigo().intValue()==108) {
-					throw APIException.raise(APIErrors.SOBRE_YA_ENVIADO);
-				}else
-					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
-				
 			}
 			
-			switch (ACKSobre.getDetalle().getEstado()) {
-			case AS:
-				
+			if (respuestas == null)
+				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+			
+			Respuesta respuesta = respuestas.getRespuesta().iterator().next();
+			
+			if (respuesta == null)
+				throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+			
+			switch (respuesta.getCodigo().intValue()) {
+				case 101:
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				case 102:
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				case 104:
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				case 105:
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+				case 108:
+					throw APIException.raise(APIErrors.SOBRE_YA_ENVIADO);
+				default:
+					throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI);
+			}
+			
+		}
+		
+		switch (ACKSobre.getDetalle().getEstado()) {
+		case AS:
+			
+			sobre.setRespuesta_dgi(response.getXmlData());
+			sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
+			sobre.setEstadoDgi(ACKSobre.getDetalle().getEstado());
+			
+			sobre.setToken(ACKSobre.getDetalle().getParamConsulta().getToken());
+			sobre.setFechaConsulta(
+					ACKSobre.getDetalle().getParamConsulta().getFechahora().toGregorianCalendar().getTime());
+			break;
+		case BA:
+			break;
+		case BS:
+			
+			if (sobreEnviadoAnteriormente(ACKSobre))
+				throw APIException.raise(APIErrors.SOBRE_YA_ENVIADO);
+			else{
 				sobre.setRespuesta_dgi(response.getXmlData());
 				sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
 				sobre.setEstadoDgi(ACKSobre.getDetalle().getEstado());
-				
-				sobre.setToken(ACKSobre.getDetalle().getParamConsulta().getToken());
-				sobre.setFechaConsulta(
-						ACKSobre.getDetalle().getParamConsulta().getFechahora().toGregorianCalendar().getTime());
-				break;
-			case BA:
-				break;
-			case BS:
-				
-				if (sobreEnviadoAnteriormente(ACKSobre))
-					throw APIException.raise(APIErrors.SOBRE_YA_ENVIADO);
-				else{
-					sobre.setRespuesta_dgi(response.getXmlData());
-					sobre.setIdReceptor(ACKSobre.getCaratula().getIDReceptor().longValue());
-					sobre.setEstadoDgi(ACKSobre.getDetalle().getEstado());
-				}
 			}
-
-			return ACKSobre;
-		} catch (Exception e) {
-			throw APIException.raise(e);
 		}
 
+		return ACKSobre;
 	}
 
 	private boolean sobreEnviadoAnteriormente(ACKSobredefType ACKSobre) {

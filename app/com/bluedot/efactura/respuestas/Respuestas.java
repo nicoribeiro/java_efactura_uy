@@ -10,13 +10,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 
-//<Respuestas>
-//<Respuesta>
-//	<codigo>108</codigo>
-//	<descripcion>Sobre duplicado.</descripcion>
-//	<detalle>El sobre fue recibido en un envío anterior</detalle>
-//</Respuesta>
-//</Respuestas>
+//<codigo>108</codigo>
+//<descripcion>Sobre duplicado.</descripcion>
+//<detalle>El sobre fue recibido en un envío anterior</detalle>
+
+//<codigo>102</codigo>
+//<descripcion>El método invocado ha detectado una excepción en su ejecución.</descripcion>
+//<detalle>Ha ocurrido un problema interno en el servicio o la invocacion se ha realizado de forma incorrecta. Inténtelo mas tarde.</detalle>
+
+//<codigo>104</codigo>
+//<descripcion>El método invocado ha detectado una excepción en su ejecución.</descripcion>
+//<detalle>Ha ocurrido un problema interno en el servicio o la invocacion se ha realizado de forma incorrecta. Inténtelo mas tarde.</detalle>
+
+//<codigo>105</codigo>
+//<descripcion>El sobre con el Id Receptor especificado aún no ha sido procesado. Vuelva a consultar luego.</descripcion>
+//<detalle/>
+
+//<codigo>101</codigo>
+//<descripcion>Error de Seguridad en la invocación.</descripcion>
+//<detalle>El usuario no tiene permisos para ejecutar el servicio.</detalle>
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Respuestas", propOrder = {

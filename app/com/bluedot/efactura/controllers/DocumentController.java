@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -195,21 +196,44 @@ public class DocumentController extends AbstractController {
 				error = e.getJSONObject();
 			}
 
-			JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+			JSONObject result = procesar_resultado(empresa, cfe, error);
 
-			if (error != null)
-				cfeJson = JSONUtils.merge(cfeJson, error);
-			else
-				cfeJson = JSONUtils.merge(cfeJson, new JSONObject(OK));
-
-			try {
-				generarPDF(empresa, cfe);
-			} catch (Throwable e) {
-			}
-
-			return json(cfeJson.toString());
+			return json(result.toString());
 		} else
 			throw APIException.raise(APIErrors.NO_CFE_CREATED);
+	}
+
+	/**
+	 * @param empresa
+	 * @param cfe
+	 * @param error
+	 * @return
+	 * @throws APIException
+	 */
+	private JSONObject procesar_resultado(Empresa empresa, CFE cfe, JSONObject error) throws APIException {
+		JSONObject result;
+
+		if (error != null) {
+			JSONObject cfeJson = new JSONObject();
+			cfeJson.put("nro", cfe.getNro());
+			cfeJson.put("serie", cfe.getSerie());
+			result = JSONUtils.merge(cfeJson, error);
+		}
+		else {
+			JSONObject cfeJson;
+			try {
+				cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+			} catch (JSONException e) {
+				throw APIException.raise(APIErrors.BAD_JSON);
+			}
+			result = JSONUtils.merge(cfeJson, new JSONObject(OK));
+		}
+		
+		try {
+			generarPDF(empresa, cfe);
+		} catch (Throwable e) {
+		}
+		return result;
 	}
 
 	@BodyParser.Of(BodyParser.Json.class)
@@ -239,19 +263,9 @@ public class DocumentController extends AbstractController {
 			error = e.getJSONObject();
 		}
 
-		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
-
-		if (error != null)
-			cfeJson = JSONUtils.merge(cfeJson, error);
-		else
-			cfeJson = JSONUtils.merge(cfeJson, new JSONObject(OK));
-
-		try {
-			generarPDF(empresa, cfe);
-		} catch (Throwable e) {
-		}
-
-		return json(cfeJson.toString());
+		JSONObject result = procesar_resultado(empresa, cfe, error);
+		
+		return json(result.toString());
 	}
 
 	public Promise<Result> anularDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
