@@ -39,8 +39,9 @@ GET      /api/v1/empresa/:rut/documentos/pdf                     com.bluedot.efa
 # Anula un documento
 DELETE   /api/v1/empresa/:rut/documentos                         com.bluedot.efactura.controllers.DocumentController.anularDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
 
-# Retorna los documentos entrantes para una empresa
-GET      /api/v1/empresa/:rut/documentos/entrantes               com.bluedot.efactura.controllers.DocumentController.getDocumentosEntrantes(rut:String)
+# Retorna los documentos para una empresa
+# Los doucmentos pueden ser: RECIBIDO, EMITIDO, AMBOS
+GET      /api/v1/empresa/:rut/documentos		                 com.bluedot.efactura.controllers.DocumentController.getDocumentos(rut:String)
 
 # Procesa los email entrantes para una empresa
 GET      /api/v1/empresa/:rut/procesarEmailEntrantes             com.bluedot.efactura.controllers.DocumentController.procesarEmailEntrantes(rut:String)

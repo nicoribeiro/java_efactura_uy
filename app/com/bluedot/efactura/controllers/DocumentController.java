@@ -416,7 +416,7 @@ public class DocumentController extends AbstractController {
 
 	}
 	
-	public Promise<Result> getDocumentosEntrantes(String rut) throws APIException {
+	public Promise<Result> getDocumentos(String rut) throws APIException {
 		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
 		
 		Date fromDate = request().getQueryString("fromDate") != null ? (new Date(Long.parseLong(request().getQueryString("fromDate")) * 1000)) : null;
@@ -424,6 +424,11 @@ public class DocumentController extends AbstractController {
 		
 		int page = request().getQueryString("page") != null ? Integer.parseInt(request().getQueryString("page")) : 1;
 		int pageSize = request().getQueryString("pageSize") != null ? Math.min(Integer.parseInt(request().getQueryString("pageSize")), 50) : 50;
+		
+		if (page <=0)
+			page = 1;
+		if (pageSize <=0)
+			pageSize = 10;
 		
 		DireccionDocumento direccion = request().getQueryString("direccion") != null ? DireccionDocumento.valueOf(request().getQueryString("direccion")) : DireccionDocumento.AMBOS;
 		

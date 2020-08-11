@@ -27,6 +27,7 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
@@ -380,6 +381,9 @@ public class CFE extends Model<CFE>{
 		}
 		
 		long rowCount = q.findRowCount();
+		
+		//Sort by id by default
+		q.orderByAsc("id");
 		
 		List<CFE> list =  page > 0 && pageSize > 0 ? q.findPage(page, pageSize) : q.findList();
 		

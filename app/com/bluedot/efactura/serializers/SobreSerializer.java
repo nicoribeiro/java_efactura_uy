@@ -45,25 +45,26 @@ public class SobreSerializer<T> extends JSONSerializer<Sobre> {
 			sobreJson.put("respuestaCfes", sobre.getRespuestaCfes()!=null? respuestaSerializer.objectToJson(sobre.getRespuestaCfes()): JSONObject.NULL);
 			sobreJson.put("respuestaSobre", sobre.getRespuestaSobre()!=null? respuestaSerializer.objectToJson(sobre.getRespuestaSobre()): JSONObject.NULL);
 			sobreJson.put("xmlEmpresa", sobre.getXmlEmpresa());
-		}
 		
-		if (sobre instanceof SobreEmitido) {
-			SobreEmitido sobreEmitido = (SobreEmitido) sobre;
-			sobreJson.put("estadoDgi", sobreEmitido.getEstadoDgi());
-			sobreJson.put("xmlDgi", sobreEmitido.getXmlDgi());
-			sobreJson.put("fechaConsulta", sdf.format(sobreEmitido.getFechaConsulta()));
-			sobreJson.put("respuesta_dgi", sobreEmitido.getRespuesta_dgi());
-			sobreJson.put("resultado_dgi", sobreEmitido.getResultado_dgi());
-			sobreJson.put("idReceptor", sobreEmitido.getIdReceptor());
-			sobreJson.put("token", sobreEmitido.getToken());
-			sobreJson.put("cfes", cfeSerializer.objectToJson(sobreEmitido.getCfes(), true));
-		}
+			if (sobre instanceof SobreEmitido) {
+				SobreEmitido sobreEmitido = (SobreEmitido) sobre;
+				sobreJson.put("estadoDgi", sobreEmitido.getEstadoDgi());
+				sobreJson.put("xmlDgi", sobreEmitido.getXmlDgi());
+				sobreJson.put("fechaConsulta", sdf.format(sobreEmitido.getFechaConsulta()));
+				sobreJson.put("respuesta_dgi", sobreEmitido.getRespuesta_dgi());
+				sobreJson.put("resultado_dgi", sobreEmitido.getResultado_dgi());
+				sobreJson.put("idReceptor", sobreEmitido.getIdReceptor());
+				sobreJson.put("token", sobreEmitido.getToken());
+				sobreJson.put("cfes", cfeSerializer.objectToJson(sobreEmitido.getCfes(), true));
+			}
+			
+			if (sobre instanceof SobreRecibido) {
+				SobreRecibido sobreRecibido = (SobreRecibido) sobre;
+				sobreJson.put("timestampRecibido", sdf.format(sobreRecibido.getTimestampRecibido()));
+				sobreJson.put("timestampProcesado", sdf.format(sobreRecibido.getTimestampRecibido()));
+				sobreJson.put("cfes", cfeSerializer.objectToJson(sobreRecibido.getCfes(), true));
+			}
 		
-		if (sobre instanceof SobreRecibido) {
-			SobreRecibido sobreRecibido = (SobreRecibido) sobre;
-			sobreJson.put("timestampRecibido", sdf.format(sobreRecibido.getTimestampRecibido()));
-			sobreJson.put("timestampProcesado", sdf.format(sobreRecibido.getTimestampRecibido()));
-			sobreJson.put("cfes", cfeSerializer.objectToJson(sobreRecibido.getCfes(), true));
 		}
 		
 		return sobreJson;
