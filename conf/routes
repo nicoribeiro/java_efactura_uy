@@ -48,7 +48,15 @@ GET      /api/v1/empresa/:rut/procesarEmailEntrantes             com.bluedot.efa
 
 # Envia por correo el documento a la empresa
 GET      /api/v1/empresa/:rut/documentos/enviarCfeEmpresa        com.bluedot.efactura.controllers.DocumentController.enviarCfeEmpresa(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
-GET      /api/v1/empresa/:rut/documentos/enviarSobreEmpresa      com.bluedot.efactura.controllers.DocumentController.enviarSobreEmpresa(rut:String, idSobre:Long)
+
+
+###### Sobres
+
+# Obtener un sobre
+GET      /api/v1/empresa/:rut/sobre                              com.bluedot.efactura.controllers.SobresController.getSobre(rut:String, idSobre:Long)
+
+# Envia por correo el sobre a la empresa
+GET      /api/v1/empresa/:rut/sobre/enviarSobreEmpresa           com.bluedot.efactura.controllers.SobresController.enviarSobreEmpresa(rut:String, idSobre:Long)
 
 ###### CAEs
 

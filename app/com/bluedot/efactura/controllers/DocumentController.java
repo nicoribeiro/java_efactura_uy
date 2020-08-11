@@ -378,31 +378,6 @@ public class DocumentController extends AbstractController {
 		return json(error.toString());
 
 	}
-	
-	public Promise<Result> enviarSobreEmpresa(String rut, long sobreId) throws APIException {
-
-		Sobre sobre = SobreEmitido.findById(sobreId,true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
-		
-		JSONObject error = null;
-		
-		if (sobre instanceof SobreEmitido)
-			try {
-				factory.getServiceMicroController(sobre.getEmpresaEmisora()).enviarSobreEmpresa((SobreEmitido)sobre);
-			} catch (APIException e) {
-				logger.error("APIException:", e);
-				error = e.getJSONObject();
-			}
-		
-		if (error == null)
-			error =  new JSONObject(OK);
-
-		return json(error.toString());
-
-	}
-	
 
 	public Promise<Result> procesarEmailEntrantes(String rut) throws APIException {
 		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
