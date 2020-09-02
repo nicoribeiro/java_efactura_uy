@@ -1,0 +1,20 @@
+# A Play Framework application systemd service file
+
+[Unit]
+Description=efactura DGI Play Framework app
+# `After` tells systemd when the script should be run.
+# (`network.target` or `mysql.service` seems best)
+After=mysql.service
+
+[Install]
+# `WantedBy` is what boot target the systemd unit should be installed into
+# (should probably be `default.target` or `multi-user.target`)
+WantedBy=multi-user.target
+
+[Service]
+Type=forking
+User=root
+Group=root
+ExecStart=/srv/java_efactura_uy/scripts/service.sh prod start
+ExecStop=/srv/java_efactura_uy/scripts/service.sh prod stop
+#RemainAfterExit=true
