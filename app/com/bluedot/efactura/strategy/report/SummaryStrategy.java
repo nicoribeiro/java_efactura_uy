@@ -272,6 +272,9 @@ public interface SummaryStrategy {
 			Date fecha = iterator.next();
 			montos.getMntsFyTItem().add(getMontosFyTItem(summary.montos.get(fecha)));
 		}
+		
+		if (montos.getMntsFyTItem().size()==0)
+			return null;
 		return montos;
 	}
 	

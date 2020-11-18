@@ -103,6 +103,8 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	@Override
 	public SobreEmitido consultaResultado(SobreEmitido sobreEmitido) throws APIException {
 		
+		
+		//Intento recuperar los datos del sobre cuando el sobre por alguna razon le faltan datos. 
 		if (sobreEmitido.getToken() == null || sobreEmitido.getIdReceptor() == null){
 			ACKConsultaEnviosSobre respuesta = consultasService.consultarEnvioSobre(sobreEmitido.getId(), 0, DateHandler.minus(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), DateHandler.add(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), empresa);
 			
@@ -121,7 +123,11 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			}
 		}
 		
-		recepcionService.consultaResultadoSobre(sobreEmitido);
+		//Si sigue siendo null no consulto, asumo que hubo un error de comunicacion o que el sobre no existe
+		if (sobreEmitido.getToken() != null && sobreEmitido.getIdReceptor() != null){
+			recepcionService.consultaResultadoSobre(sobreEmitido);
+		}
+		
 		return sobreEmitido;
 	}
 
