@@ -8,8 +8,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -461,16 +463,26 @@ public class DocumentController extends AbstractController {
 
 		String filename = cfe.getTipo().value + "-" + cfe.getSerie() + "-" + cfe.getNro() + ".pdf";
 
-		String path = Play.application().configuration().getString("documentos.pdf.path", "/mnt/efacturas");
-
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(cfe.getFechaEmision());
+		int year = cal.get(Calendar.YEAR);
+		
+		String path = Play.application().configuration().getString("documentos.pdf.path", "/mnt/efacturas") + File.separator + empresa.getRut() + File.separator + year;
+		
+		// Check Directory
+		File directory = new File(path);
+	    if (! directory.exists()){
+	        directory.mkdirs();
+	        // If you require it to make the entire directory path including parents,
+	        // use directory.mkdirs(); here instead.
+	    }
+		
+	    // Write file 
 		File pdf = new File(path + File.separator + filename);
-
 		ByteArrayOutputStream byteArrayOutputStream = generateInvoice.createPDF();
-
 		try (OutputStream outputStream = new FileOutputStream(pdf)) {
 			byteArrayOutputStream.writeTo(outputStream);
 		}
 		return pdf;
 	}
-
 }
