@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
@@ -31,6 +32,7 @@ import com.bluedot.commons.utils.IO;
 import com.bluedot.commons.utils.PrettyPrint;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.Constants;
+import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
 
@@ -316,32 +318,47 @@ public class Commons {
 		
 	}
 	
+	public static void enviarMail(Empresa empresaDesde, String destinatarios, String nombreArchivo, byte[] archivo) throws APIException {
+		String body = Play.application().configuration().getString("mail.body")
+		.replace("<nombre>", empresaDesde.getNombreComercial())
+		.replace("<mail>", empresaDesde.getMailNotificaciones()).replace("<tel>", empresaDesde.getTelefono())
+		.replace("<nl>", "\n");
+		enviarMail(empresaDesde, destinatarios, nombreArchivo, archivo, body);
+	}
 	
-	public static void enviarMail(Empresa empresaDesde, Empresa empresaHasta, String nombreArchivo, String archivo) throws APIException {
+	
+	public static void enviarMail(Empresa empresaDesde, String destinatarios, String nombreArchivo, byte[] archivo, String body) throws APIException {
 		try {
 
-			Map<String, String> attachments = new TreeMap<String, String>();
+			Map<String, byte[]> attachments = new TreeMap<String, byte[]>();
 
 			attachments.put(nombreArchivo, archivo);
 
 			String subject = nombreArchivo;
 
-//			String body = Play.application().configuration().getString("mail.body")
-//					.replace("<nombre>", empresa.getNombreComercial())
-//					.replace("<mail>", empresa.getMailNotificaciones()).replace("<tel>", empresa.getTelefono())
-//					.replace("<nl>", "\n");
-			String body = "";
-
 			new MessagingHelper()
 					.withCustomConfig(empresaDesde.getFromEnvio(), empresaDesde.getHostRecepcion(), Integer.parseInt(empresaDesde.getPuertoRecepcion()),
 							empresaDesde.getUserRecepcion(), empresaDesde.getPassRecepcion())
 					.withAttachment(attachments)
-					.sendEmail(empresaHasta.getMailRecepcion(), body, null, subject, false);
+					.sendEmail(destinatarios, body, null, subject, false);
 
 		} catch (Exception e) {
 			throw APIException.raise(e);
 		}
 
+	}
+	
+	public static String getPDFfilename(CFE cfe) {
+		return cfe.getTipo().value + "-" + cfe.getSerie() + "-" + cfe.getNro() + ".pdf";
+	}
+	
+	public static String getPDFpath(Empresa empresa, CFE cfe) {
+		
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(cfe.getFechaEmision());
+		int year = cal.get(Calendar.YEAR);
+		
+		return Play.application().configuration().getString("documentos.pdf.path", "/mnt/efacturas") + File.separator + empresa.getRut() + File.separator + year;
 	}
 
 	

@@ -29,7 +29,7 @@ public class MessagingHelper {
 	private String password;
 
 	private String signature;
-	private Map<String, String> attachments;
+	private Map<String, byte[]> attachments;
 
 	public MessagingHelper() {
 
@@ -53,7 +53,7 @@ public class MessagingHelper {
 		return this;
 	}
 
-	public MessagingHelper withAttachment(Map<String, String> attachments) {
+	public MessagingHelper withAttachment(Map<String, byte[]> attachments) {
 		this.attachments = attachments;
 		return this;
 	}

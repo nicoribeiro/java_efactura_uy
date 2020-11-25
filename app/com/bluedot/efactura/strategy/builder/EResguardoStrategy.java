@@ -160,7 +160,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 
 	@Override
 	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String rznSocRecep,
-			String dirRecep, String ciudadRecep, String deptoRecep, boolean update) throws APIException {
+			String dirRecep, String ciudadRecep, String deptoRecep, boolean update, String pdfMailAddress) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
 		if (tipoDocRecep != null)
@@ -187,6 +187,8 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 					cfe.setEmpresaReceptora(
 							Empresa.getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep, update));
 			}
+		
+		cfe.setPdfMailAddress(pdfMailAddress);
 
 	}
 	

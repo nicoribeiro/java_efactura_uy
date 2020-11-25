@@ -376,8 +376,8 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 					/*
 					 * Envio mail a los administradores notificando del error
 					 */
-					Map<String, String> attachments = new TreeMap<String, String>();
-					attachments.put(attachmentFromBD.getName(), attachmentFromBD.getPayload());
+					Map<String, byte[]> attachments = new TreeMap<String, byte[]>();
+					attachments.put(attachmentFromBD.getName(), attachmentFromBD.getPayload().getBytes());
 					String fullStackTrace = org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace(e);
 					new MessagingHelper()
 						.withCustomConfig(empresa.getFromEnvio(), empresa.getHostRecepcion(), Integer.parseInt(empresa.getPuertoRecepcion()),

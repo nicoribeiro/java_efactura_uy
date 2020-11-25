@@ -245,6 +245,8 @@ public class CFE extends Model<CFE>{
 	@OneToMany
 	private List<RetencionPercepcion> retencionesPercepciones; 
 	
+	private String pdfMailAddress;
+	
 	public CFE() {
 		super();
 		setFechaGeneracion(new Date());
@@ -857,6 +859,14 @@ public class CFE extends Model<CFE>{
 
 	public void setFechaGeneracion(Date fechaGeneracion) {
 		this.fechaGeneracion = fechaGeneracion;
+	}
+
+	public String getPdfMailAddress() {
+		return pdfMailAddress;
+	}
+
+	public void setPdfMailAddress(String pdfMailAddress) {
+		this.pdfMailAddress = pdfMailAddress;
 	}
 
 }

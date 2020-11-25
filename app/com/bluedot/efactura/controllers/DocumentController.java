@@ -30,6 +30,7 @@ import com.bluedot.commons.utils.Print;
 import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.GenerateInvoice;
 import com.bluedot.efactura.MODO_SISTEMA;
+import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.model.CFE;
@@ -461,13 +462,9 @@ public class DocumentController extends AbstractController {
 
 		GenerateInvoice generateInvoice = new GenerateInvoice(cfe, empresa);
 
-		String filename = cfe.getTipo().value + "-" + cfe.getSerie() + "-" + cfe.getNro() + ".pdf";
+		String filename = Commons.getPDFfilename(cfe);
 
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(cfe.getFechaEmision());
-		int year = cal.get(Calendar.YEAR);
-		
-		String path = Play.application().configuration().getString("documentos.pdf.path", "/mnt/efacturas") + File.separator + empresa.getRut() + File.separator + year;
+		String path = Commons.getPDFpath(empresa, cfe);
 		
 		// Check Directory
 		File directory = new File(path);
@@ -485,4 +482,6 @@ public class DocumentController extends AbstractController {
 		}
 		return pdf;
 	}
+
+	
 }

@@ -34,8 +34,8 @@ public class Email extends NotificationChannel
 
 			StringBuilder mailBody = new StringBuilder(alert.getBody());
 			String subject = alert.getSubject();
-			HashMap<String,String> attachments = new HashMap<String,String>();
-			attachments.put("attachment", alert.getAttachment());
+			HashMap<String, byte[]> attachments = new HashMap<String,byte[]>();
+			attachments.put("attachment", alert.getAttachment().getBytes());
 			new MessagingHelper().withPlayConfig().withAttachment(attachments).sendEmail(email, mailBody.toString(), mailBody.toString().replace("\n", "<br>"), subject, true);
 		}
 	}

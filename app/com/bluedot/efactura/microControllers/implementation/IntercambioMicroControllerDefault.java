@@ -226,7 +226,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				 * Envio la respuesta al emisor
 				 */
 				if (sobreRecibido.getEmpresaEmisora().getMailRecepcion()!=null && !sobreRecibido.getEmpresaEmisora().getMailRecepcion().isEmpty())
-					Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora(), respuestaSobre.getNombreArchivo(), respuestaSobre.getPayload());
+					Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora().getMailRecepcion(), respuestaSobre.getNombreArchivo(), respuestaSobre.getPayload().getBytes(), "");
 				
 				sobreRecibido.setAckSobredefType(ackSobredefType);
 				
@@ -297,7 +297,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 						/*
 						 * Envio la respuesta al emisor
 						 */
-						Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora(), respuestaCfes.getNombreArchivo(), respuestaCfes.getPayload());
+						Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora().getMailRecepcion(), respuestaCfes.getNombreArchivo(), respuestaCfes.getPayload().getBytes(), "");
 					}
 					
 					return ackcfEdefType;

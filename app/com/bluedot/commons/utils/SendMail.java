@@ -28,7 +28,7 @@ public class SendMail
 
 	final static Logger logger = LoggerFactory.getLogger(SendMail.class);
 
-	public static void sendMail(String username, String password, String smtpHost, int smtpPort, String from, String recipient, String subject, String textVersion, String htmlVersion, Map<String, String> attachments, boolean logInstedOfSend) throws MessagingException
+	public static void sendMail(String username, String password, String smtpHost, int smtpPort, String from, String recipient, String subject, String textVersion, String htmlVersion, Map<String, byte[]> attachments, boolean logInstedOfSend) throws MessagingException
 	{
 		Address[] array;
 		
@@ -48,7 +48,7 @@ public class SendMail
 
 	}
 
-	public static void sendMail(String username, String password, String smtpHost, int smtpPort, String from, Address[] recipients, String subject, String textVersion, String htmlVersion, Map<String, String> attachments, boolean logInstedOfSend) throws AddressException,
+	public static void sendMail(String username, String password, String smtpHost, int smtpPort, String from, Address[] recipients, String subject, String textVersion, String htmlVersion, Map<String, byte[]> attachments, boolean logInstedOfSend) throws AddressException,
 			MessagingException
 	{
 
@@ -114,7 +114,7 @@ public class SendMail
 			for (Iterator<String> iterator = attachments.keySet().iterator(); iterator.hasNext();) {
 				String filename = iterator.next();
 				MimeBodyPart attachmnetPart = new PreencodedMimeBodyPart("base64");
-				attachmnetPart.setContent(Base64.getEncoder().encodeToString(attachments.get(filename).getBytes()), "application/octet-stream");  
+				attachmnetPart.setContent(Base64.getEncoder().encodeToString(attachments.get(filename)), "application/octet-stream");  
 				attachmnetPart.setFileName(filename);
 				attachmentsNames = attachmentsNames.equals("")? filename : attachmentsNames + ", " + filename;
 				multiPart.addBodyPart(attachmnetPart);

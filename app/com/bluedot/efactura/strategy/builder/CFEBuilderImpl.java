@@ -11,6 +11,8 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -52,6 +54,8 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 
 	public static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	
+	private static final String regex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+
 	
 	public CFEBuilderImpl(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
 		this.caeMicroController = caeMicroController;
@@ -129,9 +133,26 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		
 		String DeptoRecep = receptorJson.has("DeptoRecep") ? receptorJson.getString("DeptoRecep") : null;
 		
+		String mailPdfAddress = receptorJson.has("MailPdfAddress") ? receptorJson.getString("MailPdfAddress") : null;
+		
+		//Validar y extraeer direcciones de correos validos
+	    Pattern pattern = Pattern.compile(regex);
+		if (mailPdfAddress != null) {
+			String[] tokens = mailPdfAddress.split("[\\s,]+");
+			StringBuilder result = new StringBuilder();
+			for (String string : tokens) {
+				Matcher matcher = pattern.matcher(string);
+				if (matcher.matches()) {
+					result.append(string);
+					result.append(",");
+				}
+			}
+			mailPdfAddress = result.length() > 0 ? result.substring(0, result.length() - 1) : "";
+		}
+		
 		boolean update = esCfeEmitido;
 		
-		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep, update);
+		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep, update, mailPdfAddress);
 		
 	}
 

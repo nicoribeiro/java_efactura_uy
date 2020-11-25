@@ -1,6 +1,10 @@
 package com.bluedot.efactura.services.impl;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -558,8 +562,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 						 * Envio a la empresa
 						 */
 						if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null)
-							Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora(), sobre.getNombreArchivo(), sobre.getXmlEmpresa());
-//							this.enviarSobreEmpresa(sobre);
+							this.enviarSobreEmpresa(sobre);
 					}else{
 						for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
 								.iterator(); iterator2.hasNext();) {
@@ -715,39 +718,6 @@ public class RecepcionServiceImpl implements RecepcionService {
 		}
 	}
 
-	// private Data sendReporte(ReporteDefType reporte, Date date) throws
-	// APIException {
-	// try {
-	// JAXBContext context = JAXBContext.newInstance(ReporteDefType.class);
-	// Marshaller marshaller = context.createMarshaller();
-	// StringWriter sw = new StringWriter();
-	// marshaller.marshal(reporte, sw);
-	//
-	// Data response =
-	// this.sendReporte(PrettyPrint.prettyPrintXML(sw.toString()), date);
-	//
-	// // Dump sobre y response to disk
-	// Commons.dumpReporteToFile(reporte, false, response, date);
-	//
-	// return response;
-	// } catch (Exception e) {
-	// throw APIException.raise(e);
-	// }
-	// }
-
-//	@Override
-//	public void consultarResultados(Date date, Empresa empresa) throws APIException {
-//
-//		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, date);
-//
-//		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
-//			SobreEmitido sobre = iterator.next();
-//			this.consultaResultadoSobre((SobreEmitido) sobre);
-//
-//		}
-//
-//	}
-
 	@Override
 	public void reenviarSobre(SobreEmitido sobre) throws APIException {
 		sobre.setReenvio(true);
@@ -777,67 +747,20 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 	@Override
 	public void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
-		Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora(), sobre.getNombreArchivo(), sobre.getXmlEmpresa());
+		//ENVIO XML
+		Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "");
+		
+		//ENVIO PDF
+		for(CFE cfe : sobre.getCfes()) {
+			if (cfe.getPdfMailAddress()!=null) {
+				String filename = Commons.getPDFpath(sobre.getEmpresaEmisora(), cfe) + File.separator + Commons.getPDFfilename(cfe);
+				try {
+					byte[] allBytes = Files.readAllBytes(Paths.get(filename));
+					Commons.enviarMail(sobre.getEmpresaEmisora(), cfe.getPdfMailAddress(), Commons.getPDFfilename(cfe), allBytes);
+				} catch (IOException e) {
+					throw APIException.raise(e);
+				}
+			}
+		}
 	}
-
-	// @Override
-	// public void anularDocumento(TipoDoc tipo, String serie, int nro, Date
-	// date, Empresa empresa) throws APIException {
-	// try {
-	// CAE caeDataJson = factory.getCAEMicroController(empresa).getCAE(tipo);
-	//
-	// SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-	//
-	// String anuladoFilePath =
-	// Play.application().configuration().getString(Constants.GENERATED_CFE_FOLDER,
-	// "resources" + File.separator + "cfe") + File.separator +
-	// formatter.format(date) + File.separator
-	// + tipo.value + File.separator + serie + "_" + nro + "_unsigned.xml";
-	// File anuladoFile = new File(anuladoFilePath);
-	//
-	// if (!anuladoFile.exists()) {
-	// IO.writeFile(anuladoFilePath, "narf");
-	// }
-	//
-	// } catch (IOException e) {
-	// throw APIException.raise(e);
-	// }
-	//
-	// }
-
-	// TODO metodo para pasar la prueba de homologacion
-	// @Override
-	// public void anularNextDocumento(TipoDoc tipo, Date date, Empresa empresa)
-	// throws APIException {
-	// try {
-	// IdDocFact id = factory.getCAEMicroController(empresa).getIdDocFact(tipo,
-	// false, 2);
-	//
-	// // TODO la forma de generar las anulaciones es generar un archivo
-	// // dummy, esto es una cagada porque hay que borrar los archivos
-	// // dummys luego de generar el reporte diario y antes de subir los
-	// // datos a DGI
-	//
-	// SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-	//
-	// String anuladoFilePath =
-	// Play.application().configuration().getString(Constants.GENERATED_CFE_FOLDER,
-	// "resources" + File.separator + "cfe") + File.separator +
-	// formatter.format(date) + File.separator
-	// + tipo.value + File.separator + id.getSerie() + "_" + id.getNro() +
-	// "_unsigned.xml";
-	// File anuladoFile = new File(anuladoFilePath);
-	//
-	// if (!anuladoFile.exists()) {
-	// IO.writeFile(anuladoFilePath, "narf");
-	// }
-	//
-	// } catch (IOException e) {
-	// throw APIException.raise(e);
-	// } catch (DatatypeConfigurationException e) {
-	// throw APIException.raise(e);
-	// }
-	//
-	// }
-
 }
