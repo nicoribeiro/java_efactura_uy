@@ -194,6 +194,7 @@ public class EmpresasController extends AbstractController {
 		String puertoRecepcion = empresaJson.has("puertoRecepcion") ? empresaJson.findPath("puertoRecepcion").asText() : null;
 		String userRecepcion = empresaJson.has("userRecepcion") ? empresaJson.findPath("userRecepcion").asText() : null;
 		String mailNotificaciones = empresaJson.has("mailNotificaciones") ? empresaJson.findPath("mailNotificaciones").asText() : null;
+		String mailRecepcion = empresaJson.has("mailRecepcion") ? empresaJson.findPath("mailRecepcion").asText() : null;
 		String fromEnvio = empresaJson.has("fromEnvio") ? empresaJson.findPath("fromEnvio").asText() : null;
 		
 		String certificado = empresaJson.has("certificado") ? empresaJson.findPath("certificado").asText() : null;
@@ -213,6 +214,9 @@ public class EmpresasController extends AbstractController {
 		
 		if (mailNotificaciones != null)
 			empresa.setMailNotificaciones(mailNotificaciones);
+		
+		if (mailRecepcion != null)
+			empresa.setMailRecepcion(mailRecepcion);
 		
 		if (fromEnvio != null)
 			empresa.setFromEnvio(fromEnvio);
