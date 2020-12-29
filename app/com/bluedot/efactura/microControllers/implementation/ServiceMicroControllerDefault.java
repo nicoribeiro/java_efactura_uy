@@ -227,16 +227,21 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 				try {
 					
 					/*
-					 * Si hubo una ecepcion las entidades se desatachearon del persistence context con el rollback.
+					 * Si hubo una excepcion las entidades se desatachearon del persistence context con el rollback.
 					 * Por lo tanto, como no estoy seguro si estan o no debo volverlas a pedir a la BBDD.
 					 */
 					attachment = Attachment.findById(attachment.getId());
 					
 					logger.info("Procesando Adjunto: " + attachment.getName());
 					
+					if (attachment.getName()==null) {
+						logger.info("El Adjunto no tiene nombre, no se procesa el adjunto");
+						continue;
+					}
+					
 					if (!attachment.getName().toUpperCase().endsWith("XML")) {
 						logger.info("El Adjunto no tiene extension XML, no se procesa el adjunto");
-						break;
+						continue;
 					}
 						
 					Document document = XML.loadXMLFromString(attachment.getPayload());
@@ -300,7 +305,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 
 						if (empresaReceptoraCandidata.getId() != empresa.getId()) {
 							logger.info("La empresa receptora no es igual a la empresa local, no se procesa el adjunto");
-							break;
+							continue;
 						}
 
 						List<Sobre> sobres = SobreRecibido.findByNombre(attachment.getName());
