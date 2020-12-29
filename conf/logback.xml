@@ -66,8 +66,7 @@
 	<!-- <Logger name="org.hibernate.type" level="debug" /> -->
 	<!-- Log all SQL DDL statements as they are executed -->
 	<!-- <Logger name="org.hibernate.tool.hbm2ddl" level="debug" /> -->
-	<!-- Log the state of all entities (max 20 entities) associated with the 
-		session at flush time -->
+	<!-- Log the state of all entities (max 20 entities) associated with the session at flush time -->
 	<!-- <Logger name="org.hibernate.pretty" level="debug" /> -->
 	<!-- Log all second-level cache activity -->
 	<!-- <Logger name="org.hibernate.cache" level="debug" /> -->
@@ -86,7 +85,6 @@
 		<appender-ref ref="ASYNCFILE" />
 		<appender-ref ref="ASYNCSTDOUT" />
 <!-- 		<appender-ref ref="SYSLOG" /> -->
-
 	</root>
 
 </configuration>
