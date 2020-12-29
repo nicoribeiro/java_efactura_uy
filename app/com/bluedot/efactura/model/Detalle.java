@@ -1,6 +1,7 @@
 package com.bluedot.efactura.model;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -38,6 +39,7 @@ public class Detalle extends Model<Detalle> {
 
 	private String nombreItem;
 	
+	@Column(length = 1000)
 	private String descripcionItem;
 
 	private double cantidad;
