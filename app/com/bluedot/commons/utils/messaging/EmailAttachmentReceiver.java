@@ -135,7 +135,7 @@ public class EmailAttachmentReceiver {
 			folderInbox.close(false);
 			store.close();
 		} catch (IOException | MessagingException | ClassNotFoundException ex) {
-			logger.debug("Exception:", ex);
+			logger.info("Exception:", ex);
 		}
 
 		return emails;
