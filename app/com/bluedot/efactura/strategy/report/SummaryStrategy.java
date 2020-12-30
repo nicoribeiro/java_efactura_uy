@@ -223,22 +223,22 @@ public interface SummaryStrategy {
 		if (cfe.getMoneda()!=TipMonType.UYU)
 			tipoCambio = cfe.getTipoCambio();
 		
-		monto.totMntNoGrv = safeAdd(monto.totMntNoGrv, cfe.getTotMntNoGrv()*tipoCambio);
-		monto.totMntExpyAsim = safeAdd(monto.totMntExpyAsim, cfe.getTotMntExpyAsim()*tipoCambio);
-		monto.totMntImpPerc = safeAdd(monto.totMntImpPerc, cfe.getTotMntImpPerc()*tipoCambio);
+		monto.totMntNoGrv = safeAdd(monto.totMntNoGrv, cfe.getTotMntNoGrv(), tipoCambio);
+		monto.totMntExpyAsim = safeAdd(monto.totMntExpyAsim, cfe.getTotMntExpyAsim(), tipoCambio);
+		monto.totMntImpPerc = safeAdd(monto.totMntImpPerc, cfe.getTotMntImpPerc(), tipoCambio);
 
-		monto.totMntIVAenSusp = safeAdd(monto.totMntIVAenSusp, cfe.getTotMntIVAenSusp()*tipoCambio);
-		monto.totMntIVATasaMin = safeAdd(monto.totMntIVATasaMin, cfe.getTotMntIVATasaMin()*tipoCambio);
-		monto.totMntIVATasaBas = safeAdd(monto.totMntIVATasaBas, cfe.getTotMntIVATasaBas()*tipoCambio);
-		monto.totMntIVAOtra = safeAdd(monto.totMntIVAOtra, cfe.getTotMntIVAOtra()*tipoCambio);
+		monto.totMntIVAenSusp = safeAdd(monto.totMntIVAenSusp, cfe.getTotMntIVAenSusp(), tipoCambio);
+		monto.totMntIVATasaMin = safeAdd(monto.totMntIVATasaMin, cfe.getTotMntIVATasaMin(), tipoCambio);
+		monto.totMntIVATasaBas = safeAdd(monto.totMntIVATasaBas, cfe.getTotMntIVATasaBas(), tipoCambio);
+		monto.totMntIVAOtra = safeAdd(monto.totMntIVAOtra, cfe.getTotMntIVAOtra(), tipoCambio);
 
-		monto.mntIVATasaBas = safeAdd(monto.mntIVATasaBas, cfe.getMntIVATasaBas()*tipoCambio);
-		monto.mntIVATasaMin = safeAdd(monto.mntIVATasaMin, cfe.getMntIVATasaMin()*tipoCambio);
-		monto.mntIVAOtra = safeAdd(monto.mntIVAOtra, cfe.getMntIVAOtra()*tipoCambio);
+		monto.mntIVATasaBas = safeAdd(monto.mntIVATasaBas, cfe.getMntIVATasaBas(), tipoCambio);
+		monto.mntIVATasaMin = safeAdd(monto.mntIVATasaMin, cfe.getMntIVATasaMin(), tipoCambio);
+		monto.mntIVAOtra = safeAdd(monto.mntIVAOtra, cfe.getMntIVAOtra(), tipoCambio);
 
-		monto.totMntTotal = safeAdd(monto.totMntTotal, cfe.getTotMntTotal()*tipoCambio);
-		monto.totMntRetenido = safeAdd(monto.totMntRetenido, cfe.getTotMntRetenido()*tipoCambio);
-		monto.totValRetPerc = safeAdd(monto.totValRetPerc, cfe.getTotValRetPerc()*tipoCambio);
+		monto.totMntTotal = safeAdd(monto.totMntTotal, cfe.getTotMntTotal(), tipoCambio);
+		monto.totMntRetenido = safeAdd(monto.totMntRetenido, cfe.getTotMntRetenido(), tipoCambio);
+		monto.totValRetPerc = safeAdd(monto.totValRetPerc, cfe.getTotValRetPerc(), tipoCambio);
 		
 		Date date = cfe.getFechaEmision();
 		Calendar calendar = new GregorianCalendar();
@@ -246,12 +246,24 @@ public interface SummaryStrategy {
 		int year = calendar.get(Calendar.YEAR);
 		UI ui = UI.findByAnio(year, true);
 		
-		if (((cfe.getTotMntTotal() - cfe.getMntIVATasaBas() - cfe.getMntIVATasaMin() - cfe.getMntIVAOtra())*tipoCambio) > ui.getCotizacion() * UI.MAX_UI)
+		if (safeSubstract(cfe.getTotMntTotal(), cfe.getMntIVATasaBas(), cfe.getMntIVATasaMin(), cfe.getMntIVAOtra()) * tipoCambio > ui.getCotizacion() * UI.MAX_UI)
 			summary.mayor10000UI++;
 
 	}
+	
+	static double safeSubstract(Double a, Double b, Double c, Double d) {
+		if (a==null)
+			a = 0d;
+		if (b==null)
+			b = 0d;
+		if (c==null)
+			c = 0d;
+		if (d==null)
+			d = 0d;
+		return a - b - c - d;
+	}
 
-	static BigDecimal safeAdd(BigDecimal acumulado, Double value) {
+	static BigDecimal safeAdd(BigDecimal acumulado, Double value, double tipoCambio) {
 
 		if (acumulado == null)
 			acumulado = new BigDecimal("0");
@@ -259,7 +271,7 @@ public interface SummaryStrategy {
 		if (value==null)
 			value = 0d;
 		
-		acumulado = acumulado.add(new BigDecimal(value)).setScale(2, BigDecimal.ROUND_HALF_UP);
+		acumulado = acumulado.add(new BigDecimal(value * tipoCambio)).setScale(2, BigDecimal.ROUND_HALF_UP);
 
 		return acumulado;
 	}

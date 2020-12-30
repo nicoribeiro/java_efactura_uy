@@ -118,6 +118,17 @@ public class DocumentController extends AbstractController {
 
 		if (!document.getJSONObject("Encabezado").getJSONObject("IdDoc").has("id"))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("id");
+		
+		if (!document.getJSONObject("Encabezado").has("Emisor"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Emisor");
+		
+		if (!document.getJSONObject("Encabezado").getJSONObject("Emisor").has("RUCEmisor"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("RUCEmisor");
+		
+		String rucEmisor = document.getJSONObject("Encabezado").getJSONObject("Emisor").getString("RUCEmisor");
+		
+		if (rucEmisor.compareTo(rut)!=0)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("rucEmisor distinto del rut de la URL");
 
 		TipoDoc tipo = TipoDoc
 				.fromInt(document.getJSONObject("Encabezado").getJSONObject("IdDoc").getInt("TipoCFE"));
