@@ -18,7 +18,7 @@ conf/servers.conf
 .cache-tests
 .sbtserver/*
 logs/application.log
-resources/images/logo.jpg
+resources/images/*
 builds
 deploys
 deploy_conf
