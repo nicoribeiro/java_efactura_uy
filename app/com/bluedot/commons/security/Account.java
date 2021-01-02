@@ -35,8 +35,6 @@ import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 import com.play4jpa.jpa.query.Query;
 
-import play.i18n.Messages;
-
 
 
 @Entity

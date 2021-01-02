@@ -224,6 +224,9 @@ public class CFE extends Model<CFE>{
 	
 	private String generadorId;
 	
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private Sucursal sucursal;
+	
 	/**
 	 * CAE
 	 */
@@ -867,6 +870,14 @@ public class CFE extends Model<CFE>{
 
 	public void setPdfMailAddress(String pdfMailAddress) {
 		this.pdfMailAddress = pdfMailAddress;
+	}
+
+	public Sucursal getSucursal() {
+		return sucursal;
+	}
+
+	public void setSucursal(Sucursal sucursal) {
+		this.sucursal = sucursal;
 	}
 
 }

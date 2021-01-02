@@ -36,6 +36,8 @@ import dgi.classes.reporte.RngDocsUtil.RDUItem;
 
 public interface SummaryStrategy {
 
+	SimpleDateFormat formateador = new SimpleDateFormat("dd-MM-yyyy");
+	
 	public class Builder {
 
 		private TipoDoc tipo;
@@ -120,13 +122,14 @@ public interface SummaryStrategy {
 		int cantDocSinRespuesta = 0;
 		int cantDocEmitidos = 0;
 		int mayor10000UI = 0;
-		HashMap<Date, Monto> montos = new HashMap<Date, Monto>();
+		HashMap<String, Monto> montos = new HashMap<String, Monto>();
 		RngDocsAnulados rngDocsAnulados = new RngDocsAnulados();
 		RngDocsUtil rngDocsUtil = new RngDocsUtil();
 	}
 
 	public class Monto {
 		protected Date fecha = null;
+		protected BigInteger CodSuc = null;
 		protected BigDecimal totMntNoGrv = new BigDecimal("0");
 		protected BigDecimal totMntExpyAsim = new BigDecimal("0");
 		protected BigDecimal totMntImpPerc = new BigDecimal("0");
@@ -209,12 +212,15 @@ public interface SummaryStrategy {
 	}
 
 	static void sumarizarMontos(CFE cfe, SummaryDatatype summary) throws APIException {
-		Monto monto = summary.montos.get(cfe.getFechaEmision());
+		String key = formateador.format(cfe.getFechaEmision()) + "-" + cfe.getSucursal().getCodigoSucursal();
+		
+		Monto monto = summary.montos.get(key);
 
 		if (monto == null) {
 			monto = new Monto();
 			monto.fecha = cfe.getFechaEmision();
-			summary.montos.put(cfe.getFechaEmision(), monto);
+			monto.CodSuc = new BigInteger(String.valueOf(cfe.getSucursal().getCodigoSucursal()));
+			summary.montos.put(key, monto);
 		}
 			
 		
@@ -280,9 +286,9 @@ public interface SummaryStrategy {
 
 	static MontosFyT getMontosFyT(SummaryDatatype summary) throws APIException {
 		MontosFyT montos = new MontosFyT();
-		for (Iterator<Date> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
-			Date fecha = iterator.next();
-			montos.getMntsFyTItem().add(getMontosFyTItem(summary.montos.get(fecha)));
+		for (Iterator<String> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
+			String key = iterator.next();
+			montos.getMntsFyTItem().add(getMontosFyTItem(summary.montos.get(key)));
 		}
 		
 		if (montos.getMntsFyTItem().size()==0)
@@ -295,8 +301,7 @@ public interface SummaryStrategy {
 			
 			MntsFyTItem item = new MntsFyTItem();
 
-			// TODO sacar el id de sucursal para un lado comun
-			item.setCodSuc(new BigInteger("2"));
+			item.setCodSuc(monto.CodSuc);
 			XMLGregorianCalendar date = DatatypeFactory.newInstance()
 					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
 			item.setFecha(date);
@@ -325,9 +330,9 @@ public interface SummaryStrategy {
 
 	static MontosRes getMontosResg(SummaryDatatype summary) throws APIException {
 		MontosRes montos = new MontosRes();
-		for (Iterator<Date> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
-			Date fecha = iterator.next();
-			montos.getMntsResItem().add(getMontosResItem(summary.montos.get(fecha)));
+		for (Iterator<String> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
+			String key = iterator.next();
+			montos.getMntsResItem().add(getMontosResItem(summary.montos.get(key)));
 		}
 		return montos;
 	}
@@ -337,8 +342,7 @@ public interface SummaryStrategy {
 			
 			MntsResItem item = new MntsResItem();
 
-			// TODO sacar el id de sucursal para un lado comun
-			item.setCodSuc(new BigInteger("2"));
+			item.setCodSuc(monto.CodSuc);
 			XMLGregorianCalendar date = DatatypeFactory.newInstance()
 					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
 			item.setFecha(date);

@@ -3,7 +3,6 @@ package com.bluedot.commons.security;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
@@ -27,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.alerts.Alert;
-import com.bluedot.commons.alerts.AlertMetadata;
 import com.bluedot.commons.alerts.AlertReceiver;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
@@ -40,9 +38,6 @@ import com.bluedot.commons.notificationChannels.SMS;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
-
-
-import play.i18n.Messages;
 
 @Entity
 @Table(name = "Users")

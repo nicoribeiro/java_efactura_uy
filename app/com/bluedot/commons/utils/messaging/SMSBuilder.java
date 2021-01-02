@@ -5,16 +5,19 @@ import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.TwilioRestException;
 import com.twilio.sdk.resource.factory.MessageFactory;
 import com.twilio.sdk.resource.instance.Message;
 
-import play.Logger;
 import play.Play;
 
 public class SMSBuilder {
+	
+	final static Logger logger = LoggerFactory.getLogger(SMSBuilder.class);
 	
 	private String to;
 	private String body;
@@ -78,16 +81,16 @@ public class SMSBuilder {
 		{
 			if(logInstedOfSend)
 			{
-				Logger.info(">>>> SMS DUMP:");
-				Logger.info("FROM: " + from);
-				Logger.info("SUBJECT: " + subject);
-				Logger.info("TO: " + to);
-				Logger.info("BODY: " + body);
-				Logger.info("IMAGE_URL: " + imageUrl);
+				logger.info(">>>> SMS DUMP:");
+				logger.info("FROM: " + from);
+				logger.info("SUBJECT: " + subject);
+				logger.info("TO: " + to);
+				logger.info("BODY: " + body);
+				logger.info("IMAGE_URL: " + imageUrl);
 			}else
 			{
 				message = messageFactory.create(params);
-				Logger.info("SMS sent correctly to: " + to + ", sid: " + message.getSid());
+				logger.info("SMS sent correctly to: " + to + ", sid: " + message.getSid());
 			}
 		} catch (TwilioRestException e)
 		{

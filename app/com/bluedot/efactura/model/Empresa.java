@@ -45,14 +45,6 @@ public class Empresa extends Model<Empresa>{
 	
 	private String nombreComercial;
 	
-	private String direccion;
-	
-	private String localidad;
-	
-	private String departamento;
-	
-	private Integer codigoSucursal;
-	
 	private String mailRecepcion;
 	
 	private String hostRecepcion;
@@ -89,29 +81,24 @@ public class Empresa extends Model<Empresa>{
 	
 	private String paginaWeb;
 	
-	private String telefono;
-	
-	private String codigoPostal;
-	
 	private String resolucion;
 	
 	@ApiModelProperty(hidden = true)
 	@OneToOne(mappedBy="empresa")
 	private FirmaDigital firmaDigital;
+	
+	@OneToMany(cascade = CascadeType.ALL, mappedBy="empresa", fetch=FetchType.LAZY)
+	private List<Sucursal> sucursales;
 
 	public Empresa() {
 		super();
 	}
 
-	public Empresa(String rut, String razon, String nombreComercial, String direccion, String localidad,
-			String departamento) {
+	public Empresa(String rut, String razon, String nombreComercial) {
 		super();
 		this.rut = rut;
 		this.razon = razon;
 		this.nombreComercial = nombreComercial;
-		this.direccion = direccion;
-		this.localidad = localidad;
-		this.departamento = departamento;
 	}
 	
 	private static Finder<Integer, Empresa> find = new Finder<Integer, Empresa>(Integer.class, Empresa.class);
@@ -154,30 +141,15 @@ public class Empresa extends Model<Empresa>{
 		return q.findRowCount();
 	}
 	
-	public static Empresa getOrCreateEmpresa(String docRecep, String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, boolean update) {
+	public static Empresa getOrCreateEmpresa(String docRecep, String rznSocRecep, String  nomComercial) {
 		Empresa empresa = Empresa.findByRUT(docRecep);
 		
 		if (empresa == null) {
 			/*
 			 * Si la empresa no existe la registro como nueva en el sistema
 			 */
-			empresa = new Empresa(docRecep, rznSocRecep, null, dirRecep, ciudadRecep, deptoRecep);
+			empresa = new Empresa(docRecep, rznSocRecep, nomComercial);
 			empresa.save();
-		}else{
-			if (update) {
-				/*
-				 * Si la empresa existe actualizo los datos que puedo
-				 */
-				if (deptoRecep!=null)
-					empresa.setDepartamento(deptoRecep.toUpperCase());
-				if (ciudadRecep!=null)
-					empresa.setLocalidad(ciudadRecep.toUpperCase());
-				if (dirRecep!=null)
-					empresa.setDireccion(dirRecep.toUpperCase());
-				if (rznSocRecep!=null)
-					empresa.setRazon(rznSocRecep.toUpperCase());
-				empresa.update();
-			}
 		}
 		
 		return empresa;
@@ -213,34 +185,6 @@ public class Empresa extends Model<Empresa>{
 
 	public void setNombreComercial(String nombreComercial) {
 		this.nombreComercial = nombreComercial;
-	}
-
-	public String getDireccion() {
-		return direccion;
-	}
-
-	public void setDireccion(String direccion) {
-		this.direccion = direccion;
-	}
-
-	public String getLocalidad() {
-		return localidad;
-	}
-
-	public void setLocalidad(String localidad) {
-		this.localidad = localidad;
-	}
-
-	public String getDepartamento() {
-		return departamento;
-	}
-
-	public void setDepartamento(String departamento) {
-		this.departamento = departamento;
-	}
-
-	public Integer getCodigoSucursal() {
-		return codigoSucursal;
 	}
 
 	public String getMailRecepcion() {
@@ -310,32 +254,12 @@ public class Empresa extends Model<Empresa>{
 		this.logo = logo;
 	}
 
-	public void setCodigoSucursal(Integer codigoSucursal) {
-		this.codigoSucursal = codigoSucursal;
-	}
-
 	public String getPaginaWeb() {
 		return paginaWeb;
 	}
 
 	public void setPaginaWeb(String paginaWeb) {
 		this.paginaWeb = paginaWeb;
-	}
-
-	public String getTelefono() {
-		return telefono;
-	}
-
-	public void setTelefono(String telefono) {
-		this.telefono = telefono;
-	}
-
-	public String getCodigoPostal() {
-		return codigoPostal;
-	}
-
-	public void setCodigoPostal(String codigoPostal) {
-		this.codigoPostal = codigoPostal;
 	}
 
 	public String getResolucion() {
@@ -408,5 +332,13 @@ public class Empresa extends Model<Empresa>{
 
 	public void setOffsetMail(int offsetMail) {
 		this.offsetMail = offsetMail;
+	}
+
+	public List<Sucursal> getSucursales() {
+		return sucursales;
+	}
+
+	public void setSucursales(List<Sucursal> sucursales) {
+		this.sucursales = sucursales;
 	}
 }

@@ -260,7 +260,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Serie").setDetailMessage("La Serie no puede ser vacia");
 		
 		cae.save();
-		empresa.getCaes().add(cae);
+		this.getEmpresa().getCaes().add(cae);
 		addCAEtoMap(cae);
 		
 	}
@@ -303,7 +303,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 			siguiente = caeJson.getLong("Siguiente");
 		}
 		
-		CAE cae = new CAE(empresa, caeJson.getLong("NA"), TipoDoc.fromInt(caeJson.getInt("TCFE")), caeJson.getString("Serie"), dNro, caeJson.getLong("HNro"), fechaVencimiento, siguiente);
+		CAE cae = new CAE(this.getEmpresa(), caeJson.getLong("NA"), TipoDoc.fromInt(caeJson.getInt("TCFE")), caeJson.getString("Serie"), dNro, caeJson.getLong("HNro"), fechaVencimiento, siguiente);
 		
 		return cae;
 	}

@@ -11,19 +11,19 @@ import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.Sucursal;
 import com.bluedot.efactura.services.impl.ConsultasServiceImpl;
 import com.bluedot.efactura.services.impl.RecepcionServiceImpl;
 
-public class EfacturaMicroControllersFactoryDefault extends MicroControllerFactoryDefault implements EfacturaMicroControllersFactory
-{
+public class EfacturaMicroControllersFactoryDefault extends MicroControllerFactoryDefault
+		implements EfacturaMicroControllersFactory {
 
 	private static MODO_SISTEMA modo;
-	
+
 	static {
 		modo = MODO_SISTEMA.NORMAL;
 	}
-	
-	
+
 	public MODO_SISTEMA getModo() {
 		return modo;
 	}
@@ -34,21 +34,19 @@ public class EfacturaMicroControllersFactoryDefault extends MicroControllerFacto
 	}
 
 	@Override
-	public CFEMicroController getCFEMicroController(Empresa empresa) throws APIException
-	{
+	public CFEMicroController getCFEMicroController(Empresa empresa) throws APIException {
 		return new CFEMicroControllerDefault(modo, empresa, getCAEMicroController(empresa));
-
 	}
 
 	@Override
 	public ServiceMicroController getServiceMicroController(Empresa empresa) throws APIException {
-		return new ServiceMicroControllerDefault(new RecepcionServiceImpl(), empresa, getCAEMicroController(empresa), new ConsultasServiceImpl(), new IntercambioMicroControllerDefault(getCFEMicroController(empresa)));
+		return new ServiceMicroControllerDefault(new RecepcionServiceImpl(), empresa, getCAEMicroController(empresa),
+				new ConsultasServiceImpl(), new IntercambioMicroControllerDefault(getCFEMicroController(empresa)));
 	}
 
 	@Override
 	public CAEMicroController getCAEMicroController(Empresa empresa) throws APIException {
 		return new CAEMicroControllerDefault(empresa);
 	}
-
 
 }

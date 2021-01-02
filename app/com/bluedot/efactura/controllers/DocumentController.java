@@ -8,10 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,8 +34,7 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.DireccionDocumento;
 import com.bluedot.efactura.model.Empresa;
-import com.bluedot.efactura.model.Sobre;
-import com.bluedot.efactura.model.SobreEmitido;
+import com.bluedot.efactura.model.Sucursal;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.pollers.PollerManager;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
@@ -47,7 +44,6 @@ import com.play4jpa.jpa.db.Tx;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import play.Play;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
@@ -106,7 +102,9 @@ public class DocumentController extends AbstractController {
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
 				.getMicroControllersFactory();
 
-		// TODO estos controles se pueden mover a una annotation
+		/*
+		 * Controles de existencia de campos y carga de variables
+		 */
 		if (!document.has("Encabezado"))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Encabezado");
 
@@ -122,13 +120,20 @@ public class DocumentController extends AbstractController {
 		if (!document.getJSONObject("Encabezado").has("Emisor"))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Emisor");
 		
-		if (!document.getJSONObject("Encabezado").getJSONObject("Emisor").has("RUCEmisor"))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("RUCEmisor");
+//		if (!document.getJSONObject("Encabezado").getJSONObject("Emisor").has("RUCEmisor"))
+//			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("RUCEmisor");
 		
-		String rucEmisor = document.getJSONObject("Encabezado").getJSONObject("Emisor").getString("RUCEmisor");
+		if (!document.getJSONObject("Encabezado").getJSONObject("Emisor").has("CdgDGISucur"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("CdgDGISucur");
 		
-		if (rucEmisor.compareTo(rut)!=0)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("rucEmisor distinto del rut de la URL");
+//		String rucEmisor = document.getJSONObject("Encabezado").getJSONObject("Emisor").getString("RUCEmisor");
+		
+		int cdgDGISucur = document.getJSONObject("Encabezado").getJSONObject("Emisor").getInt("CdgDGISucur");
+		
+		Sucursal sucursal = Sucursal.findByCodigoSucursal(empresa.getSucursales(), cdgDGISucur, true);
+		
+//		if (rucEmisor.compareTo(rut)!=0)
+//			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("rucEmisor distinto del rut de la URL");
 
 		TipoDoc tipo = TipoDoc
 				.fromInt(document.getJSONObject("Encabezado").getJSONObject("IdDoc").getInt("TipoCFE"));
@@ -142,7 +147,11 @@ public class DocumentController extends AbstractController {
 
 		if (cfe != null)
 			throw APIException.raise(APIErrors.EXISTE_CFE).withParams("generadorId", id);
-
+		/*
+		 * Fin controles de existencia de campos y carga de variables
+		 */
+		
+		
 		switch (tipo) {
 		case eFactura:
 		case eTicket:
@@ -198,6 +207,8 @@ public class DocumentController extends AbstractController {
 			if (document.has("Adenda"))
 				cfe.setAdenda(document.getJSONArray("Adenda").toString());
 
+			cfe.setSucursal(sucursal);
+			
 			JSONObject error = null;
 
 			if (cfe.getFechaEmision()==null)
@@ -471,7 +482,7 @@ public class DocumentController extends AbstractController {
 
 		logger.info("Generando PDF tipoDoc:{} - serie:{} - nro:{}", cfe.getTipo().value, cfe.getSerie(), cfe.getNro());
 
-		GenerateInvoice generateInvoice = new GenerateInvoice(cfe, empresa);
+		GenerateInvoice generateInvoice = new GenerateInvoice(cfe);
 
 		String filename = Commons.getPDFfilename(cfe);
 

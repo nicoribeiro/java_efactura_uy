@@ -5,6 +5,9 @@ import java.util.GregorianCalendar;
 
 import javax.xml.datatype.DatatypeFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.interceptors.InterceptorContextHolder;
@@ -15,7 +18,6 @@ import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.pool.WSConsultasPool;
 import com.bluedot.efactura.pool.wrappers.WSEFacturaConsultasSoapPortWrapper;
 import com.bluedot.efactura.services.ConsultasService;
-import com.sun.istack.logging.Logger;
 
 import dgi.soap.consultas.ACKConsultaCFERecibidos;
 import dgi.soap.consultas.ACKConsultaEnviosCFE;
@@ -32,7 +34,7 @@ import dgi.soap.consultas.WSEFacturaConsultasEFACCONSULTARESTADOCFEResponse;
 
 public class ConsultasServiceImpl implements ConsultasService {
 
-	static Logger logger = Logger.getLogger(ConsultasServiceImpl.class);
+	final static Logger logger = LoggerFactory.getLogger(ConsultasServiceImpl.class);	
 	
 	@Override
 	public ACKConsultaEstadoCFE consultarEstadoCFE(CFE cfe) throws APIException {
@@ -54,7 +56,7 @@ public class ConsultasServiceImpl implements ConsultasService {
 
 			WSConsultasPool.getInstance().checkIn(portWrapper);
 			
-			logger.info("Respuesta: " + output.getAckconsultaestadocfe().toString());
+			logger.debug("Respuesta: " + output.getAckconsultaestadocfe().toString());
 			
 			return output.getAckconsultaestadocfe();
 		} catch (Throwable e) {
@@ -117,7 +119,7 @@ public class ConsultasServiceImpl implements ConsultasService {
 
 			WSConsultasPool.getInstance().checkIn(portWrapper);
 			
-			logger.info("Respuesta: " + output.getAckconsultaenviossobre().toString());
+			logger.debug("Respuesta: " + output.getAckconsultaenviossobre().toString());
 			
 			return output.getAckconsultaenviossobre();
 		} catch (Throwable e) {

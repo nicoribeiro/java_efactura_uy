@@ -6,12 +6,13 @@ import org.json.JSONObject;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.Sucursal;
 
 public interface CFEBuiderInterface {
 	
 	void buildDetalle(JSONArray detalleJson, boolean montosIncluyenIva) throws APIException;
 
-	void buildReceptor(JSONObject receptorJson, boolean esCfeEmitido) throws APIException;
+	void buildReceptor(JSONObject receptorJson) throws APIException;
 
 	void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws APIException;
 
@@ -21,9 +22,7 @@ public interface CFEBuiderInterface {
 	
 	void buildCAEData() throws APIException;
 
-	void buildEmisor(Empresa empresaEmisora) throws APIException;
-	
-	void buildEmisor(JSONObject emisorJson) throws APIException;
+	void buildEmisor(Empresa empresa, JSONObject emisorJson, boolean esCfeEmitido) throws APIException;
 
 	void buildReferencia(Empresa empresaEmisora, JSONArray referencia) throws APIException;
 

@@ -50,7 +50,7 @@ GET      /api/v1/empresa/:rut/procesarEmailEntrantes             com.bluedot.efa
 GET      /api/v1/empresa/:rut/documentos/enviarCfeEmpresa        com.bluedot.efactura.controllers.DocumentController.enviarCfeEmpresa(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
 
 
-###### Sobres
+###### SOBRES
 
 # Obtener un sobre
 GET      /api/v1/empresa/:rut/sobre                              com.bluedot.efactura.controllers.SobresController.getSobre(rut:String, idSobre:Long)
@@ -75,10 +75,22 @@ GET      /api/v1/rut/:rut                                        com.bluedot.efa
 GET      /api/v1/empresa/:rut                                    com.bluedot.efactura.controllers.EmpresasController.getEmpresaByRut(rut:String)
 
 # Retorna la informacion de todas las Empresas
-GET      /api/v1/empresa                                         com.bluedot.efactura.controllers.EmpresasController.getEmpresas()
+GET      /api/v1/empresa										 com.bluedot.efactura.controllers.EmpresasController.getEmpresas()
 
 # Carga/Actualiza la informacion de las Empresas a partir el XML provisto por DGI
-POST     /api/v1/empresa/cargar                                  com.bluedot.efactura.controllers.EmpresasController.cargarEmpresas(path:String)
+POST     /api/v1/empresa/cargar									 com.bluedot.efactura.controllers.EmpresasController.cargarEmpresas(path:String)
+
+###### SUCURSALES
+
+# Obtiene las Sucursales
+GET      /api/v1/empresa/:rut/sucursales					  	 com.bluedot.efactura.controllers.EmpresasController.getSucursales(rut:String)
+
+# Crea una Sucursal
+POST      /api/v1/empresa/:rut/sucursales						 com.bluedot.efactura.controllers.EmpresasController.crearSucursal(rut:String)
+
+# Edita una Sucursal
+PUT      /api/v1/empresa/:rut/sucursales/:codigoSuc				 com.bluedot.efactura.controllers.EmpresasController.editarSucursal(rut:String, codigoSuc:Integer)
+
 
 ###### REPORTE DIARIO
 

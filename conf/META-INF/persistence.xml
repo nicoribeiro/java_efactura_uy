@@ -37,6 +37,7 @@
 		<class>com.bluedot.efactura.model.CFE</class>
 		<class>com.bluedot.efactura.model.Detalle</class>
 		<class>com.bluedot.efactura.model.Empresa</class>
+		<class>com.bluedot.efactura.model.Sucursal</class>
 		<class>com.bluedot.efactura.model.IVA</class>
 		<class>com.bluedot.efactura.model.Pais</class>
 		<class>com.bluedot.efactura.model.ReporteDiario</class>

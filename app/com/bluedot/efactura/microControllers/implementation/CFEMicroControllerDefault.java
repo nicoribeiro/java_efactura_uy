@@ -6,12 +6,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.MODO_SISTEMA;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.Sucursal;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.strategy.builder.CFEBuiderInterface;
 import com.bluedot.efactura.strategy.builder.CFEBuilderFactory;
@@ -62,10 +64,7 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Emisor (dentro de encabezado)
 		 */
-		if (encabezadoJSON.has("Emisor"))
-			cfeBuilder.buildEmisor(Commons.safeGetJSONObject(encabezadoJSON, "Emisor"));
-		else
-			cfeBuilder.buildEmisor(empresa);
+		cfeBuilder.buildEmisor(getEmpresa(), Commons.safeGetJSONObject(encabezadoJSON, "Emisor"), esCfeEmitido);
 			
 		
 		/*
@@ -84,13 +83,12 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Receptor (dentro de encabezado)
 		 */
-		boolean update = esCfeEmitido;
-		cfeBuilder.buildReceptor(Commons.safeGetJSONObject(encabezadoJSON,"Receptor"), update);
+		cfeBuilder.buildReceptor(Commons.safeGetJSONObject(encabezadoJSON,"Receptor"));
 		
 		/*
 		 * Referencia
 		 */
-		cfeBuilder.buildReferencia(empresa, docJSON.has("Referencia") ?  Commons.safeGetJSONArray(docJSON,"Referencia") : null);
+		cfeBuilder.buildReferencia(this.getEmpresa(), docJSON.has("Referencia") ?  Commons.safeGetJSONArray(docJSON,"Referencia") : null);
 		
 		/*
 		 * Complemento Fiscal

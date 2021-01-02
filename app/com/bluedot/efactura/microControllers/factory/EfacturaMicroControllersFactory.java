@@ -7,6 +7,7 @@ import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.Sucursal;
 
 public interface EfacturaMicroControllersFactory extends MicroControllersFactory{
 

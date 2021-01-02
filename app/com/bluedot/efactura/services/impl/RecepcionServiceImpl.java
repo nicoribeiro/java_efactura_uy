@@ -16,6 +16,8 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
@@ -42,7 +44,6 @@ import com.bluedot.efactura.respuestas.Respuestas;
 import com.bluedot.efactura.respuestas.Respuestas.Respuesta;
 import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.strategy.report.SummaryStrategy;
-import com.sun.istack.logging.Logger;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
@@ -67,9 +68,9 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBREResponse;
 import play.Play;
 
 public class RecepcionServiceImpl implements RecepcionService {
-
-	static Logger logger = Logger.getLogger(RecepcionServiceImpl.class);
-
+	
+	final static Logger logger = LoggerFactory.getLogger(RecepcionServiceImpl.class);
+	
 	@Override
 	public void sendCFE(CFE cfe) throws APIException {
 		// TODO soportar mas de un CFE por sobre
@@ -400,7 +401,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 			response = output.getDataout();
 
-			logger.info("Respuesta: " + response.getXmlData());
+			logger.debug("Respuesta: " + response.getXmlData());
 			
 			WSRecepcionPool.getInstance().checkIn(portWrapper);
 		} catch (Throwable e) {
@@ -518,7 +519,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 			WSRecepcionPool.getInstance().checkIn(portWrapper);
 			
-			logger.info("Respuesta: " + output.getDataout().getXmlData());
+			logger.debug("Respuesta: " + output.getDataout().getXmlData());
 			
 			return output.getDataout();
 		} catch (Throwable e) {
@@ -756,7 +757,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 				String filename = Commons.getPDFpath(sobre.getEmpresaEmisora(), cfe) + File.separator + Commons.getPDFfilename(cfe);
 				try {
 					byte[] allBytes = Files.readAllBytes(Paths.get(filename));
-					Commons.enviarMail(sobre.getEmpresaEmisora(), cfe.getPdfMailAddress(), Commons.getPDFfilename(cfe), allBytes);
+					Commons.enviarMail(cfe.getSucursal(), cfe.getPdfMailAddress(), Commons.getPDFfilename(cfe), allBytes);
 				} catch (IOException e) {
 					throw APIException.raise(e);
 				}

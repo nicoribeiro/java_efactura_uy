@@ -17,4 +17,5 @@ public interface CFEMicroController
 	 */
 	public CFE create(TipoDoc tipo, JSONObject jsonObject, boolean esCfeEmitido) throws APIException;
 	
+	
 }
