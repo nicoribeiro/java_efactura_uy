@@ -3,6 +3,7 @@ package com.bluedot.efactura.controllers;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -39,6 +40,8 @@ public class ReportController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(ReportController.class);
 	
+	private static SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+	
 	@Inject
 	public ReportController(PollerManager pollerManager){
 		super();
@@ -57,7 +60,7 @@ public class ReportController extends AbstractController {
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
 				.getMicroControllersFactory();
 
-		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
+		Date date = DateHandler.fromStringToDate(fecha, sdf);
 
 		JSONArray reportes = new JSONArray();
 
@@ -66,6 +69,8 @@ public class ReportController extends AbstractController {
 			ReporteDiario reporte = null;
 			try {
 
+				logger.info("Generando reporte diario empresa:{} dia:{}", empresa.getRut(), sdf.format(DateHandler.add(date, i, Calendar.DAY_OF_MONTH)));
+				
 				reporte = factory.getServiceMicroController(empresa)
 						.generarReporteDiario(DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
 
@@ -94,6 +99,38 @@ public class ReportController extends AbstractController {
 		return json(reportes.toString());
 	}
 
-	
+	public Promise<Result> getReporteDiario(String rut, String fecha, int cantReportes) throws APIException {
+
+		if (cantReportes < 1)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("cantReportes", cantReportes);
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		Date date = DateHandler.fromStringToDate(fecha, new SimpleDateFormat("yyyyMMdd"));
+
+		JSONArray reportes = new JSONArray();
+		
+		Date now = new Date();
+
+		for (int i = 0; i < cantReportes; i++) {
+			
+			if (DateHandler.add(date, i, Calendar.DAY_OF_MONTH).after(now))
+				break;
+			
+			logger.debug("Buscado reporte diario empresa:{} dia:{}", empresa.getRut(), sdf.format(DateHandler.add(date, i, Calendar.DAY_OF_MONTH)));
+			
+			List<ReporteDiario> reportesList = ReporteDiario.findByEmpresaFecha(empresa, DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
+			
+			logger.debug("Serializando reporte diario empresa:{} dia:{}", empresa.getRut(), sdf.format(DateHandler.add(date, i, Calendar.DAY_OF_MONTH)));
+			
+			JSONArray jsonArray = EfacturaJSONSerializerProvider.getReporteDiarioSerializer().objectToJson(reportesList);
+			
+			if (jsonArray.length()>0)
+				reportes.put(jsonArray);
+
+		}
+
+		return json(reportes.toString());
+	}
 
 }

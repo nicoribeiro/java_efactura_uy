@@ -28,14 +28,13 @@ public class ReporteDiarioSerializer<T> extends JSONSerializer<ReporteDiario> {
 		reporte.put("id", reporteDiario.getId());
 		
 		if (!shrinkSerializarion) {
-			reporte.put("empresa", empresaSerializer.objectToJson(reporteDiario.getEmpresa()));
+			reporte.put("empresa", empresaSerializer.objectToJson(reporteDiario.getEmpresa(), true));
 			reporte.put("fecha", onlyDateFormatter.format(reporteDiario.getFecha()));
 			reporte.put("secuencial", reporteDiario.getSecuencial());
-			reporte.put("timestampEnviado", timestampFormatter.format(reporteDiario.getTimestampEnviado()));
+			reporte.put("timestampEnviado", reporteDiario.getTimestampEnviado()==null ? "" : timestampFormatter.format(reporteDiario.getTimestampEnviado()));
 			reporte.put("xml", reporteDiario.getXml());
 			reporte.put("respuesta", reporteDiario.getRespuesta());
-			reporte.put("estado", reporteDiario.getEstado().name());
-			//reporte.put("motivo", reporteDiario.getMotivo().name());
+			reporte.put("estado", reporteDiario.getEstado()==null ? "" : reporteDiario.getEstado().name());
 			reporte.put("idReceptor", reporteDiario.getIdReceptor());
 		}
 		

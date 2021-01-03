@@ -94,6 +94,10 @@ PUT      /api/v1/empresa/:rut/sucursales/:codigoSuc				 com.bluedot.efactura.con
 
 ###### REPORTE DIARIO
 
+# Retorna Reporte Diario correspondiente a la fecha :fecha
+GET     /api/v1/empresa/:rut/reporteDiario/:fecha               com.bluedot.efactura.controllers.ReportController.getReporteDiario(rut:String, fecha: String, cantReportes:Integer?=1)
+
+
 # Genera el Reporte Diario correspondiente a la fecha :fecha
 POST     /api/v1/empresa/:rut/reporteDiario/:fecha               com.bluedot.efactura.controllers.ReportController.generarReporteDiario(rut:String, fecha: String, cantReportes:Integer?=1)
 
