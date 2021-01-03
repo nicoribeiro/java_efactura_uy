@@ -646,8 +646,6 @@ public class RecepcionServiceImpl implements RecepcionService {
 			caratula.setTmstFirmaEnv(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 			caratula.setVersion("1.0");
 			reporte.setCaratula(caratula);
-
-			
 			
 			/*
 			 * Resumenes

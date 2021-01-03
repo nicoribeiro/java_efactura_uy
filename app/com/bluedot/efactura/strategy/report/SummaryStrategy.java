@@ -22,6 +22,9 @@ import com.bluedot.efactura.model.IVA;
 import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.UI;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeSet;
+import com.google.common.collect.TreeRangeSet;
 
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.reporte.MontosFyT;
@@ -153,16 +156,25 @@ public interface SummaryStrategy {
 
 	static SummaryDatatype getSummary(Empresa empresa, TipoDoc tipo, List<CFE> cfes) throws APIException {
 		SummaryDatatype summary = new SummaryDatatype();
-		//summary.fecha = date;
 
+		/*
+		 * Inicializo el HashMap, la key es la serie del CFE
+		 */
+		HashMap<String, RangeSet<Long>> rangosHashMap = new HashMap<String, RangeSet<Long>>();
+		
 		for (Iterator<CFE> iterator2 = cfes.iterator(); iterator2.hasNext();) {
 			CFE cfe = iterator2.next();
 
 			if (cfe.getTipo() == tipo) {
 
-				RDUItem item = getRDUItem(cfe.getSerie(), cfe.getNro());
-				summary.rngDocsUtil.getRDUItem().add(item);
-
+				RangeSet<Long> range = rangosHashMap.get(cfe.getSerie());
+				if (range==null) {
+					range = TreeRangeSet.create();
+					rangosHashMap.put(cfe.getSerie(), range);
+				}
+				
+				range.add(Range.closed(cfe.getNro(), cfe.getNro()));
+				
 				if (cfe.getEstado() != null)
 					switch (cfe.getEstado()) {
 					case AE:
@@ -190,6 +202,37 @@ public interface SummaryStrategy {
 
 			}
 		}
+		
+		/*
+		 * Proceso el rango
+		 */
+		for(String key : rangosHashMap.keySet()) {
+			RangeSet<Long> range = rangosHashMap.get(key);
+			Range<Long> spanned = range.span();
+			long minValue = spanned.lowerEndpoint();
+			long maxValue = spanned.upperEndpoint();
+			long from = minValue;
+			long to = minValue;
+			boolean inRange = true;
+			for (long i = minValue; i<=maxValue+1;i++) {
+				if (range.contains(i)) {
+					if (inRange) {
+						to = i;
+					}else {
+						from = i;
+						to = i;
+						inRange = true;
+					}
+				}else {
+					if (inRange) {
+						RDUItem item = getRDUItem(key, from, to);
+						summary.rngDocsUtil.getRDUItem().add(item);
+						inRange=false;
+					}
+				}
+			}
+		}
+		
 		summary.cantDocUtilizados = summary.cantDocEmitidos + summary.cantDocRechazados + summary.cantDocSinRespuesta;
 		return summary;
 
@@ -203,11 +246,11 @@ public interface SummaryStrategy {
 		return item;
 	}
 
-	static RDUItem getRDUItem(String serie, Long nroCFE) {
+	static RDUItem getRDUItem(String serie, long desde, long hasta) {
 		RDUItem item = new RDUItem();
 		item.setSerie(serie);
-		item.setNroDesde(new BigInteger(String.valueOf(nroCFE)));
-		item.setNroHasta(new BigInteger(String.valueOf(nroCFE)));
+		item.setNroDesde(new BigInteger(String.valueOf(desde)));
+		item.setNroHasta(new BigInteger(String.valueOf(hasta)));
 		return item;
 	}
 
