@@ -19,6 +19,7 @@ import javax.persistence.OneToOne;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.security.EmailMessage;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
@@ -89,6 +90,10 @@ public class Empresa extends Model<Empresa>{
 	
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="empresa", fetch=FetchType.LAZY)
 	private List<Sucursal> sucursales;
+	
+	@ApiModelProperty(hidden = true)
+	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
+	private List<EmailMessage> emailsRecibidosError;
 
 	public Empresa() {
 		super();
@@ -340,5 +345,13 @@ public class Empresa extends Model<Empresa>{
 
 	public void setSucursales(List<Sucursal> sucursales) {
 		this.sucursales = sucursales;
+	}
+
+	public List<EmailMessage> getEmailsRecibidosError() {
+		return emailsRecibidosError;
+	}
+
+	public void setEmailsRecibidosError(List<EmailMessage> emailsRecibidosError) {
+		this.emailsRecibidosError = emailsRecibidosError;
 	}
 }

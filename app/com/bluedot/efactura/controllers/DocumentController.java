@@ -410,7 +410,7 @@ public class DocumentController extends AbstractController {
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
 				.getMicroControllersFactory();
 
-		factory.getServiceMicroController(empresaReceptora).getDocumentosEntrantes();
+		factory.getServiceMicroController(empresaReceptora).obtenerYProcesarEmailsEntrantesDesdeServerCorreo();
 		
 		return json(OK);
 

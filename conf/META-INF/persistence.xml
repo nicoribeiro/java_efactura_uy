@@ -50,7 +50,7 @@
 		<class>com.bluedot.efactura.model.Respuesta</class>
 		<class>com.bluedot.efactura.model.RetencionPercepcion</class>
 		
-		
+		  
 		<properties>
 			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
 <!-- 			<property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect" /> -->

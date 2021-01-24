@@ -7,7 +7,7 @@
 		class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<Pattern>
-                %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n
+                %d{yyyy-MM-dd HH:mm:ss.SSS} [%.7t] %-5level %logger{36} - %msg%n
             </Pattern>
 		</encoder>
 	</appender>
@@ -59,6 +59,7 @@
 	<logger name="com.sun.mail.imap" level="OFF" />
 	<logger name="javax.mail" level="OFF" />
 	<logger name="com.bluedot" level="INFO" />
+	<logger name="com.bluedot.efactura.microControllers.implementation" level="DEBUG" />
 
 	<!-- Log all SQL DML statements as they are executed -->
 	<!-- <Logger name="org.hibernate.SQL" level="debug" /> -->

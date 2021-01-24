@@ -1,5 +1,7 @@
 package com.bluedot.efactura.serializers;
 
+import com.bluedot.commons.security.Attachment;
+import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.serializers.JSONSerializer;
 import com.bluedot.commons.serializers.JSONSerializerProvider;
 import com.bluedot.efactura.model.CAE;

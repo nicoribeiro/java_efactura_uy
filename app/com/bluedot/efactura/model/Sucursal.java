@@ -72,7 +72,7 @@ public class Sucursal extends Model<Sucursal>{
 	
 	public static Sucursal findByCodigoSucursal(List<Sucursal> sucursales, int codigoSucursal){
 		for(Sucursal sucursal:sucursales) {
-			if (sucursal.getCodigoSucursal()==codigoSucursal)
+			if (sucursal.getCodigoSucursal()!=null && sucursal.getCodigoSucursal()==codigoSucursal)
 				return sucursal;
 		}
 		return null;
