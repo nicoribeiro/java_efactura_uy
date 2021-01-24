@@ -369,6 +369,9 @@ public class DocumentController extends AbstractController {
 
 	}
 	
+	
+
+	
 	public Promise<Result> enviarCfeEmpresa(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
@@ -417,28 +420,92 @@ public class DocumentController extends AbstractController {
 	}
 	
 	public Promise<Result> getDocumentos(String rut) throws APIException {
-		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
+		Empresa empresa = Empresa.findByRUT(rut, true);
 		
 		Date fromDate = request().getQueryString("fromDate") != null ? (new Date(Long.parseLong(request().getQueryString("fromDate")) * 1000)) : null;
 		Date toDate = request().getQueryString("toDate") != null ? (new Date(Long.parseLong(request().getQueryString("toDate")) * 1000)) : null;
 		
 		int page = request().getQueryString("page") != null ? Integer.parseInt(request().getQueryString("page")) : 1;
-		int pageSize = request().getQueryString("pageSize") != null ? Math.min(Integer.parseInt(request().getQueryString("pageSize")), 50) : 50;
+		int pageSize = request().getQueryString("pageSize") != null ? Math.min(Integer.parseInt(request().getQueryString("pageSize")), 50) : 50;		
 		
-		if (page <=0)
-			page = 1;
-		if (pageSize <=0)
-			pageSize = 10;
+		Integer nro = request().getQueryString("nro") != null ? Integer.parseInt(request().getQueryString("nro")) : null;
+		Integer idTipoDoc = request().getQueryString("idTipoDoc") != null ? Integer.parseInt(request().getQueryString("idTipoDoc")) : null;
+		String serie = request().getQueryString("serie") != null ? request().getQueryString("serie"): null;
 		
-		DireccionDocumento direccion = request().getQueryString("direccion") != null ? DireccionDocumento.valueOf(request().getQueryString("direccion")) : DireccionDocumento.AMBOS;
-		
-		Tuple<List<CFE>,Long> cfes = CFE.find(empresaReceptora, fromDate, toDate, page, pageSize, direccion);
-		
-		JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
-		
-		return json(JSONUtils.createObjectList(cfeArray, cfes.item2, page, pageSize).toString());
+		if (idTipoDoc !=null && nro!=null && serie!=null){
+			/*
+			 * Solo un documento
+			 */
+			TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+	
+			if (tipo == null)
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
+	
+			List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, null, DireccionDocumento.EMITIDO, true);
+			
+			if (cfes.size()>1)
+				throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
+			
+			CFE cfe = cfes.get(0);
+			
+			JSONObject cfeObject = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
 
+			JSONArray cfeArray = new JSONArray();
+			cfeArray.put(cfeObject);
+			
+			return json(JSONUtils.createObjectList(cfeArray, 1, 1, 1).toString());
+			
+		}else {
+			/*
+			 * Una lista de documentos
+			 */
+			if (page <=0)
+				page = 1;
+			if (pageSize <=0)
+				pageSize = 10;
+			
+			DireccionDocumento direccion = request().getQueryString("direccion") != null ? DireccionDocumento.valueOf(request().getQueryString("direccion")) : DireccionDocumento.AMBOS;
+			
+			Tuple<List<CFE>,Long> cfes = CFE.find(empresa, fromDate, toDate, page, pageSize, direccion);
+			
+			JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
+			
+			return json(JSONUtils.createObjectList(cfeArray, cfes.item2, page, pageSize).toString());
+		}
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	public Promise<Result> getDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+
+		if (tipo == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
+
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, null, DireccionDocumento.EMITIDO, true);
+
+		if (cfes.size()>1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
+		
+		CFE cfe = cfes.get(0);
+		
+		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+
+		cfeJson = JSONUtils.merge(cfeJson, new JSONObject(OK));
+
+		return json(cfeJson.toString());
+	}
+	
+	
+	
 
 	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print)
 			throws APIException {
