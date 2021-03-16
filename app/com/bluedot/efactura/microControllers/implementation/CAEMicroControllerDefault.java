@@ -139,13 +139,14 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 
 	@Override
 	public synchronized IdDocTck getIdDocTick(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago) throws APIException, DatatypeConfigurationException, IOException {
+		
+		if (!caesMap.containsKey(tipoDoc))
+			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
+		
 		IdDocTck iddoc = new IdDocTck();
 
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
-		if (cae==null)
-			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
-		
 		if (montosIncluyenIva)
 			iddoc.setMntBruto(new BigInteger("1"));
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
