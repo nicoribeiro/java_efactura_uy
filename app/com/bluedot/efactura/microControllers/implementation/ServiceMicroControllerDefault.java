@@ -124,9 +124,14 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			}
 		}
 		
-		//Si sigue siendo null no consulto, asumo que hubo un error de comunicacion o que el sobre no existe
+		/*
+		 * Si sigue siendo null el token o el id_receptor no consulto, asumo que hubo un error de comunicacion o que el sobre no existe
+		 * 
+		 * Si el sobreEmitido ya tiene resultado tampoco consulto
+		 */
 		if (sobreEmitido.getToken() != null && sobreEmitido.getIdReceptor() != null){
-			recepcionService.consultaResultadoSobre(sobreEmitido);
+			if (sobreEmitido.getResultado_dgi()== null || sobreEmitido.getResultado_dgi().isEmpty())
+				recepcionService.consultaResultadoSobre(sobreEmitido);
 		}
 		
 		return sobreEmitido;
