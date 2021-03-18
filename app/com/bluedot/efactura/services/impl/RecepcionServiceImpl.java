@@ -545,36 +545,47 @@ public class RecepcionServiceImpl implements RecepcionService {
 			
 			Data result = consultaResultadoSobre(sobre.getToken(), sobre.getIdReceptor());
 
-			sobre.setResultado_dgi(result.getXmlData());
-			sobre.update();
-
+			
 			ACKCFEdefType ACKcfe = (ACKCFEdefType) XML.unMarshall(XML.loadXMLFromString(result.getXmlData()),
 					ACKCFEdefType.class);
-
-			for (Iterator<ACKCFEDet> iterator = ACKcfe.getACKCFEDet().iterator(); iterator.hasNext();) {
-				ACKCFEDet ACKcfeDet = iterator.next();
-				CFE cfe = sobre.getCFE(ACKcfeDet.getNroCFE().longValue(), ACKcfeDet.getSerie(),
-						TipoDoc.fromInt(ACKcfeDet.getTipoCFE().intValue()));
-				if (cfe != null) {
-					cfe.setEstado(ACKcfeDet.getEstado());
-					cfe.update();
-					if (cfe.getEstado() == EstadoACKCFEType.AE){ 
-						/*
-						 * Envio a la empresa
-						 */
-						if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null)
-							this.enviarSobreEmpresa(sobre);
-					}else{
-						for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
-								.iterator(); iterator2.hasNext();) {
-							RechazoCFEDGIType rechazo = iterator2.next();
-							cfe.getMotivo().add(MotivoRechazoCFE.valueOf(rechazo.getMotivo()));
+			
+			if (ACKcfe.getACKCFEDet().isEmpty() && ACKcfe.getCaratula()==null && ACKcfe.getSignature()==null) {
+				/*
+				 * La respuesta no es util, posiblemente antes de tiempo.
+				 */
+				logger.error("La respuesta de DGI al sobre con id:" + sobre.getId() + " no es util.");
+			}else {
+				/*
+				 * Proceso la respuesta
+				 */
+				sobre.setResultado_dgi(result.getXmlData());
+				sobre.update();
+	
+				for (Iterator<ACKCFEDet> iterator = ACKcfe.getACKCFEDet().iterator(); iterator.hasNext();) {
+					ACKCFEDet ACKcfeDet = iterator.next();
+					CFE cfe = sobre.getCFE(ACKcfeDet.getNroCFE().longValue(), ACKcfeDet.getSerie(),
+							TipoDoc.fromInt(ACKcfeDet.getTipoCFE().intValue()));
+					if (cfe != null) {
+						cfe.setEstado(ACKcfeDet.getEstado());
+						cfe.update();
+						if (cfe.getEstado() == EstadoACKCFEType.AE){ 
+							/*
+							 * Envio a la empresa
+							 */
+							if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null)
+								this.enviarSobreEmpresa(sobre);
+						}else{
+							for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
+									.iterator(); iterator2.hasNext();) {
+								RechazoCFEDGIType rechazo = iterator2.next();
+								cfe.getMotivo().add(MotivoRechazoCFE.valueOf(rechazo.getMotivo()));
+							}
+	
 						}
-
+					} else {
+						// TODO ver que se hace si no encuentra al cfe dentro de los
+						// CFE del sobre
 					}
-				} else {
-					// TODO ver que se hace si no encuentra al cfe dentro de los
-					// CFE del sobre
 				}
 			}
 
