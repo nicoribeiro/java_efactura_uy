@@ -26,7 +26,7 @@ WARNING() {
 }
 
 INFO $RESULTADOS_URL
-curl -v -X POST "$RESULTADOS_URL" -H "AUTH-TOKEN: $AUTH_TOKEN" --compressed >>$LOGS 2>&1
+curl -v -X GET "$RESULTADOS_URL" -H "AUTH-TOKEN: $AUTH_TOKEN" --compressed >>$LOGS 2>&1
 
 INFO $REPORT_URL
 curl -v -X POST "$REPORT_URL" -H "AUTH-TOKEN: $AUTH_TOKEN" --compressed >>$LOGS 2>&1
