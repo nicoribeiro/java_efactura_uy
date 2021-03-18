@@ -389,7 +389,7 @@ public interface SummaryStrategy {
 			XMLGregorianCalendar date = DatatypeFactory.newInstance()
 					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
 			item.setFecha(date);
-			item.setTotMntRetenido(monto.totValRetPerc);
+			item.setTotMntRetenido(monto.totMntRetenido);
 			return item;
 		} catch (DatatypeConfigurationException e) {
 			throw APIException.raise(e);
