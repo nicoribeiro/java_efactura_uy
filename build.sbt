@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
 	"com.google.zxing" % "core" % "3.2.1",
 	"org.hibernate" % "hibernate-entitymanager" % "4.3.11.Final",
 	//DB 
-	"postgresql" % "postgresql" % "8.2-507.jdbc4",
+	"org.postgresql" % "postgresql" % "42.2.16",
 	//"mysql" % "mysql-connector-java" % "5.1.6",
 	"com.zaxxer" % "HikariCP-java6" % "2.3.7",
     "com.edulify" %% "play-hikaricp" % "2.0.6",
