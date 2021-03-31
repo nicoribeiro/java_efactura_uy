@@ -65,6 +65,9 @@ POST     /api/v1/empresa/:rut/cae                                com.bluedot.efa
 
 ###### EMPRESAS
 
+# Crea una Empresa
+POST      /api/v1/empresa                                        com.bluedot.efactura.controllers.EmpresasController.crearEmpresa()
+
 # Edita una Empresa
 PUT      /api/v1/empresa/:rut                                    com.bluedot.efactura.controllers.EmpresasController.editarEmpresa(rut:String)	
 

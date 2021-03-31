@@ -1,18 +1,5 @@
 package com.bluedot.efactura;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.StringTokenizer;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.bluedot.commons.utils.QR;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Detalle;
@@ -27,6 +14,18 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfTemplate;
 import com.itextpdf.text.pdf.PdfWriter;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.StringTokenizer;
 
 /*
  * http://www.mysamplecode.com/2012/10/generate-pdf-using-java-and-itext.html
@@ -603,27 +602,27 @@ public class GenerateInvoice {
 		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 		case eRemito:
 		case eRemito_Contingencia:
-		case eResguardo:
-		case eResguardo_Contingencia:
-		case Nota_de_Credito_de_eFactura_Exportacion:
-		case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
-		case Nota_de_Debito_de_eFactura_Exportacion:
-		case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
-		case eFactura_Exportacion:
-		case eFactura_Exportacion_Contingencia:
-		case eRemito_de_Exportacion:
-		case eRemito_de_Exportacion_Contingencia:
-			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 7, "www.dgi.com.uy",
-					PdfContentByte.ALIGN_RIGHT,3,0);
+			case eResguardo:
+			case eResguardo_Contingencia:
+			case Nota_de_Credito_de_eFactura_Exportacion:
+			case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
+			case Nota_de_Debito_de_eFactura_Exportacion:
+			case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
+			case eFactura_Exportacion:
+			case eFactura_Exportacion_Contingencia:
+			case eRemito_de_Exportacion:
+			case eRemito_de_Exportacion_Contingencia:
+				createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 7, "www.dgi.gub.uy",
+						PdfContentByte.ALIGN_RIGHT, 3, 0);
 
-			break;
+				break;
 
-		case eTicket:
-		case eTicket_Contingencia:
-		case eTicket_Venta_por_Cuenta_Ajena:
-		case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-		case Nota_de_Credito_de_eTicket:
-		case Nota_de_Credito_de_eTicket_Contingencia:
+			case eTicket:
+			case eTicket_Contingencia:
+			case eTicket_Venta_por_Cuenta_Ajena:
+			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Credito_de_eTicket:
+			case Nota_de_Credito_de_eTicket_Contingencia:
 		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
 		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 		case Nota_de_Debito_de_eTicket:

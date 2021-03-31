@@ -15,6 +15,7 @@ WantedBy=multi-user.target
 Type=forking
 User=root
 Group=root
+WorkingDirectory=/srv/java_efactura_uy
 ExecStart=/srv/java_efactura_uy/scripts/service.sh prod start
 ExecStop=/srv/java_efactura_uy/scripts/service.sh prod stop
 #RemainAfterExit=true
