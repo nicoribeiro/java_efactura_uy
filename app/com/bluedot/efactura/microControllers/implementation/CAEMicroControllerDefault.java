@@ -138,7 +138,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 
 	@Override
-	public synchronized IdDocTck getIdDocTick(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago) throws APIException, DatatypeConfigurationException, IOException {
+	public synchronized IdDocTck getIdDocTick(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago, Date fchEmis) throws APIException, DatatypeConfigurationException, IOException {
 		
 		if (!caesMap.containsKey(tipoDoc))
 			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
@@ -161,7 +161,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Fecha
 		 */
-		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(fchEmis));
 		iddoc.setFchEmis(date);
 
 		return iddoc;
@@ -195,7 +195,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 
 	@Override
-	public synchronized IdDocResg getIdDocResg(TipoDoc tipoDoc) throws APIException, DatatypeConfigurationException, IOException {
+	public synchronized IdDocResg getIdDocResg(TipoDoc tipoDoc, Date fchEmis) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocResg iddoc = new IdDocResg();
 
 		CAE cae = caesMap.get(tipoDoc).get(0);
@@ -207,14 +207,14 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Fecha
 		 */
-		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(fchEmis));
 		iddoc.setFchEmis(date);
 
 		return iddoc;
 	}
 	
 	@Override
-	public IdDocRem getIdDocRem(TipoDoc tipoDoc) throws APIException, DatatypeConfigurationException, IOException {
+	public IdDocRem getIdDocRem(TipoDoc tipoDoc, Date fchEmis) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocRem iddoc = new IdDocRem();
 
 		CAE cae = caesMap.get(tipoDoc).get(0);
@@ -226,7 +226,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Fecha
 		 */
-		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(fchEmis));
 		iddoc.setFchEmis(date);
 
 		return iddoc;

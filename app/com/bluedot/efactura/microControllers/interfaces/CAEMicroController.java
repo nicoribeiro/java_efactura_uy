@@ -55,7 +55,7 @@ public interface CAEMicroController {
 	 * 
 	 * @return
 	 */
-	 IdDocTck getIdDocTick(TipoDoc tipo, boolean montosIncluyenIva, int formaPago)
+	 IdDocTck getIdDocTick(TipoDoc tipo, boolean montosIncluyenIva, int formaPago, Date fchEmis)
 			throws APIException, DatatypeConfigurationException, IOException;
 
 	/**
@@ -63,7 +63,7 @@ public interface CAEMicroController {
 	 * 
 	 * @return
 	 */
-	IdDocResg getIdDocResg(TipoDoc tipo)
+	IdDocResg getIdDocResg(TipoDoc tipo, Date fchEmis)
 			throws APIException, DatatypeConfigurationException, IOException;
 
 	/**
@@ -71,7 +71,7 @@ public interface CAEMicroController {
 	 * 
 	 * @return
 	 */
-	IdDocRem getIdDocRem(TipoDoc tipo)
+	IdDocRem getIdDocRem(TipoDoc tipo, Date fchEmis)
 			throws APIException, DatatypeConfigurationException, IOException;
 	
 	void addCAE(CAE cae) throws APIException;
