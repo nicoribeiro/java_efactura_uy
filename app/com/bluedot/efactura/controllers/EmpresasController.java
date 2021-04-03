@@ -176,15 +176,9 @@ public class EmpresasController extends AbstractController {
 		JsonNode empresaJson = request().body().asJson();
 		Empresa empresa = new Empresa();
 		String rut = empresaJson.has("rut") ? empresaJson.findPath("rut").asText() : null;
-		String departamento = empresaJson.has("departamento") ? empresaJson.findPath("departamento").asText() : null;
-		String direccion = empresaJson.has("direccion") ? empresaJson.findPath("direccion").asText() : null;
 		String nombreComercial = empresaJson.has("nombreComercial") ? empresaJson.findPath("nombreComercial").asText() : null;
-		String localidad = empresaJson.has("localidad") ? empresaJson.findPath("localidad").asText() : null;
-		Integer codigoSucursal = empresaJson.has("codigoSucursal") ? empresaJson.findPath("codigoSucursal").asInt() : null;
 		String logoPath = empresaJson.has("logoPath") ? empresaJson.findPath("logoPath").asText() : null;
 		String paginaWeb = empresaJson.has("paginaWeb") ? empresaJson.findPath("paginaWeb").asText() : null;
-		String telefono = empresaJson.has("telefono") ? empresaJson.findPath("telefono").asText() : null;
-		String codigoPostal = empresaJson.has("codigoPostal") ? empresaJson.findPath("codigoPostal").asText() : null;
 		String resolucion = empresaJson.has("resolucion") ? empresaJson.findPath("resolucion").asText() : null;
 		String razon = empresaJson.has("razon") ? empresaJson.findPath("razon").asText() : null;
 
@@ -226,26 +220,8 @@ public class EmpresasController extends AbstractController {
 		if (paginaWeb != null)
 			empresa.setPaginaWeb(paginaWeb);
 
-		if (telefono != null)
-			empresa.setTelefono(telefono);
-
-		if (codigoPostal != null)
-			empresa.setCodigoPostal(codigoPostal);
-
-		if (codigoSucursal != null)
-			empresa.setCodigoSucursal(codigoSucursal);
-
-		if (departamento != null)
-			empresa.setDepartamento(departamento);
-
-		if (direccion != null)
-			empresa.setDireccion(direccion);
-
 		if (nombreComercial != null)
 			empresa.setNombreComercial(nombreComercial);
-
-		if (localidad != null)
-			empresa.setLocalidad(localidad);
 
 		if (resolucion != null)
 			empresa.setResolucion(resolucion);
