@@ -1,43 +1,11 @@
 package com.bluedot.efactura.model;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.imageio.ImageIO;
-import javax.persistence.CascadeType;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-
-import org.hibernate.annotations.Type;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
-
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.Tuple;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
-
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.ERem;
 import dgi.classes.recepcion.CFEDefType.EResg;
@@ -46,6 +14,21 @@ import dgi.classes.recepcion.TipMonType;
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import org.hibernate.annotations.Type;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
+
+import javax.imageio.ImageIO;
+import javax.persistence.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 @Entity
 @ApiModel
@@ -374,21 +357,21 @@ public class CFE extends Model<CFE>{
 		case AMBOS:
 			q.getCriteria().add( Restrictions.or( Restrictions.eq("empresaReceptora", empresa), Restrictions.eq("empresaEmisora", empresa))   );
 			break;
-		case EMITIDO:
-			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa)  );
-			break;
-		case RECIBIDO:
-			q.getCriteria().add( Restrictions.eq("empresaReceptora", empresa));
-			break;
+			case EMITIDO:
+				q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
+				break;
+			case RECIBIDO:
+				q.getCriteria().add(Restrictions.eq("empresaReceptora", empresa));
+				break;
 		}
-		
+
 		long rowCount = q.findRowCount();
-		
-		//Sort by id by default
-		q.orderByAsc("id");
-		
-		List<CFE> list =  page > 0 && pageSize > 0 ? q.findPage(page, pageSize) : q.findList();
-		
+
+		//Sort by fechaEmision by default
+		q.orderByDesc("fechaEmision");
+
+		List<CFE> list = page > 0 && pageSize > 0 ? q.findPage(page, pageSize) : q.findList();
+
 		return new Tuple<List<CFE>, Long>(list, rowCount);
 	}
 	
