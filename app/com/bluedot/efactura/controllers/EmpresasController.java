@@ -169,7 +169,139 @@ public class EmpresasController extends AbstractController {
 		
 		return json(json.toString());
 	}
-	
+
+
+	public Promise<Result> crearEmpresa() throws APIException
+	{
+		JsonNode empresaJson = request().body().asJson();
+		Empresa empresa = new Empresa();
+		String rut = empresaJson.has("rut") ? empresaJson.findPath("rut").asText() : null;
+		String departamento = empresaJson.has("departamento") ? empresaJson.findPath("departamento").asText() : null;
+		String direccion = empresaJson.has("direccion") ? empresaJson.findPath("direccion").asText() : null;
+		String nombreComercial = empresaJson.has("nombreComercial") ? empresaJson.findPath("nombreComercial").asText() : null;
+		String localidad = empresaJson.has("localidad") ? empresaJson.findPath("localidad").asText() : null;
+		Integer codigoSucursal = empresaJson.has("codigoSucursal") ? empresaJson.findPath("codigoSucursal").asInt() : null;
+		String logoPath = empresaJson.has("logoPath") ? empresaJson.findPath("logoPath").asText() : null;
+		String paginaWeb = empresaJson.has("paginaWeb") ? empresaJson.findPath("paginaWeb").asText() : null;
+		String telefono = empresaJson.has("telefono") ? empresaJson.findPath("telefono").asText() : null;
+		String codigoPostal = empresaJson.has("codigoPostal") ? empresaJson.findPath("codigoPostal").asText() : null;
+		String resolucion = empresaJson.has("resolucion") ? empresaJson.findPath("resolucion").asText() : null;
+		String razon = empresaJson.has("razon") ? empresaJson.findPath("razon").asText() : null;
+
+		String hostRecepcion = empresaJson.has("hostRecepcion") ? empresaJson.findPath("hostRecepcion").asText() : null;
+		String passRecepcion = empresaJson.has("passRecepcion") ? empresaJson.findPath("passRecepcion").asText() : null;
+		String puertoRecepcion = empresaJson.has("puertoRecepcion") ? empresaJson.findPath("puertoRecepcion").asText() : null;
+		String userRecepcion = empresaJson.has("userRecepcion") ? empresaJson.findPath("userRecepcion").asText() : null;
+		String mailNotificaciones = empresaJson.has("mailNotificaciones") ? empresaJson.findPath("mailNotificaciones").asText() : null;
+		String mailRecepcion = empresaJson.has("mailRecepcion") ? empresaJson.findPath("mailRecepcion").asText() : null;
+		String fromEnvio = empresaJson.has("fromEnvio") ? empresaJson.findPath("fromEnvio").asText() : null;
+
+		String certificado = empresaJson.has("certificado") ? empresaJson.findPath("certificado").asText() : null;
+		String privateKey = empresaJson.has("privateKey") ? empresaJson.findPath("privateKey").asText() : null;
+
+		if (hostRecepcion != null)
+			empresa.setHostRecepcion(hostRecepcion);
+
+		if (rut != null)
+			empresa.setRut(rut);
+
+		if (passRecepcion != null)
+			empresa.setPassRecepcion(passRecepcion);
+
+		if (puertoRecepcion != null)
+			empresa.setPuertoRecepcion(puertoRecepcion);
+
+		if (userRecepcion != null)
+			empresa.setUserRecepcion(userRecepcion);
+
+		if (mailNotificaciones != null)
+			empresa.setMailNotificaciones(mailNotificaciones);
+
+		if (mailRecepcion != null)
+			empresa.setMailRecepcion(mailRecepcion);
+
+		if (fromEnvio != null)
+			empresa.setFromEnvio(fromEnvio);
+
+		if (paginaWeb != null)
+			empresa.setPaginaWeb(paginaWeb);
+
+		if (telefono != null)
+			empresa.setTelefono(telefono);
+
+		if (codigoPostal != null)
+			empresa.setCodigoPostal(codigoPostal);
+
+		if (codigoSucursal != null)
+			empresa.setCodigoSucursal(codigoSucursal);
+
+		if (departamento != null)
+			empresa.setDepartamento(departamento);
+
+		if (direccion != null)
+			empresa.setDireccion(direccion);
+
+		if (nombreComercial != null)
+			empresa.setNombreComercial(nombreComercial);
+
+		if (localidad != null)
+			empresa.setLocalidad(localidad);
+
+		if (resolucion != null)
+			empresa.setResolucion(resolucion);
+
+		if (razon != null)
+			empresa.setRazon(razon);
+
+
+		if (logoPath!=null){
+			Path path = Paths.get(logoPath);
+			try {
+				byte[] logo = Files.readAllBytes(path);
+				empresa.setLogo(logo);
+			} catch (IOException e) {
+			}
+
+		}
+
+		if (certificado != null){
+			if (privateKey ==null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("privateKey").setDetailMessage("privateKey");
+
+			FirmaDigital firmaDigital = new FirmaDigital();
+
+			firmaDigital.setCertificate(certificado);
+			firmaDigital.setPrivateKey(privateKey);
+			try {
+
+				KeyStore keystore = firmaDigital.getKeyStore();
+
+
+				if(keystore.getCertificate(FirmaDigital.KEY_ALIAS).getType().equals("X.509")){
+					X509Certificate certificate  = (X509Certificate) keystore.getCertificate(FirmaDigital.KEY_ALIAS);
+
+					firmaDigital.setValidaHasta(certificate.getNotAfter());
+					firmaDigital.setValidaDesde(certificate.getNotBefore());
+
+					if (empresa.getFirmaDigital()!=null)
+						empresa.getFirmaDigital().delete();
+
+					firmaDigital.setEmpresa(empresa);
+					firmaDigital.save();
+
+				}
+			} catch (IOException | GeneralSecurityException e) {
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("certificado invalido o clave privada invalida");
+			}
+
+
+		}
+
+		empresa.save();
+
+		return json(OK);
+	}
+
 	//TODO permisis de edicion 
 	public Promise<Result> editarEmpresa(String rut) throws APIException
 	{
