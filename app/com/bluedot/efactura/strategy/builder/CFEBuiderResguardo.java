@@ -1,9 +1,9 @@
 package com.bluedot.efactura.strategy.builder;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -40,16 +40,13 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 
 		strategy.getCFE().setCantLineas(detalleJson.length());
 		
-		strategy.getCFE().setTotMntRetenido(new Double(0));
+		strategy.getCFE().setTotMntRetenido(Double.valueOf("0"));
 		
 		for (int i = 1; i <= detalleJson.length(); i++) {
 			ItemResgWrapper item = (ItemResgWrapper) strategy.createItem();
 			JSONObject itemJson = detalleJson.getJSONObject(i - 1);
 
 			item.setNroLinDet(i);
-
-			if (itemJson.has("IndFact"))
-				item.setIndFact(new BigInteger(Commons.safeGetString(itemJson,"IndFact")));
 
 			JSONArray retencionesJSON = Commons.safeGetJSONArray(itemJson,"RetencPercep");
 
@@ -137,20 +134,32 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 		
 		List<TotalesRetencPercepInterface> totalesRetenciones = totales.getRetencPerceps();
 		
+		HashMap<String, TotalesRetencPercepResg> map = new HashMap<String, TotalesRetencPercepResg>();
+		
+		/*
+		 * Itero sobre todos los items del detalle de el resguardo
+		 */
 		for (Iterator<ItemInterface> iterator = items.iterator(); iterator.hasNext();) {
 			ItemInterface item = iterator.next();
 			List<RetPercInterface> retencionesPercepciones = item.getRetencPerceps();
 			
-			TotalesRetencPercepResg retencion = new TotalesRetencPercepResg(new RetencPercep()); 
+			TotalesRetencPercepResg retencion;
 			
 			for (Iterator<RetPercInterface> iterator2 = retencionesPercepciones.iterator(); iterator2.hasNext();) {
 				RetPercInterface retPerc = iterator2.next();
-				retencion.setCodRet(retPerc.getCodRet());
+				
+				if (map.containsKey(retPerc.getCodRet()))
+					retencion = map.get(retPerc.getCodRet());
+				else {
+					retencion = new TotalesRetencPercepResg(new RetencPercep());
+					retencion.setCodRet(retPerc.getCodRet());
+					totalesRetenciones.add(retencion);
+					map.put(retPerc.getCodRet(), retencion);
+				}
+				
 				retencion.setValRetPerc(retencion.getValRetPerc()!=null?retencion.getValRetPerc().add(retPerc.getValRetPerc()):retPerc.getValRetPerc());
 				total = total.add(retPerc.getValRetPerc());
 			}
-			
-			totalesRetenciones.add(retencion);
 		}
 		
 		totales.setRetencPercep(totalesRetenciones);

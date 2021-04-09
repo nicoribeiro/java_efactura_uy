@@ -58,24 +58,30 @@ public interface SummaryStrategy {
 			switch (tipo) {
 			// TODO se puede poner el nombre de la clase en el TipoDoc y hacer
 			// un class.forName generico
-			case Nota_de_Credito_de_eFactura:
-				return new Strategy_112();
-			case eFactura:
-				return new Strategy_111();
-			case Nota_de_Debito_de_eFactura:
-				return new Strategy_113();
+			
 			case eTicket:
 				return new Strategy_101();
 			case Nota_de_Credito_de_eTicket:
 				return new Strategy_102();
 			case Nota_de_Debito_de_eTicket:
 				return new Strategy_103();
+			
+			case eFactura:
+				return new Strategy_111();
+			case Nota_de_Credito_de_eFactura:
+				return new Strategy_112();
+			case Nota_de_Debito_de_eFactura:
+				return new Strategy_113();
+				
 			case eResguardo:
 				return new Strategy_182();
+			
 			case eTicket_Contingencia:
 				return new Strategy_201();
 			case eFactura_Contingencia:
 				return new Strategy_211();
+			case eResguardo_Contingencia:
+				return new Strategy_282();
 
 			case Nota_de_Credito_de_eFactura_Contingencia:
 			case Nota_de_Credito_de_eFactura_Exportacion:
@@ -107,7 +113,7 @@ public interface SummaryStrategy {
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
 
-			case eResguardo_Contingencia:
+			
 
 			case eTicket_Venta_por_Cuenta_Ajena:
 			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:

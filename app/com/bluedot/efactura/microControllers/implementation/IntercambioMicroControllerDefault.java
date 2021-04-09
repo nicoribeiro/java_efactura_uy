@@ -345,69 +345,69 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				rechazo.setGlosa("No cumple validaciones (*) de Formato comprobantes");
 				cfe.getMotivo().add(MotivoRechazoCFE.E05);
 	 		}
-		}
+		} else {
+	 		/*
+			 * CONTROLES CFE
+			 * 
+			 * E01 Tipo y No de CFE ya fue reportado como anulado
+			 * 
+			 * E02 Tipo y No de CFE ya existe en los registros
+			 * 
+			 * E03 Tipo y No de CFE no se corresponden con el CAE
+			 * 
+			 * E04 Firma electrónica no es válida
+			 * 
+			 * E05 No cumple validaciones (*) de Formato comprobantes
+			 * 
+			 * E07 Fecha Firma de CFE no se corresponde con fecha CAE
+			 */
+			
+	 		/*
+			 * E01
+			 */
+	 		
+			/*
+			 * E02
+			 */
+	 		List<CFE> cfes = CFE.findById(cfe.getEmpresaEmisora(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(), EstadoACKCFEType.AE, DireccionDocumento.EMITIDO, false);
 	
- 		/*
-		 * CONTROLES CFE
-		 * 
-		 * E01 Tipo y No de CFE ya fue reportado como anulado
-		 * 
-		 * E02 Tipo y No de CFE ya existe en los registros
-		 * 
-		 * E03 Tipo y No de CFE no se corresponden con el CAE
-		 * 
-		 * E04 Firma electrónica no es válida
-		 * 
-		 * E05 No cumple validaciones (*) de Formato comprobantes
-		 * 
-		 * E07 Fecha Firma de CFE no se corresponde con fecha CAE
-		 */
-		
- 		/*
-		 * E01
-		 */
- 		
-		/*
-		 * E02
-		 */
- 		List<CFE> cfes = CFE.findById(cfe.getEmpresaEmisora(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(), EstadoACKCFEType.AE, DireccionDocumento.EMITIDO, false);
-
- 		if (cfes.size()>1)
- 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",cfe.getEmpresaEmisora().getRut()+"-"+cfe.getNro()+"-"+cfe.getSerie()+"-"+cfe.getTipo()).setDetailMessage("No identifica a un unico cfe");
- 		
- 		if (cfes.size()==1){
-	 		rechazo = new RechazoCFEDGIType();
-			rechazo.setMotivo("E02");
-			rechazo.setGlosa("Tipo y No de CFE ya existe en los registros");
-			cfe.getMotivo().add(MotivoRechazoCFE.E02);
-			cfe.setEstado(EstadoACKCFEType.BE);
- 		}
- 		
- 		//TODO estos controles
- 		/*
-		 * E03
-		 */
- 		
- 		/*
-		 * E04
-		 */
- 		
- 		/*
-		 * E05
-		 */
- 		
- 		/*
- 		 * TODO:
- 		String xsdPath = "/resources/xsd/originales/EnvioCFE_entreEmpresasv1.32.xsd";
- 		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = factory.newSchema(new File(xsdPath));
-        Validator validator = schema.newValidator();
-        validator.validate(new StreamSource(new File(xmlPath)));
- 		*/
- 		
- 		/*
-		 * E07
-		 */
+	 		if (cfes.size()>1)
+	 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",cfe.getEmpresaEmisora().getRut()+"-"+cfe.getNro()+"-"+cfe.getSerie()+"-"+cfe.getTipo()).setDetailMessage("No identifica a un unico cfe");
+	 		
+	 		if (cfes.size()==1){
+		 		rechazo = new RechazoCFEDGIType();
+				rechazo.setMotivo("E02");
+				rechazo.setGlosa("Tipo y No de CFE ya existe en los registros");
+				cfe.getMotivo().add(MotivoRechazoCFE.E02);
+				cfe.setEstado(EstadoACKCFEType.BE);
+	 		}
+	 		
+	 		//TODO estos controles
+	 		/*
+			 * E03
+			 */
+	 		
+	 		/*
+			 * E04
+			 */
+	 		
+	 		/*
+			 * E05
+			 */
+	 		
+	 		/*
+	 		 * TODO:
+	 		String xsdPath = "/resources/xsd/originales/EnvioCFE_entreEmpresasv1.32.xsd";
+	 		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+	        Schema schema = factory.newSchema(new File(xsdPath));
+	        Validator validator = schema.newValidator();
+	        validator.validate(new StreamSource(new File(xmlPath)));
+	 		*/
+	 		
+	 		/*
+			 * E07
+			 */
+		}
 		
 		/*
 		 * Genero la respuesta

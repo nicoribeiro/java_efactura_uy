@@ -29,6 +29,7 @@ import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.strategy.numeracion.EstrategiaNumeracion;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
@@ -92,17 +93,6 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		}
 	}
 	
-	private synchronized long consumeId(CAE cae) throws IOException, JSONException, APIException
-	{
-		if (cae.getSiguiente()  > cae.getFin())
-			throw APIException.raise(APIErrors.CAE_NOT_AVAILABLE_ID).withParams(cae.getNro(), cae.getTipo());
-
-		long siguiente = cae.getSiguiente();
-		cae.setSiguiente(siguiente+1);
-		cae.update();
-		return siguiente;
-	}
-
 	@Override
 	public synchronized CAEDataType getCAEDataType(TipoDoc tipoDoc) throws APIException, DatatypeConfigurationException, JSONException, ParseException
 	{
@@ -138,7 +128,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 
 	@Override
-	public synchronized IdDocTck getIdDocTick(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago, Date fchEmis) throws APIException, DatatypeConfigurationException, IOException {
+	public synchronized IdDocTck getIdDocTick(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia) throws APIException, DatatypeConfigurationException, IOException {
 		
 		if (!caesMap.containsKey(tipoDoc))
 			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
@@ -151,7 +141,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 			iddoc.setMntBruto(new BigInteger("1"));
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
 		iddoc.setSerie(cae.getSerie());
-		iddoc.setNro(new BigInteger(String.valueOf(consumeId(cae))));
+		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
 		/*
 		 * 1 = Contado
 		 * 
@@ -168,7 +158,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 	
 	@Override
-	public synchronized IdDocFact getIdDocFact(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago, Date fchEmis) throws DatatypeConfigurationException, IOException, JSONException, APIException
+	public synchronized IdDocFact getIdDocFact(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia) throws DatatypeConfigurationException, IOException, JSONException, APIException
 	{
 		IdDocFact iddoc = new IdDocFact();
 
@@ -178,7 +168,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 			iddoc.setMntBruto(new BigInteger("1"));
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
 		iddoc.setSerie(cae.getSerie());
-		iddoc.setNro(new BigInteger(String.valueOf(consumeId(cae))));
+		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
 		/*
 		 * 1 = Contado
 		 * 
@@ -195,14 +185,14 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 
 	@Override
-	public synchronized IdDocResg getIdDocResg(TipoDoc tipoDoc, Date fchEmis) throws APIException, DatatypeConfigurationException, IOException {
+	public synchronized IdDocResg getIdDocResg(TipoDoc tipoDoc, Date fchEmis, EstrategiaNumeracion estrategia) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocResg iddoc = new IdDocResg();
 
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
 		iddoc.setSerie(cae.getSerie());
-		iddoc.setNro(new BigInteger(String.valueOf(consumeId(cae))));
+		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
 		
 		/*
 		 * Fecha
@@ -214,14 +204,14 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 	
 	@Override
-	public IdDocRem getIdDocRem(TipoDoc tipoDoc, Date fchEmis) throws APIException, DatatypeConfigurationException, IOException {
+	public synchronized IdDocRem getIdDocRem(TipoDoc tipoDoc, Date fchEmis, EstrategiaNumeracion estrategia) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocRem iddoc = new IdDocRem();
 
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
 		iddoc.setSerie(cae.getSerie());
-		iddoc.setNro(new BigInteger(String.valueOf(consumeId(cae))));
+		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
 		
 		/*
 		 * Fecha

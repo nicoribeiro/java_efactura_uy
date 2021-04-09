@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -16,6 +17,7 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
+import com.bluedot.commons.utils.IO;
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
@@ -23,6 +25,7 @@ import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.pollers.PollerManager;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
 
@@ -64,6 +67,12 @@ public class ReportController extends AbstractController {
 
 		JSONArray reportes = new JSONArray();
 
+		/*
+		 * Body
+		 */
+		JsonNode jsonNode = request().body().asJson();
+		JSONObject document = new JSONObject(jsonNode.toString());
+		
 		for (int i = 0; i < cantReportes; i++) {
 			JSONObject error = null;
 			ReporteDiario reporte = null;
@@ -73,10 +82,16 @@ public class ReportController extends AbstractController {
 				
 				reporte = factory.getServiceMicroController(empresa)
 						.generarReporteDiario(DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
-
+				
+				if (document.has("Output")) {
+					String filepath = document.getString("Output");
+					IO.writeFile(filepath + "/reporte_" + reporte.getId() + ".xml", reporte.getXml());
+				}
 			} catch (APIException e) {
 				logger.error("APIException:", e);
 				error = e.getJSONObject();
+			} catch (IOException e) {
+				throw APIException.raise(e);
 			}
 
 			JSONObject reporteJSON = new JSONObject();
