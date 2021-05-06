@@ -463,12 +463,12 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 
 	@Override
 	public void enviarCfeEmpresa(CFE cfe) throws APIException{
-		recepcionService.enviarCfeEmpresa(cfe);
+		recepcionService.enviarCorreoReceptorElectronico(cfe);
 	}
 
 	@Override
-	public void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
-		recepcionService.enviarSobreEmpresa(sobre);
+	public void enviarCorreoReceptorElectronico(SobreEmitido sobre) throws APIException {
+		recepcionService.enviarCorreoReceptorElectronico(sobre);
 	}
 
 	

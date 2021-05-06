@@ -29,7 +29,7 @@ public interface ServiceMicroController
 
 	void enviarCfeEmpresa(CFE cfe) throws APIException;
 
-	void enviarSobreEmpresa(SobreEmitido sobre) throws APIException;
+	void enviarCorreoReceptorElectronico(SobreEmitido sobre) throws APIException;
 
 	/**
 	 * Hay 3 tipos de correos que pueden llegar a ser validos

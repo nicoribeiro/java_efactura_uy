@@ -570,10 +570,9 @@ public class RecepcionServiceImpl implements RecepcionService {
 						cfe.update();
 						if (cfe.getEstado() == EstadoACKCFEType.AE){ 
 							/*
-							 * Envio a la empresa
+							 * Envio correos al receptor
 							 */
-							if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null)
-								this.enviarSobreEmpresa(sobre);
+							this.enviarCorreoReceptorElectronico(sobre);
 						}else{
 							for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
 									.iterator(); iterator2.hasNext();) {
@@ -736,7 +735,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 	}
 
 	@Override
-	public void enviarCfeEmpresa(CFE cfe) throws APIException {
+	public void enviarCorreoReceptorElectronico(CFE cfe) throws APIException {
 		SobreEmitido sobre = cfe.getSobreEmitido();
 		
 		if (sobre.getEmpresaReceptora().isEmisorElectronico()){
@@ -750,20 +749,24 @@ public class RecepcionServiceImpl implements RecepcionService {
 					e.printStackTrace();
 				}
 			}
-			enviarSobreEmpresa(sobre);
+			enviarCorreoReceptorElectronico(sobre);
 		}
 		
 	}
 
 	@Override
-	public void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
-		//ENVIO XML
-		Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "");
+	public void enviarCorreoReceptorElectronico(SobreEmitido sobre) throws APIException {
+		
+		if (sobre.getEmpresaReceptora() != null && sobre.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null && sobre.getNombreArchivo()!=null && !sobre.getNombreArchivo().equals("")) {
+			//ENVIO XML
+			Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "");
+		}
 		
 		//ENVIO PDF
 		for(CFE cfe : sobre.getCfes()) {
 			if (cfe.getPdfMailAddress()!=null) {
 				String filename = Commons.getPDFpath(sobre.getEmpresaEmisora(), cfe) + File.separator + Commons.getPDFfilename(cfe);
+				logger.info("PDF filename: " + filename);
 				try {
 					byte[] allBytes = Files.readAllBytes(Paths.get(filename));
 					Commons.enviarMail(cfe.getSucursal(), cfe.getPdfMailAddress(), Commons.getPDFfilename(cfe), allBytes);
