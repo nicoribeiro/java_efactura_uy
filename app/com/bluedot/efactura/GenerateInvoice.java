@@ -284,7 +284,7 @@ public class GenerateInvoice {
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DirRecep"),
 					PdfContentByte.ALIGN_LEFT);
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4,
-					cfe.getSucursal().getCiudad() + " - " + generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DeptoRecep"), PdfContentByte.ALIGN_LEFT);
+					generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("CiudadRecep") + " - " + generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DeptoRecep"), PdfContentByte.ALIGN_LEFT);
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, cfe.getEmpresaReceptora().getRazon(),
 					PdfContentByte.ALIGN_LEFT);
 			break;
