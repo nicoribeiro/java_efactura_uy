@@ -1,501 +1,770 @@
 {
-
-"101":[
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "400",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "4200.00",
-	                "NomItem": "aaa"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "2",
-	                "Cantidad": "180",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "22.00",
-	                "NomItem": "jjj"
-	            },{
-	                "NroLinDet": 3,
-	                "IndFact": "1",
-	                "Cantidad": "120",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "35.00",
-	                "NomItem": "ccc"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"3",
-				"CodPaisRecep":"UY",
-				"DocRecep":"13353214",
-				"RznSocRecep":"Juan Pérez"
-			},"MntBruto":"1","FmaPago":1},
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "2",
-	                "Cantidad": "500",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "1650.00",
-	                "NomItem": "ddd"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "6",
-	                "Cantidad": "100",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "2500.00",
-	                "NomItem": "xxx"
-	            },{
-	                "NroLinDet": 3,
-	                "IndFact": "7",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "2500.00",
-	                "NomItem": "xxx"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"3",
-				"CodPaisRecep":"UY",
-				"DocRecep":"13353214",
-				"RznSocRecep":"Juan Pérez"
-			},"MntBruto":"1","FmaPago":2},    
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "2",
-	                "Cantidad": "800",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "1500.00",
-	                "NomItem": "eee"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "3",
-	                "Cantidad": "100",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "3600.00",
-	                "NomItem": "fff"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"3",
-				"CodPaisRecep":"UY",
-				"DocRecep":"13353214",
-				"RznSocRecep":"Juan Pérez"
-			},"MntBruto":"1","FmaPago":1},    
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "2",
-	                "Cantidad": "1000",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "4400.00",
-	                "NomItem": "hhh"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"3",
-				"CodPaisRecep":"UY",
-				"DocRecep":"13353214",
-				"RznSocRecep":"Juan Pérez"
-			},"MntBruto":"1","FmaPago":1}
-	],
-
-"102":[  
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "2",
-	                "Cantidad": "500",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "1650.00",
-	                "NomItem": "ddd"
-	            }
-	        ],
-	        "Referencia":{
-	        	"TpoDocRef": "101",
-	        	"Serie":"A",
-	        	"NroCFERef":"2"
-	        },"Receptor":{
-				"TipoDocRecep":"3",
-				"CodPaisRecep":"UY",
-				"DocRecep":"13353214",
-				"RznSocRecep":"Juan Pérez"
-			},"MntBruto":"1","FmaPago":2
-	 },    
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "160950.00",
-	                "NomItem": "Dto.TB"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "2",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "550.00",
-	                "NomItem": "Dto.TM"
-	            }
-	        ],
-	        "Referencia":{
-	        	"IndGlobal": "1",
-	        	"RazonRef":"Dto. e-ticket. mes xxx"
-	        },"Receptor":{
-				"TipoDocRecep":"3",
-				"CodPaisRecep":"UY",
-				"DocRecep":"13353214",
-				"RznSocRecep":"Juan Pérez"
-			},"MntBruto":"1","FmaPago":1
-	  }
-	],
-	
-	
-"103":[  
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "130244.00",
-	                "NomItem": "Rec.TB"
-	            }
-	        ],
-	        "Referencia":{
-	        	"TpoDocRef": "101",
-	        	"Serie":"A",
-	        	"NroCFERef":"4"
-	        },"Receptor":{
-				"TipoDocRecep":"3",
-				"CodPaisRecep":"UY",
-				"DocRecep":"13353214",
-				"RznSocRecep":"Juan Pérez"
-			},"MntBruto":"1","FmaPago":1
-	 },    
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "230222.00",
-	                "NomItem": "Rec.TB"
-	            }
-	        ],
-	        "Referencia":{
-	        	"IndGlobal": "1",
-	        	"RazonRef":"Rec. e-ticket mes xxx"
-	        },"Receptor":{
-				"TipoDocRecep":"3",
-				"CodPaisRecep":"UY",
-				"DocRecep":"13353214",
-				"RznSocRecep":"Juan Pérez"
-			},"MntBruto":"1","FmaPago":1
-	  }
-	],
-	
-"201":[  
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "2",
-	                "Cantidad": "15.75",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "22750.00",
-	                "NomItem": "kkk"
-	            },
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "400.80",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "14720.75",
-	                "NomItem": "lll"
-	            },
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "1",
-	                "Cantidad": "7.50",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "3750.00",
-	                "NomItem": "mmm"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"3",
-				"CodPaisRecep":"UY",
-				"DocRecep":"13353214",
-				"RznSocRecep":"Juan Pérez"
-			},"MntBruto":"1","FmaPago":1
-		}
-	],
-	
-	
-"111":[
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "10",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "1000.00",
-	                "NomItem": "aaa"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "3",
-	                "Cantidad": "5",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "2000.00",
-	                "NomItem": "bbb"
-	            },{
-	                "NroLinDet": 3,
-	                "IndFact": "6",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "5000.00",
-	                "NomItem": "ccc"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"2",
-				"CodPaisRecep":"UY",
-				"DocRecep":"214844360018",
-				"RznSocRecep":"DGI",
-				"DirRecep":"Fernández Crespo 1534",
-				"CiudadRecep":"Montevideo"
-			},"FmaPago":1},
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "2",
-	                "Cantidad": "50",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "1500.00",
-	                "NomItem": "ddd"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "6",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "2500.00",
-	                "NomItem": "xxx"
-	            },{
-	                "NroLinDet": 3,
-	                "IndFact": "7",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "1500.00",
-	                "NomItem": "xxx"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"2",
-				"CodPaisRecep":"UY",
-				"DocRecep":"214844360018",
-				"RznSocRecep":"DGI",
-				"DirRecep":"Fernández Crespo 1534",
-				"CiudadRecep":"Montevideo"
-			},"FmaPago":2},    
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "2",
-	                "Cantidad": "8",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "1000.00",
-	                "NomItem": "eee"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "3",
-	                "Cantidad": "10",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "4000.00",
-	                "NomItem": "fff"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "1",
-	                "Cantidad": "200",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "2000.00",
-	                "NomItem": "ggg"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"2",
-				"CodPaisRecep":"UY",
-				"DocRecep":"214844360018",
-				"RznSocRecep":"DGI",
-				"DirRecep":"Fernández Crespo 1534",
-				"CiudadRecep":"Montevideo"
-			},"FmaPago":1},    
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "2",
-	                "Cantidad": "10",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "400.00",
-	                "NomItem": "hhh"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "2",
-	                "Cantidad": "25",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "100000.00",
-	                "NomItem": "iii"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "6",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "8758.00",
-	                "NomItem": "yyy"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"2",
-				"CodPaisRecep":"UY",
-				"DocRecep":"214844360018",
-				"RznSocRecep":"DGI",
-				"DirRecep":"Fernández Crespo 1534",
-				"CiudadRecep":"Montevideo"
-			},"FmaPago":1}
-	],
-
-"112":[  
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "2",
-	                "Cantidad": "50",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "1500.00",
-	                "NomItem": "ddd"
-	            }
-	        ],
-	        "Referencia":{
-	        	"TpoDocRef": "111",
-	        	"Serie":"A",
-	        	"NroCFERef":"2"
-	        },"Receptor":{
-				"TipoDocRecep":"2",
-				"CodPaisRecep":"UY",
-				"DocRecep":"214844360018",
-				"RznSocRecep":"DGI",
-				"DirRecep":"Fernández Crespo 1534",
-				"CiudadRecep":"Montevideo"
-			},"FmaPago":2
-	  },    
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "9000.00",
-	                "NomItem": "Dto.TB"
-	            },{
-	                "NroLinDet": 2,
-	                "IndFact": "2",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "500.00",
-	                "NomItem": "Dto.TM"
-	            }
-	        ],
-	        "Referencia":{
-	        	"IndGlobal": "1",
-	        	"RazonRef":"Dto. Fac. mes xxx"
-	        },"Receptor":{
-				"TipoDocRecep":"2",
-				"CodPaisRecep":"UY",
-				"DocRecep":"214844360018",
-				"RznSocRecep":"DGI",
-				"DirRecep":"Fernández Crespo 1534",
-				"CiudadRecep":"Montevideo"
-			},"FmaPago":1
-	  }
-	],
-	
-	
-"113":[  
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "200.00",
-	                "NomItem": "Rec.TB"
-	            }
-	        ],
-	        "Referencia":{
-	        	"TpoDocRef": "111",
-	        	"Serie":"A",
-	        	"NroCFERef":"4"
-	        },"Receptor":{
-				"TipoDocRecep":"2",
-				"CodPaisRecep":"UY",
-				"DocRecep":"214844360018",
-				"RznSocRecep":"DGI",
-				"DirRecep":"Fernández Crespo 1534",
-				"CiudadRecep":"Montevideo"
-			},"FmaPago":1
-	  },    
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "100.00",
-	                "NomItem": "Rec.TB"
-	            }
-	        ],
-	        "Referencia":{
-	        	"IndGlobal": "1",
-	        	"RazonRef":"Rec. Fac. mes xxx"
-	        },"Receptor":{
-				"TipoDocRecep":"2",
-				"CodPaisRecep":"UY",
-				"DocRecep":"214844360018",
-				"RznSocRecep":"DGI",
-				"DirRecep":"Fernández Crespo 1534",
-				"CiudadRecep":"Montevideo"
-			},"FmaPago":1
-	  }
-	],
-	
-"211":[  
-	{"Detalle": [
-	            {
-	                "NroLinDet": 1,
-	                "IndFact": "3",
-	                "Cantidad": "40",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "29350.25",
-	                "NomItem": "nnn"
-	            },
-	            {
-	                "NroLinDet": 2,
-	                "IndFact": "2",
-	                "Cantidad": "150",
-	                "UniMed": "kg",
-	                "PrecioUnitario": "275.00",
-	                "NomItem": "ppp"
-	            },
-	            {
-	                "NroLinDet": 3,
-	                "IndFact": "6",
-	                "Cantidad": "1",
-	                "UniMed": "N/A",
-	                "PrecioUnitario": "9530.00",
-	                "NomItem": "qqq"
-	            }
-	        ],"Receptor":{
-				"TipoDocRecep":"2",
-				"CodPaisRecep":"UY",
-				"DocRecep":"214844360018",
-				"RznSocRecep":"DGI",
-				"DirRecep":"Fernández Crespo 1534",
-				"CiudadRecep":"Montevideo"
-			},"FmaPago":2
-		}
-	]
-	
+   "101": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "400",
+               "UniMed": "kg",
+               "PrecioUnitario": "4200.00",
+               "NomItem": "aaa"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "2",
+               "Cantidad": "180",
+               "UniMed": "kg",
+               "PrecioUnitario": "22.00",
+               "NomItem": "jjj"
+            },
+            {
+               "NroLinDet": 3,
+               "IndFact": "1",
+               "Cantidad": "120",
+               "UniMed": "kg",
+               "PrecioUnitario": "35.00",
+               "NomItem": "ccc"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez"
+         },
+         "MntBruto": "1",
+         "FmaPago": 1
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "2",
+               "Cantidad": "500",
+               "UniMed": "kg",
+               "PrecioUnitario": "1650.00",
+               "NomItem": "ddd"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "6",
+               "Cantidad": "100",
+               "UniMed": "N/A",
+               "PrecioUnitario": "2500.00",
+               "NomItem": "xxx"
+            },
+            {
+               "NroLinDet": 3,
+               "IndFact": "7",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "2500.00",
+               "NomItem": "xxx"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez"
+         },
+         "MntBruto": "1",
+         "FmaPago": 2
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "2",
+               "Cantidad": "800",
+               "UniMed": "kg",
+               "PrecioUnitario": "1500.00",
+               "NomItem": "eee"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "3",
+               "Cantidad": "100",
+               "UniMed": "kg",
+               "PrecioUnitario": "3600.00",
+               "NomItem": "fff"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez"
+         },
+         "MntBruto": "1",
+         "FmaPago": 1
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "2",
+               "Cantidad": "1000",
+               "UniMed": "kg",
+               "PrecioUnitario": "4400.00",
+               "NomItem": "hhh"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez"
+         },
+         "MntBruto": "1",
+         "FmaPago": 1
+      }
+   ],
+   "102": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "2",
+               "Cantidad": "500",
+               "UniMed": "kg",
+               "PrecioUnitario": "1650.00",
+               "NomItem": "ddd"
+            }
+         ],
+         "Referencia": {
+            "TpoDocRef": "101",
+            "Serie": "A",
+            "NroCFERef": "2"
+         },
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez"
+         },
+         "MntBruto": "1",
+         "FmaPago": 2
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "160950.00",
+               "NomItem": "Dto.TB"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "2",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "550.00",
+               "NomItem": "Dto.TM"
+            }
+         ],
+         "Referencia": {
+            "IndGlobal": "1",
+            "RazonRef": "Dto. e-ticket. mes xxx"
+         },
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez"
+         },
+         "MntBruto": "1",
+         "FmaPago": 1
+      }
+   ],
+   "103": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "130244.00",
+               "NomItem": "Rec.TB"
+            }
+         ],
+         "Referencia": {
+            "TpoDocRef": "101",
+            "Serie": "A",
+            "NroCFERef": "4"
+         },
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez"
+         },
+         "MntBruto": "1",
+         "FmaPago": 1
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "230222.00",
+               "NomItem": "Rec.TB"
+            }
+         ],
+         "Referencia": {
+            "IndGlobal": "1",
+            "RazonRef": "Rec. e-ticket mes xxx"
+         },
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez"
+         },
+         "MntBruto": "1",
+         "FmaPago": 1
+      }
+   ],
+   "111": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "10",
+               "UniMed": "kg",
+               "PrecioUnitario": "1000.00",
+               "NomItem": "aaa"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "3",
+               "Cantidad": "5",
+               "UniMed": "kg",
+               "PrecioUnitario": "2000.00",
+               "NomItem": "bbb"
+            },
+            {
+               "NroLinDet": 3,
+               "IndFact": "6",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "5000.00",
+               "NomItem": "ccc"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "2",
+               "Cantidad": "50",
+               "UniMed": "kg",
+               "PrecioUnitario": "1500.00",
+               "NomItem": "ddd"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "6",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "2500.00",
+               "NomItem": "xxx"
+            },
+            {
+               "NroLinDet": 3,
+               "IndFact": "7",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "1500.00",
+               "NomItem": "xxx"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 2
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "2",
+               "Cantidad": "8",
+               "UniMed": "kg",
+               "PrecioUnitario": "1000.00",
+               "NomItem": "eee"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "3",
+               "Cantidad": "10",
+               "UniMed": "kg",
+               "PrecioUnitario": "4000.00",
+               "NomItem": "fff"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "1",
+               "Cantidad": "200",
+               "UniMed": "kg",
+               "PrecioUnitario": "2000.00",
+               "NomItem": "ggg"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "2",
+               "Cantidad": "10",
+               "UniMed": "kg",
+               "PrecioUnitario": "400.00",
+               "NomItem": "hhh"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "2",
+               "Cantidad": "25",
+               "UniMed": "kg",
+               "PrecioUnitario": "100000.00",
+               "NomItem": "iii"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "6",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "8758.00",
+               "NomItem": "yyy"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      }
+   ],
+   "112": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "2",
+               "Cantidad": "50",
+               "UniMed": "kg",
+               "PrecioUnitario": "1500.00",
+               "NomItem": "ddd"
+            }
+         ],
+         "Referencia": {
+            "TpoDocRef": "111",
+            "Serie": "A",
+            "NroCFERef": "2"
+         },
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 2
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "9000.00",
+               "NomItem": "Dto.TB"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "2",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "500.00",
+               "NomItem": "Dto.TM"
+            }
+         ],
+         "Referencia": {
+            "IndGlobal": "1",
+            "RazonRef": "Dto. Fac. mes xxx"
+         },
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      }
+   ],
+   "113": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "200.00",
+               "NomItem": "Rec.TB"
+            }
+         ],
+         "Referencia": {
+            "TpoDocRef": "111",
+            "Serie": "A",
+            "NroCFERef": "4"
+         },
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "100.00",
+               "NomItem": "Rec.TB"
+            }
+         ],
+         "Referencia": {
+            "IndGlobal": "1",
+            "RazonRef": "Rec. Fac. mes xxx"
+         },
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      }
+   ],
+   "182": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "RetencPercep": [
+                  {
+                     "CodRet": "2183165",
+                     "Tasa": "50",
+                     "MntSujetoaRet": "22000.00",
+                     "ValRetPerc": "11000.00"
+                  }
+               ]
+            },
+            {
+               "NroLinDet": 2,
+               "RetencPercep": [
+                  {
+                     "CodRet": "2183165",
+                     "Tasa": "50",
+                     "MntSujetoaRet": "88000.00",
+                     "ValRetPerc": "44000.00"
+                  }
+               ]
+            }
+         ],
+         "Referencia": [
+            {
+               "NroLinRef": 1,
+               "TpoDocRef": "111",
+               "Serie": "A",
+               "NroCFERef": "25"
+            },
+            {
+               "NroLinRef": 2,
+               "TpoDocRef": "111",
+               "Serie": "A",
+               "NroCFERef": "30"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "RetencPercep": [
+                  {
+                     "CodRet": "2183114",
+                     "Tasa": "22",
+                     "MntSujetoaRet": "90000.00",
+                     "ValRetPerc": "19800.00"
+                  }
+               ]
+            },
+            {
+               "NroLinDet": 2,
+               "RetencPercep": [
+                  {
+                     "CodRet": "2183121",
+                     "Tasa": "25",
+                     "MntSujetoaRet": "10000.00",
+                     "ValRetPerc": "2500.00"
+                  }
+               ]
+            }
+         ],
+         "Referencia": [
+            {
+               "NroLinRef": 1,
+               "TpoDocRef": "111",
+               "Serie": "A",
+               "NroCFERef": "45"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "RetencPercep": [
+                  {
+                     "CodRet": "2183161",
+                     "Tasa": "5",
+                     "MntSujetoaRet": "1000000.00",
+                     "ValRetPerc": "50000.00"
+                  }
+               ]
+            }
+         ],
+         "Referencia": [
+            {
+               "NroLinRef": 1,
+               "TpoDocRef": "111",
+               "Serie": "A",
+               "NroCFERef": "90"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      },
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "RetencPercep": [
+                  {
+                     "CodRet": "1146171",
+                     "Tasa": "10.5",
+                     "MntSujetoaRet": "50000.00",
+                     "ValRetPerc": "5250.00"
+                  }
+               ]
+            }
+         ],
+         "Referencia": [
+            {
+               "NroLinRef": 1,
+               "TpoDocRef": "101",
+               "Serie": "A",
+               "NroCFERef": "26"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez",
+            "DirRecep": "Colonia 9999",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1
+      }
+   ],
+   "201": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "2",
+               "Cantidad": "15.75",
+               "UniMed": "kg",
+               "PrecioUnitario": "22750.00",
+               "NomItem": "kkk"
+            },
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "400.80",
+               "UniMed": "kg",
+               "PrecioUnitario": "14720.75",
+               "NomItem": "lll"
+            },
+            {
+               "NroLinDet": 1,
+               "IndFact": "1",
+               "Cantidad": "7.50",
+               "UniMed": "kg",
+               "PrecioUnitario": "3750.00",
+               "NomItem": "mmm"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "3",
+            "CodPaisRecep": "UY",
+            "DocRecep": "13353214",
+            "RznSocRecep": "Juan Pérez"
+         },
+         "MntBruto": "1",
+         "FmaPago": 1,
+         "NroCFE": 951001
+      }
+   ],
+   "211": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "IndFact": "3",
+               "Cantidad": "40",
+               "UniMed": "kg",
+               "PrecioUnitario": "29350.25",
+               "NomItem": "nnn"
+            },
+            {
+               "NroLinDet": 2,
+               "IndFact": "2",
+               "Cantidad": "150",
+               "UniMed": "kg",
+               "PrecioUnitario": "275.00",
+               "NomItem": "ppp"
+            },
+            {
+               "NroLinDet": 3,
+               "IndFact": "6",
+               "Cantidad": "1",
+               "UniMed": "N/A",
+               "PrecioUnitario": "9530.00",
+               "NomItem": "qqq"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 2,
+         "NroCFE": 952001
+      }
+   ],
+   "282": [
+      {
+         "Detalle": [
+            {
+               "NroLinDet": 1,
+               "RetencPercep": [
+                  {
+                     "CodRet": "2183161",
+                     "Tasa": "5",
+                     "MntSujetoaRet": "525000.00",
+                     "ValRetPerc": "26250.00"
+                  }
+               ]
+            }
+         ],
+         "Referencia": [
+            {
+               "NroLinRef": 1,
+               "TpoDocRef": "111",
+               "Serie": "A",
+               "NroCFERef": "42"
+            }
+         ],
+         "Receptor": {
+            "TipoDocRecep": "2",
+            "CodPaisRecep": "UY",
+            "DocRecep": "214844360018",
+            "RznSocRecep": "DGI",
+            "DirRecep": "Fernández Crespo 1534",
+            "CiudadRecep": "Montevideo"
+         },
+         "FmaPago": 1,
+         "NroCFE": 953501
+      }
+   ]
 }

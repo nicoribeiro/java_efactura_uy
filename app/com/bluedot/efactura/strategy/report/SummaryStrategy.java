@@ -22,6 +22,9 @@ import com.bluedot.efactura.model.IVA;
 import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.UI;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeSet;
+import com.google.common.collect.TreeRangeSet;
 
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.reporte.MontosFyT;
@@ -36,6 +39,8 @@ import dgi.classes.reporte.RngDocsUtil.RDUItem;
 
 public interface SummaryStrategy {
 
+	SimpleDateFormat formateador = new SimpleDateFormat("dd-MM-yyyy");
+	
 	public class Builder {
 
 		private TipoDoc tipo;
@@ -53,24 +58,30 @@ public interface SummaryStrategy {
 			switch (tipo) {
 			// TODO se puede poner el nombre de la clase en el TipoDoc y hacer
 			// un class.forName generico
-			case Nota_de_Credito_de_eFactura:
-				return new Strategy_112();
-			case eFactura:
-				return new Strategy_111();
-			case Nota_de_Debito_de_eFactura:
-				return new Strategy_113();
+			
 			case eTicket:
 				return new Strategy_101();
 			case Nota_de_Credito_de_eTicket:
 				return new Strategy_102();
 			case Nota_de_Debito_de_eTicket:
 				return new Strategy_103();
+			
+			case eFactura:
+				return new Strategy_111();
+			case Nota_de_Credito_de_eFactura:
+				return new Strategy_112();
+			case Nota_de_Debito_de_eFactura:
+				return new Strategy_113();
+				
 			case eResguardo:
 				return new Strategy_182();
+			
 			case eTicket_Contingencia:
 				return new Strategy_201();
 			case eFactura_Contingencia:
 				return new Strategy_211();
+			case eResguardo_Contingencia:
+				return new Strategy_282();
 
 			case Nota_de_Credito_de_eFactura_Contingencia:
 			case Nota_de_Credito_de_eFactura_Exportacion:
@@ -102,7 +113,7 @@ public interface SummaryStrategy {
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
 
-			case eResguardo_Contingencia:
+			
 
 			case eTicket_Venta_por_Cuenta_Ajena:
 			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
@@ -120,13 +131,14 @@ public interface SummaryStrategy {
 		int cantDocSinRespuesta = 0;
 		int cantDocEmitidos = 0;
 		int mayor10000UI = 0;
-		HashMap<Date, Monto> montos = new HashMap<Date, Monto>();
+		HashMap<String, Monto> montos = new HashMap<String, Monto>();
 		RngDocsAnulados rngDocsAnulados = new RngDocsAnulados();
 		RngDocsUtil rngDocsUtil = new RngDocsUtil();
 	}
 
 	public class Monto {
 		protected Date fecha = null;
+		protected BigInteger CodSuc = null;
 		protected BigDecimal totMntNoGrv = new BigDecimal("0");
 		protected BigDecimal totMntExpyAsim = new BigDecimal("0");
 		protected BigDecimal totMntImpPerc = new BigDecimal("0");
@@ -150,16 +162,25 @@ public interface SummaryStrategy {
 
 	static SummaryDatatype getSummary(Empresa empresa, TipoDoc tipo, List<CFE> cfes) throws APIException {
 		SummaryDatatype summary = new SummaryDatatype();
-		//summary.fecha = date;
 
+		/*
+		 * Inicializo el HashMap, la key es la serie del CFE
+		 */
+		HashMap<String, RangeSet<Long>> rangosHashMap = new HashMap<String, RangeSet<Long>>();
+		
 		for (Iterator<CFE> iterator2 = cfes.iterator(); iterator2.hasNext();) {
 			CFE cfe = iterator2.next();
 
 			if (cfe.getTipo() == tipo) {
 
-				RDUItem item = getRDUItem(cfe.getSerie(), cfe.getNro());
-				summary.rngDocsUtil.getRDUItem().add(item);
-
+				RangeSet<Long> range = rangosHashMap.get(cfe.getSerie());
+				if (range==null) {
+					range = TreeRangeSet.create();
+					rangosHashMap.put(cfe.getSerie(), range);
+				}
+				
+				range.add(Range.closed(cfe.getNro(), cfe.getNro()));
+				
 				if (cfe.getEstado() != null)
 					switch (cfe.getEstado()) {
 					case AE:
@@ -187,6 +208,37 @@ public interface SummaryStrategy {
 
 			}
 		}
+		
+		/*
+		 * Proceso el rango
+		 */
+		for(String key : rangosHashMap.keySet()) {
+			RangeSet<Long> range = rangosHashMap.get(key);
+			Range<Long> spanned = range.span();
+			long minValue = spanned.lowerEndpoint();
+			long maxValue = spanned.upperEndpoint();
+			long from = minValue;
+			long to = minValue;
+			boolean inRange = true;
+			for (long i = minValue; i<=maxValue+1;i++) {
+				if (range.contains(i)) {
+					if (inRange) {
+						to = i;
+					}else {
+						from = i;
+						to = i;
+						inRange = true;
+					}
+				}else {
+					if (inRange) {
+						RDUItem item = getRDUItem(key, from, to);
+						summary.rngDocsUtil.getRDUItem().add(item);
+						inRange=false;
+					}
+				}
+			}
+		}
+		
 		summary.cantDocUtilizados = summary.cantDocEmitidos + summary.cantDocRechazados + summary.cantDocSinRespuesta;
 		return summary;
 
@@ -200,21 +252,24 @@ public interface SummaryStrategy {
 		return item;
 	}
 
-	static RDUItem getRDUItem(String serie, Long nroCFE) {
+	static RDUItem getRDUItem(String serie, long desde, long hasta) {
 		RDUItem item = new RDUItem();
 		item.setSerie(serie);
-		item.setNroDesde(new BigInteger(String.valueOf(nroCFE)));
-		item.setNroHasta(new BigInteger(String.valueOf(nroCFE)));
+		item.setNroDesde(new BigInteger(String.valueOf(desde)));
+		item.setNroHasta(new BigInteger(String.valueOf(hasta)));
 		return item;
 	}
 
 	static void sumarizarMontos(CFE cfe, SummaryDatatype summary) throws APIException {
-		Monto monto = summary.montos.get(cfe.getFechaEmision());
+		String key = formateador.format(cfe.getFechaEmision()) + "-" + cfe.getSucursal().getCodigoSucursal();
+		
+		Monto monto = summary.montos.get(key);
 
 		if (monto == null) {
 			monto = new Monto();
 			monto.fecha = cfe.getFechaEmision();
-			summary.montos.put(cfe.getFechaEmision(), monto);
+			monto.CodSuc = new BigInteger(String.valueOf(cfe.getSucursal().getCodigoSucursal()));
+			summary.montos.put(key, monto);
 		}
 			
 		
@@ -280,9 +335,9 @@ public interface SummaryStrategy {
 
 	static MontosFyT getMontosFyT(SummaryDatatype summary) throws APIException {
 		MontosFyT montos = new MontosFyT();
-		for (Iterator<Date> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
-			Date fecha = iterator.next();
-			montos.getMntsFyTItem().add(getMontosFyTItem(summary.montos.get(fecha)));
+		for (Iterator<String> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
+			String key = iterator.next();
+			montos.getMntsFyTItem().add(getMontosFyTItem(summary.montos.get(key)));
 		}
 		
 		if (montos.getMntsFyTItem().size()==0)
@@ -295,8 +350,7 @@ public interface SummaryStrategy {
 			
 			MntsFyTItem item = new MntsFyTItem();
 
-			// TODO sacar el id de sucursal para un lado comun
-			item.setCodSuc(new BigInteger("2"));
+			item.setCodSuc(monto.CodSuc);
 			XMLGregorianCalendar date = DatatypeFactory.newInstance()
 					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
 			item.setFecha(date);
@@ -325,9 +379,9 @@ public interface SummaryStrategy {
 
 	static MontosRes getMontosResg(SummaryDatatype summary) throws APIException {
 		MontosRes montos = new MontosRes();
-		for (Iterator<Date> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
-			Date fecha = iterator.next();
-			montos.getMntsResItem().add(getMontosResItem(summary.montos.get(fecha)));
+		for (Iterator<String> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
+			String key = iterator.next();
+			montos.getMntsResItem().add(getMontosResItem(summary.montos.get(key)));
 		}
 		return montos;
 	}
@@ -337,12 +391,11 @@ public interface SummaryStrategy {
 			
 			MntsResItem item = new MntsResItem();
 
-			// TODO sacar el id de sucursal para un lado comun
-			item.setCodSuc(new BigInteger("2"));
+			item.setCodSuc(monto.CodSuc);
 			XMLGregorianCalendar date = DatatypeFactory.newInstance()
 					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
 			item.setFecha(date);
-			item.setTotMntRetenido(monto.totValRetPerc);
+			item.setTotMntRetenido(monto.totMntRetenido);
 			return item;
 		} catch (DatatypeConfigurationException e) {
 			throw APIException.raise(e);

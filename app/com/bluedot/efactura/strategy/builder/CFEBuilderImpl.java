@@ -34,6 +34,7 @@ import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FormaDePago;
 import com.bluedot.efactura.model.IVA;
 import com.bluedot.efactura.model.IndicadorFacturacion;
+import com.bluedot.efactura.model.Sucursal;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.TipoDocumento;
 
@@ -117,7 +118,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	}
 
 	@Override
-	public void buildReceptor(JSONObject receptorJson, boolean esCfeEmitido) throws APIException {
+	public void buildReceptor(JSONObject receptorJson) throws APIException {
 		
 		TipoDocumento TipoDocRecep = receptorJson.has("TipoDocRecep")? TipoDocumento.fromInt(receptorJson.getInt("TipoDocRecep")): null;
 
@@ -150,9 +151,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 			mailPdfAddress = result.length() > 0 ? result.substring(0, result.length() - 1) : "";
 		}
 		
-		boolean update = esCfeEmitido;
-		
-		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep, update, mailPdfAddress);
+		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep, mailPdfAddress);
 		
 	}
 
@@ -386,51 +385,65 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		strategy.getCFE().setCae(caeMicroController.getCAE(strategy.getCFE().getTipo()));
 	}
 
-	@Override
-	public void buildEmisor(Empresa empresaEmisora) throws APIException {
+	
+	private void buildEmisor(Sucursal sucursalEmisora) throws APIException {
 		Emisor emisor = strategy.getEmisor();
 
-		emisor.setRUCEmisor(empresaEmisora.getRut());
+		emisor.setRUCEmisor(sucursalEmisora.getEmpresa().getRut());
 
-		emisor.setRznSoc(empresaEmisora.getRazon());
+		emisor.setRznSoc(sucursalEmisora.getEmpresa().getRazon());
 
-		emisor.setCdgDGISucur(new BigInteger(String.valueOf(empresaEmisora.getCodigoSucursal())));
+		emisor.setCdgDGISucur(new BigInteger(String.valueOf(sucursalEmisora.getCodigoSucursal())));
 
-		emisor.setDomFiscal(empresaEmisora.getDireccion());
+		emisor.setDomFiscal(sucursalEmisora.getDomicilioFiscal());
 
-		emisor.setCiudad(empresaEmisora.getLocalidad());
+		emisor.setCiudad(sucursalEmisora.getCiudad());
 
-		emisor.setDepartamento(empresaEmisora.getDepartamento());
+		emisor.setDepartamento(sucursalEmisora.getDepartamento());
+		
+		strategy.getCFE().setSucursal(sucursalEmisora);
 
-		strategy.getCFE().setEmpresaEmisora(empresaEmisora);
+		strategy.getCFE().setEmpresaEmisora(sucursalEmisora.getEmpresa());
 	}
 	
 	@Override
-	public void buildEmisor(JSONObject emisorJson) throws APIException {
-		Emisor emisor = strategy.getEmisor();
+	public void buildEmisor(Empresa empresa, JSONObject emisorJson, boolean esCfeEmitido) throws APIException {
 		
-		emisor.setRUCEmisor(Commons.safeGetString(emisorJson, "RUCEmisor"));
+		Sucursal sucursal;
 		
-		/*
-		 * Campo Opcional
-		 */
-		if (emisorJson.has("NomComercial"))
-			emisor.setNomComercial(Commons.safeGetString(emisorJson, "NomComercial"));
-
-		emisor.setRznSoc(Commons.safeGetString(emisorJson, "RznSoc"));
-
-		emisor.setCdgDGISucur(new BigInteger(Commons.safeGetString(emisorJson, "CdgDGISucur")));
-
-		emisor.setDomFiscal(Commons.safeGetString(emisorJson, "DomFiscal"));
-
-		emisor.setCiudad(Commons.safeGetString(emisorJson, "Ciudad"));
-
-		emisor.setDepartamento(Commons.safeGetString(emisorJson, "Departamento"));
-
-		Empresa empresaEmisora = Empresa.getOrCreateEmpresa(emisor.getRUCEmisor(), emisor.getRznSoc(), emisor.getDomFiscal(), emisor.getCiudad(), emisor.getDepartamento(), false); 
+		if (esCfeEmitido) {
+			sucursal = Sucursal.findByCodigoSucursal(empresa.getSucursales(), Commons.safeGetInteger(emisorJson, "CdgDGISucur"), true);
+		}else {
+			Empresa empresaEmisora = Empresa.findByRUT(Commons.safeGetString(emisorJson, "RUCEmisor"));
+			if (empresaEmisora==null){
+				/*
+				 * La empresa no existe, la debo crear
+				 */
+				empresaEmisora = Empresa.getOrCreateEmpresa(Commons.safeGetString(emisorJson, "RUCEmisor"), Commons.safeGetString(emisorJson, "RznSoc"), null);
+				if (emisorJson.has("NomComercial"))
+					empresaEmisora.setNombreComercial(Commons.safeGetString(emisorJson, "NomComercial"));
+			}
+			
+			sucursal = Sucursal.findByCodigoSucursal(empresaEmisora.getSucursales(), Commons.safeGetInteger(emisorJson, "CdgDGISucur"), false);
+			
+			if (sucursal==null) {
+				/*
+				 * Creo la sucursal para la empresa
+				 */
+				sucursal = new Sucursal();
+				sucursal.setCodigoSucursal(Commons.safeGetInteger(emisorJson, "CdgDGISucur"));
+				sucursal.setDomicilioFiscal(Commons.safeGetString(emisorJson, "DomFiscal"));
+				sucursal.setCiudad(Commons.safeGetString(emisorJson, "Ciudad"));
+				sucursal.setDepartamento(Commons.safeGetString(emisorJson, "Departamento"));
+				
+				sucursal.setEmpresa(empresaEmisora);
+				sucursal.save();
+				empresaEmisora.getSucursales().add(sucursal);
+				empresaEmisora.update();
+			}
+		}
 		
-		strategy.getCFE().setEmpresaEmisora(empresaEmisora);
-		
+		buildEmisor(sucursal);
 	}
 
 	@Override
@@ -443,59 +456,59 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 					
 					JSONObject referenciaJSON = referenciasJSON.getJSONObject(i);
 				
-				if (referenciaJSON == null)
-					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia");
-
-				ReferenciaTipo referenciaType = strategy.getReferenciaTipo();
-
-				Referencia referencia = new Referencia();
-
-				/*
-				 * Campo Opcional
-				 */
-				if (referenciaJSON.has("FechaCFEref")) {
-					Date parsedDate = simpleDateFormat.parse(referenciaJSON.getString("FechaCFEref"));
-					GregorianCalendar cal = new GregorianCalendar();
-					cal.setTime(parsedDate);
-					referencia.setFechaCFEref(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
-				}
-
-				/*
-				 * Se utiliza cuando no se puede identificar los CFE de
-				 * referencia. Por ejemplo: -cuando el CFE afecta a un número
-				 * de más de 40 CFE de referencia, -cuando se referencia a un
-				 * documento no codificado, etc.
-				 * 
-				 * Se debe explicitar el motivo en "Razón Referencia" (C6)
-				 */
-				if (referenciaJSON.has("IndGlobal") && referenciaJSON.getInt("IndGlobal")==1){
-					referencia.setIndGlobal(new BigInteger("1"));
-					
-					String RazonRef = "";
-					if (referenciaJSON.has("RazonRef"))
-						RazonRef = referenciaJSON.getString("RazonRef");
-					referencia.setRazonRef(RazonRef);
-					strategy.getCFE().setRazonReferencia(RazonRef);
-				} else {
-					referencia.setNroCFERef(new BigInteger(Commons.safeGetString(referenciaJSON, "NroCFERef")));
-					referencia.setSerie(Commons.safeGetString(referenciaJSON,"Serie"));
-					referencia.setTpoDocRef(new BigInteger(Commons.safeGetString(referenciaJSON,"TpoDocRef")));
+					if (referenciaJSON == null)
+						throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia");
+	
+					ReferenciaTipo referenciaType = strategy.getReferenciaTipo();
+	
+					Referencia referencia = new Referencia();
+	
+					/*
+					 * Campo Opcional
+					 */
+					if (referenciaJSON.has("FechaCFEref")) {
+						Date parsedDate = simpleDateFormat.parse(referenciaJSON.getString("FechaCFEref"));
+						GregorianCalendar cal = new GregorianCalendar();
+						cal.setTime(parsedDate);
+						referencia.setFechaCFEref(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
+					}
+	
+					/*
+					 * Se utiliza cuando no se puede identificar los CFE de
+					 * referencia. Por ejemplo: -cuando el CFE afecta a un número
+					 * de más de 40 CFE de referencia, -cuando se referencia a un
+					 * documento no codificado, etc.
+					 * 
+					 * Se debe explicitar el motivo en "Razón Referencia" (C6)
+					 */
+					if (referenciaJSON.has("IndGlobal") && referenciaJSON.getInt("IndGlobal")==1){
+						referencia.setIndGlobal(new BigInteger("1"));
+						
+						String RazonRef = "";
+						if (referenciaJSON.has("RazonRef"))
+							RazonRef = referenciaJSON.getString("RazonRef");
+						referencia.setRazonRef(RazonRef);
+						strategy.getCFE().setRazonReferencia(RazonRef);
+					} else {
+						referencia.setNroCFERef(new BigInteger(Commons.safeGetString(referenciaJSON, "NroCFERef")));
+						referencia.setSerie(Commons.safeGetString(referenciaJSON,"Serie"));
+						referencia.setTpoDocRef(new BigInteger(Commons.safeGetString(referenciaJSON,"TpoDocRef")));
+						referencia.setNroLinRef(Commons.safeGetInteger(referenciaJSON, "NroLinRef"));
+						
+						List<CFE> cfes = CFE.findById(empresaEmisora, TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef")), Commons.safeGetString(referenciaJSON,"Serie"), Commons.safeGetLong(referenciaJSON, "NroCFERef"), null, DireccionDocumento.EMITIDO, false);
+						
+						if (cfes.size()>1)
+							throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",empresaEmisora.getRut()+"-"+Commons.safeGetLong(referenciaJSON, "NroCFERef")+"-"+Commons.safeGetString(referenciaJSON,"Serie")+"-"+TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef"))).setDetailMessage("No identifica a un unico cfe");
+						
+						if (cfes.size()==1){
+							CFE cfeReferencia = cfes.get(0);
+							strategy.getCFE().setReferencia(cfeReferencia);
+						}
+					}
 					referencia.setNroLinRef(Commons.safeGetInteger(referenciaJSON, "NroLinRef"));
 					
-					List<CFE> cfes = CFE.findById(empresaEmisora, TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef")), Commons.safeGetString(referenciaJSON,"Serie"), Commons.safeGetLong(referenciaJSON, "NroCFERef"), null, DireccionDocumento.EMITIDO, false);
-					
-					if (cfes.size()>1)
-						throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",empresaEmisora.getRut()+"-"+Commons.safeGetLong(referenciaJSON, "NroCFERef")+"-"+Commons.safeGetString(referenciaJSON,"Serie")+"-"+TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef"))).setDetailMessage("No identifica a un unico cfe");
-					
-					if (cfes.size()==1){
-						CFE cfeReferencia = cfes.get(0);
-						strategy.getCFE().setReferencia(cfeReferencia);
-					}
-				}
-				referencia.setNroLinRef(Commons.safeGetInteger(referenciaJSON, "NroLinRef"));
-				
-
-				referenciaType.getReferencias().add(referencia);
+	
+					referenciaType.getReferencias().add(referencia);
 				}
 			}
 		} catch (JSONException | ParseException | DatatypeConfigurationException e) {

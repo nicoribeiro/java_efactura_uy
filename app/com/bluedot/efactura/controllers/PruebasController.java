@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import java.nio.file.FileSystems;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.DateHandler;
+import com.bluedot.commons.utils.IO;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
@@ -21,6 +23,7 @@ import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.strategy.asignarFecha.EstrategiaAsignarFecha;
 
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 
@@ -62,7 +65,7 @@ public abstract class PruebasController extends AbstractController {
 		}
 	}
 
-	protected JSONObject execute(Empresa empresa, TipoDoc tipoDoc, CFE[] cfes, boolean ultimoEsAnulado) throws APIException {
+	protected JSONObject execute(Empresa empresa, TipoDoc tipoDoc, CFE[] cfes, boolean ultimoEsAnulado, String filepath) throws APIException {
 		if (tiposDoc.containsKey(tipoDoc)) {
 			int correctos = 0;
 			int anulados = 0;
@@ -75,6 +78,13 @@ public abstract class PruebasController extends AbstractController {
 						correctos++;
 					cfes[i].save();
 					factory.getServiceMicroController(empresa).enviar(cfes[i]);
+					
+					if (cfes[i].getSobreEmitido()!=null)
+						IO.writeFile(filepath + FileSystems.getDefault().getSeparator() + "sobreDgi_" + cfes[i].getSobreEmitido().getId() + ".xml", cfes[i].getSobreEmitido().getXmlDgi());
+					
+					if (cfes[i].getSobreEmitido()!=null && cfes[i].getSobreEmitido().getXmlEmpresa()!=null)
+						IO.writeFile(filepath + FileSystems.getDefault().getSeparator() + cfes[i].getSobreEmitido().getNombreArchivo(), cfes[i].getSobreEmitido().getXmlEmpresa());
+					
 					
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -99,7 +109,7 @@ public abstract class PruebasController extends AbstractController {
 		return result;
 	}
 
-	protected JSONObject getEncabezado(JSONObject encabezadoJSON, JSONObject config, TipoDoc tipoDoc, Boolean shuffleDates) {
+	protected JSONObject getEncabezado(JSONObject encabezadoJSON, JSONObject config, TipoDoc tipoDoc, EstrategiaAsignarFecha estrategiaAsignarFecha) {
 		JSONObject newEncabezado = new JSONObject(encabezadoJSON, JSONObject.getNames(encabezadoJSON));
 		
 		JSONObject idDoc = new JSONObject();
@@ -113,14 +123,14 @@ public abstract class PruebasController extends AbstractController {
 		
 		idDoc.put("FmaPago", 2);
 		
-		Date fechaEmision;
+		Date fechaEmision = estrategiaAsignarFecha.getDate();
 		
-		if (shuffleDates) {
-			int randomNum = ThreadLocalRandom.current().nextInt(1, 10);
-			fechaEmision = DateHandler.minus(new Date(), randomNum, Calendar.DAY_OF_MONTH);
-		}
-		else
-			fechaEmision = new Date();
+//		if (shuffleDates) {
+//			int randomNum = ThreadLocalRandom.current().nextInt(1, 10);
+//			fechaEmision = DateHandler.minus(new Date(), randomNum, Calendar.DAY_OF_MONTH);
+//		}
+//		else
+//			fechaEmision = new Date();
 			
 		idDoc.put("FchEmis", (new SimpleDateFormat("yyyy-MM-dd")).format(fechaEmision));
 			

@@ -17,6 +17,7 @@ import com.bluedot.efactura.Environment;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.strategy.asignarFecha.EstrategiaFechaAhora;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
@@ -60,6 +61,8 @@ public class HomologacionController_Adenda extends PruebasController {
 			JSONArray tiposDocArray = encabezadoJSON.getJSONArray("tiposDoc");
 			
 			String detalle = IO.readFile(encabezadoJSON.getString("Detalle"), Charset.defaultCharset());
+			
+			String output = encabezadoJSON.has("Output")?encabezadoJSON.getString("Output"):"/tmp";
 
 			loadTiposDoc(tiposDocArray);
 
@@ -75,7 +78,7 @@ public class HomologacionController_Adenda extends PruebasController {
 
 				JSONObject detalleJSON = new JSONObject(detalle);
 
-				JSONArray resultFacturas = eFacturas(detalleJSON, encabezadoJSON);
+				JSONArray resultFacturas = eFacturas(detalleJSON, encabezadoJSON, output);
 
 				JSONObject result = new JSONObject();
 
@@ -91,7 +94,7 @@ public class HomologacionController_Adenda extends PruebasController {
 		} 
 	}
 
-	private JSONArray eFacturas(JSONObject detalleJSON, JSONObject encabezadoJSON) throws APIException {
+	private JSONArray eFacturas(JSONObject detalleJSON, JSONObject encabezadoJSON, String output) throws APIException {
 
 	
 		CFE[] eFacturas = new CFE[detalleJSON.getJSONArray("111").length()];
@@ -110,7 +113,7 @@ public class HomologacionController_Adenda extends PruebasController {
 
 				factura = new JSONObject();
 				JSONObject receptor = object.getJSONObject("Receptor");
-				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eFactura, false);
+				JSONObject encabezado = getEncabezado(encabezadoJSON, object, TipoDoc.eFactura, new EstrategiaFechaAhora());
 				encabezado.put("Receptor", receptor);
 				factura.put("Encabezado", encabezado);
 
@@ -125,7 +128,7 @@ public class HomologacionController_Adenda extends PruebasController {
 			}
 		}
 		
-		result = execute(empresa, TipoDoc.eFactura, eFacturas, false);
+		result = execute(empresa, TipoDoc.eFactura, eFacturas, false, output);
 		if (result != null)
 			resultado.put(result);
 

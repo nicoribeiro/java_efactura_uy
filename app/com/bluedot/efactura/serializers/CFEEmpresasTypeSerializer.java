@@ -27,13 +27,16 @@ public class CFEEmpresasTypeSerializer<T> extends JSONSerializer<CFEEmpresasType
 				if (cfe.getAdenda() instanceof org.apache.xerces.dom.ElementNSImpl)
 					cfeJson.put("Adenda", XML.documentToString(((org.apache.xerces.dom.ElementNSImpl) cfe.getAdenda()).getOwnerDocument()));
 				else
-					if (cfe.getAdenda() instanceof byte[])
-						cfeJson.put("Adenda", new String((byte[])cfe.getAdenda()));
+					if (cfe.getAdenda() instanceof com.sun.org.apache.xerces.internal.dom.ElementNSImpl)
+						cfeJson.put("Adenda", XML.documentToString(((com.sun.org.apache.xerces.internal.dom.ElementNSImpl) cfe.getAdenda()).getOwnerDocument()));
 					else
-						if (cfe.getAdenda() instanceof String)
-							cfeJson.put("Adenda", cfe.getAdenda());
-							else
-								logger.info("Adenda no es de un tipo conocido por lo que no se puede serializar");
+						if (cfe.getAdenda() instanceof byte[])
+							cfeJson.put("Adenda", new String((byte[])cfe.getAdenda()));
+						else
+							if (cfe.getAdenda() instanceof String)
+								cfeJson.put("Adenda", cfe.getAdenda());
+								else
+									logger.info("Adenda no es de un tipo conocido por lo que no se puede serializar");
 		} catch (TransformerFactoryConfigurationError | TransformerException e) {
 			e.printStackTrace();
 		}

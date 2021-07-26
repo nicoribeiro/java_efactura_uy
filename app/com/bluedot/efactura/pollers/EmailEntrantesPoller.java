@@ -27,7 +27,7 @@ public class EmailEntrantesPoller extends PollerRunner {
 		for (Empresa empresa : Empresa.findAll()) {//TODO mejorar esto, solo las que tengan para obtener mail no todas las empresas
 			if (empresa.getHostRecepcion()!=null && empresa.getUserRecepcion()!=null && empresa.getPassRecepcion()!=null && empresa.getPuertoRecepcion()!=null){
 				logger.info("Obteniendo mensajes entrantes para Empresa id:{}, rut:{}, razon:{}", empresa.getId(), empresa.getRut(), empresa.getRazon());
-				factory.getServiceMicroController(empresa).getDocumentosEntrantes();
+				factory.getServiceMicroController(empresa).obtenerYProcesarEmailsEntrantesDesdeServerCorreo();
 			}
 		}
 		

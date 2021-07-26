@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.strategy.numeracion.EstrategiaNumeracion;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
@@ -47,7 +48,7 @@ public interface CAEMicroController {
 	 * @throws DatatypeConfigurationException
 	 * @throws IOException
 	 */
-	IdDocFact getIdDocFact(TipoDoc tipo, boolean montosIncluyenIva, int formaPago, Date fchEmis)
+	IdDocFact getIdDocFact(TipoDoc tipo, boolean montosIncluyenIva, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia)
 			throws APIException, DatatypeConfigurationException, IOException;
 
 	/**
@@ -55,7 +56,7 @@ public interface CAEMicroController {
 	 * 
 	 * @return
 	 */
-	 IdDocTck getIdDocTick(TipoDoc tipo, boolean montosIncluyenIva, int formaPago)
+	 IdDocTck getIdDocTick(TipoDoc tipo, boolean montosIncluyenIva, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia)
 			throws APIException, DatatypeConfigurationException, IOException;
 
 	/**
@@ -63,7 +64,7 @@ public interface CAEMicroController {
 	 * 
 	 * @return
 	 */
-	IdDocResg getIdDocResg(TipoDoc tipo)
+	IdDocResg getIdDocResg(TipoDoc tipo, Date fchEmis, EstrategiaNumeracion estrategia)
 			throws APIException, DatatypeConfigurationException, IOException;
 
 	/**
@@ -71,7 +72,7 @@ public interface CAEMicroController {
 	 * 
 	 * @return
 	 */
-	IdDocRem getIdDocRem(TipoDoc tipo)
+	IdDocRem getIdDocRem(TipoDoc tipo, Date fchEmis, EstrategiaNumeracion estrategia)
 			throws APIException, DatatypeConfigurationException, IOException;
 	
 	void addCAE(CAE cae) throws APIException;

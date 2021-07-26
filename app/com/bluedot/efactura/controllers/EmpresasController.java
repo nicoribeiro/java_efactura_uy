@@ -30,8 +30,10 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.ThreadMan;
+import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
+import com.bluedot.efactura.model.Sucursal;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.bluedot.efactura.services.ConsultaRutService;
 import com.bluedot.efactura.services.impl.ConsultaRutServiceImpl;
@@ -111,7 +113,7 @@ public class EmpresasController extends AbstractController {
 					Empresa empresa = empresasMap.get(rut);
 					
 					if ( empresa == null) {
-						empresa = new Empresa(rut, null, null, null, null, null);
+						empresa = new Empresa(rut, null, null);
 						empresa.setEmisorElectronico(true);
 						empresa.setMailRecepcion(mail);
 						empresa.setRazon(denominacion);
@@ -137,8 +139,6 @@ public class EmpresasController extends AbstractController {
 
 		return json(OK);
 	}
-	
-	
 	
 	public Promise<Result> getEmpresaById(int id) throws APIException {
 		
@@ -176,15 +176,9 @@ public class EmpresasController extends AbstractController {
 		JsonNode empresaJson = request().body().asJson();
 		Empresa empresa = new Empresa();
 		String rut = empresaJson.has("rut") ? empresaJson.findPath("rut").asText() : null;
-		String departamento = empresaJson.has("departamento") ? empresaJson.findPath("departamento").asText() : null;
-		String direccion = empresaJson.has("direccion") ? empresaJson.findPath("direccion").asText() : null;
 		String nombreComercial = empresaJson.has("nombreComercial") ? empresaJson.findPath("nombreComercial").asText() : null;
-		String localidad = empresaJson.has("localidad") ? empresaJson.findPath("localidad").asText() : null;
-		Integer codigoSucursal = empresaJson.has("codigoSucursal") ? empresaJson.findPath("codigoSucursal").asInt() : null;
 		String logoPath = empresaJson.has("logoPath") ? empresaJson.findPath("logoPath").asText() : null;
 		String paginaWeb = empresaJson.has("paginaWeb") ? empresaJson.findPath("paginaWeb").asText() : null;
-		String telefono = empresaJson.has("telefono") ? empresaJson.findPath("telefono").asText() : null;
-		String codigoPostal = empresaJson.has("codigoPostal") ? empresaJson.findPath("codigoPostal").asText() : null;
 		String resolucion = empresaJson.has("resolucion") ? empresaJson.findPath("resolucion").asText() : null;
 		String razon = empresaJson.has("razon") ? empresaJson.findPath("razon").asText() : null;
 
@@ -226,26 +220,8 @@ public class EmpresasController extends AbstractController {
 		if (paginaWeb != null)
 			empresa.setPaginaWeb(paginaWeb);
 
-		if (telefono != null)
-			empresa.setTelefono(telefono);
-
-		if (codigoPostal != null)
-			empresa.setCodigoPostal(codigoPostal);
-
-		if (codigoSucursal != null)
-			empresa.setCodigoSucursal(codigoSucursal);
-
-		if (departamento != null)
-			empresa.setDepartamento(departamento);
-
-		if (direccion != null)
-			empresa.setDireccion(direccion);
-
 		if (nombreComercial != null)
 			empresa.setNombreComercial(nombreComercial);
-
-		if (localidad != null)
-			empresa.setLocalidad(localidad);
 
 		if (resolucion != null)
 			empresa.setResolucion(resolucion);
@@ -309,15 +285,9 @@ public class EmpresasController extends AbstractController {
 		
 		JsonNode empresaJson = request().body().asJson();
 		
-		String departamento = empresaJson.has("departamento") ? empresaJson.findPath("departamento").asText() : null;
-		String direccion = empresaJson.has("direccion") ? empresaJson.findPath("direccion").asText() : null;
 		String nombreComercial = empresaJson.has("nombreComercial") ? empresaJson.findPath("nombreComercial").asText() : null;
-		String localidad = empresaJson.has("localidad") ? empresaJson.findPath("localidad").asText() : null;
-		Integer codigoSucursal = empresaJson.has("codigoSucursal") ? empresaJson.findPath("codigoSucursal").asInt() : null;
 		String logoPath = empresaJson.has("logoPath") ? empresaJson.findPath("logoPath").asText() : null;
 		String paginaWeb = empresaJson.has("paginaWeb") ? empresaJson.findPath("paginaWeb").asText() : null;
-		String telefono = empresaJson.has("telefono") ? empresaJson.findPath("telefono").asText() : null;
-		String codigoPostal = empresaJson.has("codigoPostal") ? empresaJson.findPath("codigoPostal").asText() : null;
 		String resolucion = empresaJson.has("resolucion") ? empresaJson.findPath("resolucion").asText() : null;
 		String razon = empresaJson.has("razon") ? empresaJson.findPath("razon").asText() : null;
 		
@@ -356,26 +326,8 @@ public class EmpresasController extends AbstractController {
 		if (paginaWeb != null)
 			empresa.setPaginaWeb(paginaWeb);
 		
-		if (telefono != null)
-			empresa.setTelefono(telefono);
-		
-		if (codigoPostal != null)
-			empresa.setCodigoPostal(codigoPostal);
-		
-		if (codigoSucursal != null)
-			empresa.setCodigoSucursal(codigoSucursal);
-		
-		if (departamento != null)
-			empresa.setDepartamento(departamento);
-		
-		if (direccion != null)
-			empresa.setDireccion(direccion);
-		
 		if (nombreComercial != null)
 			empresa.setNombreComercial(nombreComercial);
-		
-		if (localidad != null)
-			empresa.setLocalidad(localidad);
 		
 		if (resolucion != null)
 			empresa.setResolucion(resolucion);
@@ -428,6 +380,81 @@ public class EmpresasController extends AbstractController {
 		
 		empresa.update();
 		
+		return json(OK);
+	}
+	
+	/*
+	 * SUCURSALES
+	 */
+	
+	public Promise<Result> getSucursales(String rut) throws APIException
+	{
+		Empresa empresa = Empresa.findByRUT(rut,true);
+		
+		JSONArray json = EfacturaJSONSerializerProvider.getSucursalSerializer().objectToJson(empresa.getSucursales());
+		
+		return json(json.toString());
+	}
+	
+	// TODO permisis de edicion
+	public Promise<Result> editarSucursal(String rut, Integer codigoSuc) throws APIException {
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		
+		Sucursal sucursal = Sucursal.findByCodigoSucursal(empresa.getSucursales(), codigoSuc, true);
+
+		JsonNode sucursalJson = request().body().asJson();
+
+		if (Commons.safeGetString(sucursalJson, "Telefono", false) != null)
+			sucursal.setTelefono(Commons.safeGetString(sucursalJson, "Telefono", false));
+		
+		if (Commons.safeGetString(sucursalJson, "CodigoPostal", false) != null)
+			sucursal.setCodigoPostal(Commons.safeGetString(sucursalJson, "CodigoPostal", false));
+		
+		if (Commons.safeGetString(sucursalJson, "CdgDGISucur", false) != null)
+			sucursal.setCodigoSucursal(Commons.safeGetInteger(sucursalJson, "CdgDGISucur", false));
+		
+		if (Commons.safeGetString(sucursalJson, "Departamento", false) != null)
+			sucursal.setDepartamento(Commons.safeGetString(sucursalJson, "Departamento", false));
+		
+		if (Commons.safeGetString(sucursalJson, "DomFiscal", false) != null)
+			sucursal.setDomicilioFiscal(Commons.safeGetString(sucursalJson, "DomFiscal", false));
+		
+		if (Commons.safeGetString(sucursalJson, "Ciudad", false) != null)
+			sucursal.setCiudad(Commons.safeGetString(sucursalJson, "Ciudad", false));
+
+		sucursal.update();
+
+		return json(OK);
+	}
+	
+	// TODO permisis de creacion
+	public Promise<Result> crearSucursal(String rut) throws APIException {
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		
+		JsonNode sucursalJson = request().body().asJson();
+		
+		Integer codigoSucursal = Commons.safeGetInteger(sucursalJson, "CdgDGISucur", false);
+		
+		Sucursal sucursal = Sucursal.findByCodigoSucursal(empresa.getSucursales(), codigoSucursal);
+		
+		if (sucursal!=null)
+			throw APIException.raise(APIErrors.SUCURSAL_EXISTE).withParams("CdgDGISucur = " + codigoSucursal);
+		else
+			sucursal = new Sucursal();
+		
+		sucursal.setTelefono(Commons.safeGetString(sucursalJson, "Telefono", false));
+		sucursal.setCodigoPostal(Commons.safeGetString(sucursalJson, "CodigoPostal", false));
+		sucursal.setCodigoSucursal(codigoSucursal);
+		sucursal.setDepartamento(Commons.safeGetString(sucursalJson, "Departamento", true));
+		sucursal.setDomicilioFiscal(Commons.safeGetString(sucursalJson, "DomFiscal", true));
+		sucursal.setCiudad(Commons.safeGetString(sucursalJson, "Ciudad", true));
+		sucursal.setEmpresa(empresa);
+		
+		sucursal.save();
+		empresa.getSucursales().add(sucursal);
+		
+		empresa.update();
+
 		return json(OK);
 	}
 

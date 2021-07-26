@@ -29,6 +29,7 @@ import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.strategy.numeracion.EstrategiaNumeracion;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
@@ -92,17 +93,6 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		}
 	}
 	
-	private synchronized long consumeId(CAE cae) throws IOException, JSONException, APIException
-	{
-		if (cae.getSiguiente()  > cae.getFin())
-			throw APIException.raise(APIErrors.CAE_NOT_AVAILABLE_ID).withParams(cae.getNro(), cae.getTipo());
-
-		long siguiente = cae.getSiguiente();
-		cae.setSiguiente(siguiente+1);
-		cae.update();
-		return siguiente;
-	}
-
 	@Override
 	public synchronized CAEDataType getCAEDataType(TipoDoc tipoDoc) throws APIException, DatatypeConfigurationException, JSONException, ParseException
 	{
@@ -138,19 +128,20 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 
 	@Override
-	public synchronized IdDocTck getIdDocTick(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago) throws APIException, DatatypeConfigurationException, IOException {
+	public synchronized IdDocTck getIdDocTick(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia) throws APIException, DatatypeConfigurationException, IOException {
+		
+		if (!caesMap.containsKey(tipoDoc))
+			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
+		
 		IdDocTck iddoc = new IdDocTck();
 
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
-		if (cae==null)
-			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
-		
 		if (montosIncluyenIva)
 			iddoc.setMntBruto(new BigInteger("1"));
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
 		iddoc.setSerie(cae.getSerie());
-		iddoc.setNro(new BigInteger(String.valueOf(consumeId(cae))));
+		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
 		/*
 		 * 1 = Contado
 		 * 
@@ -160,14 +151,14 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		/*
 		 * Fecha
 		 */
-		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(fchEmis));
 		iddoc.setFchEmis(date);
 
 		return iddoc;
 	}
 	
 	@Override
-	public synchronized IdDocFact getIdDocFact(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago, Date fchEmis) throws DatatypeConfigurationException, IOException, JSONException, APIException
+	public synchronized IdDocFact getIdDocFact(TipoDoc tipoDoc, boolean montosIncluyenIva, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia) throws DatatypeConfigurationException, IOException, JSONException, APIException
 	{
 		IdDocFact iddoc = new IdDocFact();
 
@@ -177,7 +168,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 			iddoc.setMntBruto(new BigInteger("1"));
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
 		iddoc.setSerie(cae.getSerie());
-		iddoc.setNro(new BigInteger(String.valueOf(consumeId(cae))));
+		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
 		/*
 		 * 1 = Contado
 		 * 
@@ -194,38 +185,38 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 
 	@Override
-	public synchronized IdDocResg getIdDocResg(TipoDoc tipoDoc) throws APIException, DatatypeConfigurationException, IOException {
+	public synchronized IdDocResg getIdDocResg(TipoDoc tipoDoc, Date fchEmis, EstrategiaNumeracion estrategia) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocResg iddoc = new IdDocResg();
 
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
 		iddoc.setSerie(cae.getSerie());
-		iddoc.setNro(new BigInteger(String.valueOf(consumeId(cae))));
+		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
 		
 		/*
 		 * Fecha
 		 */
-		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(fchEmis));
 		iddoc.setFchEmis(date);
 
 		return iddoc;
 	}
 	
 	@Override
-	public IdDocRem getIdDocRem(TipoDoc tipoDoc) throws APIException, DatatypeConfigurationException, IOException {
+	public synchronized IdDocRem getIdDocRem(TipoDoc tipoDoc, Date fchEmis, EstrategiaNumeracion estrategia) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocRem iddoc = new IdDocRem();
 
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
 		iddoc.setSerie(cae.getSerie());
-		iddoc.setNro(new BigInteger(String.valueOf(consumeId(cae))));
+		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
 		
 		/*
 		 * Fecha
 		 */
-		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(fchEmis));
 		iddoc.setFchEmis(date);
 
 		return iddoc;
@@ -260,7 +251,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Serie").setDetailMessage("La Serie no puede ser vacia");
 		
 		cae.save();
-		empresa.getCaes().add(cae);
+		this.getEmpresa().getCaes().add(cae);
 		addCAEtoMap(cae);
 		
 	}
@@ -303,7 +294,7 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 			siguiente = caeJson.getLong("Siguiente");
 		}
 		
-		CAE cae = new CAE(empresa, caeJson.getLong("NA"), TipoDoc.fromInt(caeJson.getInt("TCFE")), caeJson.getString("Serie"), dNro, caeJson.getLong("HNro"), fechaVencimiento, siguiente);
+		CAE cae = new CAE(this.getEmpresa(), caeJson.getLong("NA"), TipoDoc.fromInt(caeJson.getInt("TCFE")), caeJson.getString("Serie"), dNro, caeJson.getLong("HNro"), fechaVencimiento, siguiente);
 		
 		return cae;
 	}

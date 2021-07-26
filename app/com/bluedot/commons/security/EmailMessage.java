@@ -4,7 +4,9 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -13,6 +15,7 @@ import javax.persistence.SequenceGenerator;
 
 import org.hibernate.criterion.Restrictions;
 
+import com.bluedot.efactura.model.Empresa;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
@@ -36,7 +39,7 @@ public class EmailMessage extends Model<EmailMessage> {
 	private Date sentDate;
 	private String messageContent;
 
-	@OneToMany
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "emailMessage", fetch=FetchType.LAZY)
 	private List<Attachment> attachments;
 
 	public EmailMessage() {
@@ -66,7 +69,11 @@ public class EmailMessage extends Model<EmailMessage> {
 		this.messageContent = messageContent;
 	}
 
-	protected static Finder<Long, EmailMessage> find = new Finder<Long, EmailMessage>(Long.class, EmailMessage.class);
+	private static Finder<Long, EmailMessage> find = new Finder<Long, EmailMessage>(Long.class, EmailMessage.class);
+	
+	public static EmailMessage findById(Long id) {
+		return find.byId(id);
+	}
 	
 	public static List<EmailMessage> findByMessageId(String messageId) {
 
@@ -126,5 +133,13 @@ public class EmailMessage extends Model<EmailMessage> {
 
 	public void setMessageId(String messageId) {
 		this.messageId = messageId;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
 	}
 }

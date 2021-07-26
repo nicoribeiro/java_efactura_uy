@@ -34,7 +34,9 @@ import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.Sucursal;
 import com.bluedot.efactura.model.TipoDoc;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.recepcion.EnvioCFE;
@@ -127,6 +129,26 @@ public class Commons {
 		if (!object.has(key))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
 		return object.optLong(key);
+	}
+	
+	public static String safeGetString(JsonNode node, String key, boolean throwExceptionWhenMissing) throws APIException {
+		
+		if (throwExceptionWhenMissing && !node.has(key))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
+		
+		String result = node.has(key) ? node.findPath(key).asText() : null;
+		
+		return result;
+	}
+	
+	public static Integer safeGetInteger(JsonNode node, String key, boolean throwExceptionWhenMissing) throws APIException {
+		
+		if (throwExceptionWhenMissing && !node.has(key))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
+		
+		Integer result = node.has(key) ? node.findPath(key).asInt() : null;
+		
+		return result;
 	}
 
 	public static String getFilenamePrefix(CFEDefType cfe)
@@ -318,12 +340,12 @@ public class Commons {
 		
 	}
 	
-	public static void enviarMail(Empresa empresaDesde, String destinatarios, String nombreArchivo, byte[] archivo) throws APIException {
+	public static void enviarMail(Sucursal sucursalDesde, String destinatarios, String nombreArchivo, byte[] archivo) throws APIException {
 		String body = Play.application().configuration().getString("mail.body")
-		.replace("<nombre>", empresaDesde.getNombreComercial())
-		.replace("<mail>", empresaDesde.getMailNotificaciones()).replace("<tel>", empresaDesde.getTelefono())
+		.replace("<nombre>", sucursalDesde.getEmpresa().getNombreComercial())
+		.replace("<mail>", sucursalDesde.getEmpresa().getMailNotificaciones()).replace("<tel>", sucursalDesde.getTelefono())
 		.replace("<nl>", "\n");
-		enviarMail(empresaDesde, destinatarios, nombreArchivo, archivo, body);
+		enviarMail(sucursalDesde.getEmpresa(), destinatarios, nombreArchivo, archivo, body);
 	}
 	
 	

@@ -47,7 +47,7 @@ public class SobresController extends AbstractController {
 		
 		if (sobre instanceof SobreEmitido)
 			try {
-				factory.getServiceMicroController(sobre.getEmpresaEmisora()).enviarSobreEmpresa((SobreEmitido)sobre);
+				factory.getServiceMicroController(sobre.getEmpresaEmisora()).enviarCorreoReceptorElectronico((SobreEmitido)sobre);
 			} catch (APIException e) {
 				logger.error("APIException:", e);
 				error = e.getJSONObject();

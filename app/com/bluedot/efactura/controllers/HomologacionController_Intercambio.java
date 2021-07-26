@@ -10,6 +10,8 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -22,7 +24,6 @@ import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.Environment;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.istack.logging.Logger;
 
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import play.Play;
@@ -35,7 +36,7 @@ import play.mvc.Security;
 @Security.Authenticated(Secured.class)
 public class HomologacionController_Intercambio extends AbstractController {
 
-	static Logger logger = Logger.getLogger(HomologacionController_Intercambio.class);
+	final static Logger logger = LoggerFactory.getLogger(HomologacionController_Intercambio.class);
 	
 	protected HomologacionController_Intercambio() {
 

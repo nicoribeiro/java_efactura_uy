@@ -16,6 +16,8 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
@@ -42,7 +44,6 @@ import com.bluedot.efactura.respuestas.Respuestas;
 import com.bluedot.efactura.respuestas.Respuestas.Respuesta;
 import com.bluedot.efactura.services.RecepcionService;
 import com.bluedot.efactura.strategy.report.SummaryStrategy;
-import com.sun.istack.logging.Logger;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
@@ -67,9 +68,9 @@ import dgi.soap.recepcion.WSEFacturaEFACRECEPCIONSOBREResponse;
 import play.Play;
 
 public class RecepcionServiceImpl implements RecepcionService {
-
-	static Logger logger = Logger.getLogger(RecepcionServiceImpl.class);
-
+	
+	final static Logger logger = LoggerFactory.getLogger(RecepcionServiceImpl.class);
+	
 	@Override
 	public void sendCFE(CFE cfe) throws APIException {
 		// TODO soportar mas de un CFE por sobre
@@ -400,7 +401,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 			response = output.getDataout();
 
-			logger.info("Respuesta: " + response.getXmlData());
+			logger.debug("Respuesta: " + response.getXmlData());
 			
 			WSRecepcionPool.getInstance().checkIn(portWrapper);
 		} catch (Throwable e) {
@@ -518,7 +519,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 
 			WSRecepcionPool.getInstance().checkIn(portWrapper);
 			
-			logger.info("Respuesta: " + output.getDataout().getXmlData());
+			logger.debug("Respuesta: " + output.getDataout().getXmlData());
 			
 			return output.getDataout();
 		} catch (Throwable e) {
@@ -544,36 +545,46 @@ public class RecepcionServiceImpl implements RecepcionService {
 			
 			Data result = consultaResultadoSobre(sobre.getToken(), sobre.getIdReceptor());
 
-			sobre.setResultado_dgi(result.getXmlData());
-			sobre.update();
-
+			
 			ACKCFEdefType ACKcfe = (ACKCFEdefType) XML.unMarshall(XML.loadXMLFromString(result.getXmlData()),
 					ACKCFEdefType.class);
-
-			for (Iterator<ACKCFEDet> iterator = ACKcfe.getACKCFEDet().iterator(); iterator.hasNext();) {
-				ACKCFEDet ACKcfeDet = iterator.next();
-				CFE cfe = sobre.getCFE(ACKcfeDet.getNroCFE().longValue(), ACKcfeDet.getSerie(),
-						TipoDoc.fromInt(ACKcfeDet.getTipoCFE().intValue()));
-				if (cfe != null) {
-					cfe.setEstado(ACKcfeDet.getEstado());
-					cfe.update();
-					if (cfe.getEstado() == EstadoACKCFEType.AE){ 
-						/*
-						 * Envio a la empresa
-						 */
-						if (cfe.getEmpresaReceptora() != null && cfe.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null)
-							this.enviarSobreEmpresa(sobre);
-					}else{
-						for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
-								.iterator(); iterator2.hasNext();) {
-							RechazoCFEDGIType rechazo = iterator2.next();
-							cfe.getMotivo().add(MotivoRechazoCFE.valueOf(rechazo.getMotivo()));
+			
+			if (ACKcfe.getACKCFEDet().isEmpty() && ACKcfe.getCaratula()==null && ACKcfe.getSignature()==null) {
+				/*
+				 * La respuesta no es util, posiblemente antes de tiempo.
+				 */
+				logger.error("La respuesta de DGI al sobre con id:" + sobre.getId() + " no es util.");
+			}else {
+				/*
+				 * Proceso la respuesta
+				 */
+				sobre.setResultado_dgi(result.getXmlData());
+				sobre.update();
+	
+				for (Iterator<ACKCFEDet> iterator = ACKcfe.getACKCFEDet().iterator(); iterator.hasNext();) {
+					ACKCFEDet ACKcfeDet = iterator.next();
+					CFE cfe = sobre.getCFE(ACKcfeDet.getNroCFE().longValue(), ACKcfeDet.getSerie(),
+							TipoDoc.fromInt(ACKcfeDet.getTipoCFE().intValue()));
+					if (cfe != null) {
+						cfe.setEstado(ACKcfeDet.getEstado());
+						cfe.update();
+						if (cfe.getEstado() == EstadoACKCFEType.AE){ 
+							/*
+							 * Envio correos al receptor
+							 */
+							this.enviarCorreoReceptorElectronico(sobre);
+						}else{
+							for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
+									.iterator(); iterator2.hasNext();) {
+								RechazoCFEDGIType rechazo = iterator2.next();
+								cfe.getMotivo().add(MotivoRechazoCFE.valueOf(rechazo.getMotivo()));
+							}
+	
 						}
-
+					} else {
+						// TODO ver que se hace si no encuentra al cfe dentro de los
+						// CFE del sobre
 					}
-				} else {
-					// TODO ver que se hace si no encuentra al cfe dentro de los
-					// CFE del sobre
 				}
 			}
 
@@ -645,8 +656,6 @@ public class RecepcionServiceImpl implements RecepcionService {
 			caratula.setTmstFirmaEnv(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
 			caratula.setVersion("1.0");
 			reporte.setCaratula(caratula);
-
-			
 			
 			/*
 			 * Resumenes
@@ -726,7 +735,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 	}
 
 	@Override
-	public void enviarCfeEmpresa(CFE cfe) throws APIException {
+	public void enviarCorreoReceptorElectronico(CFE cfe) throws APIException {
 		SobreEmitido sobre = cfe.getSobreEmitido();
 		
 		if (sobre.getEmpresaReceptora().isEmisorElectronico()){
@@ -740,23 +749,27 @@ public class RecepcionServiceImpl implements RecepcionService {
 					e.printStackTrace();
 				}
 			}
-			enviarSobreEmpresa(sobre);
+			enviarCorreoReceptorElectronico(sobre);
 		}
 		
 	}
 
 	@Override
-	public void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
-		//ENVIO XML
-		Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "");
+	public void enviarCorreoReceptorElectronico(SobreEmitido sobre) throws APIException {
+		
+		if (sobre.getEmpresaReceptora() != null && sobre.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null && sobre.getNombreArchivo()!=null && !sobre.getNombreArchivo().equals("")) {
+			//ENVIO XML
+			Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "");
+		}
 		
 		//ENVIO PDF
 		for(CFE cfe : sobre.getCfes()) {
 			if (cfe.getPdfMailAddress()!=null) {
 				String filename = Commons.getPDFpath(sobre.getEmpresaEmisora(), cfe) + File.separator + Commons.getPDFfilename(cfe);
+				logger.info("PDF filename: " + filename);
 				try {
 					byte[] allBytes = Files.readAllBytes(Paths.get(filename));
-					Commons.enviarMail(sobre.getEmpresaEmisora(), cfe.getPdfMailAddress(), Commons.getPDFfilename(cfe), allBytes);
+					Commons.enviarMail(cfe.getSucursal(), cfe.getPdfMailAddress(), Commons.getPDFfilename(cfe), allBytes);
 				} catch (IOException e) {
 					throw APIException.raise(e);
 				}

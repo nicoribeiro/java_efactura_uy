@@ -3,6 +3,7 @@ package com.bluedot.efactura.microControllers.implementation;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -92,7 +93,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	@Override
 	public void consultarResultados(Date date) throws APIException {
 		
-		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(empresa, date);
+		List<SobreEmitido> sobres = SobreEmitido.findByEmpresaEmisoraAndDate(this.getEmpresa(), date);
 
 		for (Iterator<SobreEmitido> iterator = sobres.iterator(); iterator.hasNext();) {
 			SobreEmitido sobre = iterator.next();
@@ -106,7 +107,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		
 		//Intento recuperar los datos del sobre cuando el sobre por alguna razon le faltan datos. 
 		if (sobreEmitido.getToken() == null || sobreEmitido.getIdReceptor() == null){
-			ACKConsultaEnviosSobre respuesta = consultasService.consultarEnvioSobre(sobreEmitido.getId(), 0, DateHandler.minus(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), DateHandler.add(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), empresa);
+			ACKConsultaEnviosSobre respuesta = consultasService.consultarEnvioSobre(sobreEmitido.getId(), 0, DateHandler.minus(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), DateHandler.add(sobreEmitido.getFecha(), 5, Calendar.DAY_OF_MONTH), this.getEmpresa());
 			
 			List<DatosSobre> sobres = respuesta.getColeccionDatosSobre().getDatosSobre();
 			
@@ -123,9 +124,14 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			}
 		}
 		
-		//Si sigue siendo null no consulto, asumo que hubo un error de comunicacion o que el sobre no existe
+		/*
+		 * Si sigue siendo null el token o el id_receptor no consulto, asumo que hubo un error de comunicacion o que el sobre no existe
+		 * 
+		 * Si el sobreEmitido ya tiene resultado tampoco consulto
+		 */
 		if (sobreEmitido.getToken() != null && sobreEmitido.getIdReceptor() != null){
-			recepcionService.consultaResultadoSobre(sobreEmitido);
+			if (sobreEmitido.getResultado_dgi()== null || sobreEmitido.getResultado_dgi().isEmpty())
+				recepcionService.consultaResultadoSobre(sobreEmitido);
 		}
 		
 		return sobreEmitido;
@@ -133,7 +139,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 
 	@Override
 	public ReporteDiario generarReporteDiario(Date date) throws APIException {
-		return recepcionService.generarReporteDiario(date, empresa);
+		return recepcionService.generarReporteDiario(date, this.getEmpresa());
 	}
 
 	@Override
@@ -164,33 +170,29 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		
 		
 	}
-	/**
-	 * Hay 3 tipos de correos que pueden llegar a ser validos
-	 * 
-	 * 1 - Respuesta a un sobre con CFE emitidos por una empresa manejada por este sistema. 
-	 * 2 - Respuesta a la recepcion de un SobreEmitido
-	 * 3 - Un sobre con CFE emitidos por otra empresa hacia una empresa manejada por el sistema.
-	 */
+	
 	@Override
-	public void getDocumentosEntrantes() throws APIException {
+	public List<EmailMessage> obtenerYProcesarEmailsEntrantesDesdeServerCorreo() throws APIException {
 		// TODO mutex
 
+		List<EmailMessage> emailsModelo = new LinkedList<EmailMessage>();
+		
 		EmailAttachmentReceiver receiver = new EmailAttachmentReceiver();
 		
-		int offset = empresa.getOffsetMail()==0 ? 1 : empresa.getOffsetMail();
+		int offset = this.getEmpresa().getOffsetMail()==0 ? 1 : this.getEmpresa().getOffsetMail();
 		int messageQuantity = 100;
 		List<Email> emails = null;
 		do {
 			
-			emails = receiver.downloadEmail("imap", empresa.getHostRecepcion(),
-					empresa.getPuertoRecepcion(), empresa.getUserRecepcion(),
-					empresa.getPassRecepcion(), offset, messageQuantity);
+			emails = receiver.downloadEmail("imap", this.getEmpresa().getHostRecepcion(),
+					this.getEmpresa().getPuertoRecepcion(), this.getEmpresa().getUserRecepcion(),
+					this.getEmpresa().getPassRecepcion(), offset, messageQuantity);
 			
 			try {
-				procesarEmails(emails);
+				emailsModelo.addAll(procesarEmails(emails));
 				offset += emails.size();
-				empresa.setOffsetMail(offset);
-				empresa.update();
+				this.getEmpresa().setOffsetMail(offset);
+				this.getEmpresa().update();
 				ThreadMan.forceTransactionFlush();
 			} catch (APIException e) {
 				throw e;
@@ -200,16 +202,24 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			
 		} while (emails.size() == messageQuantity);
 		
+		return emailsModelo;
 	}
 	
-	private void procesarEmails(List<Email> emails) throws APIException, Exception {
 	
+	private List<EmailMessage> procesarEmails(List<Email> emails) throws APIException, Exception {
+	
+		int i = 1;
+		
+		List<EmailMessage> emailsModelo = new LinkedList<EmailMessage>();
+		
 		for (Email email : emails)
 
 		{
+			logger.info(i+"-Procesando email: " + email.getMessageId());
 			
 			if (EmailMessage.findByMessageId(email.getMessageId()).size()>0){
-				logger.info("Este Email ya fue procesado messageId:" + email.getMessageId());
+				logger.info(i+"-Este Email ya fue procesado messageId:" + email.getMessageId());
+				i++;
 				continue;
 			}
 			
@@ -218,196 +228,247 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			 */
 			EmailMessage emailModel = new EmailMessage(email);
 			emailModel.save();
+			emailsModelo.add(emailModel);
 			ThreadMan.forceTransactionFlush();
 			
-			logger.info("Procesado email: " + email.getMessageId());
-			logger.info("Email contiene " + email.getAttachments().size() + " attachments");
+			logger.info(i+"-Email persistido: " + email.getMessageId());
+			logger.info(i+"-Email contiene " + email.getAttachments().size() + " attachments");
 			
-			for (Attachment attachment : emailModel.getAttachments()) {
-				try {
-					
-					/*
-					 * Si hubo una excepcion las entidades se desatachearon del persistence context con el rollback.
-					 * Por lo tanto, como no estoy seguro si estan o no debo volverlas a pedir a la BBDD.
-					 */
-					attachment = Attachment.findById(attachment.getId());
-					
-					logger.info("Procesando Adjunto: " + attachment.getName());
-					
-					if (attachment.getName()==null) {
-						logger.info("El Adjunto no tiene nombre, no se procesa el adjunto");
-						continue;
-					}
-					
-					if (!attachment.getName().toUpperCase().endsWith("XML")) {
-						logger.info("El Adjunto no tiene extension XML, no se procesa el adjunto");
-						continue;
-					}
-						
-					Document document = XML.loadXMLFromString(attachment.getPayload());
-					
-					logger.debug("Attachment payload: " + attachment.getPayload());
-					
-					/*
-					 * 1 - Es la respuesta de los CFE dentro de un SobreEmitido (respuesta de aceptacion)
-					 */
-					if (attachment.getName().substring(0, 3).equalsIgnoreCase("ME_")){
-						ACKCFEdefType ackCFEdefType = (ACKCFEdefType) XML.unMarshall(document,
-								ACKCFEdefType.class);
-						Sobre sobre = SobreEmitido.findById(ackCFEdefType.getCaratula().getIDEmisor().longValue(), true);
-						
-						if (sobre instanceof SobreEmitido){
-							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
-							
-							Respuesta respuestaCfe = new Respuesta();
-							sobreEmitido.setRespuestaCfes(respuestaCfe);
-							respuestaCfe.setNombreArchivo(attachment.getName());
-							respuestaCfe.setPayload(attachment.getPayload());
-							respuestaCfe.save();
-							sobreEmitido.update();
-							
-							
-						}
-					}
-					
-					/*
-					 * 2 - Es una respuesta a la recepcion de un SobreEmitido (respuesta de recepcion)
-					 */
-					if (attachment.getName().substring(0, 2).equalsIgnoreCase("M_")){
-						ACKSobredefType ackSobredefType = (ACKSobredefType) XML.unMarshall(document,
-								ACKSobredefType.class);
-						Sobre sobre = SobreEmitido.findById(ackSobredefType.getCaratula().getIDEmisor().longValue(), true);
-						
-						if (sobre instanceof SobreEmitido){
-							SobreEmitido sobreEmitido = (SobreEmitido) sobre;
-							sobreEmitido.setEstadoEmpresa(ackSobredefType.getDetalle().getEstado());
-							
-							Respuesta respuestaSobre = new Respuesta();
-							sobreEmitido.setRespuestaSobre(respuestaSobre);
-							respuestaSobre.setNombreArchivo(attachment.getName());
-							respuestaSobre.setPayload(attachment.getPayload());
-							respuestaSobre.save();
-							sobreEmitido.update();
-						}
-						
-					}
-					
-					/*
-					 * 3 - Es un sobre con CFE adentro
-					 */
-					if (attachment.getName().substring(0, 3).equalsIgnoreCase("Sob")){
-
-						EnvioCFEEntreEmpresas envioCFEEntreEmpresas = (EnvioCFEEntreEmpresas) XML.unMarshall(document,
-								EnvioCFEEntreEmpresas.class);
-
-						Empresa empresaReceptoraCandidata = Empresa
-								.findByRUT(envioCFEEntreEmpresas.getCaratula().getRutReceptor(), true);
-
-						if (empresaReceptoraCandidata.getId() != empresa.getId()) {
-							logger.info("La empresa receptora no es igual a la empresa local, no se procesa el adjunto");
-							continue;
-						}
-
-						List<Sobre> sobres = SobreRecibido.findByNombre(attachment.getName());
-						
-						SobreRecibido sobreRecibido=null;
-						
-						if (sobres.size()>0 && sobres.get(0) instanceof SobreRecibido)
-							sobreRecibido = (SobreRecibido) sobres.get(0);
-						
-						if (sobreRecibido==null){
-							/*
-							 * Create el SobreRecibido
-							 */
-							sobreRecibido = new SobreRecibido();
-							sobreRecibido.setEmpresaReceptora(empresa);
-							Empresa empresaEmisora = Empresa.findByRUT(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
-							if (empresaEmisora == null) {
-								empresaEmisora = new Empresa(envioCFEEntreEmpresas.getCaratula().getRUCEmisor(), null, null, null, null, null);
-								empresaEmisora.save();
-							}
-							sobreRecibido.setEmpresaEmisora(empresaEmisora);
-							sobreRecibido.setEnvioCFEEntreEmpresas(envioCFEEntreEmpresas);
-							sobreRecibido.setNombreArchivo(attachment.getName());
-							sobreRecibido.setXmlEmpresa(attachment.getPayload());
-							sobreRecibido.save();
-							sobreRecibido.getEmails().add(emailModel);
-
-							/*
-							 * PROCESO SOBRE
-							 */
-							intercambioMicroController.procesarSobre(empresa, sobreRecibido, document);
-							sobreRecibido.update();
-
-							/*
-							 * PROCESO CFE DENTRO DE SOBRE
-							 */
-							if (sobreRecibido.getEstadoEmpresa()==EstadoACKSobreType.AS){
-								intercambioMicroController.procesarCFESobre(empresa, sobreRecibido);
-								sobreRecibido.update();
-							}
-
-						}else{
-							sobreRecibido.getEmails().add(emailModel);
-							sobreRecibido.update();
-						}
-						
-						
-					}
-					attachment.setEstado(AttachmentEstado.PROCESADO_OK);
-					attachment.update();
-					/*
-					 * Para que se guarden en la BBDD los cambios referentes al procesamiento del ultimo attachment
-					 */
-					ThreadMan.forceTransactionFlush();
-					
-
-				} catch (APIException | Exception e) {
-					logger.error("APIException is: ", e);
-					/*
-					 * si hubo una ecepcion en el procesamiento del attachment debo rollbaquear y setear el estado del attachment a PROCESADO_ERROR
-					 */
-					play.db.jpa.JPA.em().getTransaction().rollback();
-					play.db.jpa.JPA.em().getTransaction().begin();
-					Attachment attachmentFromBD = Attachment.findById(attachment.getId());
-					attachmentFromBD.setEstado(AttachmentEstado.PROCESADO_ERROR);
-					attachmentFromBD.update();
-					ThreadMan.forceTransactionFlush();
-					/*
-					 * Vuelvo a cargar la empsa para que este en el persistence context
-					 */
-					empresa = Empresa.findByRUT(empresa.getRut());
-					
-					/*
-					 * Envio mail a los administradores notificando del error
-					 */
-					Map<String, byte[]> attachments = new TreeMap<String, byte[]>();
-					attachments.put(attachmentFromBD.getName(), attachmentFromBD.getPayload().getBytes());
-					String fullStackTrace = org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace(e);
-					new MessagingHelper()
-						.withCustomConfig(empresa.getFromEnvio(), empresa.getHostRecepcion(), Integer.parseInt(empresa.getPuertoRecepcion()),
-								empresa.getUserRecepcion(), empresa.getPassRecepcion())
-						.withAttachment(attachments)
-						.sendEmail(empresa.getMailNotificaciones(), fullStackTrace, null, "Error Procesando Archivo Recibido", false);
-					
-				}
-
-			}
+			procesarAttachments(i, emailModel);
 			
-			logger.info("Fin procesaminto email: " + email.getMessageId());
+			logger.info(i+"-Fin procesaminto email: " + email.getMessageId());
+			i++;
 		}
 
+		return emailsModelo;
+	}
 
+	/**
+	 * Hay 3 tipos de correos que pueden llegar a ser validos
+	 * 
+	 * 1 - Respuesta a un sobre con CFE emitidos por una empresa manejada por este sistema. 
+	 * 2 - Respuesta a la recepcion de un SobreEmitido
+	 * 3 - Un sobre con CFE emitidos por otra empresa hacia una empresa manejada por el sistema.
+	 */
+	@Override
+	public void procesarAttachments(int index, EmailMessage emailMessage) {
+		if (emailMessage.getAttachments()==null || emailMessage.getAttachments().size()==0)
+			logger.info(index+"-Email no contiene adjuntos, se aborta el procesamiento");
+		
+		for (Attachment attachment : emailMessage.getAttachments()) {
+			procesarAttachment(index, attachment);
+		}
+	}
+
+	/**
+	 * @param index
+	 * @param emailMessage
+	 * @param attachment
+	 * @return resultado del procesamiento: true = OK
+	 */
+	public void procesarAttachment(int index, Attachment attachment) {
+		boolean procesar_Sob = true;
+		boolean procesar_M = false;//TODO cambiar
+		boolean procesar_ME = false;//TODO cambiar
+		
+		try {
+			
+			/*
+			 * Si hubo una excepcion las entidades se desatachearon del persistence context con el rollback.
+			 * Por lo tanto, como no estoy seguro si estan o no debo volverlas a pedir a la BBDD.
+			 */
+			attachment = Attachment.findById(attachment.getId());
+			
+			logger.info(index+"-Procesando Adjunto: " + attachment.getName());
+
+			if (attachment.getEstado()==AttachmentEstado.PROCESADO_OK) {
+				logger.info(index+"-El Adjunto ya fue procesado correctamente, se aborta el procesamiento");
+				return;
+			}
+			
+			if (attachment.getName()==null) {
+				logger.info(index+"-El Adjunto no tiene nombre, se aborta el procesamiento");
+				return;
+			}
+			
+			if (!attachment.getName().toUpperCase().endsWith("XML")) {
+				logger.info(index+"-El Adjunto no tiene extension XML, se aborta el procesamiento");
+				return;
+			}
+				
+			Document document = XML.loadXMLFromString(attachment.getPayload());
+			
+			logger.debug(index+"-Attachment payload: " + attachment.getPayload());
+			
+			
+			/*
+			 * 1 - Es la respuesta de los CFE dentro de un SobreEmitido (respuesta de aceptacion)
+			 */
+			if (attachment.getName().substring(0, 3).equalsIgnoreCase("ME_") && procesar_ME){
+				ACKCFEdefType ackCFEdefType = (ACKCFEdefType) XML.unMarshall(document,
+						ACKCFEdefType.class);
+				Sobre sobre = SobreEmitido.findById(ackCFEdefType.getCaratula().getIDEmisor().longValue(), true);
+				
+				if (sobre instanceof SobreEmitido){
+					SobreEmitido sobreEmitido = (SobreEmitido) sobre;
+					
+					Respuesta respuestaCfe = new Respuesta();
+					sobreEmitido.setRespuestaCfes(respuestaCfe);
+					respuestaCfe.setNombreArchivo(attachment.getName());
+					respuestaCfe.setPayload(attachment.getPayload());
+					respuestaCfe.save();
+					sobreEmitido.update();
+					
+					
+				}
+			}
+			
+			/*
+			 * 2 - Es una respuesta a la recepcion de un SobreEmitido (respuesta de recepcion)
+			 */
+			if (attachment.getName().substring(0, 2).equalsIgnoreCase("M_") && procesar_M){
+				ACKSobredefType ackSobredefType = (ACKSobredefType) XML.unMarshall(document,
+						ACKSobredefType.class);
+				Sobre sobre = SobreEmitido.findById(ackSobredefType.getCaratula().getIDEmisor().longValue(), true);
+				
+				if (sobre instanceof SobreEmitido){
+					SobreEmitido sobreEmitido = (SobreEmitido) sobre;
+					sobreEmitido.setEstadoEmpresa(ackSobredefType.getDetalle().getEstado());
+					
+					Respuesta respuestaSobre = new Respuesta();
+					sobreEmitido.setRespuestaSobre(respuestaSobre);
+					respuestaSobre.setNombreArchivo(attachment.getName());
+					respuestaSobre.setPayload(attachment.getPayload());
+					respuestaSobre.save();
+					sobreEmitido.update();
+				}
+				
+			}
+			
+			/*
+			 * 3 - Es un sobre con CFE adentro
+			 */
+			if (attachment.getName().substring(0, 3).equalsIgnoreCase("Sob") && procesar_Sob){
+
+				EnvioCFEEntreEmpresas envioCFEEntreEmpresas = (EnvioCFEEntreEmpresas) XML.unMarshall(document,
+						EnvioCFEEntreEmpresas.class);
+
+				Empresa empresaReceptoraCandidata = Empresa
+						.findByRUT(envioCFEEntreEmpresas.getCaratula().getRutReceptor(), true);
+
+				if (empresaReceptoraCandidata.getId() != this.getEmpresa().getId()) {
+					logger.info(index+"-La empresa receptora no es igual a la empresa local, se aborta el procesamiento");
+					return;
+				}
+
+				List<Sobre> sobres = SobreRecibido.findByNombre(attachment.getName());
+				
+				SobreRecibido sobreRecibido=null;
+				
+				if (sobres.size()>0 && sobres.get(0) instanceof SobreRecibido)
+					sobreRecibido = (SobreRecibido) sobres.get(0);
+				
+				if (sobreRecibido==null){
+					/*
+					 * Create el SobreRecibido
+					 */
+					sobreRecibido = new SobreRecibido();
+					sobreRecibido.setEmpresaReceptora(this.getEmpresa());
+					Empresa empresaEmisora = Empresa.findByRUT(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
+					if (empresaEmisora == null) {
+						empresaEmisora = new Empresa(envioCFEEntreEmpresas.getCaratula().getRUCEmisor(), null, null);
+						empresaEmisora.save();
+					}
+					sobreRecibido.setEmpresaEmisora(empresaEmisora);
+					sobreRecibido.setEnvioCFEEntreEmpresas(envioCFEEntreEmpresas);
+					sobreRecibido.setNombreArchivo(attachment.getName());
+					sobreRecibido.setXmlEmpresa(attachment.getPayload());
+					sobreRecibido.save();
+					sobreRecibido.getEmails().add(attachment.getEmailMessage());
+
+					/*
+					 * PROCESO SOBRE
+					 */
+					intercambioMicroController.procesarSobre(this.getEmpresa(), sobreRecibido, document);
+					sobreRecibido.update();
+
+					/*
+					 * PROCESO CFE DENTRO DE SOBRE
+					 */
+					if (sobreRecibido.getEstadoEmpresa()==EstadoACKSobreType.AS){
+						intercambioMicroController.procesarCFESobre(this.getEmpresa(), sobreRecibido);
+						sobreRecibido.update();
+					}
+
+				}else{
+					sobreRecibido.getEmails().add(attachment.getEmailMessage());
+					sobreRecibido.update();
+				}
+				
+				
+			}
+			attachment.setEstado(AttachmentEstado.PROCESADO_OK);
+			attachment.update();
+			/*
+			 * Para que se guarden en la BBDD los cambios referentes al procesamiento del ultimo attachment
+			 */
+			ThreadMan.forceTransactionFlush();
+			
+
+		} catch (APIException | Exception e) {
+			logger.error(index+"-APIException is: ", e);
+			/*
+			 * si hubo una excepcion en el procesamiento del attachment debo rollbaquear y setear el estado del attachment a PROCESADO_ERROR
+			 */
+			play.db.jpa.JPA.em().getTransaction().rollback();
+			play.db.jpa.JPA.em().getTransaction().begin();
+			Attachment attachmentFromBD = Attachment.findById(attachment.getId());
+			attachmentFromBD.setEstado(AttachmentEstado.PROCESADO_ERROR);
+			attachmentFromBD.update();
+			ThreadMan.forceTransactionFlush();
+			/*
+			 * Vuelvo a cargar la empsa para que este en el persistence context
+			 */
+			this.setEmpresa(Empresa.findByRUT(this.getEmpresa().getRut()));
+			
+			/*
+			 * Agrego el Email a la lista de emails Erroneos de la empresa;
+			 */
+			boolean agregar = true;
+			for(EmailMessage email : this.getEmpresa().getEmailsRecibidosError()) {
+				if (attachment.getEmailMessage().getId() == email.getId()) {
+					agregar = false;
+					break;
+				}
+			}
+			if (agregar)
+				this.getEmpresa().getEmailsRecibidosError().add(EmailMessage.findById(attachment.getEmailMessage().getId()));
+			
+			ThreadMan.forceTransactionFlush();
+			
+			/*
+			 * Envio mail a los administradores notificando del error
+			 */
+			Map<String, byte[]> attachments = new TreeMap<String, byte[]>();
+			attachments.put(attachmentFromBD.getName(), attachmentFromBD.getPayload().getBytes());
+			String fullStackTrace = org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace(e);
+			new MessagingHelper()
+				.withCustomConfig(this.getEmpresa().getFromEnvio(), this.getEmpresa().getHostRecepcion(), Integer.parseInt(this.getEmpresa().getPuertoRecepcion()),
+						this.getEmpresa().getUserRecepcion(), this.getEmpresa().getPassRecepcion())
+				.withAttachment(attachments)
+				.sendEmail(this.getEmpresa().getMailNotificaciones(), fullStackTrace, null, "Error Procesando Archivo Recibido", false);
+			
+		}
 	}
 
 	@Override
 	public void enviarCfeEmpresa(CFE cfe) throws APIException{
-		recepcionService.enviarCfeEmpresa(cfe);
+		recepcionService.enviarCorreoReceptorElectronico(cfe);
 	}
 
 	@Override
-	public void enviarSobreEmpresa(SobreEmitido sobre) throws APIException {
-		recepcionService.enviarSobreEmpresa(sobre);
+	public void enviarCorreoReceptorElectronico(SobreEmitido sobre) throws APIException {
+		recepcionService.enviarCorreoReceptorElectronico(sobre);
 	}
 
 	

@@ -8,10 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,8 +34,7 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.DireccionDocumento;
 import com.bluedot.efactura.model.Empresa;
-import com.bluedot.efactura.model.Sobre;
-import com.bluedot.efactura.model.SobreEmitido;
+import com.bluedot.efactura.model.Sucursal;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.pollers.PollerManager;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
@@ -47,7 +44,6 @@ import com.play4jpa.jpa.db.Tx;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import play.Play;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
@@ -106,7 +102,9 @@ public class DocumentController extends AbstractController {
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
 				.getMicroControllersFactory();
 
-		// TODO estos controles se pueden mover a una annotation
+		/*
+		 * Controles de existencia de campos y carga de variables
+		 */
 		if (!document.has("Encabezado"))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Encabezado");
 
@@ -122,13 +120,20 @@ public class DocumentController extends AbstractController {
 		if (!document.getJSONObject("Encabezado").has("Emisor"))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Emisor");
 		
-		if (!document.getJSONObject("Encabezado").getJSONObject("Emisor").has("RUCEmisor"))
-			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("RUCEmisor");
+//		if (!document.getJSONObject("Encabezado").getJSONObject("Emisor").has("RUCEmisor"))
+//			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("RUCEmisor");
 		
-		String rucEmisor = document.getJSONObject("Encabezado").getJSONObject("Emisor").getString("RUCEmisor");
+		if (!document.getJSONObject("Encabezado").getJSONObject("Emisor").has("CdgDGISucur"))
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("CdgDGISucur");
 		
-		if (rucEmisor.compareTo(rut)!=0)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("rucEmisor distinto del rut de la URL");
+//		String rucEmisor = document.getJSONObject("Encabezado").getJSONObject("Emisor").getString("RUCEmisor");
+		
+		int cdgDGISucur = document.getJSONObject("Encabezado").getJSONObject("Emisor").getInt("CdgDGISucur");
+		
+		Sucursal sucursal = Sucursal.findByCodigoSucursal(empresa.getSucursales(), cdgDGISucur, true);
+		
+//		if (rucEmisor.compareTo(rut)!=0)
+//			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("rucEmisor distinto del rut de la URL");
 
 		TipoDoc tipo = TipoDoc
 				.fromInt(document.getJSONObject("Encabezado").getJSONObject("IdDoc").getInt("TipoCFE"));
@@ -142,7 +147,11 @@ public class DocumentController extends AbstractController {
 
 		if (cfe != null)
 			throw APIException.raise(APIErrors.EXISTE_CFE).withParams("generadorId", id);
-
+		/*
+		 * Fin controles de existencia de campos y carga de variables
+		 */
+		
+		
 		switch (tipo) {
 		case eFactura:
 		case eTicket:
@@ -198,6 +207,8 @@ public class DocumentController extends AbstractController {
 			if (document.has("Adenda"))
 				cfe.setAdenda(document.getJSONArray("Adenda").toString());
 
+			cfe.setSucursal(sucursal);
+			
 			JSONObject error = null;
 
 			if (cfe.getFechaEmision()==null)
@@ -358,6 +369,9 @@ public class DocumentController extends AbstractController {
 
 	}
 	
+	
+
+	
 	public Promise<Result> enviarCfeEmpresa(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
@@ -399,35 +413,99 @@ public class DocumentController extends AbstractController {
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
 				.getMicroControllersFactory();
 
-		factory.getServiceMicroController(empresaReceptora).getDocumentosEntrantes();
+		factory.getServiceMicroController(empresaReceptora).obtenerYProcesarEmailsEntrantesDesdeServerCorreo();
 		
 		return json(OK);
 
 	}
 	
 	public Promise<Result> getDocumentos(String rut) throws APIException {
-		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
+		Empresa empresa = Empresa.findByRUT(rut, true);
 		
 		Date fromDate = request().getQueryString("fromDate") != null ? (new Date(Long.parseLong(request().getQueryString("fromDate")) * 1000)) : null;
 		Date toDate = request().getQueryString("toDate") != null ? (new Date(Long.parseLong(request().getQueryString("toDate")) * 1000)) : null;
 		
 		int page = request().getQueryString("page") != null ? Integer.parseInt(request().getQueryString("page")) : 1;
-		int pageSize = request().getQueryString("pageSize") != null ? Math.min(Integer.parseInt(request().getQueryString("pageSize")), 50) : 50;
+		int pageSize = request().getQueryString("pageSize") != null ? Math.min(Integer.parseInt(request().getQueryString("pageSize")), 50) : 50;		
 		
-		if (page <=0)
-			page = 1;
-		if (pageSize <=0)
-			pageSize = 10;
+		Integer nro = request().getQueryString("nro") != null ? Integer.parseInt(request().getQueryString("nro")) : null;
+		Integer idTipoDoc = request().getQueryString("idTipoDoc") != null ? Integer.parseInt(request().getQueryString("idTipoDoc")) : null;
+		String serie = request().getQueryString("serie") != null ? request().getQueryString("serie"): null;
 		
-		DireccionDocumento direccion = request().getQueryString("direccion") != null ? DireccionDocumento.valueOf(request().getQueryString("direccion")) : DireccionDocumento.AMBOS;
-		
-		Tuple<List<CFE>,Long> cfes = CFE.find(empresaReceptora, fromDate, toDate, page, pageSize, direccion);
-		
-		JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
-		
-		return json(JSONUtils.createObjectList(cfeArray, cfes.item2, page, pageSize).toString());
+		if (idTipoDoc !=null && nro!=null && serie!=null){
+			/*
+			 * Solo un documento
+			 */
+			TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+	
+			if (tipo == null)
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
+	
+			List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, null, DireccionDocumento.EMITIDO, true);
+			
+			if (cfes.size()>1)
+				throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
+			
+			CFE cfe = cfes.get(0);
+			
+			JSONObject cfeObject = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
 
+			JSONArray cfeArray = new JSONArray();
+			cfeArray.put(cfeObject);
+			
+			return json(JSONUtils.createObjectList(cfeArray, 1, 1, 1).toString());
+			
+		}else {
+			/*
+			 * Una lista de documentos
+			 */
+			if (page <=0)
+				page = 1;
+			if (pageSize <=0)
+				pageSize = 10;
+			
+			DireccionDocumento direccion = request().getQueryString("direccion") != null ? DireccionDocumento.valueOf(request().getQueryString("direccion")) : DireccionDocumento.AMBOS;
+			
+			Tuple<List<CFE>,Long> cfes = CFE.find(empresa, fromDate, toDate, page, pageSize, direccion);
+			
+			JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
+			
+			return json(JSONUtils.createObjectList(cfeArray, cfes.item2, page, pageSize).toString());
+		}
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	public Promise<Result> getDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+
+		if (tipo == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
+
+		List<CFE> cfes = CFE.findById(empresa, tipo, serie, nro, null, DireccionDocumento.EMITIDO, true);
+
+		if (cfes.size()>1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
+		
+		CFE cfe = cfes.get(0);
+		
+		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+
+		cfeJson = JSONUtils.merge(cfeJson, new JSONObject(OK));
+
+		return json(cfeJson.toString());
+	}
+	
+	
+	
 
 	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print)
 			throws APIException {
@@ -471,7 +549,7 @@ public class DocumentController extends AbstractController {
 
 		logger.info("Generando PDF tipoDoc:{} - serie:{} - nro:{}", cfe.getTipo().value, cfe.getSerie(), cfe.getNro());
 
-		GenerateInvoice generateInvoice = new GenerateInvoice(cfe, empresa);
+		GenerateInvoice generateInvoice = new GenerateInvoice(cfe);
 
 		String filename = Commons.getPDFfilename(cfe);
 

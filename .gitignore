@@ -7,6 +7,8 @@ bin/
 build/
 resources/cfe/
 resources/images/qr/
+resources/sobres
+resources/reportes
 *.pkcs12
 *.DS_Store
 project/target/*
@@ -18,7 +20,7 @@ conf/servers.conf
 .cache-tests
 .sbtserver/*
 logs/application.log
-resources/images/logo.jpg
+resources/images/*
 builds
 deploys
 deploy_conf

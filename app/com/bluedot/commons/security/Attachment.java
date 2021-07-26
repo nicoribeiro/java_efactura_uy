@@ -3,13 +3,17 @@ package com.bluedot.commons.security;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 
 import com.bluedot.commons.error.APIException;
@@ -47,6 +51,9 @@ public class Attachment extends Model<Attachment> {
 	
 	@Enumerated(EnumType.STRING)
 	private AttachmentEstado estado;
+	
+	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
+	private EmailMessage emailMessage;
 
 	public Attachment() {
 
@@ -159,5 +166,13 @@ public class Attachment extends Model<Attachment> {
 
 	public void setEstado(AttachmentEstado estado) {
 		this.estado = estado;
+	}
+
+	public EmailMessage getEmailMessage() {
+		return emailMessage;
+	}
+
+	public void setEmailMessage(EmailMessage emailMessage) {
+		this.emailMessage = emailMessage;
 	}
 }

@@ -84,7 +84,7 @@ public class GenerateInvoice {
 		width = pageWidth - leftMargin - rightMargin;
 	}
 	
-	public GenerateInvoice(CFE cfe, Empresa empresa){
+	public GenerateInvoice(CFE cfe){
 		this.cfe = cfe;
 	}
 	
@@ -215,19 +215,10 @@ public class GenerateInvoice {
 		/*
 		 * Datos del Emisor
 		 */
-		/*
-		 * Aca no se puede usar todos los datos de cfe.getEmpresaEmisora() porque pueden haber cambiado, puedo usar los datos del generador_json 
-		 * o desde el XML que se envia a DGI. Como el XML esta dentro del sobre prefiero usar los datos del generador_json 
-		 * 
-		 * Los datos que pueden cambiar son direccion, localidad, departamento y codigoPostal
-		 * 
-		 */
-		JSONObject generador = new JSONObject(cfe.getGeneradorJson());
-		
 		createHeadings(bf, cb, emisor_x, emisor_y, cfe.getEmpresaEmisora().getRazon());
-		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize, generador.getJSONObject("Encabezado").getJSONObject("Emisor").getString("DomFiscal") + " CP " + cfe.getEmpresaEmisora().getCodigoPostal());
-		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 2, generador.getJSONObject("Encabezado").getJSONObject("Emisor").getString("Ciudad") + " - Uruguay") ;
-		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 3, cfe.getEmpresaEmisora().getTelefono());
+		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize, cfe.getSucursal().getDomicilioFiscal() + " CP " + cfe.getSucursal().getCodigoPostal());
+		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 2, cfe.getSucursal().getCiudad() + ", " + cfe.getSucursal().getDepartamento() + " - Uruguay") ;
+		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 3, cfe.getSucursal().getTelefono());
 		createHeadings(bf, cb, emisor_x, emisor_y - headerRowSize * 4, cfe.getEmpresaEmisora().getPaginaWeb());
 
 	}
@@ -293,7 +284,7 @@ public class GenerateInvoice {
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DirRecep"),
 					PdfContentByte.ALIGN_LEFT);
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4,
-					cfe.getEmpresaReceptora().getLocalidad() + " - " + generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DeptoRecep"), PdfContentByte.ALIGN_LEFT);
+					generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("CiudadRecep") + " - " + generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DeptoRecep"), PdfContentByte.ALIGN_LEFT);
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, cfe.getEmpresaReceptora().getRazon(),
 					PdfContentByte.ALIGN_LEFT);
 			break;

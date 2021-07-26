@@ -1,5 +1,7 @@
 package com.bluedot.efactura.serializers;
 
+import com.bluedot.commons.security.Attachment;
+import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.serializers.JSONSerializer;
 import com.bluedot.commons.serializers.JSONSerializerProvider;
 import com.bluedot.efactura.model.CAE;
@@ -10,6 +12,7 @@ import com.bluedot.efactura.model.Pais;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.Respuesta;
 import com.bluedot.efactura.model.Sobre;
+import com.bluedot.efactura.model.Sucursal;
 import com.bluedot.efactura.model.Titular;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
@@ -21,7 +24,7 @@ public class EfacturaJSONSerializerProvider extends JSONSerializerProvider {
 	}
 
 	public static JSONSerializer<Empresa> getEmpresaSerializer() {
-		return new EmpresaSerializer<Empresa>();
+		return new EmpresaSerializer<Empresa>(getSucursalSerializer());
 	}
 	
 	public static JSONSerializer<CFE> getCFESerializer(){
@@ -60,6 +63,10 @@ public class EfacturaJSONSerializerProvider extends JSONSerializerProvider {
 	
 	private static JSONSerializer<Respuesta> getRespuestaSerializer() {
 		return new RespuestaSerializer<Respuesta>();
+	}
+	
+	public static JSONSerializer<Sucursal> getSucursalSerializer() {
+		return new SucursalSerializer<Sucursal>();
 	}
 
 }

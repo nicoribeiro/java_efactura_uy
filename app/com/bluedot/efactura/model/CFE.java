@@ -3,6 +3,8 @@ package com.bluedot.efactura.model;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.Tuple;
+import com.bluedot.efactura.strategy.numeracion.EstrategiaNumeracion;
+import com.bluedot.efactura.strategy.numeracion.EstrategiaNumeracionSiguiente;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
@@ -207,6 +209,9 @@ public class CFE extends Model<CFE>{
 	
 	private String generadorId;
 	
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private Sucursal sucursal;
+	
 	/**
 	 * CAE
 	 */
@@ -229,6 +234,9 @@ public class CFE extends Model<CFE>{
 	private List<RetencionPercepcion> retencionesPercepciones; 
 	
 	private String pdfMailAddress;
+	
+	@Transient
+	private EstrategiaNumeracion estrategiaNumeracion;
 	
 	public CFE() {
 		super();
@@ -796,6 +804,8 @@ public class CFE extends Model<CFE>{
 		case Nota_de_Debito_de_eTicket_Contingencia:
 		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
 		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+		case eResguardo:
+		case eResguardo_Contingencia:
 			return true;
 		default:
 			return false;
@@ -850,6 +860,24 @@ public class CFE extends Model<CFE>{
 
 	public void setPdfMailAddress(String pdfMailAddress) {
 		this.pdfMailAddress = pdfMailAddress;
+	}
+
+	public Sucursal getSucursal() {
+		return sucursal;
+	}
+
+	public void setSucursal(Sucursal sucursal) {
+		this.sucursal = sucursal;
+	}
+	
+	public EstrategiaNumeracion getEstrategiaNumeracion() {
+		if (estrategiaNumeracion==null)
+			estrategiaNumeracion = new EstrategiaNumeracionSiguiente();
+		return estrategiaNumeracion;
+	}
+
+	public void setEstrategiaNumeracion(EstrategiaNumeracion estrategia) {
+		this.estrategiaNumeracion = estrategia;
 	}
 
 }

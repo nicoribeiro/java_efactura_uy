@@ -118,7 +118,7 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 	@Override
 	public void setIdDoc() throws APIException {
 		try {
-			IdDocTck idDocTck = caeMicroController.getIdDocTick(cfe.getTipo(), cfe.isIndMontoBruto(), cfe.getFormaDePago().value);
+			IdDocTck idDocTck = caeMicroController.getIdDocTick(cfe.getTipo(), cfe.isIndMontoBruto(), cfe.getFormaDePago().value, cfe.getFechaEmision(), cfe.getEstrategiaNumeracion());
 			getEncabezado().setIdDoc(idDocTck);
 			cfe.setSerie(idDocTck.getSerie());
 			cfe.setNro(idDocTck.getNro().intValue());
@@ -169,12 +169,9 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 
 	@Override
 	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
-			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, boolean update, String pdfMailAddress) throws APIException {
+			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, String pdfMailAddress) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
-		
-		
-		
 		if (supera10000UI()) {
 			
 			if (tipoDocRecep==null)

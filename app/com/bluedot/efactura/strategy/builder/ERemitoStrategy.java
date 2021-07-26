@@ -109,7 +109,7 @@ public class ERemitoStrategy extends CommonStrategy implements CFEStrategy {
 	@Override
 	public void setIdDoc() throws APIException {
 		try {
-			IdDocRem idDocResg = caeMicroController.getIdDocRem(cfe.getTipo());
+			IdDocRem idDocResg = caeMicroController.getIdDocRem(cfe.getTipo(), cfe.getFechaEmision(), cfe.getEstrategiaNumeracion());
 			getEncabezado().setIdDoc(idDocResg);
 			cfe.setSerie(idDocResg.getSerie());
 			cfe.setNro(idDocResg.getNro().intValue());
@@ -160,7 +160,7 @@ public class ERemitoStrategy extends CommonStrategy implements CFEStrategy {
 
 	@Override
 	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String rznSocRecep,
-			String dirRecep, String ciudadRecep, String deptoRecep, boolean update, String pdfMailAddress) throws APIException {
+			String dirRecep, String ciudadRecep, String deptoRecep, String pdfMailAddress) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
 		if (tipoDocRecep != null)
@@ -185,7 +185,7 @@ public class ERemitoStrategy extends CommonStrategy implements CFEStrategy {
 			} else {
 				if (rznSocRecep != null && dirRecep != null && ciudadRecep != null)
 					cfe.setEmpresaReceptora(
-							Empresa.getOrCreateEmpresa(docRecep, rznSocRecep, dirRecep, ciudadRecep, deptoRecep, update));
+							Empresa.getOrCreateEmpresa(docRecep, rznSocRecep, null));
 			}
 		
 		cfe.setPdfMailAddress(pdfMailAddress);

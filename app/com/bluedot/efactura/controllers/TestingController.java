@@ -20,6 +20,7 @@ import com.bluedot.efactura.Environment;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.strategy.asignarFecha.EstrategiaFechaRango;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
@@ -66,14 +67,16 @@ public class TestingController extends PruebasController {
 		cantidadDocumentos = encabezadoJSON.getInt("cantidadDocumentos");
 
 		maxLineasPorDocumento = encabezadoJSON.getInt("maxLineasPorDocumento");
+		
+		String output = encabezadoJSON.has("Output")?encabezadoJSON.getString("Output"):"/tmp";
 
 		loadTiposDoc(tiposDocArray);
 
-		JSONArray resultFacturas = eFacturas(encabezadoJSON);
+		JSONArray resultFacturas = eFacturas(encabezadoJSON, output);
 
-		JSONArray resultTickets = eTickets(encabezadoJSON);
+		JSONArray resultTickets = eTickets(encabezadoJSON, output);
 
-		JSONArray resultResguardos = eResguardos(encabezadoJSON);
+		JSONArray resultResguardos = eResguardos(encabezadoJSON, output);
 
 		JSONObject result = new JSONObject();
 
@@ -85,10 +88,12 @@ public class TestingController extends PruebasController {
 
 	}
 
-	private JSONArray eResguardos(JSONObject encabezadoJSON)
+	private JSONArray eResguardos(JSONObject encabezadoJSON, String output)
 			throws APIException {
 
 		CFE[] eResguardos = new CFE[cantidadDocumentos];
+		
+		EstrategiaFechaRango estrategia = new EstrategiaFechaRango(5, 10, true);
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(182))) {
 			/*
@@ -98,9 +103,12 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomResguardoDetail();
 
 				JSONObject resguardo = new JSONObject();
-				resguardo.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eResguardo, true));
+				resguardo.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eResguardo, estrategia));
 				resguardo.put("Detalle", detalleJSON);
 
+				JSONArray referencia = getReferencia();
+				resguardo.put("Referencia", referencia);
+				
 				/*
 				 * Create EResg object from json description
 				 */
@@ -116,7 +124,7 @@ public class TestingController extends PruebasController {
 		JSONObject result;
 		JSONArray resultado = new JSONArray();
 
-		result = execute(empresa, TipoDoc.eResguardo, eResguardos, false);
+		result = execute(empresa, TipoDoc.eResguardo, eResguardos, false, output);
 		if (result != null)
 			resultado.put(result);
 
@@ -124,7 +132,7 @@ public class TestingController extends PruebasController {
 
 	}
 
-	private JSONArray eFacturas(JSONObject encabezadoJSON)
+	private JSONArray eFacturas(JSONObject encabezadoJSON, String output)
 			throws APIException {
 
 		CFE[] eFacturas = new CFE[cantidadDocumentos];
@@ -134,6 +142,8 @@ public class TestingController extends PruebasController {
 		JSONObject result;
 		JSONArray resultado = new JSONArray();
 		
+		EstrategiaFechaRango estrategiaFacturas = new EstrategiaFechaRango(5, 10, true);
+		
 		if (tiposDoc.containsKey(TipoDoc.fromInt(111))) {
 			/*
 			 * efactura
@@ -142,7 +152,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(null);
 
 				JSONObject factura = new JSONObject();
-				factura.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eFactura, true));
+				factura.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eFactura, estrategiaFacturas));
 				factura.put("Detalle", detalleJSON);
 
 				/*
@@ -158,9 +168,11 @@ public class TestingController extends PruebasController {
 		/*
 		 * Se envian las TipoDoc.eFactura
 		 */
-		result = execute(empresa, TipoDoc.eFactura, eFacturas, false);
+		result = execute(empresa, TipoDoc.eFactura, eFacturas, false, output);
 		if (result != null)
 			resultado.put(result);
+		
+		EstrategiaFechaRango estrategiaNotaCredito = new EstrategiaFechaRango(1, 4, true);
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(112))) {
 			/*
@@ -171,7 +183,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaCredito = new JSONObject();
-				notaCredito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Credito_de_eFactura, false));
+				notaCredito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Credito_de_eFactura, estrategiaNotaCredito));
 				notaCredito.put("Detalle", detalleJSON);
 				
 				JSONArray referencia = getReferencia(eFacturas[i].getEfactura());
@@ -189,9 +201,11 @@ public class TestingController extends PruebasController {
 		/*
 		 * Se envian las TipoDoc.Nota_de_Credito_de_eFactura
 		 */
-		result = execute(empresa, TipoDoc.Nota_de_Credito_de_eFactura, eFacturas_credito, false);
+		result = execute(empresa, TipoDoc.Nota_de_Credito_de_eFactura, eFacturas_credito, false, output);
 		if (result != null)
 			resultado.put(result);
+		
+		EstrategiaFechaRango estrategiaNotaDebito = new EstrategiaFechaRango(1, 4, true);
 
 		if (tiposDoc.containsKey(TipoDoc.fromInt(113))) {
 			/*
@@ -202,7 +216,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaDebito = new JSONObject();
-				notaDebito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Debito_de_eFactura, false));
+				notaDebito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Debito_de_eFactura, estrategiaNotaDebito));
 				notaDebito.put("Detalle", detalleJSON);
 
 				JSONArray referencia = getReferencia(eFacturas[i].getEfactura());
@@ -220,7 +234,7 @@ public class TestingController extends PruebasController {
 		/*
 		 * Se envian las TipoDoc.Nota_de_Debito_de_eFactura
 		 */
-		result = execute(empresa, TipoDoc.Nota_de_Debito_de_eFactura, eFacturas_debito, false);
+		result = execute(empresa, TipoDoc.Nota_de_Debito_de_eFactura, eFacturas_debito, false, output);
 		if (result != null)
 			resultado.put(result);
 
@@ -228,7 +242,7 @@ public class TestingController extends PruebasController {
 
 	}
 
-	private JSONArray eTickets(JSONObject encabezadoJSON)
+	private JSONArray eTickets(JSONObject encabezadoJSON, String output)
 			throws APIException {
 
 		CFE[] eTickets = new CFE[cantidadDocumentos];
@@ -238,6 +252,8 @@ public class TestingController extends PruebasController {
 		JSONObject result;
 		JSONArray resultado = new JSONArray();
 		
+		EstrategiaFechaRango estrategiaTickets = new EstrategiaFechaRango(5, 10, true);
+		
 		if (tiposDoc.containsKey(TipoDoc.fromInt(101))) {
 			/*
 			 * eTicket
@@ -246,7 +262,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(null);
 
 				JSONObject ticket = new JSONObject();
-				ticket.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eTicket, true));
+				ticket.put("Encabezado", getEncabezado(encabezadoJSON, null, TipoDoc.eTicket, estrategiaTickets));
 				ticket.put("Detalle", detalleJSON);
 
 				/*
@@ -259,10 +275,12 @@ public class TestingController extends PruebasController {
 			}
 		}
 		
-		result = execute(empresa, TipoDoc.eTicket, eTickets, false);
+		result = execute(empresa, TipoDoc.eTicket, eTickets, false, output);
 		if (result != null)
 			resultado.put(result);
 
+		EstrategiaFechaRango estrategiaNotaCredito = new EstrategiaFechaRango(1, 4, true);
+		
 		if (tiposDoc.containsKey(TipoDoc.fromInt(102))) {
 			/*
 			 * Nota de credito de eTicket
@@ -272,7 +290,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaCredito = new JSONObject();
-				notaCredito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Credito_de_eTicket, false));
+				notaCredito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Credito_de_eTicket, estrategiaNotaCredito));
 				notaCredito.put("Detalle", detalleJSON);
 
 				JSONArray referencia = getReferencia(eTickets[i].getEticket());
@@ -287,10 +305,12 @@ public class TestingController extends PruebasController {
 			}
 		}
 		
-		result = execute(empresa, TipoDoc.Nota_de_Credito_de_eTicket, eTickets_credito, false);
+		result = execute(empresa, TipoDoc.Nota_de_Credito_de_eTicket, eTickets_credito, false, output);
 		if (result != null)
 			resultado.put(result);
 
+		EstrategiaFechaRango estrategiaNotaDebito = new EstrategiaFechaRango(1, 4, true);
+		
 		if (tiposDoc.containsKey(TipoDoc.fromInt(103))) {
 			/*
 			 * Nota de debito de eTicket
@@ -300,7 +320,7 @@ public class TestingController extends PruebasController {
 				JSONArray detalleJSON = createRandomDetail(value);
 
 				JSONObject notaDebito = new JSONObject();
-				notaDebito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Debito_de_eTicket, false));
+				notaDebito.put("Encabezado", getEncabezado(encabezadoJSON, encabezadoJSON, TipoDoc.Nota_de_Debito_de_eTicket, estrategiaNotaDebito));
 				notaDebito.put("Detalle", detalleJSON);
 
 				JSONArray referencia = getReferencia(eTickets[i].getEticket());
@@ -315,7 +335,7 @@ public class TestingController extends PruebasController {
 			}
 		}
 
-		result = execute(empresa, TipoDoc.Nota_de_Debito_de_eTicket, etickets_debito, false);
+		result = execute(empresa, TipoDoc.Nota_de_Debito_de_eTicket, etickets_debito, false, output);
 		if (result != null)
 			resultado.put(result);
 
@@ -332,6 +352,18 @@ public class TestingController extends PruebasController {
 		result.put(referencia);
 		return result;
 	}
+	
+	private JSONArray getReferencia() {
+		JSONArray result = new JSONArray();
+		JSONObject referencia = new JSONObject();
+		referencia.put("NroCFERef", 23);
+		referencia.put("Serie", "A");
+		referencia.put("TpoDocRef", "111");
+		referencia.put("NroLinRef", 1);
+		result.put(referencia);
+		return result;
+	}
+	
 
 	private JSONArray getReferencia(EFact eFact) {
 		JSONArray result = new JSONArray();
@@ -375,7 +407,7 @@ public class TestingController extends PruebasController {
 		int cantLineas = ThreadLocalRandom.current().nextInt(1, 5 + 1);
 
 		for (int i = 0; i < cantLineas; i++) {
-
+			
 			BigDecimal tasa = new BigDecimal("7");
 			String CodRet = "1700082";
 			BigDecimal MntSujetoaRet = new BigDecimal(String.valueOf(ThreadLocalRandom.current().nextInt(1, 200 + 1)));
@@ -392,7 +424,8 @@ public class TestingController extends PruebasController {
 			retenciones.put(linea);
 		}
 		item.put("RetencPercep", retenciones);
-
+		item.put("NroLinDet", 1);
+		
 		detalle.put(item);
 
 		return detalle;

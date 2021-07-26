@@ -29,7 +29,7 @@ mv $PROYECT_DIR/build.sbt.new $PROYECT_DIR/build.sbt
 
 cd $PROYECT_DIR
 
-activator dist
+sbt dist
 
 mv $PROYECT_DIR/target/universal/$BUILD_NAME $BUILDS/.
 
