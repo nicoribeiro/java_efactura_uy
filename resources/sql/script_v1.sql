@@ -4,6 +4,7 @@
 -- 2 ejecutar un metodo de consulta (para que levante hibernate)
 -- 3 ejecutar este script SQL (se debe reemplazar <idEmpresa> por el id de la/s empresa/s emisora/s)
 
+-- PostgreSQL
 
 insert into sucursal(id, ciudad, departamento, domicilio_fiscal, empresa_id, codigo_sucursal, codigo_postal, telefono)
 select id, localidad, departamento, direccion, id, codigo_sucursal, codigo_postal, telefono from empresa where localidad is not null;
@@ -43,3 +44,28 @@ END
 $$;
 
 SELECT public."UpdateTable"();
+
+
+-- MySQL
+
+ALTER TABLE empresa
+DROP COLUMN codigo_postal;
+ALTER TABLE empresa
+DROP COLUMN codigo_sucursal;
+ALTER TABLE empresa
+DROP COLUMN departamento;
+ALTER TABLE empresa
+DROP COLUMN direccion;
+ALTER TABLE empresa
+DROP COLUMN localidad;
+ALTER TABLE empresa
+DROP COLUMN telefono;
+
+update cfe set sucursal_id = <idEmpresa> where empresaemisora_id = <idEmpresa>;
+
+INSERT INTO empresa_emails_recibidos_error("empresa_id", "emailsrecibidoserror_id") 
+	select <idEmpresa>, id from email_message;
+
+INSERT INTO empresa_emails_recibidos_error(empresa_id, emailsrecibidoserror_id) 
+	SELECT 33729, id from email_message;
+
