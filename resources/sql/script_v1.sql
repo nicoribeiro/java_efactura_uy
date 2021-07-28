@@ -48,6 +48,9 @@ SELECT public."UpdateTable"();
 
 -- MySQL
 
+insert into sucursal(id, ciudad, departamento, domicilio_fiscal, empresa_id, codigo_sucursal, codigo_postal, telefono)
+select id, localidad, departamento, direccion, id, codigo_sucursal, codigo_postal, telefono from empresa where localidad is not null;
+
 ALTER TABLE empresa
 DROP COLUMN codigo_postal;
 ALTER TABLE empresa
@@ -65,7 +68,4 @@ update cfe set sucursal_id = <idEmpresa> where empresaemisora_id = <idEmpresa>;
 
 INSERT INTO empresa_emails_recibidos_error("empresa_id", "emailsrecibidoserror_id") 
 	select <idEmpresa>, id from email_message;
-
-INSERT INTO empresa_emails_recibidos_error(empresa_id, emailsrecibidoserror_id) 
-	SELECT 33729, id from email_message;
 
