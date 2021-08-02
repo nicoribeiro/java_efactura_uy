@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Envio de reporte diario a DGI
+# Ejemplo cron
+# 0 22 * * * /srv/java_efactura_uy/scripts/cron_reporte.sh
+
 DATE_START=$1
 RUT_DEFAULT_VALUE=210475270010 # especificar RUT por omisión aqui
 RUT=${2:-$RUT_DEFAULT_VALUE}
