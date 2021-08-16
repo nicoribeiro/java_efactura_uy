@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Envio de reporte diario a DGI
+# Ejemplo cron
+# 0 22 * * * /srv/java_efactura_uy/scripts/cron_reporte.sh
+
 DATE_START=$1
 RUT_DEFAULT_VALUE=210475270010 # especificar RUT por omisión aqui
 RUT=${2:-$RUT_DEFAULT_VALUE}
@@ -29,4 +33,5 @@ INFO $RESULTADOS_URL
 curl -v -X GET "$RESULTADOS_URL" -H "AUTH-TOKEN: $AUTH_TOKEN" --compressed >>$LOGS 2>&1
 
 INFO $REPORT_URL
-curl -v -X POST "$REPORT_URL" -H "AUTH-TOKEN: $AUTH_TOKEN" --compressed >>$LOGS 2>&1
+curl -v -X POST "$REPORT_URL" -H "Content-Type: application/json" -H "AUTH-TOKEN: $AUTH_TOKEN" --compressed -d '{}' >>$LOGS 2>&1
+
