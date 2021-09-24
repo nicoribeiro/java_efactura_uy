@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
 
+import dgi.classes.respuestas.reporte.EstadoACKRepType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import play.libs.F.Promise;
@@ -53,13 +55,16 @@ public class ReportController extends AbstractController {
 	@ApiOperation(value = "Generar Reporte Diario",
 		    response = ReporteDiario.class
 		    )
-	public Promise<Result> generarReporteDiario(String rut, String fecha, int cantReportes) throws APIException {
+	public Promise<Result> generarReporteDiario(String rut, String fecha, int cantReportes, int soloFaltantes) throws APIException {
 
 		if (cantReportes < 1)
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("cantReportes", cantReportes);
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
 
+		if (empresa.getFirmaDigital().getValidaHasta().before(new Date()))
+			throw APIException.raise(APIErrors.FIRMA_DIGITAL_VENCIDA);
+		
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
 				.getMicroControllersFactory();
 
@@ -78,6 +83,29 @@ public class ReportController extends AbstractController {
 			ReporteDiario reporte = null;
 			try {
 
+				if (soloFaltantes>0) {
+
+					List<ReporteDiario> reportesList = ReporteDiario.findByEmpresaFecha(empresa, DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
+					
+					if (reportesList!=null && reportesList.size()>0) {
+					
+						ReporteDiario reporteDiario = reportesList.get(0);
+						
+						//Busco el reporte diario mas reciente
+						for (Iterator<ReporteDiario> iterator = reportesList.iterator(); iterator.hasNext();) {
+							ReporteDiario rd = (ReporteDiario) iterator.next();
+							if ((reporteDiario.getEstado()==null && rd.getEstado()!=null) || (rd.getSecuencial()>reporteDiario.getSecuencial()))
+								reporteDiario = rd;
+							
+						}
+						
+						//si solo se pide los faltantes y este existe y esta en estado AR se saltea la invocacion
+						if (reporteDiario.getEstado()==EstadoACKRepType.AR)
+							continue;
+						
+					}
+				}
+				
 				logger.info("Generando reporte diario empresa:{} dia:{}", empresa.getRut(), sdf.format(DateHandler.add(date, i, Calendar.DAY_OF_MONTH)));
 				
 				reporte = factory.getServiceMicroController(empresa)

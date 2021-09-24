@@ -123,7 +123,8 @@ public class APIException extends Throwable
 		RESPUESTA_NO_ENCONTRADA(120,  200, true),
 		NO_SOPORTADO_EN_PRODUCCION(121,  200, true),
 		SUCURSAL_NO_ENCONTRADA(122, 200, true), 
-		SUCURSAL_EXISTE(124, 200, true)
+		SUCURSAL_EXISTE(124, 200, true),
+		FIRMA_DIGITAL_VENCIDA(125, 200, true)
 		;
 
 

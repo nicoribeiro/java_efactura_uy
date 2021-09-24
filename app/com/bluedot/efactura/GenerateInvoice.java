@@ -4,6 +4,7 @@ import com.bluedot.commons.utils.QR;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Detalle;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.RetencionPercepcion;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.serializers.AdendaSerializer;
 import com.itextpdf.text.Document;
@@ -136,24 +137,82 @@ public class GenerateInvoice {
 			
 			boolean beginPage = true;
 			int row = 0;
-
-			for (int i = 0; i < cfe.getDetalle().size(); i++) {
-				if (beginPage) {
-					beginPage = false;
-					generateTablaCuerpo(cb);
-					generateIdentificacionEmisorElectronico(doc, cb);
-					generateIdentificacionComprobante(cb);
-					generateSelloDigital(doc, cb);
-					row = 1;
+			
+			switch (cfe.getTipo()) {
+			case eResguardo:
+			case eResguardo_Contingencia:
+				for (int i = 0; i < cfe.getRetencionesPercepciones().size(); i++) {
+					if (beginPage) {
+						beginPage = false;
+						generateTablaCuerpo(cb);
+						generateIdentificacionEmisorElectronico(doc, cb);
+						generateIdentificacionComprobante(cb);
+						generateSelloDigital(doc, cb);
+						row = 1;
+					}
+					int cant = generateLineaDeCuerpo(cb, row, cfe.getRetencionesPercepciones().get(i));
+					row += cant;
+					if (row == itemsPerPage + 1) {
+						printPageNumber(doc,docWriter, bf, cb);
+						doc.newPage();
+						beginPage = true;
+					}
+	
 				}
-				int cant = generateLineaDeCuerpo(cb, row, cfe.getDetalle().get(i));
-				row += cant;
-				if (row == itemsPerPage + 1) {
-					printPageNumber(doc,docWriter, bf, cb);
-					doc.newPage();
-					beginPage = true;
+				break;
+			case eFactura:
+			case Nota_de_Credito_de_eFactura:
+			case Nota_de_Credito_de_eFactura_Contingencia:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Debito_de_eFactura:
+			case Nota_de_Debito_de_eFactura_Contingencia:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case eFactura_Contingencia:
+			case eFactura_Venta_por_Cuenta_Ajena:
+			case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case eRemito:
+			case eRemito_Contingencia:
+			case eTicket:
+			case eTicket_Contingencia:
+			case eTicket_Venta_por_Cuenta_Ajena:
+			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Credito_de_eTicket:
+			case Nota_de_Credito_de_eTicket_Contingencia:
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Debito_de_eTicket:
+			case Nota_de_Debito_de_eTicket_Contingencia:
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Credito_de_eFactura_Exportacion:
+			case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
+			case Nota_de_Debito_de_eFactura_Exportacion:
+			case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
+			case eFactura_Exportacion:
+			case eFactura_Exportacion_Contingencia:
+			case eRemito_de_Exportacion:
+			case eRemito_de_Exportacion_Contingencia:
+				for (int i = 0; i < cfe.getDetalle().size(); i++) {
+					if (beginPage) {
+						beginPage = false;
+						generateTablaCuerpo(cb);
+						generateIdentificacionEmisorElectronico(doc, cb);
+						generateIdentificacionComprobante(cb);
+						generateSelloDigital(doc, cb);
+						row = 1;
+					}
+					int cant = generateLineaDeCuerpo(cb, row, cfe.getDetalle().get(i));
+					row += cant;
+					if (row == itemsPerPage + 1) {
+						printPageNumber(doc,docWriter, bf, cb);
+						doc.newPage();
+						beginPage = true;
+					}
+	
 				}
-
+				break;
 			}
 
 			printPageNumber(doc,docWriter, bf, cb);
@@ -243,7 +302,15 @@ public class GenerateInvoice {
 		createHeadings(bfBold, cb, idDoc_x, idDoc_y, "RUT " + cfe.getEmpresaEmisora().getRut());
 		createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize, cfe.getTipo().friendlyName);
 		createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 2, cfe.getSerie() + " " + cfe.getNro());
-		createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 3, cfe.getFormaDePago().toString());
+		switch (cfe.getTipo()) {
+			case eResguardo:
+			case eResguardo_Contingencia:
+				break;
+			default:
+				createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 3, cfe.getFormaDePago().toString());
+				break;
+		}
+		
 		createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 4, sdf.format(cfe.getFechaEmision()));
 
 		/*
@@ -283,10 +350,14 @@ public class GenerateInvoice {
 					PdfContentByte.ALIGN_CENTER);
 			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DirRecep"),
 					PdfContentByte.ALIGN_LEFT);
-			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4,
-					generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("CiudadRecep") + " - " + generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DeptoRecep"), PdfContentByte.ALIGN_LEFT);
-			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, cfe.getEmpresaReceptora().getRazon(),
-					PdfContentByte.ALIGN_LEFT);
+			
+			String ciudad;
+			String depto;
+			ciudad = generador.getJSONObject("Encabezado").getJSONObject("Receptor").has("CiudadRecep") ? generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("CiudadRecep"):"";
+			depto = generador.getJSONObject("Encabezado").getJSONObject("Receptor").has("DeptoRecep") ? generador.getJSONObject("Encabezado").getJSONObject("Receptor").getString("DeptoRecep"):"";
+			
+			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4, ciudad + " - " + depto, PdfContentByte.ALIGN_LEFT);
+			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, cfe.getEmpresaReceptora().getRazon(), PdfContentByte.ALIGN_LEFT);
 			break;
 
 		case eTicket:
@@ -367,11 +438,26 @@ public class GenerateInvoice {
 
 		// Titulos de detalle de productos
 		int title_y = height + detailsLowerLeft_y - detailsRowSize + 5;
-		createHeadings(bfBold, cb, leftMargin + 2, title_y, "Cant");
-		createHeadings(bfBold, cb, leftMargin + cant_ancho + 2, title_y, "Código");
-		createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + 2, title_y, "Descripción");
-		createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + 2, title_y, "Precio Unitario");
-		createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho +  2, title_y, "Monto");
+		switch (cfe.getTipo()) {
+			case eResguardo:
+			case eResguardo_Contingencia:
+				createHeadings(bfBold, cb, leftMargin + 2, title_y, "%");
+				createHeadings(bfBold, cb, leftMargin + cant_ancho + 2, title_y, "Código");
+				createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + 2, title_y, "Descripción");
+				createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + 2, title_y, "Monto Sujeto");
+				createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho +  2, title_y, "Valor Ret");
+				break;
+			default:
+				createHeadings(bfBold, cb, leftMargin + 2, title_y, "Cant");
+				createHeadings(bfBold, cb, leftMargin + cant_ancho + 2, title_y, "Código");
+				createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + 2, title_y, "Descripción");
+				createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + 2, title_y, "Precio Unitario");
+				createHeadings(bfBold, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho +  2, title_y, "Monto");
+				break;
+			
+		}
+		
+		
 
 	}
 
@@ -380,23 +466,40 @@ public class GenerateInvoice {
 	 */
 	public int generateLineaDeCuerpo(PdfContentByte cb, int row, Detalle detalle) {
 		 	
-			int y = pageHeight - headerHeight - detailsRowSize - row * detailsRowSize + 5;
+		int y = pageHeight - headerHeight - detailsRowSize - row * detailsRowSize + 5;
 
-			double cantidad = detalle.getCantidad();
-			
-			createContent(bf, cb, leftMargin+ cant_ancho -2, y, df_0.format(cantidad), PdfContentByte.ALIGN_RIGHT);
-			createContent(bf, cb, leftMargin+ cant_ancho + 2, y, detalle.getCodItem()!=null?detalle.getCodItem():"", PdfContentByte.ALIGN_LEFT);
-			
-			
-			int cant = printLongDesc(cb, leftMargin+ cant_ancho + codigo_ancho + 2, y,detalle.getNombreItem(), 64);
-			
+		double cantidad = detalle.getCantidad();
+		
+		createContent(bf, cb, leftMargin+ cant_ancho -2, y, df_0.format(cantidad), PdfContentByte.ALIGN_RIGHT);
+		createContent(bf, cb, leftMargin+ cant_ancho + 2, y, detalle.getCodItem()!=null?detalle.getCodItem():"", PdfContentByte.ALIGN_LEFT);
+		
+		
+		int cant = printLongDesc(cb, leftMargin+ cant_ancho + codigo_ancho + 2, y,detalle.getNombreItem(), 64);
+		
 
-			createContent(bf, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho -2, y, df_2.format(detalle.getPrecioUnitario()), PdfContentByte.ALIGN_RIGHT);
-			createContent(bf, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho + monto_ancho-2, y, df_2.format(detalle.getMontoItem()), PdfContentByte.ALIGN_RIGHT);
-			
-			return cant;
+		createContent(bf, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho -2, y, df_2.format(detalle.getPrecioUnitario()), PdfContentByte.ALIGN_RIGHT);
+		createContent(bf, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho + monto_ancho-2, y, df_2.format(detalle.getMontoItem()), PdfContentByte.ALIGN_RIGHT);
+		
+		return cant;
 			
 	}
+	
+	private int generateLineaDeCuerpo(PdfContentByte cb, int row, RetencionPercepcion retencionPercepcion) {
+		int y = pageHeight - headerHeight - detailsRowSize - row * detailsRowSize + 5;
+
+		double cantidad = retencionPercepcion.getTasa();
+		
+		createContent(bf, cb, leftMargin+ cant_ancho -2, y, df_0.format(cantidad), PdfContentByte.ALIGN_RIGHT);
+		createContent(bf, cb, leftMargin+ cant_ancho + 2, y, retencionPercepcion.getCodigo(), PdfContentByte.ALIGN_LEFT);
+		
+		int cant = printLongDesc(cb, leftMargin+ cant_ancho + codigo_ancho + 2, y, retencionPercepcion.getDescripcion()!=null?retencionPercepcion.getDescripcion():"", 64);
+
+		createContent(bf, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho -2, y, df_2.format(retencionPercepcion.getMontoSujeto()), PdfContentByte.ALIGN_RIGHT);
+		createContent(bf, cb, leftMargin + cant_ancho + codigo_ancho + desc_ancho + punit_ancho + monto_ancho-2, y, df_2.format(retencionPercepcion.getValor()), PdfContentByte.ALIGN_RIGHT);
+		
+		return cant;
+	}
+	
 	
 	public int printLongDesc(PdfContentByte cb, int y, String input, int maxLineLength, int columns, int column) {
 	
@@ -451,88 +554,136 @@ public class GenerateInvoice {
 		int numCol = 0;
 		
 		
-		//Otra Tasa
-		numCol = 0;
-		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "IVA OTRA TASA", cantCol, numCol);
-		
-		//createContent(bf, cb, (pageWidth/cantCol) * numCol + offset, detailsLowerLeft_y - detailsRowSize * 3, "Tasa : ", PdfContentByte.ALIGN_RIGHT);
-		//createContent(bf, cb, (pageWidth/cantCol) * numCol + offset, detailsLowerLeft_y - detailsRowSize * 3, totales.getIVATasaMin().toPlainString(), PdfContentByte.ALIGN_LEFT);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Neto : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntIVAOtra()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Monto : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, df_2.format(cfe.getMntIVAOtra()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
+		switch (cfe.getTipo()) {
+			case eResguardo:
+			case eResguardo_Contingencia:
+				break;
+			case eFactura:
+			case Nota_de_Credito_de_eFactura:
+			case Nota_de_Credito_de_eFactura_Contingencia:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Debito_de_eFactura:
+			case Nota_de_Debito_de_eFactura_Contingencia:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case eFactura_Contingencia:
+			case eFactura_Venta_por_Cuenta_Ajena:
+			case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case eRemito:
+			case eRemito_Contingencia:
+			case eTicket:
+			case eTicket_Contingencia:
+			case eTicket_Venta_por_Cuenta_Ajena:
+			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Credito_de_eTicket:
+			case Nota_de_Credito_de_eTicket_Contingencia:
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Debito_de_eTicket:
+			case Nota_de_Debito_de_eTicket_Contingencia:
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Credito_de_eFactura_Exportacion:
+			case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
+			case Nota_de_Debito_de_eFactura_Exportacion:
+			case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
+			case eFactura_Exportacion:
+			case eFactura_Exportacion_Contingencia:
+			case eRemito_de_Exportacion:
+			case eRemito_de_Exportacion_Contingencia:
+				//Otra Tasa
+				numCol = 0;
+				generateFrame(bfBold, cb, frameUp_y, frameDown_y, "IVA OTRA TASA", cantCol, numCol);
 				
-		//Tasa Minima
-		numCol = 1;
-		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "IVA TASA MINIMA", cantCol, numCol);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "Tasa : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, cfe.getIvaTasaMin() + "%", PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Neto : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntIVATasaMin()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Monto : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, df_2.format(cfe.getMntIVATasaMin()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
-		
-		
-		//Tasa Basica
-		numCol = 2;
-		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "IVA TASA BASICA", cantCol, numCol);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "Tasa : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, cfe.getIvaTasaBas() + "%", PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Neto : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntIVATasaBas()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Monto : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, df_2.format(cfe.getMntIVATasaBas()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-
-		//Tasa Basica
-		numCol = 3;
-		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "OTROS VALORES", cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "IVA Suspenso : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, df_2.format(cfe.getTotMntIVAenSusp()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Imp. Per. : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntImpPerc()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Exportación : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, df_2.format(cfe.getTotMntExpyAsim()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-
-//						createContentOnFrame(cb, detailsLowerLeft_y - detailsRowSize * 6, "No Facturable : ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-//						createContentOnFrame(cb, detailsLowerLeft_y - detailsRowSize * 6, cfe.getMontoNF(), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				//createContent(bf, cb, (pageWidth/cantCol) * numCol + offset, detailsLowerLeft_y - detailsRowSize * 3, "Tasa: ", PdfContentByte.ALIGN_RIGHT);
+				//createContent(bf, cb, (pageWidth/cantCol) * numCol + offset, detailsLowerLeft_y - detailsRowSize * 3, totales.getIVATasaMin().toPlainString(), PdfContentByte.ALIGN_LEFT);
 				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Neto: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntIVAOtra()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Monto: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, df_2.format(cfe.getMntIVAOtra()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				
+						
+				//Tasa Minima
+				numCol = 1;
+				generateFrame(bfBold, cb, frameUp_y, frameDown_y, "IVA TASA MINIMA", cantCol, numCol);
+				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "Tasa: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, cfe.getIvaTasaMin() + "%", PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Neto: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntIVATasaMin()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Monto: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, df_2.format(cfe.getMntIVATasaMin()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				
+				
+				//Tasa Basica
+				numCol = 2;
+				generateFrame(bfBold, cb, frameUp_y, frameDown_y, "IVA TASA BASICA", cantCol, numCol);
+				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "Tasa: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, cfe.getIvaTasaBas() + "%", PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Neto: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntIVATasaBas()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Monto: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, df_2.format(cfe.getMntIVATasaBas()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+
+				//Tasa Basica
+				numCol = 3;
+				generateFrame(bfBold, cb, frameUp_y, frameDown_y, "OTROS VALORES", cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "IVA Suspenso: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, df_2.format(cfe.getTotMntIVAenSusp()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Imp. Per.: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntImpPerc()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, "Exportación: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 5, df_2.format(cfe.getTotMntExpyAsim()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+
+//								createContentOnFrame(cb, detailsLowerLeft_y - detailsRowSize * 6, "No Facturable: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+//								createContentOnFrame(cb, detailsLowerLeft_y - detailsRowSize * 6, cfe.getMontoNF(), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+
+				
+				break;
+		}
+		
 		//TOTALES
 		numCol = 4;
 		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "TOTALES", cantCol, numCol);
 		
-		
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "No gravado:", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, df_2.format(cfe.getTotMntNoGrv()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-		
+		if (cfe.getTotMntNoGrv()!=null) {
+			createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "No gravado:", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+			createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, df_2.format(cfe.getTotMntNoGrv()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+		}
 		
 		String moneda = null;
-				switch (cfe.getMoneda()) {
-				case UYU:
-					moneda = "$";
-					break;
-				case USD:
-					moneda = "U$S";
-					break;
-				default:
-					moneda = cfe.getMoneda().name();
-					break;
+		switch (cfe.getMoneda()) {
+			case UYU:
+				moneda = "$";
+				break;
+			case USD:
+				moneda = "U$S";
+				break;
+			default:
+				moneda = cfe.getMoneda().name();
+				break;
 		}
-		createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, "Total : " + moneda, PdfContentByte.ALIGN_LEFT, cantCol, numCol);
-		createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntTotal()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
-				
 		
+		if (cfe.getTotMntTotal()!=null) {
+			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, "Total: " + moneda, PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntTotal()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+		}
+		
+		if (cfe.getTotMntRetenido()!=null) {
+			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, "Total Ret: " + moneda, PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntRetenido()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+		}
+	
 	}
 		
 
@@ -559,9 +710,19 @@ public class GenerateInvoice {
 		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "SELLO DIGITAL", 3, 0);
 
 		if (cfe.getQr()==null){
-			BufferedImage qr = generateQR(cfe.getEmpresaEmisora().getRut(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(),
-				cfe.getTotMntTotal(),
-				cfe.getFechaEmision(), cfe.getHash());
+			BufferedImage qr;
+			switch (cfe.getTipo()) {
+			case eResguardo:
+			case eResguardo_Contingencia:
+				 qr = generateQR(cfe.getEmpresaEmisora().getRut(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(),
+						cfe.getTotMntRetenido(), cfe.getFechaEmision(), cfe.getHash());
+				break;
+			default:
+				qr = generateQR(cfe.getEmpresaEmisora().getRut(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(),
+						cfe.getTotMntTotal(), cfe.getFechaEmision(), cfe.getHash());
+				break;
+			}
+			
 			cfe.qrAsImage(qr);
 			
 			/*
@@ -588,20 +749,20 @@ public class GenerateInvoice {
 		createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 6, "comprobante en:         ",PdfContentByte.ALIGN_RIGHT, 3,0);
 		
 		switch (cfe.getTipo()) {
-		case eFactura:
-		case Nota_de_Credito_de_eFactura:
-		case Nota_de_Credito_de_eFactura_Contingencia:
-		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
-		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-		case Nota_de_Debito_de_eFactura:
-		case Nota_de_Debito_de_eFactura_Contingencia:
-		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
-		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-		case eFactura_Contingencia:
-		case eFactura_Venta_por_Cuenta_Ajena:
-		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-		case eRemito:
-		case eRemito_Contingencia:
+			case eFactura:
+			case Nota_de_Credito_de_eFactura:
+			case Nota_de_Credito_de_eFactura_Contingencia:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Debito_de_eFactura:
+			case Nota_de_Debito_de_eFactura_Contingencia:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case eFactura_Contingencia:
+			case eFactura_Venta_por_Cuenta_Ajena:
+			case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+			case eRemito:
+			case eRemito_Contingencia:
 			case eResguardo:
 			case eResguardo_Contingencia:
 			case Nota_de_Credito_de_eFactura_Exportacion:
@@ -614,25 +775,22 @@ public class GenerateInvoice {
 			case eRemito_de_Exportacion_Contingencia:
 				createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 7, "www.dgi.gub.uy",
 						PdfContentByte.ALIGN_RIGHT, 3, 0);
-
 				break;
-
 			case eTicket:
 			case eTicket_Contingencia:
 			case eTicket_Venta_por_Cuenta_Ajena:
 			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 			case Nota_de_Credito_de_eTicket:
 			case Nota_de_Credito_de_eTicket_Contingencia:
-		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
-		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-		case Nota_de_Debito_de_eTicket:
-		case Nota_de_Debito_de_eTicket_Contingencia:
-		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
-		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-			createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 7, cfe.getEmpresaEmisora().getPaginaWeb(),
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+			case Nota_de_Debito_de_eTicket:
+			case Nota_de_Debito_de_eTicket_Contingencia:
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+				createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 7, cfe.getEmpresaEmisora().getPaginaWeb(),
 					PdfContentByte.ALIGN_RIGHT,3,0);
-
-			break;
+				break;
 
 		}
 

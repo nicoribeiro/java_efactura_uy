@@ -468,9 +468,8 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 					 */
 					if (referenciaJSON.has("FechaCFEref")) {
 						Date parsedDate = simpleDateFormat.parse(referenciaJSON.getString("FechaCFEref"));
-						GregorianCalendar cal = new GregorianCalendar();
-						cal.setTime(parsedDate);
-						referencia.setFechaCFEref(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
+						XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(parsedDate));
+						referencia.setFechaCFEref(date);
 					}
 	
 					/*

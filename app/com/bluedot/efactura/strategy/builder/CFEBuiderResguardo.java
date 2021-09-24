@@ -1,6 +1,7 @@
 package com.bluedot.efactura.strategy.builder;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.HashMap;
@@ -47,6 +48,10 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 			JSONObject itemJson = detalleJson.getJSONObject(i - 1);
 
 			item.setNroLinDet(i);
+			
+			
+			if (itemJson.has("IndFact"))
+				item.setIndFact(new BigInteger(String.valueOf(Commons.safeGetInteger(itemJson,"IndFact"))));
 
 			JSONArray retencionesJSON = Commons.safeGetJSONArray(itemJson,"RetencPercep");
 
@@ -81,6 +86,10 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("ValRetPerc").setDetailMessage("ValRetPerc");
 				retencion.setValRetPerc(new BigDecimal(retencionJSON.getString("ValRetPerc")));
 				retencionPercepcion.setValor(Double.parseDouble(retencionJSON.getString("ValRetPerc")));
+				
+				if (retencionJSON.has("Descripcion")) {
+					retencionPercepcion.setDescripcion(retencionJSON.getString("Descripcion"));
+				}
 				
 				strategy.getCFE().setTotMntRetenido(strategy.getCFE().getTotMntRetenido() + retencionPercepcion.getValor());
 				
@@ -157,8 +166,14 @@ public class CFEBuiderResguardo extends CFEBuilderImpl implements CFEBuiderInter
 					map.put(retPerc.getCodRet(), retencion);
 				}
 				
-				retencion.setValRetPerc(retencion.getValRetPerc()!=null?retencion.getValRetPerc().add(retPerc.getValRetPerc()):retPerc.getValRetPerc());
-				total = total.add(retPerc.getValRetPerc());
+				//Si es una anulacion de resguardo resto, sino sumo
+				if (item.getIndFact()!=null && item.getIndFact().equals(new BigInteger("9"))) {
+					total = total.subtract(retPerc.getValRetPerc());
+					retencion.setValRetPerc(retencion.getValRetPerc()!=null?retencion.getValRetPerc().subtract(retPerc.getValRetPerc()):retPerc.getValRetPerc().negate());
+				}else{
+					total = total.add(retPerc.getValRetPerc());
+					retencion.setValRetPerc(retencion.getValRetPerc()!=null?retencion.getValRetPerc().add(retPerc.getValRetPerc()):retPerc.getValRetPerc());
+				}
 			}
 		}
 		

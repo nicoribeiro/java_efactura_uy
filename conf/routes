@@ -102,7 +102,7 @@ GET     /api/v1/empresa/:rut/reporteDiario/:fecha               com.bluedot.efac
 
 
 # Genera el Reporte Diario correspondiente a la fecha :fecha
-POST     /api/v1/empresa/:rut/reporteDiario/:fecha               com.bluedot.efactura.controllers.ReportController.generarReporteDiario(rut:String, fecha: String, cantReportes:Integer?=1)
+POST     /api/v1/empresa/:rut/reporteDiario/:fecha               com.bluedot.efactura.controllers.ReportController.generarReporteDiario(rut:String, fecha: String, cantReportes:Integer?=1, soloFaltantes:Integer?=0)
 
 ###### TESTING
 

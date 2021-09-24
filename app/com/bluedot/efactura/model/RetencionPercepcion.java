@@ -25,6 +25,16 @@ public class RetencionPercepcion extends Model<RetencionPercepcion> {
 	private double montoSujeto;
 	
 	private double valor;
+	
+	private String descripcion;
+
+	public String getDescripcion() {
+		return descripcion;
+	}
+
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
 
 	public RetencionPercepcion() {
 		super();

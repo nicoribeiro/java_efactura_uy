@@ -95,6 +95,11 @@ public class DocumentController extends AbstractController {
 	public Promise<Result> aceptarDocumento(String rut) throws APIException {
 		// TODO meter mutex
 		Empresa empresa = Empresa.findByRUT(rut, true);
+		
+		
+		if (empresa.getFirmaDigital().getValidaHasta().before(new Date()))
+			throw APIException.raise(APIErrors.FIRMA_DIGITAL_VENCIDA);
+		
 
 		JsonNode jsonNode = request().body().asJson();
 		JSONObject document = new JSONObject(jsonNode.toString());
@@ -155,9 +160,9 @@ public class DocumentController extends AbstractController {
 		switch (tipo) {
 		case eFactura:
 		case eTicket:
-		case eResguardo:
 			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
 			break;
+		case eResguardo:
 		case Nota_de_Credito_de_eFactura:
 		case Nota_de_Credito_de_eTicket:
 		case Nota_de_Debito_de_eFactura:
