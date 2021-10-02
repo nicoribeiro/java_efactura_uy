@@ -674,29 +674,18 @@ public class GenerateInvoice {
 				break;
 		}
 		
-		if (cfe.getTotMntTotal()!=null) {
+		if (cfe.getTotMntTotal()!=null && cfe.getTotMntTotal()>0) {
 			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, "Total: " + moneda, PdfContentByte.ALIGN_LEFT, cantCol, numCol);
 			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntTotal()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
 		}
 		
-		if (cfe.getTotMntRetenido()!=null) {
+		if (cfe.getTotMntRetenido()!=null && cfe.getTotMntRetenido()>0) {
 			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, "Total Ret: " + moneda, PdfContentByte.ALIGN_LEFT, cantCol, numCol);
 			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntRetenido()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
 		}
 	
 	}
 		
-
-	
-
-//	private String safeNull(BigDecimal mntImpuestoPerc) {
-//		if (mntImpuestoPerc==null)
-//			return "0.00";
-//		else{
-//			mntImpuestoPerc= mntImpuestoPerc.setScale(2, RoundingMode.CEILING);
-//			return mntImpuestoPerc.toPlainString();
-//		}
-//	}
 
 	/*
 	 * 5) Pie del comprobante.(todas las paginas)
