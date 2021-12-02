@@ -36,145 +36,144 @@ import java.util.List;
 @Entity
 @ApiModel
 public class CFE extends Model<CFE>{
-	
+
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 2833574192837235368L;
 
 	@Id
 	@GeneratedValue
 	private long id;
-	
+
 	/**
 	 * Empresa que emite el CFE
 	 */
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private Empresa empresaEmisora;
-	
+
 	/**
 	 * Empresa que recibe el CFE
-	 * 
+	 *
 	 * Si este campo esta presente => titular=null;
 	 */
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private Empresa empresaReceptora;
-	
+
 	/**
 	 * Titular que recibe el CFE
-	 * 
+	 *
 	 * Si este campo esta presente => empresaReceptora=null
 	 */
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private Titular titular;
-	
+
 	/**
 	 * Sobre que contiene el CFE cuando es emitido por el Sistema
 	 */
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private SobreEmitido sobreEmitido;
-	
+
 	/**
 	 * Sobre que contiene el CFE cuando fue recibido por el sistema
 	 */
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private SobreRecibido sobreRecibido;
-	
+
 	/**
 	 * Reporte diario en el que se reporto el CFE
 	 */
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private ReporteDiario reporteDiario;
-	
+
 	/**
 	 * Nro de ordinal dentro del sobre
 	 */
 	private int ordinal;
-	
+
 	@Enumerated(EnumType.STRING)
 	private TipoDoc tipo;
-	
+
 	private String serie;
-	
+
 	private long nro;
-	
+
 	@Temporal(TemporalType.DATE)
 	private Date fechaEmision;
-	
+
 	@Temporal(TemporalType.DATE)
 	private Date fechaGeneracion;
-	
+
 	/**
 	 * Periodo para servicios
 	 */
 	private Date facturadoDesde;
-	
+
 	/**
 	 * Periodo para servicios;
 	 */
 	private Date facturadoHasta;
-	
+
 	/**
 	 * Líneas de detalle si expresan en burto (IVA incluido)
 	 */
 	private boolean indMontoBruto;
-	
+
 	/**
 	 * Forma de pago
 	 */
 	@Enumerated(EnumType.STRING)
 	private FormaDePago formaDePago;
-	
+
 	private Date vencimiento;
-	
+
 	@Enumerated(EnumType.STRING)
 	private TipMonType moneda;
-	
+
 	/**
 	 * Si la moneda es distinta de UYU este campo debe expresar el tipo de cambio
 	 */
 	private double tipoCambio;
-	
+
 	/**
 	 * Todos los totales que la DGI pide en un CFE
-	 * 
 	 */
-	private Double totMntNoGrv; 
-	private Double totMntExpyAsim; 
-	private Double totMntImpPerc; 
-	private Double totMntIVAenSusp; 
-	private Double totMntIVATasaMin; 
-	private Double totMntIVATasaBas; 
-	private Double totMntIVAOtra; 
-	private Double mntIVATasaMin; 
-	private Double mntIVATasaBas; 
-	private Double mntIVAOtra; 
-	private Double ivaTasaMin;	
-	private Double ivaTasaBas; 
-	private Double totMntTotal; 
-	private Double totMntRetenido; 
-	private Double totValRetPerc; 
-	
+	private Double totMntNoGrv;
+	private Double totMntExpyAsim;
+	private Double totMntImpPerc;
+	private Double totMntIVAenSusp;
+	private Double totMntIVATasaMin;
+	private Double totMntIVATasaBas;
+	private Double totMntIVAOtra;
+	private Double mntIVATasaMin;
+	private Double mntIVATasaBas;
+	private Double mntIVAOtra;
+	private Double ivaTasaMin;
+	private Double ivaTasaBas;
+	private Double totMntTotal;
+	private Double totMntRetenido;
+	private Double totValRetPerc;
+
 	/**
 	 * Cantidad de lineas, cantlineas=detalle.length()
 	 */
 	private int cantLineas;
-	
+
 	/**
 	 * Hash del comprobante
 	 */
 	private String hash;
-	
+
 	/**
 	 * AE - Comprobante Recibido
-	 * 
-	 * BE - Comprobante Rechazado (CFE) 
-	 * 
+	 *
+	 * BE - Comprobante Rechazado (CFE)
+	 *
 	 * CE - Comprobante Observado (CFC) (uso exclusivo DGI)
 	 */
 	@Enumerated(EnumType.STRING)
 	private EstadoACKCFEType estado;
-	
+
 	/**
 	 * Si el estado == BE || estado == CE entonces debe de haver un motivo.
 	 * Este campo representa el motivo de rechazo
@@ -182,7 +181,7 @@ public class CFE extends Model<CFE>{
 	@ElementCollection
 	@Enumerated(EnumType.STRING)
 	private List<MotivoRechazoCFE> motivo;
-	
+
 	/**
 	 * Lineas del CFE
 	 */
@@ -192,60 +191,60 @@ public class CFE extends Model<CFE>{
 	@ApiModelProperty(hidden = true)
 	@Transient
 	private EFact efactura;
-	
+
 	@ApiModelProperty(hidden = true)
 	@Transient
 	private ETck eticket;
-	
+
 	@ApiModelProperty(hidden = true)
 	@Transient
 	private EResg eresguardo;
-	
+
 	@ApiModelProperty(hidden = true)
 	@Transient
 	private ERem eremito;
-	
+
 	@Type(type="text")
 	private String generadorJson;
-	
+
 	private String generadorId;
-	
+
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private Sucursal sucursal;
-	
+
 	/**
 	 * CAE
 	 */
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private CAE cae;
-	
+
 	@ApiModelProperty(hidden = true)
 	@Lob
 	private byte[] qr;
-	
-	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
+
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private CFE referencia;
-	
+
 	private String razonReferencia;
-	
-	@Type(type="text")
+
+	@Type(type = "text")
 	private String adenda;
 
 	@OneToMany
-	private List<RetencionPercepcion> retencionesPercepciones; 
-	
+	private List<RetencionPercepcion> retencionesPercepciones;
+
 	private String pdfMailAddress;
-	
+
 	@Transient
 	private EstrategiaNumeracion estrategiaNumeracion;
-	
+
 	public CFE() {
 		super();
 		setFechaGeneracion(new Date());
 	}
-	
+
 	private static Finder<Integer, CFE> find = new Finder<Integer, CFE>(Integer.class, CFE.class);
-	
+
 	public static CFE findById(Integer id) {
 		return find.byId(id);
 	}
@@ -257,11 +256,11 @@ public class CFE extends Model<CFE>{
 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("id", id);
 		return cfe;
 	}
-	
+
 	public static List<CFE> findById(Empresa empresa, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, DireccionDocumento direccion, boolean throwExceptionWhenMissing) throws APIException
 	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
-		
+
 		switch (direccion) {
 		case AMBOS:
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("DireccionDocumento", direccion.name());
@@ -274,24 +273,24 @@ public class CFE extends Model<CFE>{
 			q.getCriteria().add(Restrictions.isNotNull("sobreRecibido"));
 			break;
 		}
-			
-			
+
+
 		q.getCriteria().add(Restrictions.and
-		(		 
-			Restrictions.eq("tipo",tipo), 
-			Restrictions.eq("serie", serie), 
-			Restrictions.eq("nro", nro)
-		));
-		
+				(
+						Restrictions.eq("tipo", tipo),
+						Restrictions.eq("serie", serie),
+						Restrictions.eq("nro", nro)
+				));
+
 		if (estado!=null)
 			q.getCriteria().add(Restrictions.eq("estado", estado));
-		
+
 		List<CFE> cfe =  q.findList();
 		if ((cfe == null || cfe.size()==0)&& throwExceptionWhenMissing)
 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro);
 		return cfe;
 	}
-	
+
 	public static CFE findByGeneradorId(Empresa empresa, String id, DireccionDocumento direccion) throws APIException {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
@@ -307,40 +306,40 @@ public class CFE extends Model<CFE>{
 			q.getCriteria().add(Restrictions.isNotNull("sobreRecibido"));
 			break;
 		}
-		
+
 		q.getCriteria().add(Restrictions.eq("generadorId", id));
 
 		CFE cfe = q.findUnique();
 		return cfe;
 	}
-	
+
 	public static List<CFE> findByEmpresaEmisoraAndFechaGeneracion(Empresa empresaEmisora, Date fechaGeneracion) throws APIException
 	{
 		return findByEmpresaEmisoraAndFechaGeneracion(empresaEmisora, fechaGeneracion, false);
 	}
-	
+
 	public static List<CFE> findByEmpresaEmisoraAndFechaGeneracion(Empresa empresaEmisora, Date fechaGeneracion, boolean soloEmitidos) throws APIException
 	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
-			
-			q.getCriteria().createAlias("empresaEmisora", "empresaEmis", JoinType.LEFT_OUTER_JOIN);
-			
-			q.getCriteria().add(Restrictions.and
-					
-					(		Restrictions.eq("empresaEmis.id", empresaEmisora.getId()), 
-							Restrictions.eq("fechaGeneracion", fechaGeneracion)
-					));
-			/*
+
+		q.getCriteria().createAlias("empresaEmisora", "empresaEmis", JoinType.LEFT_OUTER_JOIN);
+
+		q.getCriteria().add(Restrictions.and
+
+				(Restrictions.eq("empresaEmis.id", empresaEmisora.getId()),
+						Restrictions.eq("fechaGeneracion", fechaGeneracion)
+				));
+		/*
 			 * Esto filtra los CFE que la empresaEmisora = empresaReceptora (facturas autoemitidas)
 			 */
 			if (soloEmitidos)
 				q.getCriteria().add(Restrictions.isNull("sobreRecibido"));
-			
-		
+
+
 		List<CFE> cfes = q.findList();
-		
+
 		return cfes;
-		
+
 	}
 
 
@@ -362,7 +361,10 @@ public class CFE extends Model<CFE>{
 
 		if (rutReceptor != null) {
 			q.getCriteria().createAlias("empresaReceptora", "rutEmisor");
-			q.getCriteria().add(Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START));
+			q.getCriteria().createAlias("titular", "titular");
+			q.getCriteria().add(Restrictions.or(
+					Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START),
+					Restrictions.like("titular.documento", rutReceptor, MatchMode.START)));
 		}
 
 		if (razonReceptor != null) {
@@ -391,7 +393,7 @@ public class CFE extends Model<CFE>{
 
 		return new Tuple<List<CFE>, Long>(list, rowCount);
 	}
-	
+
 
 	public Empresa getEmpresaEmisora() {
 		return empresaEmisora;
@@ -740,7 +742,7 @@ public class CFE extends Model<CFE>{
 	public void setGeneradorId(String generadorId) {
 		this.generadorId = generadorId;
 	}
-	
+
 	public CAE getCae() {
 		return cae;
 	}
@@ -748,7 +750,7 @@ public class CFE extends Model<CFE>{
 	public void setCae(CAE cae) {
 		this.cae = cae;
 	}
-	
+
 	public byte[] getQr() {
 		return qr;
 	}
@@ -790,7 +792,7 @@ public class CFE extends Model<CFE>{
 	public void setRazonReferencia(String razonReferencia) {
 		this.razonReferencia = razonReferencia;
 	}
-	
+
 	public boolean isObligatorioReferencia(){
 		switch (getTipo()) {
 		case Nota_de_Credito_de_eFactura:
@@ -844,7 +846,7 @@ public class CFE extends Model<CFE>{
 	public void setSobreRecibido(SobreRecibido sobreRecibido) {
 		this.sobreRecibido = sobreRecibido;
 	}
-	
+
 	public List<RetencionPercepcion> getRetencionesPercepciones() {
 		if (retencionesPercepciones==null)
 			retencionesPercepciones = new LinkedList<RetencionPercepcion>();
@@ -878,7 +880,7 @@ public class CFE extends Model<CFE>{
 	public void setSucursal(Sucursal sucursal) {
 		this.sucursal = sucursal;
 	}
-	
+
 	public EstrategiaNumeracion getEstrategiaNumeracion() {
 		if (estrategiaNumeracion==null)
 			estrategiaNumeracion = new EstrategiaNumeracionSiguiente();
