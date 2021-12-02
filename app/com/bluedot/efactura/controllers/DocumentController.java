@@ -1,22 +1,5 @@
 package com.bluedot.efactura.controllers;
 
-import java.awt.print.PrinterException;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
@@ -31,23 +14,29 @@ import com.bluedot.efactura.MODO_SISTEMA;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
-import com.bluedot.efactura.model.CFE;
-import com.bluedot.efactura.model.DireccionDocumento;
-import com.bluedot.efactura.model.Empresa;
-import com.bluedot.efactura.model.Sucursal;
-import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.model.*;
 import com.bluedot.efactura.pollers.PollerManager;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
+
+import java.awt.print.PrinterException;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
 @ErrorMessage
 @Tx
@@ -426,23 +415,26 @@ public class DocumentController extends AbstractController {
 	
 	public Promise<Result> getDocumentos(String rut) throws APIException {
 		Empresa empresa = Empresa.findByRUT(rut, true);
-		
+
 		Date fromDate = request().getQueryString("fromDate") != null ? (new Date(Long.parseLong(request().getQueryString("fromDate")) * 1000)) : null;
 		Date toDate = request().getQueryString("toDate") != null ? (new Date(Long.parseLong(request().getQueryString("toDate")) * 1000)) : null;
-		
+
 		int page = request().getQueryString("page") != null ? Integer.parseInt(request().getQueryString("page")) : 1;
-		int pageSize = request().getQueryString("pageSize") != null ? Math.min(Integer.parseInt(request().getQueryString("pageSize")), 50) : 50;		
-		
+		int pageSize = request().getQueryString("pageSize") != null ? Math.min(Integer.parseInt(request().getQueryString("pageSize")), 50) : 50;
+
 		Integer nro = request().getQueryString("nro") != null ? Integer.parseInt(request().getQueryString("nro")) : null;
 		Integer idTipoDoc = request().getQueryString("idTipoDoc") != null ? Integer.parseInt(request().getQueryString("idTipoDoc")) : null;
-		String serie = request().getQueryString("serie") != null ? request().getQueryString("serie"): null;
-		
-		if (idTipoDoc !=null && nro!=null && serie!=null){
+		String serie = request().getQueryString("serie") != null ? request().getQueryString("serie") : null;
+
+		String rutReceptor = request().getQueryString("rutReceptor") != null ? request().getQueryString("rutReceptor") : null;
+		String razonReceptor = request().getQueryString("razonReceptor") != null ? request().getQueryString("razonReceptor") : null;
+
+		if (idTipoDoc != null && nro != null && serie != null) {
 			/*
 			 * Solo un documento
 			 */
 			TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
-	
+
 			if (tipo == null)
 				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
 	
@@ -470,8 +462,8 @@ public class DocumentController extends AbstractController {
 				pageSize = 10;
 			
 			DireccionDocumento direccion = request().getQueryString("direccion") != null ? DireccionDocumento.valueOf(request().getQueryString("direccion")) : DireccionDocumento.AMBOS;
-			
-			Tuple<List<CFE>,Long> cfes = CFE.find(empresa, fromDate, toDate, page, pageSize, direccion);
+
+			Tuple<List<CFE>, Long> cfes = CFE.find(empresa, fromDate, toDate, rutReceptor, razonReceptor, page, pageSize, direccion);
 			
 			JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
 			
