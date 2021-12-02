@@ -361,10 +361,10 @@ public class CFE extends Model<CFE>{
 
 		if (rutReceptor != null) {
 			q.getCriteria().createAlias("empresaReceptora", "rutEmisor");
-			q.getCriteria().createAlias("titular", "titular");
+			q.getCriteria().createAlias("titular", "tit");
 			q.getCriteria().add(Restrictions.or(
 					Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START),
-					Restrictions.like("titular.documento", rutReceptor, MatchMode.START)));
+					Restrictions.like("tit.documento", rutReceptor, MatchMode.START)));
 		}
 
 		if (razonReceptor != null) {
