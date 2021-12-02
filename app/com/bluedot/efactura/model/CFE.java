@@ -18,6 +18,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Type;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
@@ -341,30 +342,38 @@ public class CFE extends Model<CFE>{
 		return cfes;
 		
 	}
-	
-	
-	public static Tuple<List<CFE>,Long> find(Empresa empresa, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion)
-	{
+
+
+	public static Tuple<List<CFE>, Long> find(Empresa empresa, Date desdeFechaEmision, Date hastaFechaEmision, String rutReceptor, String razonReceptor, int page, int pageSize, DireccionDocumento direccion) {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
 		Criterion dateCriteria = null;
-		
+
 		if (desdeFechaEmision != null)
-			if (hastaFechaEmision==null)
+			if (hastaFechaEmision == null)
 				dateCriteria = Restrictions.ge("fechaEmision", desdeFechaEmision);
 			else
 				dateCriteria = Restrictions.between("fechaEmision", desdeFechaEmision, hastaFechaEmision);
-		else
-			if (hastaFechaEmision!=null)
-				dateCriteria = Restrictions.le("fechaEmision", hastaFechaEmision);
-		
-		if (dateCriteria!=null)
+		else if (hastaFechaEmision != null)
+			dateCriteria = Restrictions.le("fechaEmision", hastaFechaEmision);
+
+		if (dateCriteria != null)
 			q.getCriteria().add(dateCriteria);
-		
+
+		if (rutReceptor != null) {
+			q.getCriteria().createAlias("empresaReceptora", "rutEmisor");
+			q.getCriteria().add(Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START));
+		}
+
+		if (razonReceptor != null) {
+			q.getCriteria().createAlias("empresaReceptora", "rutEmisor");
+			q.getCriteria().add(Restrictions.ilike("rutEmisor.razon", razonReceptor, MatchMode.START));
+		}
+
 		switch (direccion) {
-		case AMBOS:
-			q.getCriteria().add( Restrictions.or( Restrictions.eq("empresaReceptora", empresa), Restrictions.eq("empresaEmisora", empresa))   );
-			break;
+			case AMBOS:
+				q.getCriteria().add(Restrictions.or(Restrictions.eq("empresaReceptora", empresa), Restrictions.eq("empresaEmisora", empresa)));
+				break;
 			case EMITIDO:
 				q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
 				break;
