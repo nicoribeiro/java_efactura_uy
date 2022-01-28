@@ -544,7 +544,7 @@ public class DocumentController extends AbstractController {
 	 */
 	private File generarPDF(Empresa empresa, CFE cfe) throws IOException, FileNotFoundException {
 
-		logger.info("Generando PDF tipoDoc:{} - serie:{} - nro:{}", cfe.getTipo().value, cfe.getSerie(), cfe.getNro());
+		logger.info("Generando PDF empresaId:{} - tipoDoc:{} - serie:{} - nro:{}",cfe.getEmpresaEmisora().getId(), cfe.getTipo().value, cfe.getSerie(), cfe.getNro());
 
 		GenerateInvoice generateInvoice = new GenerateInvoice(cfe);
 
