@@ -169,7 +169,7 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 
 	@Override
 	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
-			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, String pdfMailAddress) throws APIException {
+			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, String pdfMailAddress, String CompraID) throws APIException {
 		
 		ReceptorInterface receptor = getReceptor();
 		
@@ -203,6 +203,7 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 		receptor.setDirRecep(dirRecep);
 		receptor.setRznSocRecep(rznSocRecep);
 		receptor.setCiudadRecep(ciudadRecep);
+		receptor.setCompraID(CompraID);
 		
 		if (deptoRecep != null)
 			receptor.setDeptoRecep(deptoRecep);

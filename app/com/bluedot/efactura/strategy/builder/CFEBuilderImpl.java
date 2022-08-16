@@ -136,6 +136,8 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		
 		String mailPdfAddress = receptorJson.has("MailPdfAddress") ? receptorJson.getString("MailPdfAddress") : null;
 		
+		String CompraID = receptorJson.has("CompraID") ? receptorJson.getString("CompraID") : null;
+		
 		//Validar y extraeer direcciones de correos validos
 	    Pattern pattern = Pattern.compile(regex);
 		if (mailPdfAddress != null) {
@@ -151,7 +153,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 			mailPdfAddress = result.length() > 0 ? result.substring(0, result.length() - 1) : "";
 		}
 		
-		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep, mailPdfAddress);
+		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep, mailPdfAddress, CompraID);
 		
 	}
 
