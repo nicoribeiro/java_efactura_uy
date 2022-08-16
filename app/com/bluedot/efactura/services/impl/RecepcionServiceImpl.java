@@ -759,15 +759,17 @@ public class RecepcionServiceImpl implements RecepcionService {
 		
 		if (sobre.getEmpresaReceptora() != null && sobre.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null && sobre.getNombreArchivo()!=null && !sobre.getNombreArchivo().equals("")) {
 			//ENVIO XML
+			logger.info("ENVIO DE XML");
 			Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "");
 		}
 		
 		//ENVIO PDF
 		for(CFE cfe : sobre.getCfes()) {
-			if (cfe.getPdfMailAddress()!=null) {
+			if (cfe.getPdfMailAddress()!=null && cfe.getPdfMailAddress().trim().length()>0) {
 				String filename = Commons.getPDFpath(sobre.getEmpresaEmisora(), cfe) + File.separator + Commons.getPDFfilename(cfe);
-				logger.info("PDF filename: " + filename);
 				try {
+					logger.info("ENVIO DE PDF");
+					logger.info("PDF filename: " + filename);
 					byte[] allBytes = Files.readAllBytes(Paths.get(filename));
 					Commons.enviarMail(cfe.getSucursal(), cfe.getPdfMailAddress(), Commons.getPDFfilename(cfe), allBytes);
 				} catch (IOException e) {
