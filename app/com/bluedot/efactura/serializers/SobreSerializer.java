@@ -50,7 +50,10 @@ public class SobreSerializer<T> extends JSONSerializer<Sobre> {
 				SobreEmitido sobreEmitido = (SobreEmitido) sobre;
 				sobreJson.put("estadoDgi", sobreEmitido.getEstadoDgi());
 				sobreJson.put("xmlDgi", sobreEmitido.getXmlDgi());
-				sobreJson.put("fechaConsulta", sdf.format(sobreEmitido.getFechaConsulta()));
+				if (sobreEmitido.getFechaConsulta()!=null) 
+					sobreJson.put("fechaConsulta", sdf.format(sobreEmitido.getFechaConsulta()));
+				else
+					sobreJson.put("fechaConsulta","");
 				sobreJson.put("respuesta_dgi", sobreEmitido.getRespuesta_dgi());
 				sobreJson.put("resultado_dgi", sobreEmitido.getResultado_dgi());
 				sobreJson.put("idReceptor", sobreEmitido.getIdReceptor());
