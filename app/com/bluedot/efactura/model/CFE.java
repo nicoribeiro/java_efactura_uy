@@ -377,10 +377,12 @@ public class CFE extends Model<CFE>{
 				q.getCriteria().add(Restrictions.or(Restrictions.eq("empresaReceptora", empresa), Restrictions.eq("empresaEmisora", empresa)));
 				break;
 			case EMITIDO:
-				q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
+				//Agrego control de existencia del sobre emitido para eliminar duplicados cuando emisor = receptor
+				q.getCriteria().add(Restrictions.and(Restrictions.eq("empresaEmisora", empresa), Restrictions.isNotNull("sobreEmitido")));
 				break;
 			case RECIBIDO:
-				q.getCriteria().add(Restrictions.eq("empresaReceptora", empresa));
+				//Agrego control de existencia del sobre recibido para eliminar duplicados cuando emisor = receptor
+				q.getCriteria().add(Restrictions.and(Restrictions.eq("empresaReceptora", empresa), Restrictions.isNotNull("sobreRecibido")));
 				break;
 		}
 
