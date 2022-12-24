@@ -84,7 +84,7 @@ public class EmpresasController extends AbstractController {
 			// http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
 			doc.getDocumentElement().normalize();
 
-			NodeList nList = doc.getElementsByTagName("RucEmisoresTransicionMail.RucEmisoresTransicionMailItem");
+			NodeList nList = doc.getElementsByTagName("RucEmisoresTransicionMailProv.RucEmisoresTransicionMailProvItem");
 
 			List<Empresa> empresas = Empresa.findAll();
 			
