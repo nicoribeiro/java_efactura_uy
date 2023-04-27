@@ -528,31 +528,61 @@ public class DocumentController extends AbstractController {
 	
 	
 
-	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print)
+	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print, String rutEmisor)
 			throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
-
+		
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
-
-		List<CFE> cfes = CFE.findByIdEmitido(empresa, tipo, serie, nro, null, true);
-
-		if (cfes.size()>1)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
 		
-		CFE cfe = cfes.get(0);
-		
-		try {
-			File pdf = generarPDF(empresa, cfe);
-
-			if (print)
-				Print.print(null, pdf);
-
-			return Promise.<Result>pure(ok(pdf));
-
-		} catch (IOException | PrinterException e) {
-			throw APIException.raise(e);
+		if (rutEmisor.equals(rut) || rutEmisor.equals("")){
+			// Es un CFE emitido
+			List<CFE> cfes = CFE.findByIdEmitido(empresa, tipo, serie, nro, null, true);
+	
+			if (cfes.size()>1)
+				throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
+			
+			CFE cfe = cfes.get(0);
+			
+			try {
+				File pdf = generarPDF(empresa, cfe);
+	
+				if (print)
+					Print.print(null, pdf);
+	
+				return Promise.<Result>pure(ok(pdf));
+	
+			} catch (IOException | PrinterException e) {
+				throw APIException.raise(e);
+			}
+		}else {
+			// es un CFE recibido
+			
+			Empresa empresaEmisora = Empresa.findByRUT(rutEmisor, true);
+			
+			List<CFE> cfes = CFE.findByIdRecibido(empresa, tipo, serie, nro, null, empresaEmisora, true);
+			
+			if (cfes.size()>1)
+				throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
+			
+			CFE cfe = cfes.get(0);
+			
+			try {
+				File pdf = generarPDF(empresaEmisora, cfe);
+	
+				if (print)
+					Print.print(null, pdf);
+	
+				return Promise.<Result>pure(ok(pdf));
+	
+			} catch (IOException | PrinterException e) {
+				throw APIException.raise(e);
+			}
+			
+			
+			
 		}
+			
 
 	}
 

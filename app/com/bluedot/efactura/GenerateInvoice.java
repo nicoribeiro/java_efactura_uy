@@ -693,6 +693,10 @@ public class GenerateInvoice {
 	private void generateSelloDigital(Document doc, PdfContentByte cb)
 			throws DocumentException, MalformedURLException, IOException {
 
+		// sino tengo el hash no puedo generar le qr, esto pasa en cfe recibidos
+		if (cfe.getHash()==null)
+			return;
+		
 		int frameUp_y = pageHeight - headerHeight - detailsHeight - adendaHeight;
 		int frameDown_y = pageHeight - headerHeight - detailsHeight - adendaHeight - selloDigitalAndCAEDataHeight;
 //		int frameUp_x = 25;
@@ -700,6 +704,7 @@ public class GenerateInvoice {
 
 		if (cfe.getQr()==null){
 			BufferedImage qr;
+			
 			switch (cfe.getTipo()) {
 			case eResguardo:
 			case eResguardo_Contingencia:
@@ -707,7 +712,7 @@ public class GenerateInvoice {
 						cfe.getTotMntRetenido(), cfe.getFechaEmision(), cfe.getHash());
 				break;
 			default:
-				qr = generateQR(cfe.getEmpresaEmisora().getRut(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(),
+				 qr = generateQR(cfe.getEmpresaEmisora().getRut(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(),
 						cfe.getTotMntTotal(), cfe.getFechaEmision(), cfe.getHash());
 				break;
 			}
@@ -827,6 +832,10 @@ public class GenerateInvoice {
 	public void generateCaeData(PdfContentByte cb)
 			throws MalformedURLException, IOException, DocumentException {
 
+		// Sino tengo un CAE no puedo generar la info del CAE, esto paa con CFE recibidos
+		if (cfe.getCae()==null)
+			return;
+		
 		int frameUp_y = pageHeight - headerHeight - detailsHeight - adendaHeight;
 		int frameDown_y = pageHeight - headerHeight - detailsHeight - adendaHeight - selloDigitalAndCAEDataHeight;
 
@@ -879,38 +888,40 @@ public class GenerateInvoice {
 		int frameUp_y = pageHeight - headerHeight - detailsHeight;
 		int frameDown_y = pageHeight - headerHeight - detailsHeight - adendaHeight;
 
-		
-		/*
-		 * ENTREGA
-		 */
-		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "ADENDA - ENTREGA", 3, 1);
-		
-		if (cfe.getAdenda()==null)
-			return;
-		
-		JSONArray array = new JSONArray(cfe.getAdenda());
-		JSONArray entrega = null;
-		
-		for (int i = 0; i < array.length(); i++) {
-			try {
-				JSONObject jsonObject = array.getJSONObject(i);
-				if (jsonObject.get("Entrega")!=null)
-					entrega = jsonObject.getJSONArray("Entrega");
-			} catch (JSONException e) {
+		if (cfe.getSobreEmitido()!=null) {
+			//Es un CFE emitido
+			/*
+			 * ENTREGA
+			 */
+			generateFrame(bfBold, cb, frameUp_y, frameDown_y, "ADENDA - ENTREGA", 3, 1);
+			
+			if (cfe.getAdenda()==null)
+				return;
+			
+			JSONArray array = new JSONArray(cfe.getAdenda());
+			JSONArray entrega = null;
+			
+			for (int i = 0; i < array.length(); i++) {
+				try {
+					JSONObject jsonObject = array.getJSONObject(i);
+					if (jsonObject.get("Entrega")!=null)
+						entrega = jsonObject.getJSONArray("Entrega");
+				} catch (JSONException e) {
+				}
+				
 			}
 			
-		}
-		
-		if (entrega!=null){
-			StringBuilder stringBuilder = new StringBuilder();
-			AdendaSerializer.convertAdenda(stringBuilder, entrega);
-			
-			String[] adenda = stringBuilder.toString().split("\\r?\\n");
-			
-			for (int i = 0; i < adenda.length; i++) {
-				createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * (i+3), adenda[i], PdfContentByte.ALIGN_LEFT, 3, 1);
+			if (entrega!=null){
+				StringBuilder stringBuilder = new StringBuilder();
+				AdendaSerializer.convertAdenda(stringBuilder, entrega);
+				
+				String[] adenda = stringBuilder.toString().split("\\r?\\n");
+				
+				for (int i = 0; i < adenda.length; i++) {
+					createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * (i+3), adenda[i], PdfContentByte.ALIGN_LEFT, 3, 1);
+				}
+				
 			}
-			
 		}
 	}
 	
@@ -925,37 +936,38 @@ public class GenerateInvoice {
 
 		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "ADENDA - DATOS INTERNOS",3,0);
 		
-		if (cfe.getAdenda()==null)
-			return;
+		if (cfe.getSobreEmitido()!=null) {
 		
-		JSONArray array = new JSONArray(cfe.getAdenda());
-		
-		for (int i = 0; i < array.length(); i++) {
-			try {
-				JSONObject jsonObject = array.getJSONObject(i);
-				if (jsonObject.has("Entrega") || jsonObject.has("Notas"))
-					array.remove(i);
-			} catch (JSONException e) {
+			// es un cfe emitido
+			
+			JSONArray array = new JSONArray(cfe.getAdenda());
+			
+			for (int i = 0; i < array.length(); i++) {
+				try {
+					JSONObject jsonObject = array.getJSONObject(i);
+					if (jsonObject.has("Entrega") || jsonObject.has("Notas"))
+						array.remove(i);
+				} catch (JSONException e) {
+				}
+				
 			}
 			
-		}
-		
-		
-		if (cfe.getAdenda() != null){
-			StringBuilder stringBuilder = new StringBuilder();
-			AdendaSerializer.convertAdenda(stringBuilder, array);
 			
-			String[] adenda = stringBuilder.toString().split("\\r?\\n");
-			int row = 3;
-			for (int i = 0; i < adenda.length; i++) {
-				int cant = printLongDesc(cb, frameUp_y - detailsRowSize * (row) ,adenda[i], 40, 2, 0);
-				row = row+cant;
-				//createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * (i+3), adenda[i], PdfContentByte.ALIGN_LEFT, 2, 0);
+			if (cfe.getAdenda() != null){
+				StringBuilder stringBuilder = new StringBuilder();
+				AdendaSerializer.convertAdenda(stringBuilder, array);
+				
+				String[] adenda = stringBuilder.toString().split("\\r?\\n");
+				int row = 3;
+				for (int i = 0; i < adenda.length; i++) {
+					int cant = printLongDesc(cb, frameUp_y - detailsRowSize * (row) ,adenda[i], 40, 2, 0);
+					row = row+cant;
+					//createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * (i+3), adenda[i], PdfContentByte.ALIGN_LEFT, 2, 0);
+				}
+				
 			}
-			
+		
 		}
-		
-		
 		
 	}
 	
@@ -980,25 +992,29 @@ public class GenerateInvoice {
 		
 		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "ADENDA - NOTAS",3,1);
 		
-		
-		if (cfe.getAdenda()==null)
-			return;
-		
-		JSONArray array = new JSONArray(cfe.getAdenda());
-		JSONObject notas = null; 
-		for (int i = 0; i < array.length(); i++) {
-			try {
-				if (array.getJSONObject(i).get("Notas")!=null) {
-					notas = array.getJSONObject(i);
-					break;
+		if (cfe.getSobreEmitido()!=null) {
+			//Es un CFE emitido
+			
+			if (cfe.getAdenda()==null)
+				return;
+			
+			JSONArray array = new JSONArray(cfe.getAdenda());
+			JSONObject notas = null; 
+			for (int i = 0; i < array.length(); i++) {
+				try {
+					if (array.getJSONObject(i).get("Notas")!=null) {
+						notas = array.getJSONObject(i);
+						break;
+					}
+				} catch (JSONException e) {
 				}
-			} catch (JSONException e) {
+				
 			}
 			
-		}
+			if (notas!=null)
+				 printLongDesc(cb, frameUp_y - detailsRowSize * (3) ,notas.getString("Notas"), 50, 3, 1);
 		
-		if (notas!=null)
-			 printLongDesc(cb, frameUp_y - detailsRowSize * (3) ,notas.getString("Notas"), 50, 3, 1);
+		}
 		
 	}
 

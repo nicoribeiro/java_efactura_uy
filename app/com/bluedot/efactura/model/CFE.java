@@ -257,11 +257,11 @@ public class CFE extends Model<CFE>{
 		return cfe;
 	}
 
-	public static List<CFE> findByIdEmitido(Empresa empresa, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, boolean throwExceptionWhenMissing) throws APIException
+	public static List<CFE> findByIdEmitido(Empresa empresaEmisora, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, boolean throwExceptionWhenMissing) throws APIException
 	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
-		q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
+		q.getCriteria().add(Restrictions.eq("empresaEmisora", empresaEmisora));
 		q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
 
 		q.getCriteria().add(Restrictions.and
@@ -276,9 +276,34 @@ public class CFE extends Model<CFE>{
 
 		List<CFE> cfe =  q.findList();
 		if ((cfe == null || cfe.size()==0)&& throwExceptionWhenMissing)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro);
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro + "emitido por la empresa con RUT:"+empresaEmisora.getRut());
 		return cfe;
 	}
+
+	public static List<CFE> findByIdRecibido(Empresa empresaReceptora, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, Empresa empresaEmisora, boolean throwExceptionWhenMissing) throws APIException
+	{
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+
+		q.getCriteria().add(Restrictions.eq("empresaEmisora", empresaEmisora));
+		q.getCriteria().add(Restrictions.eq("empresaReceptora", empresaReceptora));
+		q.getCriteria().add(Restrictions.isNotNull("sobreRecibido"));
+
+		q.getCriteria().add(Restrictions.and
+				(
+						Restrictions.eq("tipo", tipo),
+						Restrictions.eq("serie", serie),
+						Restrictions.eq("nro", nro)
+				));
+
+		if (estado!=null)
+			q.getCriteria().add(Restrictions.eq("estado", estado));
+
+		List<CFE> cfe =  q.findList();
+		if ((cfe == null || cfe.size()==0)&& throwExceptionWhenMissing)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro+ "recibido por la empresa con RUT:"+empresaReceptora.getRut());
+		return cfe;
+	}
+
 	
 	public static List<CFE> findById(Empresa empresaEmisora, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, Empresa empresaReceptora, boolean throwExceptionWhenMissing, DireccionDocumento direccion) throws APIException
 	{
