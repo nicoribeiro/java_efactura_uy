@@ -127,6 +127,12 @@ public class Empresa extends Model<Empresa>{
 		return find.query().eq("rut", rut).findUnique();
 	}
 	
+	public static List<Empresa> findEmpresasConMail()
+	{
+		return find.query().isNotNull("hostRecepcion").findList();
+	}
+	
+	
 	public static Empresa findByRUT(String rut, boolean throwExceptionWhenMissing) throws APIException {
 		Empresa empresa = find.query().eq("rut", rut).findUnique();
 

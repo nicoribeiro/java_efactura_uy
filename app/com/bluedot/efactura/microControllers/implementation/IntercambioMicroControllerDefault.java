@@ -369,7 +369,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 			/*
 			 * E02
 			 */
-	 		List<CFE> cfes = CFE.findById(cfe.getEmpresaEmisora(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(), EstadoACKCFEType.AE, DireccionDocumento.EMITIDO, false);
+	 		List<CFE> cfes = CFE.findByIdEmitido(cfe.getEmpresaEmisora(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(), EstadoACKCFEType.AE, false);
 	
 	 		if (cfes.size()>1)
 	 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",cfe.getEmpresaEmisora().getRut()+"-"+cfe.getNro()+"-"+cfe.getSerie()+"-"+cfe.getTipo()).setDetailMessage("No identifica a un unico cfe");

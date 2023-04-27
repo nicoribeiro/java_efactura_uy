@@ -189,15 +189,13 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 					this.getEmpresa().getPassRecepcion(), offset, messageQuantity);
 			
 			try {
-				emailsModelo.addAll(procesarEmails(emails));
+				emailsModelo.addAll(procesarEmails(emails, false));
 				offset += emails.size();
 				this.getEmpresa().setOffsetMail(offset);
 				this.getEmpresa().update();
 				ThreadMan.forceTransactionFlush();
 			} catch (APIException e) {
 				throw e;
-			} catch (Exception e) {
-				throw APIException.raise(e);
 			}
 			
 		} while (emails.size() == messageQuantity);
@@ -206,7 +204,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	}
 	
 	
-	private List<EmailMessage> procesarEmails(List<Email> emails) throws APIException, Exception {
+	private List<EmailMessage> procesarEmails(List<Email> emails, boolean retry) throws APIException {
 	
 		int i = 1;
 		
@@ -227,14 +225,16 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			 * Convierto El datatype Email a un Email del modelo y lo persisto junto con sus Attachments
 			 */
 			EmailMessage emailModel = new EmailMessage(email);
-			emailModel.save();
+			emailModel.setEmpresa(getEmpresa());
+			if (!play.db.jpa.JPA.em().contains(emailModel))
+				emailModel.save();
 			emailsModelo.add(emailModel);
 			ThreadMan.forceTransactionFlush();
 			
 			logger.info(i+"-Email persistido: " + email.getMessageId());
 			logger.info(i+"-Email contiene " + email.getAttachments().size() + " attachments");
 			
-			procesarAttachments(i, emailModel);
+			procesarAttachments(i, emailModel, retry);
 			
 			logger.info(i+"-Fin procesaminto email: " + email.getMessageId());
 			i++;
@@ -251,12 +251,12 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	 * 3 - Un sobre con CFE emitidos por otra empresa hacia una empresa manejada por el sistema.
 	 */
 	@Override
-	public void procesarAttachments(int index, EmailMessage emailMessage) {
+	public void procesarAttachments(int index, EmailMessage emailMessage, boolean retry) {
 		if (emailMessage.getAttachments()==null || emailMessage.getAttachments().size()==0)
 			logger.info(index+"-Email no contiene adjuntos, se aborta el procesamiento");
 		
 		for (Attachment attachment : emailMessage.getAttachments()) {
-			procesarAttachment(index, attachment);
+			procesarAttachment(index, attachment, retry);
 		}
 	}
 
@@ -266,10 +266,10 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	 * @param attachment
 	 * @return resultado del procesamiento: true = OK
 	 */
-	public void procesarAttachment(int index, Attachment attachment) {
+	public void procesarAttachment(int index, Attachment attachment, boolean retry) {
 		boolean procesar_Sob = true;
-		boolean procesar_M = false;//TODO cambiar
-		boolean procesar_ME = false;//TODO cambiar
+		boolean procesar_M = true;
+		boolean procesar_ME = true;
 		
 		try {
 			
@@ -281,7 +281,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			
 			logger.info(index+"-Procesando Adjunto: " + attachment.getName());
 
-			if (attachment.getEstado()==AttachmentEstado.PROCESADO_OK) {
+			if (attachment.getEstado()==AttachmentEstado.PROCESADO_OK && ! retry) {
 				logger.info(index+"-El Adjunto ya fue procesado correctamente, se aborta el procesamiento");
 				return;
 			}
@@ -293,6 +293,8 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			
 			if (!attachment.getName().toUpperCase().endsWith("XML")) {
 				logger.info(index+"-El Adjunto no tiene extension XML, se aborta el procesamiento");
+				attachment.setEstado(AttachmentEstado.OMITIDO);
+				attachment.update();
 				return;
 			}
 				
@@ -309,17 +311,32 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						ACKCFEdefType.class);
 				Sobre sobre = SobreEmitido.findById(ackCFEdefType.getCaratula().getIDEmisor().longValue(), true);
 				
+				if (!ackCFEdefType.getCaratula().getRUCEmisor().equals(this.getEmpresa().getRut())) {
+					logger.info(index+"-La empresa emisora no es igual a la empresa local, se aborta el procesamiento");
+					return;
+				}
+				
+				if (sobre.getEmpresaEmisora() != getEmpresa()) {
+					logger.info(index+"-La empresa emisora del sobre no es igual a la empresa local, se aborta el procesamiento");
+					return;
+				}
+				
+				setEmpresa(attachment);
+				
 				if (sobre instanceof SobreEmitido){
 					SobreEmitido sobreEmitido = (SobreEmitido) sobre;
 					
-					Respuesta respuestaCfe = new Respuesta();
-					sobreEmitido.setRespuestaCfes(respuestaCfe);
-					respuestaCfe.setNombreArchivo(attachment.getName());
-					respuestaCfe.setPayload(attachment.getPayload());
-					respuestaCfe.save();
-					sobreEmitido.update();
-					
-					
+					if (sobreEmitido.getRespuestaCfes()==null) {
+						//chequeo que sea null ya que puede ser un retry, si ya fue creado no hago nada y retorno OK
+						Respuesta respuestaCfe = new Respuesta();
+						sobreEmitido.setRespuestaCfes(respuestaCfe);
+						respuestaCfe.setNombreArchivo(attachment.getName());
+						respuestaCfe.setPayload(attachment.getPayload());
+						respuestaCfe.save();
+						sobreEmitido.update();
+					} else {
+						logger.info(index+"-La respuesta de los cfe del sobre con id ? ya fue procesada", ackCFEdefType.getCaratula().getIDEmisor().longValue());
+					}
 				}
 			}
 			
@@ -331,18 +348,34 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						ACKSobredefType.class);
 				Sobre sobre = SobreEmitido.findById(ackSobredefType.getCaratula().getIDEmisor().longValue(), true);
 				
+				if (!ackSobredefType.getCaratula().getRUCEmisor().equals(this.getEmpresa().getRut())) {
+					logger.info(index+"-La empresa emisora no es igual a la empresa local, se aborta el procesamiento");
+					return;
+				}
+				
+				if (sobre.getEmpresaEmisora() != getEmpresa()) {
+					logger.info(index+"-La empresa emisora del sobre no es igual a la empresa local, se aborta el procesamiento");
+					return;
+				}
+				
+				setEmpresa(attachment);
+				
 				if (sobre instanceof SobreEmitido){
 					SobreEmitido sobreEmitido = (SobreEmitido) sobre;
 					sobreEmitido.setEstadoEmpresa(ackSobredefType.getDetalle().getEstado());
 					
-					Respuesta respuestaSobre = new Respuesta();
-					sobreEmitido.setRespuestaSobre(respuestaSobre);
-					respuestaSobre.setNombreArchivo(attachment.getName());
-					respuestaSobre.setPayload(attachment.getPayload());
-					respuestaSobre.save();
-					sobreEmitido.update();
+					if (sobreEmitido.getRespuestaSobre()==null) {
+						//chequeo que sea null ya que puede ser un retry, si ya fue creado no hago nada y retorno OK
+						Respuesta respuestaSobre = new Respuesta();
+						sobreEmitido.setRespuestaSobre(respuestaSobre);
+						respuestaSobre.setNombreArchivo(attachment.getName());
+						respuestaSobre.setPayload(attachment.getPayload());
+						respuestaSobre.save();
+						sobreEmitido.update();
+					}else {
+						logger.info(index+"-La respuesta del sobre con id ? ya fue procesada", ackSobredefType.getCaratula().getIDEmisor().longValue());
+					}
 				}
-				
 			}
 			
 			/*
@@ -360,6 +393,8 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 					logger.info(index+"-La empresa receptora no es igual a la empresa local, se aborta el procesamiento");
 					return;
 				}
+				
+				setEmpresa(attachment);
 
 				List<Sobre> sobres = SobreRecibido.findByNombre(attachment.getName());
 				
@@ -370,7 +405,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 				
 				if (sobreRecibido==null){
 					/*
-					 * Create el SobreRecibido
+					 * El sobre no existe paso a procesar el SobreRecibido y procesar los CFE
 					 */
 					sobreRecibido = new SobreRecibido();
 					sobreRecibido.setEmpresaReceptora(this.getEmpresa());
@@ -401,8 +436,18 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 					}
 
 				}else{
-					sobreRecibido.getEmails().add(attachment.getEmailMessage());
-					sobreRecibido.update();
+					//El sobre existe no lo vuelvo a procesar
+					boolean encontre = false;
+					for (Iterator<EmailMessage> iterator = sobreRecibido.getEmails().iterator(); iterator.hasNext();) {
+						EmailMessage email = iterator.next();
+						if (email.getId() == attachment.getEmailMessage().getId())
+							encontre = true;
+					}
+					
+					if (!encontre) {
+						sobreRecibido.getEmails().add(attachment.getEmailMessage());
+						sobreRecibido.update();
+					}
 				}
 				
 				
@@ -427,7 +472,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			attachmentFromBD.update();
 			ThreadMan.forceTransactionFlush();
 			/*
-			 * Vuelvo a cargar la empsa para que este en el persistence context
+			 * Vuelvo a cargar la empresa para que este en el persistence context
 			 */
 			this.setEmpresa(Empresa.findByRUT(this.getEmpresa().getRut()));
 			
@@ -458,6 +503,19 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 				.withAttachment(attachments)
 				.sendEmail(this.getEmpresa().getMailNotificaciones(), fullStackTrace, null, "Error Procesando Archivo Recibido", false);
 			
+		}
+	}
+
+	private void setEmpresa(Attachment attachment) {
+		if (attachment.getEmailMessage().getEmpresa()==null) {
+			attachment.getEmailMessage().setEmpresa(this.getEmpresa());
+			if (attachment.getEmailMessage().getId()!=0) {
+				/*
+				 *  Es una instancia que ya fue salvada, por lo tanto le hago un update. Sino tiene id fue creada
+				 *  en esta ejecucion y ya se guardaran los cambios porque se hizo un save antes.
+				 */
+				attachment.getEmailMessage().update();
+			}
 		}
 	}
 

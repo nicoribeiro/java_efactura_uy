@@ -77,19 +77,25 @@ public class EmailController extends AbstractController
 		if (emailAction == EmailAction.RETRY) {
 			ServiceMicroController serviceMicroController = factory.getServiceMicroController(empresaReceptora);
 			int i = 1;
-			for (EmailMessage email : empresaReceptora.getEmailsRecibidosError()) {
-				if (id != null) {
-					if (email.getId() != id) {
-						serviceMicroController.procesarAttachments(i, email);
-						JSONObject jsonObject = JSONSerializerProvider.getEmailMessageSerializer().objectToJson(email);
-						return json(jsonObject.toString());
-					}
-				} else
-					serviceMicroController.procesarAttachments(i, email);
-				i++;
+			
+			if (id != null) {
+				EmailMessage email = EmailMessage.findById(id,true);
+				serviceMicroController.procesarAttachments(i, email, true);
+				JSONObject jsonObject = JSONSerializerProvider.getEmailMessageSerializer().objectToJson(email);
+				return json(jsonObject.toString());
+				
+			} else {
+				JSONArray jsonArray = new JSONArray();
+				
+				for (EmailMessage email : empresaReceptora.getEmailsRecibidosError()) {
+					serviceMicroController.procesarAttachments(i, email, true);
+					JSONObject jsonObject = JSONSerializerProvider.getEmailMessageSerializer().objectToJson(email);
+					jsonArray.put(jsonObject);
+					i++;
+				}
+				return json(jsonArray.toString());
 			}
-			JSONArray jsonArray = JSONSerializerProvider.getEmailMessageSerializer().objectToJson(empresaReceptora.getEmailsRecibidosError());
-			return json(jsonArray.toString());
+			
 
 		}
 		return json(OK);

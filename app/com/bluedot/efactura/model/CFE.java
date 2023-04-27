@@ -257,23 +257,12 @@ public class CFE extends Model<CFE>{
 		return cfe;
 	}
 
-	public static List<CFE> findById(Empresa empresa, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, DireccionDocumento direccion, boolean throwExceptionWhenMissing) throws APIException
+	public static List<CFE> findByIdEmitido(Empresa empresa, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, boolean throwExceptionWhenMissing) throws APIException
 	{
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
-		switch (direccion) {
-		case AMBOS:
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("DireccionDocumento", direccion.name());
-		case EMITIDO:
-			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
-			q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
-			break;
-		case RECIBIDO:
-			q.getCriteria().add(Restrictions.eq("empresaReceptora", empresa));
-			q.getCriteria().add(Restrictions.isNotNull("sobreRecibido"));
-			break;
-		}
-
+		q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
+		q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
 
 		q.getCriteria().add(Restrictions.and
 				(
@@ -290,13 +279,42 @@ public class CFE extends Model<CFE>{
 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro);
 		return cfe;
 	}
+	
+	public static List<CFE> findById(Empresa empresaEmisora, TipoDoc tipo, String serie, long nro, EstadoACKCFEType estado, Empresa empresaReceptora, boolean throwExceptionWhenMissing, DireccionDocumento direccion) throws APIException
+	{
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+
+		q.getCriteria().add(Restrictions.eq("empresaEmisora", empresaEmisora));
+		
+	
+		q.getCriteria().add(Restrictions.eq("empresaReceptora", empresaReceptora));
+		
+		if (direccion == DireccionDocumento.EMITIDO)
+			q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
+		else
+			q.getCriteria().add(Restrictions.isNotNull("sobreRecibido"));
+			
+		q.getCriteria().add(Restrictions.and
+				(
+						Restrictions.eq("tipo", tipo),
+						Restrictions.eq("serie", serie),
+						Restrictions.eq("nro", nro)
+				));
+
+		if (estado!=null)
+			q.getCriteria().add(Restrictions.eq("estado", estado));
+
+		List<CFE> cfe =  q.findList();
+		if ((cfe == null || cfe.size()==0)&& throwExceptionWhenMissing)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("tipo-serie-nro", tipo.value+"-"+serie+"-"+nro);
+		return cfe;
+	}
+	
 
 	public static CFE findByGeneradorId(Empresa empresa, String id, DireccionDocumento direccion) throws APIException {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
 		switch (direccion) {
-		case AMBOS:
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("DireccionDocumento", direccion.name());
 		case EMITIDO:
 			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresa));
 			q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
@@ -343,7 +361,7 @@ public class CFE extends Model<CFE>{
 	}
 
 
-	public static Tuple<List<CFE>, Long> find(Empresa empresa, Date desdeFechaEmision, Date hastaFechaEmision, String rutReceptor, String razonReceptor, int page, int pageSize, DireccionDocumento direccion) {
+	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion) {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
 		Criterion dateCriteria = null;
@@ -359,30 +377,22 @@ public class CFE extends Model<CFE>{
 		if (dateCriteria != null)
 			q.getCriteria().add(dateCriteria);
 
-		if (rutReceptor != null) {
-			q.getCriteria().createAlias("empresaReceptora", "rutEmisor", JoinType.LEFT_OUTER_JOIN);
-			q.getCriteria().createAlias("titular", "tit", JoinType.LEFT_OUTER_JOIN);
-			q.getCriteria().add(Restrictions.or(
-					Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START),
-					Restrictions.like("tit.documento", rutReceptor, MatchMode.START)));
+		if (empresaReceptora != null) {
+			q.getCriteria().add(Restrictions.eq("empresaReceptora", empresaReceptora));
 		}
-
-		if (razonReceptor != null) {
-			q.getCriteria().createAlias("empresaReceptora", "rutEmisor", JoinType.LEFT_OUTER_JOIN);
-			q.getCriteria().add(Restrictions.ilike("rutEmisor.razon", razonReceptor, MatchMode.START));
+		
+		if (empresaEmisora != null) {
+			q.getCriteria().add(Restrictions.eq("empresaEmisora", empresaEmisora));
 		}
 
 		switch (direccion) {
-			case AMBOS:
-				q.getCriteria().add(Restrictions.or(Restrictions.eq("empresaReceptora", empresa), Restrictions.eq("empresaEmisora", empresa)));
-				break;
 			case EMITIDO:
 				//Agrego control de existencia del sobre emitido para eliminar duplicados cuando emisor = receptor
-				q.getCriteria().add(Restrictions.and(Restrictions.eq("empresaEmisora", empresa), Restrictions.isNotNull("sobreEmitido")));
+				q.getCriteria().add(Restrictions.and(Restrictions.eq("empresaEmisora", empresaEmisora), Restrictions.isNotNull("sobreEmitido")));
 				break;
 			case RECIBIDO:
 				//Agrego control de existencia del sobre recibido para eliminar duplicados cuando emisor = receptor
-				q.getCriteria().add(Restrictions.and(Restrictions.eq("empresaReceptora", empresa), Restrictions.isNotNull("sobreRecibido")));
+				q.getCriteria().add(Restrictions.and(Restrictions.eq("empresaReceptora", empresaReceptora), Restrictions.isNotNull("sobreRecibido")));
 				break;
 		}
 

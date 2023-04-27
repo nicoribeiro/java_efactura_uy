@@ -11,10 +11,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 
 import org.hibernate.criterion.Restrictions;
 
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.model.Empresa;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
@@ -38,6 +41,9 @@ public class EmailMessage extends Model<EmailMessage> {
 	private String subject;
 	private Date sentDate;
 	private String messageContent;
+	
+	@OneToOne
+	private Empresa empresa;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "emailMessage", fetch=FetchType.LAZY)
 	private List<Attachment> attachments;
@@ -51,11 +57,12 @@ public class EmailMessage extends Model<EmailMessage> {
 		this.fromEmail = email.getFrom();
 		this.subject = email.getSubject();
 		this.sentDate = email.getSentDate();
-		this.messageContent = email.getMessageContent();
-		for (com.bluedot.commons.utils.messaging.Attachment attachment : email.getAttachments()) {
-			Attachment attachment2 = new Attachment(attachment);
-			attachment2.save();
-			getAttachments().add(attachment2);
+		this.messageContent = email.getMessageContent(); // TODO esto es siempre vacio
+		for (com.bluedot.commons.utils.messaging.Attachment attachmentRaw : email.getAttachments()) {
+			Attachment attachment = new Attachment(attachmentRaw);
+			attachment.setEmailMessage(this);
+			attachment.save();
+			getAttachments().add(attachment);
 		}
 
 	}
@@ -74,6 +81,15 @@ public class EmailMessage extends Model<EmailMessage> {
 	public static EmailMessage findById(Long id) {
 		return find.byId(id);
 	}
+	
+	public static EmailMessage findById(Long id, boolean throwExceptionWhenMissing) throws APIException {
+		EmailMessage emailMessage = find.byId(id);
+
+		if (emailMessage == null && throwExceptionWhenMissing)
+			throw APIException.raise(APIErrors.NO_EXISTE_EMAIL).withParams("id", id);
+		return emailMessage;
+	}
+	
 	
 	public static List<EmailMessage> findByMessageId(String messageId) {
 
@@ -141,5 +157,13 @@ public class EmailMessage extends Model<EmailMessage> {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public Empresa getEmpresa() {
+		return empresa;
+	}
+
+	public void setEmpresa(Empresa empresa) {
+		this.empresa = empresa;
 	}
 }

@@ -10,7 +10,7 @@ import com.bluedot.efactura.model.Empresa;
 
 public class EmailEntrantesPoller extends PollerRunner {
 	
-	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l* 5l;
+	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l* 5l; // 5 Minutes
 	
 	static Logger logger = LoggerFactory.getLogger(EmailEntrantesPoller.class);
 
@@ -24,7 +24,7 @@ public class EmailEntrantesPoller extends PollerRunner {
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
 				.getMicroControllersFactory();
 		
-		for (Empresa empresa : Empresa.findAll()) {//TODO mejorar esto, solo las que tengan para obtener mail no todas las empresas
+		for (Empresa empresa : Empresa.findEmpresasConMail()) {
 			if (empresa.getHostRecepcion()!=null && empresa.getUserRecepcion()!=null && empresa.getPassRecepcion()!=null && empresa.getPuertoRecepcion()!=null){
 				logger.debug("Obteniendo mensajes entrantes para Empresa id:{}, rut:{}, razon:{}", empresa.getId(), empresa.getRut(), empresa.getRazon());
 				factory.getServiceMicroController(empresa).obtenerYProcesarEmailsEntrantesDesdeServerCorreo();

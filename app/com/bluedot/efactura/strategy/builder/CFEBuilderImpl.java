@@ -496,7 +496,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 						referencia.setTpoDocRef(new BigInteger(Commons.safeGetString(referenciaJSON,"TpoDocRef")));
 						referencia.setNroLinRef(Commons.safeGetInteger(referenciaJSON, "NroLinRef"));
 						
-						List<CFE> cfes = CFE.findById(empresaEmisora, TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef")), Commons.safeGetString(referenciaJSON,"Serie"), Commons.safeGetLong(referenciaJSON, "NroCFERef"), null, DireccionDocumento.EMITIDO, false);
+						List<CFE> cfes = CFE.findByIdEmitido(empresaEmisora, TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef")), Commons.safeGetString(referenciaJSON,"Serie"), Commons.safeGetLong(referenciaJSON, "NroCFERef"), null, false);
 						
 						if (cfes.size()>1)
 							throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",empresaEmisora.getRut()+"-"+Commons.safeGetLong(referenciaJSON, "NroCFERef")+"-"+Commons.safeGetString(referenciaJSON,"Serie")+"-"+TipoDoc.fromInt(Commons.safeGetInteger(referenciaJSON,"TpoDocRef"))).setDetailMessage("No identifica a un unico cfe");

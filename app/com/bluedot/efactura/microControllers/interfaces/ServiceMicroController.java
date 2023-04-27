@@ -42,8 +42,8 @@ public interface ServiceMicroController
 	 * 3 - Un sobre con CFE emitidos por otra empresa hacia una empresa manejada por
 	 * el sistema.
 	 */
-	void procesarAttachments(int index, EmailMessage emailModel);
+	void procesarAttachments(int index, EmailMessage emailModel, boolean retry);
 
-	void procesarAttachment(int index, Attachment attachment);
+	void procesarAttachment(int index, Attachment attachment, boolean retry);
 
 }
