@@ -41,7 +41,7 @@ public class CommonStrategy {
 
 		UI ui = UI.findByAnio(anio, true);
 
-		return (monto / ui.getCotizacion()) > 10000;
+		return (monto / ui.getCotizacion()) > UI.MAX_UI;
 
 	}
 
