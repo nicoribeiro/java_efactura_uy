@@ -130,7 +130,7 @@ public interface SummaryStrategy {
 		int cantDocRechazados = 0;
 		int cantDocSinRespuesta = 0;
 		int cantDocEmitidos = 0;
-		int mayor10000UI = 0;
+		int mayorTopeUI = 0;
 		HashMap<String, Monto> montos = new HashMap<String, Monto>();
 		RngDocsAnulados rngDocsAnulados = new RngDocsAnulados();
 		RngDocsUtil rngDocsUtil = new RngDocsUtil();
@@ -301,8 +301,8 @@ public interface SummaryStrategy {
 		int year = calendar.get(Calendar.YEAR);
 		UI ui = UI.findByAnio(year, true);
 		
-		if (safeSubstract(cfe.getTotMntTotal(), cfe.getMntIVATasaBas(), cfe.getMntIVATasaMin(), cfe.getMntIVAOtra()) * tipoCambio > ui.getCotizacion() * UI.MAX_UI)
-			summary.mayor10000UI++;
+		if ((safeSubstract(cfe.getTotMntTotal(), cfe.getMntIVATasaBas(), cfe.getMntIVATasaMin(), cfe.getMntIVAOtra()) * tipoCambio) > (ui.getCotizacion() * UI.MAX_UI))
+			summary.mayorTopeUI++;
 
 	}
 	

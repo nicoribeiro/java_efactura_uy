@@ -25,7 +25,7 @@ public class Strategy_201 implements SummaryStrategy {
 
 		data.setCantCFCEmi(new BigInteger(String.valueOf(summary.cantDocEmitidos)));
 		data.setMontos(SummaryStrategy.getMontosFyT(summary));
-		data.setCantDocsMayTopeUI(new BigInteger(String.valueOf(summary.mayor10000UI)));
+		data.setCantDocsMayTopeUI(new BigInteger(String.valueOf(summary.mayorTopeUI)));
 
 		resumen.setRsmnData(data);
 

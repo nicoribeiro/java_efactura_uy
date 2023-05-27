@@ -18,7 +18,7 @@ public abstract class TicketStrategy implements SummaryStrategy {
 		data.setRngDocsAnulados(summary.rngDocsAnulados);
 		data.setRngDocsUtil(summary.rngDocsUtil);
 		data.setMontos(SummaryStrategy.getMontosFyT(summary));
-		data.setCantDocsMayTopeUI(new BigInteger(String.valueOf(summary.mayor10000UI)));
+		data.setCantDocsMayTopeUI(new BigInteger(String.valueOf(summary.mayorTopeUI)));
 		
 		return data;
 	}
