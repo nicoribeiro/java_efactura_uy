@@ -68,6 +68,14 @@ public class PollerManager {
 		}else
 			logger.info("NotificationPoller: not running");
 		
+		
+		if (applicationProvider.get().configuration().getBoolean("TipoDeCambioPoller.run", false)){
+			logger.info("TipoDeCambioPoller: running");
+			runner = new PollerTipoDeCambioRunner();
+			executor.execute(runner);
+		}else
+			logger.info("TipoDeCambioPoller: not running");
+		
 	}
 
 }

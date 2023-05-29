@@ -172,7 +172,7 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, String pdfMailAddress, String CompraID) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
-		if (supera10000UI()) {
+		if (superaTopeUI()) {
 			
 			if (tipoDocRecep==null)
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("tipoDocRecep");

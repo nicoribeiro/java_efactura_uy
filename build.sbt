@@ -34,7 +34,9 @@ libraryDependencies ++= Seq(
     //Para imprimir
     "org.apache.pdfbox" % "pdfbox" % "2.0.2",
     //Documentacion del API
-    "io.swagger" %% "swagger-play2" % "1.5.2"
+    "io.swagger" %% "swagger-play2" % "1.5.2",
+    "org.apache.poi" % "poi" % "4.0.1",
+  	"org.apache.poi" % "poi-ooxml" % "4.0.1"
 )
 
 resolvers += Resolver.url("Edulify Repository", url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns)

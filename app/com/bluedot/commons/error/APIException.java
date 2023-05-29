@@ -125,7 +125,8 @@ public class APIException extends Throwable
 		SUCURSAL_NO_ENCONTRADA(122, 200, true), 
 		SUCURSAL_EXISTE(124, 200, true),
 		FIRMA_DIGITAL_VENCIDA(125, 200, true),
-		NO_EXISTE_EMAIL(126,200,true)
+		NO_EXISTE_EMAIL(126,200,true), 
+		TIPO_CAMBIO_NO_ENCONTRADO(127,200,true)
 		;
 
 

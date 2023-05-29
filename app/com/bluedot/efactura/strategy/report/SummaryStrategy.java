@@ -20,6 +20,7 @@ import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.IVA;
 import com.bluedot.efactura.model.IndicadorFacturacion;
+import com.bluedot.efactura.model.TipoDeCambio;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.model.UI;
 import com.google.common.collect.Range;
@@ -276,7 +277,7 @@ public interface SummaryStrategy {
 		double tipoCambio = 1;
 		
 		if (cfe.getMoneda()!=TipMonType.UYU)
-			tipoCambio = cfe.getTipoCambio();
+			tipoCambio = TipoDeCambio.findByFechaYMoneda(cfe.getFechaEmision(), cfe.getMoneda(), true).getCompra().doubleValue();
 		
 		monto.totMntNoGrv = safeAdd(monto.totMntNoGrv, cfe.getTotMntNoGrv(), tipoCambio);
 		monto.totMntExpyAsim = safeAdd(monto.totMntExpyAsim, cfe.getTotMntExpyAsim(), tipoCambio);
