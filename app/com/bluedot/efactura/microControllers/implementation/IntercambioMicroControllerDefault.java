@@ -41,6 +41,7 @@ import com.bluedot.efactura.model.MotivoRechazoSobre;
 import com.bluedot.efactura.model.Respuesta;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.model.TipoDoc;
+import com.bluedot.efactura.serializers.CFEEmpresasTypeWrapper;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
@@ -265,7 +266,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 					int i = 1;
 					for (Iterator<CFEEmpresasType> iterator = envioCFEEntreEmpresas.getCFEAdendas().iterator(); iterator.hasNext();) {
 						CFEEmpresasType cfeEmpresasType = iterator.next();
-						procesarCfeEntrante(cfeEmpresasType, ackcfEdefType, i, sobreRecibido);
+						procesarCfeEntrante(new CFEEmpresasTypeWrapper(cfeEmpresasType, sobreRecibido.getEmpresaReceptora()), ackcfEdefType, i, sobreRecibido);
 						i++;
 					}
 					
@@ -311,12 +312,12 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		//TODO si los servicios son la capa superior nunca deberian tirar exepciones distintas de APIException
 	}
 
-	private void procesarCfeEntrante(CFEEmpresasType cfeEmpresasType, ACKCFEdefType ackcfEdefType, int ordinal, SobreRecibido sobreRecibido) throws APIException {
+	private void procesarCfeEntrante(CFEEmpresasTypeWrapper cfeEmpresasTypeWrapper, ACKCFEdefType ackcfEdefType, int ordinal, SobreRecibido sobreRecibido) throws APIException {
 		
 		/*
 		 * Serializo el CFEEmpresasType a JSONObject
 		 */
-		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFEEmpresasTypeSerializer().objectToJson(cfeEmpresasType);
+		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFEEmpresasTypeSerializer().objectToJson(cfeEmpresasTypeWrapper);
 		logger.debug("cfeJson: " + cfeJson.toString());
 		
 		TipoDoc tipoDoc = TipoDoc.fromInt(cfeJson.getJSONObject("Encabezado").getJSONObject("IdDoc").getInt("TipoCFE"));

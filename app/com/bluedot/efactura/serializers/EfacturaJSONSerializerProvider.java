@@ -41,8 +41,8 @@ public class EfacturaJSONSerializerProvider extends JSONSerializerProvider {
 		return new ReporteDiarioSerializer<ReporteDiario>(getEmpresaSerializer());
 	}
 	
-	public static JSONSerializer<CFEEmpresasType> getCFEEmpresasTypeSerializer() {
-		return new CFEEmpresasTypeSerializer<CFEEmpresasType>();
+	public static JSONSerializer<CFEEmpresasTypeWrapper> getCFEEmpresasTypeSerializer() {
+		return new CFEEmpresasTypeSerializer<CFEEmpresasTypeWrapper>();
 	}
 	
 	public static JSONSerializer<CAE> getCAESerializer(){

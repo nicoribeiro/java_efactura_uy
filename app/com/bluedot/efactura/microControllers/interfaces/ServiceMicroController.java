@@ -44,6 +44,6 @@ public interface ServiceMicroController
 	 */
 	void procesarAttachments(int index, EmailMessage emailModel, boolean retry);
 
-	void procesarAttachment(int index, Attachment attachment, boolean retry);
+	void procesarAttachment(int index, int attachmentId, boolean retry);
 
 }

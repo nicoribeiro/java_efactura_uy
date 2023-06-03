@@ -7,6 +7,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.strategy.builder.CFEBuilderImpl;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
@@ -18,7 +19,7 @@ import dgi.classes.recepcion.RetPercResg;
 public class EResgStrategy implements CFEEmpresasStrategy {
 
 	@Override
-	public JSONObject getEncabezado(CFEEmpresasType cfe) {
+	public JSONObject getEncabezado(CFEEmpresasType cfe, Empresa empresaReceptora) {
 		
 		JSONObject encabezado = new JSONObject();
 		JSONObject idDoc = new JSONObject();

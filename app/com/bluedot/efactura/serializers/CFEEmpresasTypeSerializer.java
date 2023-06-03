@@ -14,13 +14,15 @@ import com.bluedot.commons.utils.XML;
 
 import dgi.classes.entreEmpresas.CFEEmpresasType;
 
-public class CFEEmpresasTypeSerializer<T> extends JSONSerializer<CFEEmpresasType> {
+public class CFEEmpresasTypeSerializer<T> extends JSONSerializer<CFEEmpresasTypeWrapper> {
 
 	final static Logger logger = LoggerFactory.getLogger(CFEEmpresasTypeSerializer.class);
 	
 	@Override
-	public JSONObject objectToJson(CFEEmpresasType cfe, boolean shrinkSerializarion) throws JSONException {
+	public JSONObject objectToJson(CFEEmpresasTypeWrapper wrapper, boolean shrinkSerializarion) throws JSONException {
 		JSONObject cfeJson = new JSONObject();
+		
+		CFEEmpresasType cfe = wrapper.getCfeEmpresasType();
 		
 		try {
 			if (cfe.getAdenda()!=null)
@@ -48,7 +50,7 @@ public class CFEEmpresasTypeSerializer<T> extends JSONSerializer<CFEEmpresasType
 		
 		cfeJson.put("TmstFirma", strategy.getTimestampFirma(cfe));
 		
-		cfeJson.put("Encabezado", strategy.getEncabezado(cfe));
+		cfeJson.put("Encabezado", strategy.getEncabezado(cfe, wrapper.getEmpresaReceptora()));
 		
 		cfeJson.put("Detalle", strategy.getDetalle(cfe));
 		

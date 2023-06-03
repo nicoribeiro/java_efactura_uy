@@ -255,9 +255,27 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		if (emailMessage.getAttachments()==null || emailMessage.getAttachments().size()==0)
 			logger.info(index+"-Email no contiene adjuntos, se aborta el procesamiento");
 		
+		LinkedList<Integer> attachmentsIds = new LinkedList<>(); 
+		
+		
+		/*
+		 * Tomo los ids de los attachments para luego pedirlos por id, esto previene la exception:
+		 * 
+		 * java.util.ConcurrentModificationException: null
+		 * 
+		 * que pasa cuando se modifica la lista de attachments cuendo se le pide a hibernate que vuelva a traer el atachment
+		 * 
+		 * 
+		 */
+		
 		for (Attachment attachment : emailMessage.getAttachments()) {
-			procesarAttachment(index, attachment, retry);
+			attachmentsIds.add(attachment.getId());
 		}
+		
+		for (Integer attachmentId : attachmentsIds) {
+			procesarAttachment(index, attachmentId, retry);	
+		}
+		
 	}
 
 	/**
@@ -266,18 +284,14 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	 * @param attachment
 	 * @return resultado del procesamiento: true = OK
 	 */
-	public void procesarAttachment(int index, Attachment attachment, boolean retry) {
+	public void procesarAttachment(int index, int attachmentId, boolean retry) {
 		boolean procesar_Sob = true;
 		boolean procesar_M = true;
 		boolean procesar_ME = true;
 		
 		try {
 			
-			/*
-			 * Si hubo una excepcion las entidades se desatachearon del persistence context con el rollback.
-			 * Por lo tanto, como no estoy seguro si estan o no debo volverlas a pedir a la BBDD.
-			 */
-			attachment = Attachment.findById(attachment.getId());
+			Attachment attachment = Attachment.findById(attachmentId);
 			
 			logger.info(index+"-Procesando Adjunto: " + attachment.getName());
 
@@ -467,7 +481,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			 */
 			play.db.jpa.JPA.em().getTransaction().rollback();
 			play.db.jpa.JPA.em().getTransaction().begin();
-			Attachment attachmentFromBD = Attachment.findById(attachment.getId());
+			Attachment attachmentFromBD = Attachment.findById(attachmentId);
 			attachmentFromBD.setEstado(AttachmentEstado.PROCESADO_ERROR);
 			attachmentFromBD.update();
 			ThreadMan.forceTransactionFlush();
@@ -481,13 +495,13 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			 */
 			boolean agregar = true;
 			for(EmailMessage email : this.getEmpresa().getEmailsRecibidosError()) {
-				if (attachment.getEmailMessage().getId() == email.getId()) {
+				if (attachmentFromBD.getEmailMessage().getId() == email.getId()) {
 					agregar = false;
 					break;
 				}
 			}
 			if (agregar)
-				this.getEmpresa().getEmailsRecibidosError().add(EmailMessage.findById(attachment.getEmailMessage().getId()));
+				this.getEmpresa().getEmailsRecibidosError().add(EmailMessage.findById(attachmentFromBD.getEmailMessage().getId()));
 			
 			ThreadMan.forceTransactionFlush();
 			

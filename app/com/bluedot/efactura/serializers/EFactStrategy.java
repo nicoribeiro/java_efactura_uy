@@ -5,6 +5,10 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.Sucursal;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.strategy.builder.CFEBuilderImpl;
 
@@ -17,7 +21,7 @@ import dgi.classes.recepcion.ReferenciaTipo.Referencia;
 public class EFactStrategy extends CommonStrategy {
 
 	@Override
-	public JSONObject getEncabezado(CFEEmpresasType cfe) {
+	public JSONObject getEncabezado(CFEEmpresasType cfe, Empresa empresaReceptora) {
 		
 		JSONObject encabezado = new JSONObject();
 		JSONObject idDoc = new JSONObject();
@@ -33,13 +37,36 @@ public class EFactStrategy extends CommonStrategy {
 		idDoc.put("FmaPago", documento.getEncabezado().getIdDoc().getFmaPago());
 		idDoc.put("MntBruto", documento.getEncabezado().getIdDoc().getMntBruto()==null? 0:documento.getEncabezado().getIdDoc().getMntBruto());
 		
-		receptor.put("TipoDocRecep", documento.getEncabezado().getReceptor().getTipoDocRecep());
-		receptor.put("CiudadRecep", documento.getEncabezado().getReceptor().getCiudadRecep());
-		receptor.put("DeptoRecep", documento.getEncabezado().getReceptor().getDeptoRecep());
-		receptor.put("CodPaisRecep", documento.getEncabezado().getReceptor().getCodPaisRecep());
-		receptor.put("DocRecep", documento.getEncabezado().getReceptor().getDocRecep());
-		receptor.put("RznSocRecep", documento.getEncabezado().getReceptor().getRznSocRecep());
-		receptor.put("DirRecep", documento.getEncabezado().getReceptor().getDirRecep());
+		if (documento.getEncabezado().getReceptor() !=null) {
+			receptor.put("TipoDocRecep", documento.getEncabezado().getReceptor().getTipoDocRecep());
+			receptor.put("CiudadRecep", documento.getEncabezado().getReceptor().getCiudadRecep());
+			receptor.put("DeptoRecep", documento.getEncabezado().getReceptor().getDeptoRecep());
+			receptor.put("CodPaisRecep", documento.getEncabezado().getReceptor().getCodPaisRecep());
+			receptor.put("DocRecep", documento.getEncabezado().getReceptor().getDocRecep());
+			receptor.put("RznSocRecep", documento.getEncabezado().getReceptor().getRznSocRecep());
+			receptor.put("DirRecep", documento.getEncabezado().getReceptor().getDirRecep());
+		}else
+			if(empresaReceptora != null) {
+				receptor.put("TipoDocRecep", 2);
+				receptor.put("DocRecep", empresaReceptora.getRut());
+				receptor.put("RznSocRecep", empresaReceptora.getRazon());
+				
+				if (empresaReceptora.getSucursales().size()>0) {
+					//Tomo una sucursal cualquiera para la direccion
+					Sucursal sucursal = empresaReceptora.getSucursales().iterator().next();
+					receptor.put("CiudadRecep", sucursal.getCiudad());
+					receptor.put("DeptoRecep", sucursal.getDepartamento());
+					receptor.put("DirRecep", sucursal.getDomicilioFiscal());		
+				}else {
+					// no tengo datos por lo que los lleno vacios
+					receptor.put("CiudadRecep", "N/A");
+					receptor.put("DeptoRecep", "N/A");
+					receptor.put("DirRecep", "N/A");
+				}
+				
+				
+				receptor.put("CodPaisRecep", "UY");
+			}
 		
 		emisor.put("CdgDGISucur", documento.getEncabezado().getEmisor().getCdgDGISucur());
 		emisor.put("Ciudad", documento.getEncabezado().getEmisor().getCiudad());
