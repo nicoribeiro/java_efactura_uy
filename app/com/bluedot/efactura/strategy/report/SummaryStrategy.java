@@ -16,6 +16,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.IVA;
@@ -277,7 +278,7 @@ public interface SummaryStrategy {
 		double tipoCambio = 1;
 		
 		if (cfe.getMoneda()!=TipMonType.UYU)
-			tipoCambio = TipoDeCambio.findByFechaYMoneda(cfe.getFechaEmision(), cfe.getMoneda(), true).getInterbancario().doubleValue();
+			tipoCambio = TipoDeCambio.findByFechaYMoneda(DateHandler.minus(cfe.getFechaEmision(),1,Calendar.DAY_OF_WEEK), cfe.getMoneda(), true).getInterbancario().doubleValue();
 		
 		monto.totMntNoGrv = safeAdd(monto.totMntNoGrv, cfe.getTotMntNoGrv(), tipoCambio);
 		monto.totMntExpyAsim = safeAdd(monto.totMntExpyAsim, cfe.getTotMntExpyAsim(), tipoCambio);

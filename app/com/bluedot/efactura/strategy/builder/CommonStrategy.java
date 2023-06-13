@@ -3,6 +3,7 @@ package com.bluedot.efactura.strategy.builder;
 import java.util.Calendar;
 
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Pais;
@@ -34,7 +35,7 @@ public class CommonStrategy {
 				+ cfe.getTotMntIVAOtra();
 
 		if (cfe.getMoneda()!=TipMonType.UYU)
-			monto = monto * TipoDeCambio.findByFechaYMoneda(cfe.getFechaEmision(), cfe.getMoneda(), true).getInterbancario().doubleValue();
+			monto = monto * TipoDeCambio.findByFechaYMoneda(DateHandler.minus(cfe.getFechaEmision(),1,Calendar.DAY_OF_WEEK), cfe.getMoneda(), true).getInterbancario().doubleValue();
 		
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(cfe.getFechaEmision());
