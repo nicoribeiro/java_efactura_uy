@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.ExcelToJSONConverter;
 import com.bluedot.efactura.model.TipoDeCambio;
+import com.bluedot.efactura.model.TipoCotizacion;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
@@ -32,12 +33,6 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 	private String pattern = "yyyy-MM-dd";
 	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
 
-	private enum TipoCotizacion {
-		COMPRA,
-		VENTA,
-		PROMEDIO
-	}
-	
 	public PollerTipoDeCambioRunner() {
 		super(logger, SLEEP_TIME_IN_MILLIS);
 	}

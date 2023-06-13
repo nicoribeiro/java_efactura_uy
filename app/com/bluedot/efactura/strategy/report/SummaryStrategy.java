@@ -277,7 +277,7 @@ public interface SummaryStrategy {
 		double tipoCambio = 1;
 		
 		if (cfe.getMoneda()!=TipMonType.UYU)
-			tipoCambio = TipoDeCambio.findByFechaYMoneda(cfe.getFechaEmision(), cfe.getMoneda(), true).getCompra().doubleValue();
+			tipoCambio = TipoDeCambio.findByFechaYMoneda(cfe.getFechaEmision(), cfe.getMoneda(), true).getInterbancario().doubleValue();
 		
 		monto.totMntNoGrv = safeAdd(monto.totMntNoGrv, cfe.getTotMntNoGrv(), tipoCambio);
 		monto.totMntExpyAsim = safeAdd(monto.totMntExpyAsim, cfe.getTotMntExpyAsim(), tipoCambio);

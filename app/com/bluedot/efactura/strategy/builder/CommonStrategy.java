@@ -34,7 +34,7 @@ public class CommonStrategy {
 				+ cfe.getTotMntIVAOtra();
 
 		if (cfe.getMoneda()!=TipMonType.UYU)
-			monto = monto * TipoDeCambio.findByFechaYMoneda(cfe.getFechaEmision(), cfe.getMoneda(), true).getCompra().doubleValue();
+			monto = monto * TipoDeCambio.findByFechaYMoneda(cfe.getFechaEmision(), cfe.getMoneda(), true).getInterbancario().doubleValue();
 		
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(cfe.getFechaEmision());

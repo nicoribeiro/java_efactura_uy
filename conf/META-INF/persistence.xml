@@ -45,10 +45,12 @@
 		<class>com.bluedot.efactura.model.SobreEmitido</class>
 		<class>com.bluedot.efactura.model.SobreRecibido</class>
 		<class>com.bluedot.efactura.model.Titular</class>
+		<class>com.bluedot.efactura.model.TipoDeCambio</class>
 		<class>com.bluedot.efactura.model.UI</class>
 		<class>com.bluedot.efactura.model.FirmaDigital</class>
 		<class>com.bluedot.efactura.model.Respuesta</class>
 		<class>com.bluedot.efactura.model.RetencionPercepcion</class>
+		
 		
 		  
 		<properties>
