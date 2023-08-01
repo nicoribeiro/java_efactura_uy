@@ -1,35 +1,19 @@
 package com.bluedot.efactura.model;
 
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.type.StringType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.utils.DateHandler;
-import com.bluedot.efactura.services.impl.ConsultasServiceImpl;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
-
 import dgi.classes.recepcion.TipMonType;
+import org.hibernate.criterion.Restrictions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.*;
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 @Entity
@@ -43,7 +27,7 @@ public class TipoDeCambio extends Model<TipoDeCambio> {
 	final static Logger logger = LoggerFactory.getLogger(TipoDeCambio.class);	
 	
 	@Id
-	@GeneratedValue(strategy=GenerationType.SEQUENCE,generator="tipo_de_cambio_seq")
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "tipo_de_cambio_seq")
 	@SequenceGenerator(name = "tipo_de_cambio_seq", sequenceName = "tipo_de_cambio_seq" )
 	private long id;
 	@Temporal(TemporalType.DATE)
