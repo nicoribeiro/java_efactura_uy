@@ -18,7 +18,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Type;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
@@ -425,6 +424,7 @@ public class CFE extends Model<CFE>{
 
 		//Sort by fechaEmision by default
 		q.orderByDesc("fechaEmision");
+		q.orderByDesc("tipo");
 
 		List<CFE> list = page > 0 && pageSize > 0 ? q.findPage(page, pageSize) : q.findList();
 
