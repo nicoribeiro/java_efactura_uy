@@ -3,7 +3,6 @@ package com.bluedot.efactura;
 import com.bluedot.commons.utils.QR;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Detalle;
-import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.RetencionPercepcion;
 import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.serializers.AdendaSerializer;
@@ -375,10 +374,11 @@ public class GenerateInvoice {
 			createHeadings(bfBold, cb, receptor_x + 50, receptor_y, "CONSUMO FINAL", PdfContentByte.ALIGN_CENTER);
 			
 			if (cfe.getTitular()!=null){
-			
-			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, cfe.getTitular().getTipoDocumento().name(),
-					PdfContentByte.ALIGN_LEFT);
-			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4, cfe.getTitular().getPaisEmisorDocumento().getCodigo() + " " + cfe.getTitular().getDocumento(),
+				if (cfe.getTitular().getTipoDocumento() != null) {
+					createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, cfe.getTitular().getTipoDocumento().name(),
+							PdfContentByte.ALIGN_LEFT);
+				}
+				createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4, cfe.getTitular().getPaisEmisorDocumento().getCodigo() + " " + cfe.getTitular().getDocumento(),
 					PdfContentByte.ALIGN_LEFT);
 			}
 			break;
