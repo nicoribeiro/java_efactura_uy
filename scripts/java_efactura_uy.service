@@ -1,4 +1,9 @@
 # A Play Framework application systemd service file
+# To install
+# cp java_efactura_uy.service /etc/systemd/system
+# systemctl enable java_efactura_uy.service
+# systemctl start java_efactura_uy.service
+
 
 [Unit]
 Description=efactura DGI Play Framework app
