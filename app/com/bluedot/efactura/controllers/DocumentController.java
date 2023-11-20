@@ -427,7 +427,8 @@ public class DocumentController extends AbstractController {
 		String serie = request().getQueryString("serie") != null ? request().getQueryString("serie") : null;
 
 		String rutExterno = request().getQueryString("rutExterno") != null ? request().getQueryString("rutExterno") : null;
-		//String razonReceptor = request().getQueryString("razonReceptor") != null ? request().getQueryString("razonReceptor") : null;
+		String rutReceptor = request().getQueryString("rutReceptor") != null ? request().getQueryString("rutReceptor") : null;
+		String razonReceptor = request().getQueryString("razonReceptor") != null ? request().getQueryString("razonReceptor") : null;
 
 		DireccionDocumento direccion = request().getQueryString("direccion") != null ? DireccionDocumento.valueOf(request().getQueryString("direccion")) : DireccionDocumento.EMITIDO;
 		
@@ -485,9 +486,9 @@ public class DocumentController extends AbstractController {
 			Tuple<List<CFE>, Long> cfes;
 			
 			if (direccion == DireccionDocumento.EMITIDO)
-				cfes = CFE.find(empresa, empresaExterna, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, fromDate, toDate, page, pageSize, direccion);
 			else
-				cfes = CFE.find(empresaExterna, empresa, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, fromDate, toDate, page, pageSize, direccion);
 			
 			JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
 			

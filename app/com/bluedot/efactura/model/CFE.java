@@ -18,6 +18,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Type;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
@@ -385,7 +386,7 @@ public class CFE extends Model<CFE>{
 	}
 
 
-	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion) {
+	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, String rutReceptor, String razonReceptor, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion) {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
 		Criterion dateCriteria = null;
@@ -403,6 +404,19 @@ public class CFE extends Model<CFE>{
 
 		if (empresaReceptora != null) {
 			q.getCriteria().add(Restrictions.eq("empresaReceptora", empresaReceptora));
+		}
+
+		if (rutReceptor != null) {
+			q.getCriteria().createAlias("empresaReceptora", "rutEmisor", JoinType.LEFT_OUTER_JOIN);
+			q.getCriteria().createAlias("titular", "tit", JoinType.LEFT_OUTER_JOIN);
+			q.getCriteria().add(Restrictions.or(
+					Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START),
+					Restrictions.like("tit.documento", rutReceptor, MatchMode.START)));
+		}
+
+		if (razonReceptor != null) {
+			q.getCriteria().createAlias("empresaReceptora", "rutEmisor", JoinType.LEFT_OUTER_JOIN);
+			q.getCriteria().add(Restrictions.ilike("rutEmisor.razon", razonReceptor, MatchMode.START));
 		}
 		
 		if (empresaEmisora != null) {
