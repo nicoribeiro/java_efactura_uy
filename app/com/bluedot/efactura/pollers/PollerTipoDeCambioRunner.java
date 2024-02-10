@@ -27,7 +27,7 @@ import dgi.classes.recepcion.TipMonType;
 
 public class PollerTipoDeCambioRunner extends PollerRunner {
 
-	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l * 60l * 6l; // 6 Hours
+	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l * 60l * 1l; // 1 Hour
 	
 	static Logger logger = LoggerFactory.getLogger(PollerTipoDeCambioRunner.class);
 
