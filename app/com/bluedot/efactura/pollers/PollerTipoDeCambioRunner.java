@@ -10,6 +10,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.Formatter.BigDecimalLayoutForm;
 import java.util.GregorianCalendar;
 
 import org.slf4j.Logger;
@@ -60,14 +61,18 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 
 			if (tipodecambio==null) {
 				logger.info("Falta cotizacion para: " + simpleDateFormat.format(gc_fecha.getTime()) + ".");
-				tipodecambio = new TipoDeCambio();
-				tipodecambio.save();
-				tipodecambio.setFecha(gc_fecha.getTime());
-				tipodecambio.setMoneda(TipMonType.USD);
-				tipodecambio.setCompra(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.COMPRA));
-				tipodecambio.setVenta(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.VENTA));
-				logger.info("Valor de la cotizacion COMPRA para " + simpleDateFormat.format(gc_fecha.getTime()) + " es " + tipodecambio.getCompra().doubleValue());
-				logger.info("Valor de la cotizacion VENTA para " + simpleDateFormat.format(gc_fecha.getTime()) + " es " + tipodecambio.getVenta().doubleValue());
+				if (getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.COMPRA) != BigDecimal.ZERO && getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.VENTA) != BigDecimal.ZERO) {
+					tipodecambio = new TipoDeCambio();
+					tipodecambio.save();
+					tipodecambio.setFecha(gc_fecha.getTime());
+					tipodecambio.setMoneda(TipMonType.USD);
+					tipodecambio.setCompra(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.COMPRA));
+					tipodecambio.setVenta(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.VENTA));
+					logger.info("Valor de la cotizacion COMPRA para " + simpleDateFormat.format(gc_fecha.getTime()) + " es " + tipodecambio.getCompra().doubleValue());
+					logger.info("Valor de la cotizacion VENTA para " + simpleDateFormat.format(gc_fecha.getTime()) + " es " + tipodecambio.getVenta().doubleValue());
+				}else {
+					logger.info("Valor de la cotizacion para " + simpleDateFormat.format(gc_fecha.getTime()) + " es cero, no se guarda el valor.");
+				}
 			}
 			gc_fecha.add((GregorianCalendar.DAY_OF_MONTH), 1);
 		}

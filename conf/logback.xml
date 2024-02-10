@@ -60,6 +60,8 @@
 	<logger name="javax.mail" level="OFF" />
 	<logger name="com.bluedot" level="INFO" />
 	<logger name="com.bluedot.efactura.microControllers.implementation" level="DEBUG" />
+	<!-- logger name="com.bluedot.commons.utils.ExcelToJSONConverter" level="DEBUG" /> -->
+	<!-- logger name="com.bluedot.efactura.pollers.PollerTipoDeCambioRunner" level="DEBUG" /> -->
 
 	<!-- Log all SQL DML statements as they are executed -->
 	<!-- <Logger name="org.hibernate.SQL" level="debug" /> -->

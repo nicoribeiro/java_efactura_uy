@@ -4,11 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -18,7 +15,6 @@ import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -75,11 +71,10 @@ public class ExcelToJSONConverter {
 						logger.debug("Row:" + j);
 						Row row = sheet.getRow(j);
 
-
 						ObjectNode rowData = mapper.createObjectNode();
 						
-						// Si el dia esta vacio se termino la lista
-						if (row.getCell(0)== null || row.getCell(0).getCellType() == CellType.BLANK)
+						// Si  (dia, compra, venta) estan vacios se termino la lista
+						if (row.getCell(0)== null || (row.getCell(0).getCellType() == CellType.BLANK && row.getCell(3).getCellType() == CellType.BLANK && row.getCell(4).getCellType() == CellType.BLANK)) 
 							break;
 
 						if (row.getCell(0)!= null && row.getCell(0).getCellType() != CellType.BLANK)
