@@ -261,6 +261,34 @@ c7o835DLAFshEWfC7TIe3g==
 -----END CERTIFICATE-----
 ```
 
+9 - Install certificate and private key in *firma_digital* database table 
+
+To install the certificate and private key genearted in previous steps, an insert query has to be executed in the database for the company (empresa_id).
+The company must exist previously in the *empresa* table in the database. In this case the *empresa_id* used is 33724.
+
+```
+INSERT INTO `firma_digital`
+        (
+                `id`          ,
+                `certificate` ,
+                `private_key` ,
+                `valida_desde`,
+                `valida_hasta`,
+                `empresa_id`
+        )
+VALUES
+        (
+                1                                                                                             ,
+                '-----BEGIN CERTIFICATE-----\nMIIGQTCCBCmgAwIBAg......DdVaFj+uHmOU\n-----END CERTIFICATE-----',
+                '-----BEGIN PRIVATE KEY-----\nMIIEvQI......f5yGO4yZo=\n-----END PRIVATE KEY-----\n'           ,
+                '2025-07-30 18:45:26'                                                                         ,
+                '2027-07-30 18:45:26'                                                                         ,
+                33724
+        )
+;
+```
+
+
 #### Computing Resource
 
 Follow [this](https://linuxconfig.org/how-to-install-ubuntu-18-04-bionic-beaver) tutorial to install Ubuntu 18.04 LTS

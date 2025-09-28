@@ -35,7 +35,8 @@ public class CommonStrategy {
 				+ cfe.getTotMntIVAOtra();
 
 		if (cfe.getMoneda()!=TipMonType.UYU)
-			monto = monto * TipoDeCambio.findByFechaYMoneda(DateHandler.minus(cfe.getFechaEmision(),1,Calendar.DAY_OF_WEEK), cfe.getMoneda(), true).getInterbancario().doubleValue();
+			// De deja Precio de Venta en vez de precio interbancario ya que el precio de venta se toma atomaticamente y el interbancario es manual y tiene retrasos
+			monto = monto * TipoDeCambio.findByFechaYMoneda(DateHandler.minus(cfe.getFechaEmision(),1,Calendar.DAY_OF_WEEK), cfe.getMoneda(), true).getVenta().doubleValue();
 		
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(cfe.getFechaEmision());
