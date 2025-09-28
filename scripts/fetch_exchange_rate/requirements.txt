@@ -1,0 +1,2 @@
+suds-py3
+mysql-connector-python
