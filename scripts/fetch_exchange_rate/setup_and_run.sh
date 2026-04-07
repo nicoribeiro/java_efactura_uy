@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Get the directory where THIS script lives (robust version)
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
 # Exit on any error
 set -e
 
@@ -45,7 +48,7 @@ else
 fi
 
 # Step 2: Check for existing config.ini or prompt for MariaDB credentials
-CONFIG_FILE="config.ini"
+CONFIG_FILE="$SCRIPT_DIR/config.ini"
 if [ -f "$CONFIG_FILE" ]; then
     echo -e "${GREEN}Found existing $CONFIG_FILE. Skipping credential prompts.${NC}"
     # Read credentials from config.ini to use in database setup
@@ -76,7 +79,7 @@ EOL
 fi
 
 # Step 3: Create virtual environment
-VENV_DIR="venv"
+VENV_DIR="$SCRIPT_DIR/venv"
 if [ -d "$VENV_DIR" ]; then
     echo "Virtual environment already exists at $VENV_DIR. Deleting and recreating..."
     rm -rf "$VENV_DIR"
@@ -87,16 +90,16 @@ source "$VENV_DIR/bin/activate"
 echo -e "${GREEN}Virtual environment activated${NC}"
 
 # Step 4: Install dependencies from requirements.txt
-if [ ! -f "requirements.txt" ]; then
+if [ ! -f "$SCRIPT_DIR/requirements.txt" ]; then
     echo -e "${RED}Error: requirements.txt not found in current directory.${NC}"
     exit 1
 fi
 echo "Installing dependencies from requirements.txt..."
-pip install -r requirements.txt
+pip install -r $SCRIPT_DIR/requirements.txt
 echo -e "${GREEN}Dependencies installed${NC}"
 
 # Step 6: Run the Python script
-SCRIPT_FILE="fetch_exchange_rate.py"
+SCRIPT_FILE="$SCRIPT_DIR/fetch_exchange_rate.py"
 if [ ! -f "$SCRIPT_FILE" ]; then
     echo -e "${RED}Error: $SCRIPT_FILE not found in current directory.${NC}"
     exit 1
@@ -112,3 +115,4 @@ echo "mysql -h $DB_HOST -u $DB_USER -p $DB_NAME -e 'SELECT * FROM tipo_de_cambio
 # Deactivate virtual environment
 deactivate
 echo -e "${GREEN}Setup and execution complete. Virtual environment deactivated.${NC}"
+
