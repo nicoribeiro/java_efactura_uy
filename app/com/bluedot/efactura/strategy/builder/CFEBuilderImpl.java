@@ -504,6 +504,50 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 						if (cfes.size()==1){
 							CFE cfeReferencia = cfes.get(0);
 							strategy.getCFE().setReferencia(cfeReferencia);
+
+							// ========== NUEVO: Autocompletar campos de referencia (v25+) ==========
+        
+						        // 1. Fecha del CFE de referencia (F-C7) - CRITICO
+						        if (cfeReferencia.getFechaEmision() != null) {
+						            try {
+						                XMLGregorianCalendar fechaRef = DatatypeFactory.newInstance()
+						                    .newXMLGregorianCalendar(
+						                        new SimpleDateFormat("yyyy-MM-dd").format(cfeReferencia.getFechaEmision())
+						                    );
+						                referencia.setFechaCFEref(fechaRef);
+						            } catch (DatatypeConfigurationException e) {
+						                throw APIException.raise(e);
+						            }
+						        }
+
+							// 2. Monto del CFE de referencia (F-C8) - Recomendado
+							if (cfeReferencia.getTotMntTotal() != null) {
+								referencia.setMntCFEref(BigDecimal.valueOf(cfeReferencia.getTotMntTotal())
+								.setScale(2, BigDecimal.ROUND_HALF_UP));
+							}
+
+        
+							// 3. Moneda del CFE de referencia (F-C9) - Recomendado
+							if (cfeReferencia.getMoneda() != null) {
+								referencia.setTpoMonedaRef(cfeReferencia.getMoneda());
+							}
+        
+							// 4. Tipo de cambio (F-C10) - Solo si no es UYU
+							if (cfeReferencia.getMoneda() != null && cfeReferencia.getMoneda() != TipMonType.UYU
+								&& cfeReferencia.getTipoCambio() != 0.0) {
+							    referencia.setTpoCambioRef(BigDecimal.valueOf(cfeReferencia.getTipoCambio())
+								.setScale(3, BigDecimal.ROUND_HALF_UP));
+							}
+					        	// =====================================================================
+
+						}
+
+						// Si el JSON trae FechaCFEref explícitamente, tiene prioridad
+						if (referenciaJSON.has("FechaCFEref")) {
+							Date parsedDate = simpleDateFormat.parse(referenciaJSON.getString("FechaCFEref"));
+							XMLGregorianCalendar date = DatatypeFactory.newInstance()
+								.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(parsedDate));
+							referencia.setFechaCFEref(date);
 						}
 					}
 					referencia.setNroLinRef(Commons.safeGetInteger(referenciaJSON, "NroLinRef"));
