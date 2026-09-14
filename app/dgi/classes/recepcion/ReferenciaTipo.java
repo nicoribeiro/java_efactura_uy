@@ -8,6 +8,7 @@
 
 package dgi.classes.recepcion;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -178,7 +180,10 @@ public class ReferenciaTipo {
         "serie",
         "nroCFERef",
         "razonRef",
-        "fechaCFEref"
+        "fechaCFEref",
+		"mntCFEref",
+        "tpoMonedaRef",
+        "tpoCambioRef"
     })
     public static class Referencia {
 
@@ -196,6 +201,13 @@ public class ReferenciaTipo {
         protected String razonRef;
         @XmlElement(name = "FechaCFEref", namespace = "http://cfe.dgi.gub.uy")
         protected XMLGregorianCalendar fechaCFEref;
+		@XmlElement(name = "MntCFEref")
+        protected BigDecimal mntCFEref;
+        @XmlElement(name = "TpoMonedaRef")
+        @XmlSchemaType(name = "string")
+        protected TipMonType tpoMonedaRef;
+        @XmlElement(name = "TpoCambioRef")
+        protected BigDecimal tpoCambioRef;
 
         /**
          * Gets the value of the nroLinRef property.
@@ -355,6 +367,78 @@ public class ReferenciaTipo {
          */
         public void setFechaCFEref(XMLGregorianCalendar value) {
             this.fechaCFEref = value;
+        }
+		
+		/**
+         * Gets the value of the mntCFEref property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link BigDecimal }
+         *     
+         */
+        public BigDecimal getMntCFEref() {
+            return mntCFEref;
+        }
+
+        /**
+         * Sets the value of the mntCFEref property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link BigDecimal }
+         *     
+         */
+        public void setMntCFEref(BigDecimal value) {
+            this.mntCFEref = value;
+        }
+
+        /**
+         * Gets the value of the tpoMonedaRef property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link TipMonType }
+         *     
+         */
+        public TipMonType getTpoMonedaRef() {
+            return tpoMonedaRef;
+        }
+
+        /**
+         * Sets the value of the tpoMonedaRef property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link TipMonType }
+         *     
+         */
+        public void setTpoMonedaRef(TipMonType value) {
+            this.tpoMonedaRef = value;
+        }
+
+        /**
+         * Gets the value of the tpoCambioRef property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link BigDecimal }
+         *     
+         */
+        public BigDecimal getTpoCambioRef() {
+            return tpoCambioRef;
+        }
+
+        /**
+         * Sets the value of the tpoCambioRef property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link BigDecimal }
+         *     
+         */
+        public void setTpoCambioRef(BigDecimal value) {
+            this.tpoCambioRef = value;
         }
 
     }

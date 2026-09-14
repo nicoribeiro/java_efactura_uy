@@ -15,6 +15,10 @@ public enum MotivoRechazoCFE {
 	E07("Fecha Firma de CFE no se corresponde con fecha CAE"),
 	
 	E08("No coinciden RUC emisor de CFE y Complemento Fiscal"),
+
+	E12("Información en Zona de Referencia no existe en los registros"),
+
+	E13("Tipo de CAE del CFE no se corresponde con el CAE utilizado"),
 	
 	E20("Orden de compra vencida"),
 	
