@@ -24,3 +24,6 @@ resources/images/*
 builds
 deploys
 deploy_conf
+
+# Archivo de emisores DGI: se versiona solo la version comprimida (.gz)
+resources/ejemplos/Emisores_Mail_Completo.XML

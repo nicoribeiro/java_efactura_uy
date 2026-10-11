@@ -1,7 +1,9 @@
 package com.bluedot.efactura.controllers;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,6 +13,7 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.zip.GZIPInputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -77,7 +80,14 @@ public class EmpresasController extends AbstractController {
 			File fXmlFile = new File(path);
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			Document doc = dBuilder.parse(fXmlFile);
+			Document doc;
+			// El archivo de emisores es muy grande, se versiona comprimido (.gz)
+			if (path.toLowerCase().endsWith(".gz")) {
+				try (InputStream in = new GZIPInputStream(new FileInputStream(fXmlFile))) {
+					doc = dBuilder.parse(in);
+				}
+			} else
+				doc = dBuilder.parse(fXmlFile);
 
 			// optional, but recommended
 			// read this -
