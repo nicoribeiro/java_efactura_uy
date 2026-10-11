@@ -101,6 +101,17 @@ public class EmailMessage extends Model<EmailMessage> {
 
 	}
 
+	public static List<EmailMessage> findByMessageId(String messageId, Empresa empresa) {
+
+		DefaultQuery<EmailMessage> q = (DefaultQuery<EmailMessage>) find.query();
+
+		q.getCriteria().add(Restrictions.eq("messageId", messageId));
+		q.getCriteria().add(Restrictions.eq("empresa", empresa));
+
+		return q.findList();
+
+	}
+
 	public String getFromEmail() {
 		return fromEmail;
 	}

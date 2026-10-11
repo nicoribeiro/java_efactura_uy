@@ -2,13 +2,20 @@ package com.bluedot.commons.utils.messaging;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.mail.Address;
+import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -16,15 +23,18 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.UIDFolder;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.search.ComparisonTerm;
+import javax.mail.search.ReceivedDateTerm;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.mail.imap.IMAPMessage;
+import com.sun.mail.imap.IMAPFolder;
 
 /**
- * This program demonstrates how to download e-mail messages
+ * Descarga mensajes de todas las carpetas de un buzon IMAP y extrae sus adjuntos.
  *
  * @author www.codejava.net
  * @author nicolasribeiro
@@ -34,121 +44,259 @@ public class EmailAttachmentReceiver {
 	final static Logger logger = LoggerFactory.getLogger(EmailAttachmentReceiver.class);
 
 	/**
-	 * Downloads new messages and saves attachments to disk if any.
-	 * 
-	 * @param protocol
-	 *            imap or pop3
-	 * @param host
-	 * @param port
-	 * @param userName
-	 * @param password
+	 * Atributos SPECIAL-USE (RFC 6154) de carpetas que no se procesan. \All, \Flagged e \Important
+	 * son vistas virtuales (ej: Gmail) que duplican mensajes de otras carpetas.
 	 */
-	public List<Email> downloadEmail(String protocol, String host, String port, String userName, String password,
-			int offset, int messageQuantity) {
+	private static final Set<String> SPECIAL_USE_EXCLUIDOS = new HashSet<String>(
+			Arrays.asList("\\trash", "\\junk", "\\sent", "\\drafts", "\\all", "\\flagged", "\\important"));
 
-		/*
-		 * Port 110 - this is the default POP3 non-encrypted port Port 995 - this is the
-		 * port you need to use if you want to connect using POP3 securely
-		 * 
-		 * Port 143 - this is the default IMAP non-encrypted port Port 993 - this is the
-		 * port you need to use if you want to connect using IMAP securely
-		 * 
-		 * Port 25 - this is the default SMTP non-encrypted port Port 465 - this is the
-		 * port used, if you want to send messages using SMTP securely
-		 */
+	/**
+	 * Nombres de carpetas excluidas para servidores que no informan SPECIAL-USE.
+	 */
+	private static final Set<String> NOMBRES_EXCLUIDOS = new HashSet<String>(Arrays.asList("trash", "deleted",
+			"deleted items", "deleted messages", "papelera", "elementos eliminados", "junk", "junk e-mail",
+			"junk email", "spam", "bulk mail", "correo no deseado", "sent", "sent items", "sent mail",
+			"sent messages", "enviados", "elementos enviados", "drafts", "borradores"));
 
-		List<Email> emails = new LinkedList<Email>();
+	private static final int FETCH_BATCH = 100;
 
-		Properties properties = EmailReceiver.getServerProperties(protocol, host, port, true);
+	/**
+	 * Sincroniza todas las carpetas del buzon (salvo papelera, spam, enviados y borradores) usando UIDs.
+	 * 
+	 * Por cada carpeta se procesan solo los mensajes con UID mayor al ultimo procesado. La primera vez
+	 * que se ve una carpeta (o si cambia su UIDVALIDITY) se procesan los mensajes recibidos en los
+	 * ultimos diasPrimeraSincronizacion dias.
+	 * 
+	 * @param carpetasExcluidas
+	 *            nombres adicionales de carpetas a excluir (case insensitive, nombre completo o ultimo segmento)
+	 */
+	public void syncAllFolders(String host, String port, String userName, String password,
+			Collection<String> carpetasExcluidas, int diasPrimeraSincronizacion, ImapSyncListener listener)
+			throws MessagingException {
 
+		String buzon = userName + "@" + host + ":" + port;
+		long inicio = System.currentTimeMillis();
+
+		Properties properties = EmailReceiver.getServerProperties("imap", host, port, true);
 		Session session = Session.getInstance(properties);
+		Store store = session.getStore("imap");
+
+		Set<String> excluidos = new HashSet<String>(NOMBRES_EXCLUIDOS);
+		if (carpetasExcluidas != null)
+			for (String nombre : carpetasExcluidas)
+				excluidos.add(nombre.trim().toLowerCase(Locale.ROOT));
+
+		int carpetasSincronizadas = 0;
+		int carpetasExcluidasCount = 0;
+		int carpetasConError = 0;
+		int mensajesProcesados = 0;
+		int mensajesConError = 0;
+
+		logger.info("Inicio sincronizacion IMAP de " + buzon);
+		logger.debug("Carpetas adicionales excluidas por configuracion: " + carpetasExcluidas
+				+ ", dias primera sincronizacion: " + diasPrimeraSincronizacion);
 
 		try {
-			String packageName = "javax.mail.internet.";
-			String simpleClassName = "MimeMultipart";
-			String className = packageName + simpleClassName;
-			Class<?> cl = Class.forName(className);
-			URL url = cl.getResource(simpleClassName + ".class");
-			logger.debug("url=" + url);
-		
-			// connects to the message store
-			Store store = session.getStore(protocol);
 			store.connect(userName, password);
+			logger.debug("Conectado a " + buzon);
 
-			// opens the inbox folder
-			Folder folderInbox = store.getFolder("INBOX");
-			folderInbox.open(Folder.READ_ONLY);
-			int messageCount = folderInbox.getMessageCount();
-			int end = offset + messageQuantity - 1;
+			Folder[] folders = store.getDefaultFolder().list("*");
+			logger.info(folders.length + " carpetas en " + buzon);
 
-			if (offset < 1)
-				offset = 1;
+			for (Folder folder : folders) {
+				IMAPFolder imapFolder = (IMAPFolder) folder;
+				logger.debug("Carpeta " + folder.getFullName() + " atributos=" + Arrays.toString(imapFolder.getAttributes()));
 
-			if (end > messageCount)
-				end = messageCount;
+				if ((folder.getType() & Folder.HOLDS_MESSAGES) == 0) {
+					logger.debug("Carpeta " + folder.getFullName() + " omitida: no contiene mensajes");
+					continue;
+				}
 
-			// El offset puede quedar mas alla del final si se borraron/movieron mensajes del INBOX
-			if (offset > end) {
-				if (offset > messageCount + 1)
-					logger.warn("Offset de mail (" + offset + ") mayor que la cantidad de mensajes en INBOX ("
-							+ messageCount + ") para " + userName + "@" + host);
-				folderInbox.close(false);
+				String motivoExclusion = motivoExclusion(imapFolder, excluidos);
+				if (motivoExclusion != null) {
+					logger.debug("Carpeta " + folder.getFullName() + " excluida: " + motivoExclusion);
+					carpetasExcluidasCount++;
+					continue;
+				}
+
+				try {
+					ResultadoCarpeta resultado = syncFolder(imapFolder, diasPrimeraSincronizacion, listener);
+					carpetasSincronizadas++;
+					mensajesProcesados += resultado.procesados;
+					mensajesConError += resultado.errores;
+				} catch (MessagingException e) {
+					// Un error en una carpeta no debe impedir procesar las demas
+					carpetasConError++;
+					logger.error("Error sincronizando carpeta " + folder.getFullName() + " de " + buzon, e);
+				}
+			}
+		} finally {
+			if (store.isConnected())
 				store.close();
-				return emails;
+			logger.info("Fin sincronizacion IMAP de " + buzon + ": carpetas sincronizadas=" + carpetasSincronizadas
+					+ ", excluidas=" + carpetasExcluidasCount + ", con error=" + carpetasConError
+					+ ", mensajes procesados=" + mensajesProcesados + ", mensajes con error=" + mensajesConError
+					+ ", duracion=" + (System.currentTimeMillis() - inicio) + "ms");
+		}
+	}
+
+	private static class ResultadoCarpeta {
+		int procesados;
+		int errores;
+	}
+
+	/**
+	 * @return motivo por el que se excluye la carpeta, o null si se procesa
+	 */
+	private String motivoExclusion(IMAPFolder folder, Set<String> excluidos) throws MessagingException {
+		for (String atributo : folder.getAttributes())
+			if (SPECIAL_USE_EXCLUIDOS.contains(atributo.toLowerCase(Locale.ROOT)))
+				return "atributo " + atributo;
+
+		String fullName = folder.getFullName().toLowerCase(Locale.ROOT);
+		String name = folder.getName().toLowerCase(Locale.ROOT);
+		if (excluidos.contains(fullName) || excluidos.contains(name))
+			return "nombre";
+		return null;
+	}
+
+	private ResultadoCarpeta syncFolder(IMAPFolder folder, int diasPrimeraSincronizacion, ImapSyncListener listener)
+			throws MessagingException {
+		String folderName = folder.getFullName();
+		ResultadoCarpeta resultado = new ResultadoCarpeta();
+
+		folder.open(Folder.READ_ONLY);
+		try {
+			long uidValidity = folder.getUIDValidity();
+			ImapSyncListener.FolderSyncState state = listener.getState(folderName);
+
+			logger.debug("Carpeta " + folderName + ": mensajes=" + folder.getMessageCount() + ", uidValidity="
+					+ uidValidity + ", uidNext=" + folder.getUIDNext() + ", estado guardado="
+					+ (state == null ? "ninguno" : "uidValidity=" + state.getUidValidity() + " lastUid=" + state.getLastUid()));
+
+			long lastUid;
+			if (state != null && state.getUidValidity() == uidValidity) {
+				lastUid = state.getLastUid();
+			} else {
+				if (state != null)
+					logger.warn("Cambio el UIDVALIDITY de la carpeta " + folderName + " (" + state.getUidValidity()
+							+ " -> " + uidValidity + "), se resincronizan los ultimos " + diasPrimeraSincronizacion + " dias");
+				lastUid = uidInicial(folder, diasPrimeraSincronizacion);
+				listener.saveState(folderName, uidValidity, lastUid);
+				logger.info("Carpeta " + folderName + " sin estado previo: se procesan mensajes de los ultimos "
+						+ diasPrimeraSincronizacion + " dias (desde UID " + (lastUid + 1) + ")");
 			}
 
-			// fetches new messages from server
-			Message[] arrayMessages = folderInbox.getMessages(offset, end);
+			// Con UID n:* el servidor siempre devuelve al menos el ultimo mensaje, por eso se filtra uid > lastUid
+			Message[] candidatos = folder.getMessagesByUID(lastUid + 1, UIDFolder.LASTUID);
+			List<Message> nuevos = new LinkedList<Message>();
+			for (Message message : candidatos)
+				if (message != null && folder.getUID(message) > lastUid)
+					nuevos.add(message);
 
-			/* Get the messages which is unread in the Inbox */
-			// Message messages[] = folderInbox.search(new FlagTerm(new Flags(
-			// Flags.Flag.SEEN), false));
-			// logger.debug("No. of Unread Messages : " + messages.length);
-
-			for (int i = 0; i < arrayMessages.length; i++) {
-				IMAPMessage message = (IMAPMessage) arrayMessages[i];
-
-				Address[] fromAddress = message.getFrom();
-				String from = "";
-				if (fromAddress != null && fromAddress.length > 0)
-					from = fromAddress[0].toString();
-				
-//				if (from.contains("buscojobs.com"))
-//					logger.info("Message #" + (i + 1) + ":");
-				
-				String subject = message.getSubject();
-				Date sentDate = message.getSentDate();
-
-				String messageContent = "";
-
-				Email email = new Email(message.getMessageID(), from, subject, sentDate, messageContent);
-				
-				logger.info("Message #" + (i + 1) + ":");
-				logger.info("Message id" + email.getMessageId());
-				
-				messageContent = extractAttachments(message, messageContent, email);
-
-				emails.add(email);
-
-				/*
-				 * Print out details of each message
-				 */
-				logger.debug("\t From: " + from);
-				logger.debug("\t Subject: " + subject);
-				logger.debug("\t Sent Date: " + sentDate);
-				logger.debug("\t Message: " + messageContent);
-				logger.debug("\t #Attachments: " + email.getAttachments().size());
-
+			if (nuevos.isEmpty()) {
+				logger.debug("Carpeta " + folderName + ": sin mensajes nuevos (lastUid=" + lastUid + ")");
+				return resultado;
 			}
 
-			// disconnect
-			folderInbox.close(false);
-			store.close();
-		} catch (IOException | MessagingException | ClassNotFoundException ex) {
-			logger.info("Exception:", ex);
+			nuevos.sort(new Comparator<Message>() {
+				@Override
+				public int compare(Message a, Message b) {
+					return Integer.compare(a.getMessageNumber(), b.getMessageNumber());
+				}
+			});
+
+			logger.info("Carpeta " + folderName + ": " + nuevos.size() + " mensajes nuevos (UID > " + lastUid + ")");
+
+			FetchProfile fetchProfile = new FetchProfile();
+			fetchProfile.add(FetchProfile.Item.ENVELOPE);
+			fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+
+			int n = 0;
+			for (int desde = 0; desde < nuevos.size(); desde += FETCH_BATCH) {
+				List<Message> lote = nuevos.subList(desde, Math.min(desde + FETCH_BATCH, nuevos.size()));
+				logger.debug("Carpeta " + folderName + ": descargando lote de " + lote.size() + " mensajes");
+				folder.fetch(lote.toArray(new Message[lote.size()]), fetchProfile);
+
+				for (Message message : lote) {
+					long uid = folder.getUID(message);
+					n++;
+					logger.debug("Carpeta " + folderName + ": mensaje " + n + "/" + nuevos.size() + " UID " + uid);
+					try {
+						listener.onMessage(folderName, uid, toEmail(message));
+						resultado.procesados++;
+					} catch (Exception e) {
+						// No se reintenta: se loguea y se avanza para no bloquear el buzon con un mensaje malformado
+						resultado.errores++;
+						logger.error("Error procesando mensaje UID " + uid + " de carpeta " + folderName, e);
+					}
+					listener.saveState(folderName, uidValidity, uid);
+					logger.debug("Carpeta " + folderName + ": lastUid=" + uid + " guardado");
+				}
+			}
+
+			logger.info("Carpeta " + folderName + ": " + resultado.procesados + " procesados, " + resultado.errores
+					+ " con error");
+			return resultado;
+		} finally {
+			if (folder.isOpen())
+				folder.close(false);
+		}
+	}
+
+	/**
+	 * UID a partir del cual empezar en una carpeta que no tiene estado: el anterior al primer mensaje
+	 * recibido en los ultimos dias, o el ultimo UID de la carpeta si no hay mensajes recientes.
+	 */
+	private long uidInicial(IMAPFolder folder, int dias) throws MessagingException {
+		Calendar desde = Calendar.getInstance();
+		desde.add(Calendar.DAY_OF_MONTH, -dias);
+
+		Message[] recientes = folder.search(new ReceivedDateTerm(ComparisonTerm.GE, desde.getTime()));
+		logger.debug("Carpeta " + folder.getFullName() + ": " + recientes.length + " mensajes recibidos desde "
+				+ desde.getTime());
+
+		if (recientes.length > 0) {
+			long minUid = Long.MAX_VALUE;
+			for (Message message : recientes)
+				minUid = Math.min(minUid, folder.getUID(message));
+			return minUid - 1;
 		}
 
-		return emails;
+		int messageCount = folder.getMessageCount();
+		if (messageCount == 0)
+			return Math.max(folder.getUIDNext() - 1, 0);
+		return folder.getUID(folder.getMessage(messageCount));
+	}
+
+	private Email toEmail(Message message) throws MessagingException, IOException {
+		Address[] fromAddress = message.getFrom();
+		String from = "";
+		if (fromAddress != null && fromAddress.length > 0)
+			from = fromAddress[0].toString();
+
+		String subject = message.getSubject();
+		Date sentDate = message.getSentDate();
+		String messageId = message instanceof javax.mail.internet.MimeMessage
+				? ((javax.mail.internet.MimeMessage) message).getMessageID()
+				: null;
+
+		String messageContent = "";
+
+		Email email = new Email(messageId, from, subject, sentDate, messageContent);
+
+		messageContent = extractAttachments(message, messageContent, email);
+
+		logger.debug("\t Message id: " + messageId);
+		logger.debug("\t From: " + from);
+		logger.debug("\t Subject: " + subject);
+		logger.debug("\t Sent Date: " + sentDate);
+		logger.debug("\t Message: " + (messageContent.length() > 500 ? messageContent.substring(0, 500) + "..." : messageContent));
+		logger.debug("\t #Attachments: " + email.getAttachments().size());
+		for (Attachment attachment : email.getAttachments())
+			logger.debug("\t Attachment: " + attachment.getName());
+
+		return email;
 	}
 
 	/**

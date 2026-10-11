@@ -1,12 +1,17 @@
 package com.bluedot.efactura.microControllers.implementation;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+
+import javax.mail.MessagingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +29,12 @@ import com.bluedot.commons.utils.XML;
 
 import com.bluedot.commons.utils.messaging.Email;
 import com.bluedot.commons.utils.messaging.EmailAttachmentReceiver;
+import com.bluedot.commons.utils.messaging.ImapSyncListener;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.IntercambioMicroController;
 import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.EmailFolderState;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.model.Respuesta;
@@ -46,6 +53,7 @@ import dgi.classes.respuestas.sobre.ACKSobredefType;
 import dgi.classes.respuestas.sobre.EstadoACKSobreType;
 import dgi.soap.consultas.ACKConsultaEnviosSobre;
 import dgi.soap.consultas.DatosSobre;
+import play.Play;
 
 public class ServiceMicroControllerDefault extends MicroControllerDefault implements ServiceMicroController {
 
@@ -171,35 +179,107 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		
 	}
 	
+	/**
+	 * Un lock por empresa para que el poller y los endpoints manuales no sincronicen el mismo buzon a la vez.
+	 * Es local a la JVM: con varias instancias de la aplicacion cada una debe tener el poller en una sola.
+	 */
+	private static final ConcurrentHashMap<Integer, ReentrantLock> locksRecepcionMail = new ConcurrentHashMap<Integer, ReentrantLock>();
+
 	@Override
 	public List<EmailMessage> obtenerYProcesarEmailsEntrantesDesdeServerCorreo() throws APIException {
-		// TODO mutex
 
-		List<EmailMessage> emailsModelo = new LinkedList<EmailMessage>();
-		
-		EmailAttachmentReceiver receiver = new EmailAttachmentReceiver();
-		
-		int offset = this.getEmpresa().getOffsetMail()==0 ? 1 : this.getEmpresa().getOffsetMail();
-		int messageQuantity = 100;
-		List<Email> emails = null;
-		do {
-			
-			emails = receiver.downloadEmail("imap", this.getEmpresa().getHostRecepcion(),
-					this.getEmpresa().getPuertoRecepcion(), this.getEmpresa().getUserRecepcion(),
-					this.getEmpresa().getPassRecepcion(), offset, messageQuantity);
-			
-			try {
-				emailsModelo.addAll(procesarEmails(emails, false));
-				offset += emails.size();
-				this.getEmpresa().setOffsetMail(offset);
-				this.getEmpresa().update();
-				ThreadMan.forceTransactionFlush();
-			} catch (APIException e) {
-				throw e;
-			}
-			
-		} while (emails.size() == messageQuantity);
-		
+		final List<EmailMessage> emailsModelo = new LinkedList<EmailMessage>();
+		final Empresa empresa = this.getEmpresa();
+
+		locksRecepcionMail.putIfAbsent(empresa.getId(), new ReentrantLock());
+		ReentrantLock lock = locksRecepcionMail.get(empresa.getId());
+		if (!lock.tryLock()) {
+			logger.info("Ya hay una sincronizacion de mail en curso para la empresa " + empresa.getRut() + ", se omite");
+			return emailsModelo;
+		}
+
+		logger.info("Obteniendo emails entrantes de la empresa " + empresa.getRut());
+
+		try {
+			String excluidas = Play.application().configuration().getString("mail.recepcion.carpetasExcluidas", "");
+			List<String> carpetasExcluidas = new LinkedList<String>();
+			for (String carpeta : excluidas.split(","))
+				if (!carpeta.trim().isEmpty())
+					carpetasExcluidas.add(carpeta.trim());
+			String dias = Play.application().configuration().getString("mail.recepcion.diasPrimeraSincronizacion", "");
+			int diasPrimeraSincronizacion = dias.trim().isEmpty() ? 30 : Integer.parseInt(dias.trim());
+			/*
+			 * dryRun: recorre las carpetas y descarga los mensajes que se procesarian, pero no guarda el estado
+			 * de las carpetas ni persiste/procesa los emails. Lee el estado guardado, asi que muestra exactamente
+			 * lo que haria la proxima ejecucion real, y se puede repetir.
+			 */
+			final boolean dryRun = Boolean.parseBoolean(
+					Play.application().configuration().getString("mail.recepcion.dryRun", "false").trim());
+			if (dryRun)
+				logger.info("DRY RUN: no se guardan emails ni estado de carpetas para la empresa " + empresa.getRut());
+
+			new EmailAttachmentReceiver().syncAllFolders(empresa.getHostRecepcion(), empresa.getPuertoRecepcion(),
+					empresa.getUserRecepcion(), empresa.getPassRecepcion(), carpetasExcluidas,
+					diasPrimeraSincronizacion, new ImapSyncListener() {
+
+						@Override
+						public FolderSyncState getState(String folderName) {
+							EmailFolderState state = EmailFolderState.findByEmpresaYCarpeta(empresa, folderName);
+							return state == null ? null : new FolderSyncState(state.getUidValidity(), state.getLastUid());
+						}
+
+						@Override
+						public void saveState(String folderName, long uidValidity, long lastUid) {
+							if (dryRun) {
+								logger.debug("DRY RUN: no se guarda estado carpeta=" + folderName + " uidValidity="
+										+ uidValidity + " lastUid=" + lastUid);
+								return;
+							}
+							EmailFolderState state = EmailFolderState.findByEmpresaYCarpeta(empresa, folderName);
+							if (state == null) {
+								state = new EmailFolderState(empresa, folderName);
+								state.setUidValidity(uidValidity);
+								state.setLastUid(lastUid);
+								state.setUltimaSincronizacion(new Date());
+								state.save();
+							} else {
+								state.setUidValidity(uidValidity);
+								state.setLastUid(lastUid);
+								state.setUltimaSincronizacion(new Date());
+								state.update();
+							}
+							ThreadMan.forceTransactionFlush();
+						}
+
+						@Override
+						public void onMessage(String folderName, long uid, Email email) throws Exception {
+							if (dryRun) {
+								boolean yaProcesado = !EmailMessage.findByMessageId(email.getMessageId(), empresa).isEmpty();
+								StringBuilder adjuntos = new StringBuilder();
+								for (com.bluedot.commons.utils.messaging.Attachment attachment : email.getAttachments())
+									adjuntos.append(adjuntos.length() == 0 ? "" : ", ").append(attachment.getName());
+								logger.info("DRY RUN: " + (yaProcesado ? "ya procesado, se omitiria" : "se procesaria")
+										+ " carpeta=" + folderName + " UID=" + uid + " messageId=" + email.getMessageId()
+										+ " fecha=" + email.getSentDate() + " from=" + email.getFrom() + " asunto="
+										+ email.getSubject() + " adjuntos=[" + adjuntos + "]");
+								return;
+							}
+							logger.info("Procesando email carpeta=" + folderName + " UID=" + uid + " messageId="
+									+ email.getMessageId() + " adjuntos=" + email.getAttachments().size());
+							try {
+								emailsModelo.addAll(procesarEmails(Collections.singletonList(email), false));
+							} catch (APIException e) {
+								// APIException extiende Throwable, se envuelve para que el receiver la loguee
+								throw new Exception(e.getMessage(), e);
+							}
+						}
+					});
+		} catch (MessagingException e) {
+			logger.error("Error conectando al servidor de correo de la empresa " + empresa.getRut(), e);
+		} finally {
+			lock.unlock();
+		}
+
 		return emailsModelo;
 	}
 	
@@ -215,7 +295,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		{
 			logger.info(i+"-Procesando email: " + email.getMessageId());
 			
-			if (EmailMessage.findByMessageId(email.getMessageId()).size()>0){
+			if (EmailMessage.findByMessageId(email.getMessageId(), getEmpresa()).size()>0){
 				logger.info(i+"-Este Email ya fue procesado messageId:" + email.getMessageId());
 				i++;
 				continue;
