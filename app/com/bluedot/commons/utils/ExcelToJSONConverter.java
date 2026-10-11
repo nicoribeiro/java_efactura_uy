@@ -53,7 +53,7 @@ public class ExcelToJSONConverter {
 				// Reading each sheet one by one
 				for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
 					Sheet sheet = workbook.getSheetAt(i);
-					String sheetName = sheet.getSheetName();
+					String sheetName = "Cotizaciones";
 					logger.debug("Sheet Name:" + sheetName);      
 
 

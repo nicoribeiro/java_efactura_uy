@@ -8,34 +8,47 @@ import java.math.RoundingMode;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.Formatter.BigDecimalLayoutForm;
 import java.util.GregorianCalendar;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.utils.ExcelToJSONConverter;
-import com.bluedot.efactura.model.TipoDeCambio;
+import com.bluedot.commons.utils.ExcelToJSONConverter2;
 import com.bluedot.efactura.model.TipoCotizacion;
+import com.bluedot.efactura.model.TipoDeCambio;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.google.inject.Provider;
 
 import dgi.classes.recepcion.TipMonType;
+import play.Application;
 
 public class PollerTipoDeCambioRunner extends PollerRunner {
 
-	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l * 60l * 1l; // 1 Hour
+	//private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l * 60l * 1l; // 1 Hour
+	private static final long SLEEP_TIME_IN_MILLIS = 10l * 1000l; // 10 sec
 	
 	static Logger logger = LoggerFactory.getLogger(PollerTipoDeCambioRunner.class);
 
 	private String pattern = "yyyy-MM-dd";
 	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+	
+	private Provider<Application> applicationProvider;
 
-	public PollerTipoDeCambioRunner() {
+	public PollerTipoDeCambioRunner(Provider<Application> applicationProvider) {
 		super(logger, SLEEP_TIME_IN_MILLIS);
+		this.applicationProvider = applicationProvider;
 	}
 	
 	@Override
@@ -68,10 +81,16 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 					tipodecambio.setMoneda(TipMonType.USD);
 					tipodecambio.setCompra(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.COMPRA));
 					tipodecambio.setVenta(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.VENTA));
+					tipodecambio.setInterbancario(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.PROMEDIO));
 					logger.info("Valor de la cotizacion COMPRA para " + simpleDateFormat.format(gc_fecha.getTime()) + " es " + tipodecambio.getCompra().doubleValue());
 					logger.info("Valor de la cotizacion VENTA para " + simpleDateFormat.format(gc_fecha.getTime()) + " es " + tipodecambio.getVenta().doubleValue());
 				}else {
 					logger.info("Valor de la cotizacion para " + simpleDateFormat.format(gc_fecha.getTime()) + " es cero, no se guarda el valor.");
+				}
+			} else { 
+				if (tipodecambio.getInterbancario() == null) {
+					tipodecambio.setInterbancario(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.PROMEDIO));
+					tipodecambio.update();
 				}
 			}
 			gc_fecha.add((GregorianCalendar.DAY_OF_MONTH), 1);
@@ -88,8 +107,43 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 		File tempFile = File.createTempFile(prefix, suffix);
 		logger.debug("Temp file created: "+tempFile.getAbsolutePath());
 
-		String ine_file_url = "https://www5.ine.gub.uy/documents/Estad%C3%ADsticasecon%C3%B3micas/SERIES%20Y%20OTROS/Cotizaci%C3%B3n%20de%20monedas/Cotizaci%C3%B3n%20monedas.xlsx";
+		String ine_file_url = applicationProvider.get().configuration().getString("ine.cotizaciones");
 
+		/*
+		 * ESTO ES PARA BYPASEAR EL CHECK DE LOS CERTIFICADOS SSL
+		 * hay un problam con el certificado de ine donde se baja el archivo
+		 */
+		TrustManager trm = new X509TrustManager() {
+		    public X509Certificate[] getAcceptedIssuers() {
+		        return null;
+		    }
+
+		    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+
+		    }
+
+		    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+		    }
+		};
+		
+		SSLContext sc;
+		try {
+			sc = SSLContext.getInstance("SSL");
+			sc.init(null, new TrustManager[] { trm }, null);
+			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+			
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (KeyManagementException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		/*
+		 * ACA TERMINA EL BYPASSS
+		 */
+		
+		
 		//Me bajo el archivo de cotizaciones del ine
 		URL website = new URL(ine_file_url);
 		ReadableByteChannel rbc = Channels.newChannel(website.openStream());
@@ -98,7 +152,7 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 		fos.close();
 
 		// Creating a file object with specific file path
-		ExcelToJSONConverter converter = new ExcelToJSONConverter();
+		ExcelToJSONConverter2 converter = new ExcelToJSONConverter2();
 		JsonNode data = converter.excelToJson(tempFile, logger);
 		logger.debug("Excel file contains the Data:\n" + data.toString());
 
@@ -112,7 +166,7 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 
 	private BigDecimal getCotizacionPesosFecha(LocalDate fecha, JsonNode data, TipoCotizacion tc)  {
 
-		JsonNode cotizacion = data.get("Cotización al público").get(fecha.toString());
+		JsonNode cotizacion = data.get("Cotizaciones").get(fecha.toString());
 
 		int intentos = 0;
 		
@@ -123,7 +177,7 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 			
 			fecha = fecha.minusDays(1);
 			intentos++;
-			cotizacion = data.get("Cotización al público").get(fecha.toString());
+			cotizacion = data.get("Cotizaciones").get(fecha.toString());
 		}
 
 		double compra = cotizacion.get("compra").asDouble();

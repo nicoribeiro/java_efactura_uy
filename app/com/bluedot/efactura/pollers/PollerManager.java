@@ -71,7 +71,7 @@ public class PollerManager {
 		
 		if (applicationProvider.get().configuration().getBoolean("TipoDeCambioPoller.run", false)){
 			logger.info("TipoDeCambioPoller: running");
-			runner = new PollerTipoDeCambioRunner();
+			runner = new PollerTipoDeCambioRunner(applicationProvider);
 			executor.execute(runner);
 		}else
 			logger.info("TipoDeCambioPoller: not running");

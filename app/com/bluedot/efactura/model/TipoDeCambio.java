@@ -27,7 +27,7 @@ public class TipoDeCambio extends Model<TipoDeCambio> {
 	final static Logger logger = LoggerFactory.getLogger(TipoDeCambio.class);	
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "tipo_de_cambio_seq")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tipo_de_cambio_seq")
 	@SequenceGenerator(name = "tipo_de_cambio_seq", sequenceName = "tipo_de_cambio_seq" )
 	private long id;
 	@Temporal(TemporalType.DATE)
