@@ -42,6 +42,14 @@ public class EmpresaSerializer<T> extends JSONSerializer<Empresa> {
 			empresa.put("paginaWeb", p.getPaginaWeb());
 			empresa.put("resolucion", p.getResolucion());
 			empresa.put("sucursales", sucursalSerializer.objectToJson(p.getSucursales(), false));
+			// Solo las fechas de validez: nunca el certificado ni la clave privada
+			if (p.getFirmaDigital() != null) {
+				JSONObject firma = new JSONObject();
+				firma.put("validaDesde", p.getFirmaDigital().getValidaDesde() != null ? sdf.format(p.getFirmaDigital().getValidaDesde()) : JSONObject.NULL);
+				firma.put("validaHasta", p.getFirmaDigital().getValidaHasta() != null ? sdf.format(p.getFirmaDigital().getValidaHasta()) : JSONObject.NULL);
+				empresa.put("firmaDigital", firma);
+			} else
+				empresa.put("firmaDigital", JSONObject.NULL);
 		}
 		
 		return empresa;
