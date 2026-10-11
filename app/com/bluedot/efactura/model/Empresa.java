@@ -17,9 +17,16 @@ import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
+import org.hibernate.sql.JoinType;
+
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.security.EmailMessage;
+import com.bluedot.commons.utils.Tuple;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
@@ -147,6 +154,58 @@ public class Empresa extends Model<Empresa>{
 		return find.all();
 	}
 	
+	/**
+	 * Busqueda paginada de empresas.
+	 *
+	 * @param texto
+	 *            busca en rut, razon y nombre comercial (contiene, sin distinguir mayusculas); null = sin filtro
+	 * @param emisorElectronico
+	 *            null = sin filtro
+	 * @param soloConFirma
+	 *            solo empresas con firma digital cargada (las que emiten con este sistema)
+	 * @return lista de la pagina y cantidad total de empresas que cumplen los filtros
+	 */
+	public static Tuple<List<Empresa>, Long> find(String texto, Boolean emisorElectronico, boolean soloConFirma, int page,
+			int pageSize) {
+		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
+
+		if (texto != null && !texto.trim().isEmpty()) {
+			String like = "%" + texto.trim() + "%";
+			q.getCriteria().add(Restrictions.or(Restrictions.ilike("rut", like), Restrictions.ilike("razon", like),
+					Restrictions.ilike("nombreComercial", like)));
+		}
+
+		if (emisorElectronico != null)
+			q.getCriteria().add(Restrictions.eq("emisorElectronico", emisorElectronico));
+
+		if (soloConFirma)
+			q.getCriteria().createAlias("firmaDigital", "firmaDigital", JoinType.INNER_JOIN);
+
+		long rowCount = q.findRowCount();
+
+		q.orderByAsc("rut");
+
+		List<Empresa> list = q.findPage(page, pageSize);
+
+		return new Tuple<List<Empresa>, Long>(list, rowCount);
+	}
+
+	/**
+	 * Empresas que tienen firma digital o CAEs cargados, es decir las que emiten con este sistema. Evita recorrer
+	 * todas las empresas (la tabla incluye la lista de emisores electronicos de DGI, decenas de miles).
+	 */
+	public static List<Empresa> findConFirmaDigitalOCAEs() {
+		DetachedCriteria conFirmaDigital = DetachedCriteria.forClass(FirmaDigital.class, "firma")
+				.setProjection(Projections.property("firma.empresa.id"));
+		DetachedCriteria conCAEs = DetachedCriteria.forClass(CAE.class, "cae")
+				.setProjection(Projections.property("cae.empresa.id"));
+
+		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
+		q.getCriteria().add(Restrictions.or(Subqueries.propertyIn("id", conFirmaDigital), Subqueries.propertyIn("id", conCAEs)));
+
+		return q.findList();
+	}
+
 	public static long count(){
 		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
 		return q.findRowCount();

@@ -25,11 +25,12 @@ public class EmpresaSerializer<T> extends JSONSerializer<Empresa> {
 		JSONObject empresa = new JSONObject();
 		
 		empresa.put("id", p.getId());
-		
+		// rut y razon tambien en la version reducida (CFE, sobres, CAE, reportes) para no tener que buscar la empresa aparte
+		empresa.put("rut", p.getRut());
+		empresa.put("razon", p.getRazon());
+
 		if (!shrinkSerializarion) {
-			empresa.put("rut", p.getRut());
 			empresa.put("nombreComercial", p.getNombreComercial());
-			empresa.put("razon", p.getRazon());
 			empresa.put("mailRecepcion", p.getMailRecepcion());
 			empresa.put("hostRecepcion", p.getHostRecepcion());
 			empresa.put("userRecepcion", p.getUserRecepcion());

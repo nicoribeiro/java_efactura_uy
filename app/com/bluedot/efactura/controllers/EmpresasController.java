@@ -32,7 +32,9 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.IO;
+import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.ThreadMan;
+import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
@@ -171,13 +173,41 @@ public class EmpresasController extends AbstractController {
 		return json(json.toString());
 	}
 	
+	/**
+	 * Lista de empresas.
+	 *
+	 * Con page, pageSize o algun filtro (q, emisorElectronico, conFirma) devuelve una pagina
+	 * {results, count, page, pageSize} ordenada por rut (pageSize maximo 100). 
+	 */
 	public Promise<Result> getEmpresas() throws APIException {
-		
-		List<Empresa> empresas = Empresa.findAll();
-		
-		JSONArray json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresas);
-		
-		return json(json.toString());
+
+		String pageParam = request().getQueryString("page");
+		String pageSizeParam = request().getQueryString("pageSize");
+		String texto = request().getQueryString("q");
+		String emisorElectronicoParam = request().getQueryString("emisorElectronico");
+		boolean conFirma = "true".equalsIgnoreCase(request().getQueryString("conFirma"));
+
+		int page;
+		int pageSize;
+		try {
+			page = pageParam != null ? Integer.parseInt(pageParam) : 1;
+			pageSize = pageSizeParam != null ? Integer.parseInt(pageSizeParam) : 20;
+		} catch (NumberFormatException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("page/pageSize", pageParam + "/" + pageSizeParam);
+		}
+		if (page <= 0)
+			page = 1;
+		if (pageSize <= 0)
+			pageSize = 20;
+		pageSize = Math.min(pageSize, 100);
+
+		Boolean emisorElectronico = emisorElectronicoParam != null ? Boolean.valueOf(emisorElectronicoParam) : null;
+
+		Tuple<List<Empresa>, Long> empresas = Empresa.find(texto, emisorElectronico, conFirma, page, pageSize);
+
+		JSONArray json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresas.item1);
+
+		return json(JSONUtils.createObjectList(json, empresas.item2, page, pageSize).toString());
 	}
 
 

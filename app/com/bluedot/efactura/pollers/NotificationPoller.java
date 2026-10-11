@@ -31,19 +31,27 @@ public class NotificationPoller extends PollerRunner {
 		
 		logger.info("Buscando Empresas ...");
 
-		List<Empresa> empresas = Empresa.findAll();
+		// Solo las empresas que emiten con el sistema (con firma digital o CAEs), no todas las registradas
+		List<Empresa> empresas = Empresa.findConFirmaDigitalOCAEs();
+
+		logger.info(empresas.size() + " empresas con firma digital o CAEs");
 
 		for (Empresa empresa : empresas) {
-			if (empresa.getFirmaDigital() != null)
-				checkFechaVencimientoFirma(empresa);
-			if (empresa.getCaes() != null && !empresa.getCaes().isEmpty())
-				try {
+			// Un error en una empresa (ej: configuracion de mail incompleta) no debe impedir notificar a las demas
+			try {
+				if (empresa.getFirmaDigital() != null)
+					checkFechaVencimientoFirma(empresa);
+			} catch (RuntimeException e) {
+				logger.error("Error chequeando vencimiento de firma de la empresa " + empresa.getRut(), e);
+			}
+			try {
+				if (empresa.getCaes() != null && !empresa.getCaes().isEmpty())
 					checkCAEs(empresa);
-				} catch (APIException e) {
-					e.printStackTrace();
-				}
+			} catch (APIException | RuntimeException e) {
+				logger.error("Error chequeando CAEs de la empresa " + empresa.getRut(), e);
+			}
 		}
-		
+
 		logger.info("Finaliza Procesamiento de Empresas ...");
 		
 	}
