@@ -14,10 +14,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.model.Empresa;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
@@ -91,6 +95,49 @@ public class EmailMessage extends Model<EmailMessage> {
 	}
 	
 	
+	/**
+	 * Emails recibidos por una empresa, del mas nuevo al mas viejo.
+	 * 
+	 * @param texto
+	 *            busca en asunto y remitente (contiene, sin distinguir mayusculas); null = sin filtro
+	 * @param estado
+	 *            emails con al menos un adjunto en ese estado; null = sin filtro
+	 * @param desde
+	 *            fecha de envio mayor o igual; null = sin filtro
+	 * @param hasta
+	 *            fecha de envio menor o igual; null = sin filtro
+	 */
+	public static Tuple<List<EmailMessage>, Long> find(Empresa empresa, String texto, AttachmentEstado estado, Date desde,
+			Date hasta, int page, int pageSize) {
+		DefaultQuery<EmailMessage> q = (DefaultQuery<EmailMessage>) find.query();
+
+		q.getCriteria().add(Restrictions.eq("empresa", empresa));
+
+		if (texto != null && !texto.trim().isEmpty()) {
+			String like = "%" + texto.trim() + "%";
+			q.getCriteria().add(Restrictions.or(Restrictions.ilike("subject", like), Restrictions.ilike("fromEmail", like)));
+		}
+
+		if (estado != null) {
+			DetachedCriteria conAdjuntoEnEstado = DetachedCriteria.forClass(Attachment.class, "adjunto")
+					.add(Restrictions.eq("adjunto.estado", estado))
+					.setProjection(Projections.property("adjunto.emailMessage.id"));
+			q.getCriteria().add(Subqueries.propertyIn("id", conAdjuntoEnEstado));
+		}
+
+		if (desde != null)
+			q.getCriteria().add(Restrictions.ge("sentDate", desde));
+		if (hasta != null)
+			q.getCriteria().add(Restrictions.le("sentDate", hasta));
+
+		long rowCount = q.findRowCount();
+
+		q.orderByDesc("sentDate");
+		q.orderByDesc("id");
+
+		return new Tuple<List<EmailMessage>, Long>(q.findPage(page, pageSize), rowCount);
+	}
+
 	public static List<EmailMessage> findByMessageId(String messageId) {
 
 		DefaultQuery<EmailMessage> q = (DefaultQuery<EmailMessage>) find.query();

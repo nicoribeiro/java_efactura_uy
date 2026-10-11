@@ -175,4 +175,19 @@ public class Attachment extends Model<Attachment> {
 	public void setEmailMessage(EmailMessage emailMessage) {
 		this.emailMessage = emailMessage;
 	}
+
+	/**
+	 * Resumen de los adjuntos de varios emails SIN cargar el contenido (payload puede ser un XML grande).
+	 * 
+	 * @return filas [id, name, estado, timestamp, emailMessageId]
+	 */
+	public static java.util.List<Object[]> findResumenByEmails(java.util.Collection<Long> emailIds) {
+		if (emailIds.isEmpty())
+			return new java.util.LinkedList<Object[]>();
+		return play.db.jpa.JPA.em()
+				.createQuery("select a.id, a.name, a.estado, a.timestamp, a.emailMessage.id from Attachment a"
+						+ " where a.emailMessage.id in :ids order by a.id", Object[].class)
+				.setParameter("ids", emailIds).getResultList();
+	}
+
 }

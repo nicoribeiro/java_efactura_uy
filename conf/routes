@@ -51,6 +51,7 @@ GET      /api/v1/empresa/:rut/documentos/enviarCfeEmpresa        com.bluedot.efa
 POST     /api/v1/empresa/:rut/emailEntrantes    		         com.bluedot.efactura.controllers.EmailController.emailEntrantesTodos(rut:String, accion:String?="NO_ACTION")
 PUT      /api/v1/empresa/:rut/emailEntrantes/:id    		     com.bluedot.efactura.controllers.EmailController.emailEntrantes(rut:String, id:Long, accion:String?="NO_ACTION")
 GET		 /api/v1/empresa/:rut/emailEntrantes   	    	     com.bluedot.efactura.controllers.EmailController.getEmailEntrantes(rut:String, estado:String)
+GET      /api/v1/empresa/:rut/emails                             com.bluedot.efactura.controllers.EmailController.getEmails(rut:String)
 
 ###### SOBRES
 
