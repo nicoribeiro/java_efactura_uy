@@ -60,3 +60,5 @@ CFE_NO_ENCONTRADO=No se encontro un CFE con {0}:{1}
 SOBRE_NO_ENCONTRADO=No se encontro un sobre con {0}:{1}
 UI_NO_ENCONTRADA=No se encontro la UI con {0}:{1}
 TIPO_CAMBIO_NO_ENCONTRADO=No se encuentra tipo de cambio para la {0}:{1}
+ACCESO_EMPRESA_DENEGADO=No tiene acceso a esta empresa
+SOLO_ADMIN=Operacion permitida solo a administradores

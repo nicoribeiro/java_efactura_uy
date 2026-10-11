@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.security.EmpresaAccess;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 
@@ -30,6 +32,7 @@ import play.mvc.Security;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
+@EmpresaAccess
 public class HomologacionController_Adenda extends PruebasController {
 
 	private Empresa empresa;

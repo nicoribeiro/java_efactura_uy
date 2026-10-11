@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.security.EmpresaAccess;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,6 +40,7 @@ import play.mvc.Security;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
+@EmpresaAccess
 public class EmailController extends AbstractController
 {
 

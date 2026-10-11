@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.security.EmpresaAccess;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -26,6 +28,7 @@ import play.mvc.Security;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
+@EmpresaAccess
 @Api(value = "Operaciones de Sobres") 
 public class SobresController extends AbstractController {
 

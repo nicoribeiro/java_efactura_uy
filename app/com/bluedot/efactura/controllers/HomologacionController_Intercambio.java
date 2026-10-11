@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.security.EmpresaAccess;
+
 import java.io.IOException;
 
 import javax.xml.bind.JAXBException;
@@ -34,6 +36,7 @@ import play.mvc.Security;
 
 @ErrorMessage
 @Security.Authenticated(Secured.class)
+@EmpresaAccess
 public class HomologacionController_Intercambio extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(HomologacionController_Intercambio.class);

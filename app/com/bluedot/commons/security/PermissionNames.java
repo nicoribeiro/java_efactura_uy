@@ -19,6 +19,10 @@ public enum PermissionNames {
 	 */
 	MANAGE_SETTINGS_ON_ACCOUNT("manage_settings_on_account_{0}"),
 	/**
+	 * Acceso a una empresa de efactura ({0} = RUT)
+	 */
+	EMPRESA_ACCESS("access_empresa_{0}"),
+	/**
 	 * 
 	 */
 	MASTER_ADMIN("master_admin");

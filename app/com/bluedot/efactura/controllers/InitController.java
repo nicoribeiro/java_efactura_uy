@@ -1,6 +1,10 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.security.EmpresaAccess;
+
 import com.bluedot.commons.error.APIException;
+import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DatabaseExecutor;
 import com.bluedot.commons.utils.DatabaseExecutor.PromiseBlock;
 import com.bluedot.commons.utils.ThreadMan;
@@ -12,7 +16,11 @@ import com.bluedot.efactura.model.UI;
 import play.libs.F.Promise;
 import play.mvc.Controller;
 import play.mvc.Result;
+import play.mvc.Security;
 
+@ErrorMessage
+@Security.Authenticated(Secured.class)
+@EmpresaAccess
 public class InitController extends Controller {
 
 	public Promise<Result> initDatabase() {

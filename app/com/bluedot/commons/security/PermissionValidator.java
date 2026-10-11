@@ -26,7 +26,9 @@ public class PermissionValidator
 		if (ctx.args.containsKey("sessionUser"))
 			return (User) ctx.args.get("sessionUser");
 
-		if (ctx.request().getHeader(Secured.HMAC_KEY_HEADER) == null && ctx.request().getHeader(Secured.AUTH_HEADER) == null)
+		// Secured tambien acepta el token como ?api_key=
+		if (ctx.request().getHeader(Secured.HMAC_KEY_HEADER) == null && ctx.request().getHeader(Secured.AUTH_HEADER) == null
+				&& ctx.request().getQueryString("api_key") == null)
 			throw APIException.raise(APIErrors.NO_AUTH_METHOD_DEFINED);
 
 		if (RequestUtils.isHMACSHA256Request(ctx.request()))

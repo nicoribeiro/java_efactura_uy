@@ -1,5 +1,8 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.security.AccesoEmpresa;
+import com.bluedot.efactura.security.EmpresaAccess;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,7 +33,9 @@ import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.security.PermissionValidator;
 import com.bluedot.commons.security.Secured;
+import com.bluedot.commons.security.User;
 import com.bluedot.commons.utils.IO;
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.ThreadMan;
@@ -54,6 +59,7 @@ import play.mvc.Security;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
+@EmpresaAccess
 @Api(value = "Operaciones de Empresa") 
 public class EmpresasController extends AbstractController {
 
@@ -203,7 +209,22 @@ public class EmpresasController extends AbstractController {
 
 		Boolean emisorElectronico = emisorElectronicoParam != null ? Boolean.valueOf(emisorElectronicoParam) : null;
 
-		Tuple<List<Empresa>, Long> empresas = Empresa.find(texto, emisorElectronico, conFirma, page, pageSize);
+		// Control de acceso: un usuario que no es ADMIN solo ve sus empresas (en modo log solo se registra)
+		List<String> ruts = null;
+		AccesoEmpresa.Modo modo = AccesoEmpresa.modo();
+		if (modo != AccesoEmpresa.Modo.OFF) {
+			User user = PermissionValidator.getSessionUser(ctx());
+			if (!AccesoEmpresa.esAdmin(user)) {
+				List<String> permitidas = AccesoEmpresa.rutsPermitidos(user);
+				if (modo == AccesoEmpresa.Modo.ENFORCE)
+					ruts = permitidas;
+				else
+					logger.warn("SERIA FILTRADO: usuario " + (user != null ? user.getEmailAddress() : "desconocido")
+							+ " lista empresas con acceso a " + permitidas.size() + " empresas (GET /api/v1/empresa)");
+			}
+		}
+
+		Tuple<List<Empresa>, Long> empresas = Empresa.find(texto, emisorElectronico, conFirma, ruts, page, pageSize);
 
 		JSONArray json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresas.item1);
 

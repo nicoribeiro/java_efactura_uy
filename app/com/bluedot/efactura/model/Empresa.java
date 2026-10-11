@@ -163,11 +163,19 @@ public class Empresa extends Model<Empresa>{
 	 *            null = sin filtro
 	 * @param soloConFirma
 	 *            solo empresas con firma digital cargada (las que emiten con este sistema)
+	 * @param ruts
+	 *            solo estas empresas (control de acceso); null = sin restriccion, vacio = ninguna
 	 * @return lista de la pagina y cantidad total de empresas que cumplen los filtros
 	 */
-	public static Tuple<List<Empresa>, Long> find(String texto, Boolean emisorElectronico, boolean soloConFirma, int page,
-			int pageSize) {
+	public static Tuple<List<Empresa>, Long> find(String texto, Boolean emisorElectronico, boolean soloConFirma,
+			java.util.Collection<String> ruts, int page, int pageSize) {
+		if (ruts != null && ruts.isEmpty())
+			return new Tuple<List<Empresa>, Long>(new java.util.LinkedList<Empresa>(), 0l);
+
 		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
+
+		if (ruts != null)
+			q.getCriteria().add(Restrictions.in("rut", ruts));
 
 		if (texto != null && !texto.trim().isEmpty()) {
 			String like = "%" + texto.trim() + "%";

@@ -126,7 +126,12 @@ public class APIException extends Throwable
 		SUCURSAL_EXISTE(124, 200, true),
 		FIRMA_DIGITAL_VENCIDA(125, 200, true),
 		NO_EXISTE_EMAIL(126,200,true), 
-		TIPO_CAMBIO_NO_ENCONTRADO(127,200,true)
+		TIPO_CAMBIO_NO_ENCONTRADO(127,200,true),
+		/*
+		 * Control de acceso por empresa: 403 (no 401) para no confundir con una sesion vencida
+		 */
+		ACCESO_EMPRESA_DENEGADO(128, 403, false),
+		SOLO_ADMIN(129, 403, false)
 		;
 
 

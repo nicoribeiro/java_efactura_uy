@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.security.EmpresaAccess;
+
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
@@ -41,6 +43,7 @@ import java.util.List;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
+@EmpresaAccess
 @Api(value = "Operaciones de Documentos") 
 public class DocumentController extends AbstractController {
 
