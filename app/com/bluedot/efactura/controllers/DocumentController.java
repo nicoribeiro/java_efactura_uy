@@ -416,6 +416,61 @@ public class DocumentController extends AbstractController {
 
 	}
 	
+	/**
+	 * Sobre (emitido o recibido segun direccion) en el que viajo un CFE, con su estado y las respuestas de DGI y de la
+	 * empresa receptora. Solo lectura.
+	 * 
+	 * Parametros: idTipoDoc, serie, nro, direccion (EMITIDO por defecto) y rutExterno (RUT del emisor, para RECIBIDO).
+	 * Se busca a partir del CFE porque Sobre.findById busca en las tablas de emitidos y recibidos a la vez y un mismo
+	 * id puede existir en ambas.
+	 */
+	//TODO agregar validacion de que el usuario tiene permisos sobre esta empresa (cubierto por @EmpresaAccess)
+	public Promise<Result> getSobreDocumento(String rut) throws APIException {
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		Integer idTipoDoc;
+		Integer nro;
+		DireccionDocumento direccion;
+		try {
+			idTipoDoc = request().getQueryString("idTipoDoc") != null ? Integer.parseInt(request().getQueryString("idTipoDoc")) : null;
+			nro = request().getQueryString("nro") != null ? Integer.parseInt(request().getQueryString("nro")) : null;
+			direccion = request().getQueryString("direccion") != null ? DireccionDocumento.valueOf(request().getQueryString("direccion")) : DireccionDocumento.EMITIDO;
+		} catch (IllegalArgumentException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("idTipoDoc, nro o direccion invalidos");
+		}
+		String serie = request().getQueryString("serie");
+		String rutExterno = request().getQueryString("rutExterno");
+
+		if (idTipoDoc == null || nro == null || serie == null)
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("idTipoDoc, serie y nro son obligatorios");
+
+		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+		if (tipo == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
+
+		List<CFE> cfes;
+		if (direccion == DireccionDocumento.EMITIDO)
+			cfes = CFE.findByIdEmitido(empresa, tipo, serie, nro, null, true);
+		else {
+			if (rutExterno == null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("rutExterno es obligatorio para documentos recibidos");
+			cfes = CFE.findById(Empresa.findByRUT(rutExterno, true), tipo, serie, nro, null, empresa, true, direccion);
+		}
+
+		if (cfes.size() != 1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC", rut + "-" + nro + "-" + serie + "-" + idTipoDoc)
+					.setDetailMessage(cfes.isEmpty() ? "No exite CFE" : "No identifica a un unico cfe");
+
+		CFE cfe = cfes.get(0);
+		Sobre sobre = direccion == DireccionDocumento.EMITIDO ? cfe.getSobreEmitido() : cfe.getSobreRecibido();
+
+		JSONObject result = new JSONObject();
+		result.put("direccion", direccion.name());
+		result.put("sobre", sobre != null ? EfacturaJSONSerializerProvider.getSobreSerializer().objectToJson(sobre, false) : JSONObject.NULL);
+
+		return json(result.toString());
+	}
+
 	public Promise<Result> getDocumentos(String rut) throws APIException {
 		Empresa empresa = Empresa.findByRUT(rut, true);
 

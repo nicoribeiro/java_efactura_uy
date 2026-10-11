@@ -38,7 +38,7 @@ public class SobreSerializer<T> extends JSONSerializer<Sobre> {
 			sobreJson.put("empresaReceptora", sobre.getEmpresaReceptora()!=null? empresaSerializer.objectToJson(sobre.getEmpresaReceptora(), true): JSONObject.NULL);
 			sobreJson.put("empresaEmisora", sobre.getEmpresaEmisora()!=null? empresaSerializer.objectToJson(sobre.getEmpresaEmisora(), true): JSONObject.NULL);
 			sobreJson.put("estadoEmpresa", sobre.getEstadoEmpresa());
-			sobreJson.put("fecha", sdf.format(sobre.getFecha()));
+			sobreJson.put("fecha", sobre.getFecha() != null ? sdf.format(sobre.getFecha()) : JSONObject.NULL);
 			sobreJson.put("idEmisor", sobre.getIdEmisor());
 			sobreJson.put("motivo", sobre.getMotivo());
 			sobreJson.put("nombreArchivo", sobre.getNombreArchivo());
@@ -63,8 +63,8 @@ public class SobreSerializer<T> extends JSONSerializer<Sobre> {
 			
 			if (sobre instanceof SobreRecibido) {
 				SobreRecibido sobreRecibido = (SobreRecibido) sobre;
-				sobreJson.put("timestampRecibido", sdf.format(sobreRecibido.getTimestampRecibido()));
-				sobreJson.put("timestampProcesado", sdf.format(sobreRecibido.getTimestampRecibido()));
+				sobreJson.put("timestampRecibido", sobreRecibido.getTimestampRecibido() != null ? sdf.format(sobreRecibido.getTimestampRecibido()) : JSONObject.NULL);
+				sobreJson.put("timestampProcesado", sobreRecibido.getTimestampProcesado() != null ? sdf.format(sobreRecibido.getTimestampProcesado()) : JSONObject.NULL);
 				sobreJson.put("cfes", cfeSerializer.objectToJson(sobreRecibido.getCfes(), true));
 			}
 		
