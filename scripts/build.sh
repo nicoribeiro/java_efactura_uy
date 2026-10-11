@@ -13,7 +13,7 @@ INCREMENT=0
 VERSION=$MAJOR.$(($MINOR + $INCREMENT))
 BUILD_LOG=$BUILDS/build.log
 BUILD_NAME=java_efactura_uy-$VERSION.zip
-
+JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home
 
 if [ ! -d "$BUILDS" ]; then
 	# Control will enter here if $BUILDS doesn't exist.
