@@ -87,6 +87,16 @@ public class EmailAttachmentReceiver {
 			if (end > messageCount)
 				end = messageCount;
 
+			// El offset puede quedar mas alla del final si se borraron/movieron mensajes del INBOX
+			if (offset > end) {
+				if (offset > messageCount + 1)
+					logger.warn("Offset de mail (" + offset + ") mayor que la cantidad de mensajes en INBOX ("
+							+ messageCount + ") para " + userName + "@" + host);
+				folderInbox.close(false);
+				store.close();
+				return emails;
+			}
+
 			// fetches new messages from server
 			Message[] arrayMessages = folderInbox.getMessages(offset, end);
 
