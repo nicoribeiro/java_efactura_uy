@@ -12,7 +12,6 @@ import com.bluedot.efactura.model.UI;
 import play.libs.F.Promise;
 import play.mvc.Controller;
 import play.mvc.Result;
-import views.html.index;
 
 public class InitController extends Controller {
 
