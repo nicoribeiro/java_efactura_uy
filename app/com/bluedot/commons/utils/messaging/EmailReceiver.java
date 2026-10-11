@@ -34,7 +34,11 @@ public class EmailReceiver {
         // server setting
         properties.put(String.format("mail.%s.host", protocol), host);
         properties.put(String.format("mail.%s.port", protocol), port);
- 
+
+        // timeouts (ms) para no colgar el poller si el servidor no responde
+        properties.put(String.format("mail.%s.connectiontimeout", protocol), "30000");
+        properties.put(String.format("mail.%s.timeout", protocol), "60000");
+
         // SSL setting
         if (ssl){
         properties.setProperty(
