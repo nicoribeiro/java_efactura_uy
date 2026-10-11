@@ -119,9 +119,9 @@ public class Settings
 
 		properties = new Properties();
 		if (System.getProperty("settingsPath")!=null)
-			properties.load(new FileInputStream(System.getProperty("settingsPath")));
+			properties.load(new FileInputStream(IO.resolve(System.getProperty("settingsPath"))));
 		else
-			properties.load(new FileInputStream(PROPERTIES_PATH));
+			properties.load(new FileInputStream(IO.resolve(PROPERTIES_PATH)));
 
 	}
 

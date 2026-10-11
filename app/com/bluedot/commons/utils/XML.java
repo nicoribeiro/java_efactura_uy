@@ -87,7 +87,7 @@ public class XML {
 
 	public static Document readDocument(String filepath)
 			throws ParserConfigurationException, SAXException, IOException {
-		File file = new File(filepath);
+		File file = IO.resolve(filepath);
 		return XML.readDocument(file);
 	}
 

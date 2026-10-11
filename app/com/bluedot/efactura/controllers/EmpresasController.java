@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
@@ -32,6 +31,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
+import com.bluedot.commons.utils.IO;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.model.Empresa;
@@ -77,7 +77,7 @@ public class EmpresasController extends AbstractController {
 	public Promise<Result> cargarEmpresas(String path) throws APIException {
 		try {
 
-			File fXmlFile = new File(path);
+			File fXmlFile = IO.resolve(path);
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			Document doc;
@@ -241,7 +241,7 @@ public class EmpresasController extends AbstractController {
 
 
 		if (logoPath!=null){
-			Path path = Paths.get(logoPath);
+			Path path = IO.resolve(logoPath).toPath();
 			try {
 				byte[] logo = Files.readAllBytes(path);
 				empresa.setLogo(logo);
@@ -346,7 +346,7 @@ public class EmpresasController extends AbstractController {
 			empresa.setRazon(razon);
 		
 		if (logoPath!=null){
-			Path path = Paths.get(logoPath);
+			Path path = IO.resolve(logoPath).toPath();
 			try {
 				byte[] logo = Files.readAllBytes(path);
 				empresa.setLogo(logo);
