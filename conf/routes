@@ -197,6 +197,7 @@ PUT      /api/v1/users/:uid                                      com.bluedot.com
 GET      /api/v1/users/:uid/acl                                  com.bluedot.commons.controllers.UserController.getAccessLevels(uid: Int)
 # Acceso a empresas de efactura (solo ADMIN)
 GET      /api/v1/users/:uid/empresas                             com.bluedot.efactura.controllers.AccesoEmpresasController.getEmpresasUsuario(uid: Int)
+GET      /api/v1/empresa/:rut/usuarios                           com.bluedot.efactura.controllers.AccesoEmpresasController.getUsuariosEmpresa(rut: String)
 PUT      /api/v1/users/:uid/empresas/:rut                        com.bluedot.efactura.controllers.AccesoEmpresasController.agregarEmpresa(uid: Int, rut: String)
 DELETE   /api/v1/users/:uid/empresas/:rut                        com.bluedot.efactura.controllers.AccesoEmpresasController.quitarEmpresa(uid: Int, rut: String)
 GET      /api/v1/users/:uid/credentials/regenerate               com.bluedot.commons.controllers.UserController.regenerateCredentials(uid: Int)

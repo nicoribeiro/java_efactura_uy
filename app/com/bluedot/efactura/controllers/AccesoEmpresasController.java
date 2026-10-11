@@ -1,6 +1,8 @@
 package com.bluedot.efactura.controllers;
 
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -14,6 +16,7 @@ import com.bluedot.commons.security.Permission;
 import com.bluedot.commons.security.PermissionValidator;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.security.User;
+import com.bluedot.commons.security.User.Role;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.security.AccesoEmpresa;
 import com.bluedot.efactura.security.EmpresaAccess;
@@ -24,8 +27,9 @@ import play.mvc.Result;
 import play.mvc.Security;
 
 /**
- * Asignacion de empresas a usuarios (permiso access_empresa_{rut}). Solo ADMIN, siempre: lo exige
- * {@link EmpresaAccess} para /api/v1/users/{uid}/empresas sin importar seguridad.accesoEmpresa.
+ * Asignacion de empresas a usuarios (permiso access_empresa_{rut}) y usuarios de una empresa. Solo ADMIN, siempre:
+ * lo exige {@link EmpresaAccess} para /api/v1/users/{uid}/empresas y /api/v1/empresa/{rut}/usuarios sin importar
+ * seguridad.accesoEmpresa.
  */
 @ErrorMessage
 @Tx
@@ -58,6 +62,41 @@ public class AccesoEmpresasController extends AbstractController {
 		result.put("empresas", empresas);
 
 		return json(result.toString());
+	}
+
+	/**
+	 * Usuarios con acceso a la empresa: los ADMIN (acceso total) y los que tienen el permiso de la empresa.
+	 */
+	public Promise<Result> getUsuariosEmpresa(String rut) throws APIException {
+		Empresa.findByRUT(rut, true);
+
+		String permisoId = AccesoEmpresa.permisoEmpresa(rut);
+		Map<Integer, JSONObject> usuarios = new LinkedHashMap<Integer, JSONObject>();
+
+		for (User user : User.find(Role.ADMIN))
+			usuarios.put(user.getId(), usuarioJson(user, "ADMIN"));
+
+		// findWithPermissionId busca por prefijo: se filtra por permiso exacto
+		for (User user : User.findWithPermissionId(permisoId))
+			if (!usuarios.containsKey(user.getId()) && user.hasPermission(permisoId))
+				usuarios.put(user.getId(), usuarioJson(user, "PERMISO"));
+
+		JSONArray result = new JSONArray();
+		for (JSONObject usuario : usuarios.values())
+			result.put(usuario);
+
+		return json(result.toString());
+	}
+
+	private static JSONObject usuarioJson(User user, String acceso) {
+		JSONObject json = new JSONObject();
+		json.put("id", user.getId());
+		json.put("emailAddress", user.getEmailAddress());
+		json.put("firstName", user.getFirstName() != null ? user.getFirstName() : JSONObject.NULL);
+		json.put("lastName", user.getLastName() != null ? user.getLastName() : JSONObject.NULL);
+		json.put("role", user.getRole().name());
+		json.put("acceso", acceso);
+		return json;
 	}
 
 	/**
