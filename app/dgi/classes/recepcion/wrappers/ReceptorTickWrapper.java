@@ -24,6 +24,11 @@ public class ReceptorTickWrapper implements ReceptorInterface {
 	public String getDocRecep() {
 		return delegate.getDocRecep();
 	}
+	
+	@Override
+	public String getDocRecepExt() {
+		return delegate.getDocRecepExt();
+	}
 
 	@Override
 	public String getRznSocRecep() {
@@ -84,6 +89,11 @@ public class ReceptorTickWrapper implements ReceptorInterface {
 	@Override
 	public void setDocRecep(String value) {
 		delegate.setDocRecep(value);
+	}
+	
+	@Override
+	public void setDocRecepExt(String value) {
+		delegate.setDocRecepExt(value);
 	}
 
 	@Override

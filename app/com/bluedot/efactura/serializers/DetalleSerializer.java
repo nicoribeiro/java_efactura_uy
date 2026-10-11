@@ -24,6 +24,10 @@ public class DetalleSerializer<T> extends JSONSerializer<Detalle> {
 			cfeJson.put("nroLinea", detalle.getNroLinea());
 			cfeJson.put("precioUnitario", detalle.getPrecioUnitario());
 			cfeJson.put("unidadMedida", detalle.getUnidadMedida());
+			cfeJson.put("recargoMonto", detalle.getRecargoMonto());
+			cfeJson.put("recargoPct", detalle.getRecargoPorcentaje());
+			cfeJson.put("descuentoMonto", detalle.getDescuentoMonto());
+			cfeJson.put("descuentoPct", detalle.getDescuentoPorcentaje());
 		}
 		return cfeJson;
 	}

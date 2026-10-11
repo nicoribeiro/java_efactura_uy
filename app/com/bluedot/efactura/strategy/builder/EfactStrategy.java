@@ -168,7 +168,7 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 	}
 
 	@Override
-	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
+	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String docRecepExt,
 			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, String pdfMailAddress, String CompraID) throws APIException {
 		
 		ReceptorInterface receptor = getReceptor();

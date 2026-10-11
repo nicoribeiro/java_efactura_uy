@@ -126,6 +126,15 @@ public class EFactStrategy extends CommonStrategy {
 			item.put("MontoItem", String.valueOf(itemDetFact.getMontoItem()));
 			item.put("DscItem", String.valueOf(itemDetFact.getDscItem()));
 			
+			if (itemDetFact.getDescuentoPct() != null)
+				item.put("DescuentoPct", String.valueOf(itemDetFact.getDescuentoPct()));
+			if (itemDetFact.getDescuentoMonto() != null)
+				item.put("DescuentoMonto", String.valueOf(itemDetFact.getDescuentoMonto()));
+			
+			if (itemDetFact.getRecargoPct() != null)
+				item.put("RecargoPct", String.valueOf(itemDetFact.getRecargoPct()));
+			if (itemDetFact.getRecargoMnt() != null)
+				item.put("RecargoMnt", String.valueOf(itemDetFact.getRecargoMnt()));		
 			
 			//TODO soportar mas de un CodItem
 			if (itemDetFact.getCodItems()!=null &&  itemDetFact.getCodItems().size()>0){ 

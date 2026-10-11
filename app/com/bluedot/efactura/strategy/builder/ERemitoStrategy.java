@@ -159,7 +159,7 @@ public class ERemitoStrategy extends CommonStrategy implements CFEStrategy {
 	}
 
 	@Override
-	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String rznSocRecep,
+	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String docRecepExt, String rznSocRecep,
 			String dirRecep, String ciudadRecep, String deptoRecep, String pdfMailAddress, String CompraID) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
@@ -169,6 +169,8 @@ public class ERemitoStrategy extends CommonStrategy implements CFEStrategy {
 			receptor.setCodPaisRecep(codPaisRecep);
 		if (docRecep != null)
 			receptor.setDocRecep(docRecep);
+		if (docRecepExt != null)
+			receptor.setDocRecepExt(docRecepExt);
 		if (dirRecep != null)
 			receptor.setDirRecep(dirRecep);
 		if (rznSocRecep != null)

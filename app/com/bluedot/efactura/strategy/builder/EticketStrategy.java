@@ -168,7 +168,7 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 	}
 
 	@Override
-	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
+	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String docRecepExt,
 			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, String pdfMailAddress, String CompraID) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
@@ -177,23 +177,33 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 			if (tipoDocRecep==null)
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("tipoDocRecep");
 			
-			if (tipoDocRecep == TipoDocumento.RUC)
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("tipoDocRecep").setDetailMessage("Deberia ser distinto de 2 (RUC)");
-
 			if (codPaisRecep == null)
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("codPaisRecep");
-
-			if ((tipoDocRecep==TipoDocumento.RUC || tipoDocRecep==TipoDocumento.CI)  && !codPaisRecep.equals("UY"))
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("codPaisRecep")
-						.setDetailMessage("Debe ser UY");
-
-			if (tipoDocRecep==TipoDocumento.DNI  && (codPaisRecep.equals("AR") || codPaisRecep.equals("BR") || codPaisRecep.equals("CL") || codPaisRecep.equals("PY"))   )
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("codPaisRecep")
-						.setDetailMessage("Debe ser UY");
 			
-			if (docRecep == null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecep");
-
+			switch (tipoDocRecep) {
+			case RUC:
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("tipoDocRecep").setDetailMessage("Deberia ser distinto de 2 (RUC)");
+			case CI:
+				if (!codPaisRecep.equals("UY"))
+					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("codPaisRecep").setDetailMessage("Debe ser UY");
+				if (docRecep == null)
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecep");
+				break;
+			case DNI:
+				if ((!codPaisRecep.equals("AR") && !codPaisRecep.equals("BR") && !codPaisRecep.equals("CL") && !codPaisRecep.equals("PY"))   )
+					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("codPaisRecep").setDetailMessage("Debe ser AR o BR o CL o PY");
+				if (docRecepExt == null)
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecepExt");
+			case OTROS:
+				if (docRecepExt == null)
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecepExt");
+				break;
+			
+			case PASAPORTE:
+				if (docRecepExt == null)
+					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecepExt");
+				break;
+			}
 
 		}
 
@@ -203,6 +213,8 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 			receptor.setCodPaisRecep(codPaisRecep);
 		if (docRecep != null)
 			receptor.setDocRecep(docRecep);
+		if (docRecepExt != null)
+			receptor.setDocRecepExt(docRecepExt);
 		if (dirRecep != null)
 			receptor.setDirRecep(dirRecep);
 		if (rznSocRecep != null)

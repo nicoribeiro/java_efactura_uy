@@ -53,6 +53,26 @@ public interface ReceptorInterface {
 	 *     
 	 */
 	void setDocRecep(String value);
+	
+	/**
+	 * Gets the value of the docRecepExt property.
+	 * 
+	 * @return
+	 *     possible object is
+	 *     {@link String }
+	 *     
+	 */
+	String getDocRecepExt();
+
+	/**
+	 * Sets the value of the docRecepExt property.
+	 * 
+	 * @param value
+	 *     allowed object is
+	 *     {@link String }
+	 *     
+	 */
+	void setDocRecepExt(String value);
 
 	/**
 	 * Gets the value of the rznSocRecep property.

@@ -137,7 +137,7 @@ public interface CFEStrategy {
 
 	CFE getCFE();
 
-	void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep,
+	void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String docRecepExt,
 			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, String mailPdfAddress, String compraID) throws APIException;
 
 	ComplFiscalType getComplementoFiscal();

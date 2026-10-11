@@ -24,6 +24,11 @@ public class ReceptorFactWrapper implements ReceptorInterface {
 	public String getDocRecep() {
 		return delegate.getDocRecep();
 	}
+	
+	@Override
+	public String getDocRecepExt() {
+		return "";
+	}
 
 	@Override
 	public String getRznSocRecep() {
@@ -84,6 +89,11 @@ public class ReceptorFactWrapper implements ReceptorInterface {
 	@Override
 	public void setDocRecep(String value) {
 		delegate.setDocRecep(value);
+	}
+
+	@Override
+	public void setDocRecepExt(String value) {
+		
 	}
 
 	@Override

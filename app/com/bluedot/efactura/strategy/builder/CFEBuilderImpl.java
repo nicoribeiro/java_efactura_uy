@@ -113,6 +113,15 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 				detalle.setTpoCod(tpoCod);
 			}
 			
+			if (itemJson.has("RecargoPct"))
+				item.setRecargoPct(new BigDecimal(Commons.safeGetString(itemJson,"RecargoPct")));
+			if (itemJson.has("RecargoMnt"))
+				item.setRecargoMnt(new BigDecimal(Commons.safeGetString(itemJson,"RecargoMnt")));
+			if (itemJson.has("DescuentoPct"))
+				item.setDescuentoPct(new BigDecimal(Commons.safeGetString(itemJson,"DescuentoPct")));
+			if (itemJson.has("DescuentoMonto"))
+				item.setDescuentoMonto(new BigDecimal(Commons.safeGetString(itemJson,"DescuentoMonto")));
+
 			strategy.getCFE().getDetalle().add(detalle);
 		}
 	}
@@ -125,6 +134,8 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		String CodPaisRecep = receptorJson.has("CodPaisRecep") ? receptorJson.getString("CodPaisRecep") : null;
 
 		String DocRecep = receptorJson.has("DocRecep") ? receptorJson.getString("DocRecep") : null;
+		
+		String DocRecepExt = receptorJson.has("DocRecepExt") ? receptorJson.getString("DocRecepExt") : null;
 
 		String RznSocRecep = receptorJson.has("RznSocRecep") ? receptorJson.getString("RznSocRecep") : null;
 
@@ -153,7 +164,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 			mailPdfAddress = result.length() > 0 ? result.substring(0, result.length() - 1) : "";
 		}
 		
-		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep, mailPdfAddress, CompraID);
+		strategy.buildReceptor(TipoDocRecep, CodPaisRecep, DocRecep, DocRecepExt, RznSocRecep, DirRecep, CiudadRecep, DeptoRecep, mailPdfAddress, CompraID);
 		
 	}
 
