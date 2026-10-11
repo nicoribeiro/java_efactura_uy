@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -35,6 +36,7 @@ public class Attachment extends Model<Attachment> {
 	@SequenceGenerator(name = "attachment_seq", sequenceName = "attachment_seq" )
 	private int id;
 
+	@Column(columnDefinition = "TEXT")
 	private String url;
 
 	@Enumerated(EnumType.STRING)
@@ -43,10 +45,12 @@ public class Attachment extends Model<Attachment> {
 	@Lob
 	private String payload;
 
+	@Column(columnDefinition = "TEXT")
 	private String createdBy;
 
 	private long timestamp;
 	
+	@Column(columnDefinition = "TEXT")
 	private String name;
 	
 	@Enumerated(EnumType.STRING)

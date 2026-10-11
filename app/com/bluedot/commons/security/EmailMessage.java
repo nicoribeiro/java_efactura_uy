@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -40,8 +41,11 @@ public class EmailMessage extends Model<EmailMessage> {
 	@SequenceGenerator(name = "email_message_seq", sequenceName = "email_message_seq" )
 	private long id;
 
+	@Column(columnDefinition = "TEXT")
 	private String messageId;
+	@Column(columnDefinition = "TEXT")
 	private String fromEmail;
+	@Column(columnDefinition = "TEXT")
 	private String subject;
 	private Date sentDate;
 	private String messageContent;

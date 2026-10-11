@@ -224,7 +224,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 
 						@Override
 						public FolderSyncState getState(String folderName) {
-							EmailFolderState state = EmailFolderState.findByEmpresaYCarpeta(empresa, folderName);
+							EmailFolderState state = EmailFolderState.findByEmpresaYCarpeta(getEmpresa(), folderName);
 							return state == null ? null : new FolderSyncState(state.getUidValidity(), state.getLastUid());
 						}
 
@@ -235,9 +235,9 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 										+ uidValidity + " lastUid=" + lastUid);
 								return;
 							}
-							EmailFolderState state = EmailFolderState.findByEmpresaYCarpeta(empresa, folderName);
+							EmailFolderState state = EmailFolderState.findByEmpresaYCarpeta(getEmpresa(), folderName);
 							if (state == null) {
-								state = new EmailFolderState(empresa, folderName);
+								state = new EmailFolderState(getEmpresa(), folderName);
 								state.setUidValidity(uidValidity);
 								state.setLastUid(lastUid);
 								state.setUltimaSincronizacion(new Date());
@@ -254,7 +254,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						@Override
 						public void onMessage(String folderName, long uid, Email email) throws Exception {
 							if (dryRun) {
-								boolean yaProcesado = !EmailMessage.findByMessageId(email.getMessageId(), empresa).isEmpty();
+								boolean yaProcesado = !EmailMessage.findByMessageId(email.getMessageId(), getEmpresa()).isEmpty();
 								StringBuilder adjuntos = new StringBuilder();
 								for (com.bluedot.commons.utils.messaging.Attachment attachment : email.getAttachments())
 									adjuntos.append(adjuntos.length() == 0 ? "" : ", ").append(attachment.getName());
@@ -268,9 +268,13 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 									+ email.getMessageId() + " adjuntos=" + email.getAttachments().size());
 							try {
 								emailsModelo.addAll(procesarEmails(Collections.singletonList(email), false));
-							} catch (APIException e) {
+							} catch (Throwable e) {
+								// Si fallo el commit (ej: dato invalido) la transaccion queda inactiva y la sesion con la
+								// entidad que fallo: sin recuperarla, todos los mensajes siguientes y el estado de la
+								// carpeta tambien fallan
+								recuperarTransaccion();
 								// APIException extiende Throwable, se envuelve para que el receiver la loguee
-								throw new Exception(e.getMessage(), e);
+								throw e instanceof Exception ? (Exception) e : new Exception(e.getMessage(), e);
 							}
 						}
 					});
@@ -284,6 +288,20 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	}
 	
 	
+	/**
+	 * Deja la transaccion en un estado usable despues de un error: rollback si sigue activa, limpia el persistence
+	 * context (si no, Hibernate reintenta en el proximo flush la operacion que fallo), abre una nueva y vuelve a cargar
+	 * la empresa.
+	 */
+	private void recuperarTransaccion() {
+		javax.persistence.EntityManager em = play.db.jpa.JPA.em();
+		if (em.getTransaction().isActive())
+			em.getTransaction().rollback();
+		em.clear();
+		em.getTransaction().begin();
+		this.setEmpresa(Empresa.findByRUT(this.getEmpresa().getRut()));
+	}
+
 	private List<EmailMessage> procesarEmails(List<Email> emails, boolean retry) throws APIException {
 	
 		int i = 1;
@@ -559,8 +577,7 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			/*
 			 * si hubo una excepcion en el procesamiento del attachment debo rollbaquear y setear el estado del attachment a PROCESADO_ERROR
 			 */
-			play.db.jpa.JPA.em().getTransaction().rollback();
-			play.db.jpa.JPA.em().getTransaction().begin();
+			recuperarTransaccion();
 			Attachment attachmentFromBD = Attachment.findById(attachmentId);
 			attachmentFromBD.setEstado(AttachmentEstado.PROCESADO_ERROR);
 			attachmentFromBD.update();
