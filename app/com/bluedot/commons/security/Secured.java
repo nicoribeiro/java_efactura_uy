@@ -77,6 +77,12 @@ public class Secured extends Security.Authenticator
 		}
 		if (session != null && session.isValid())
 		{
+			if (!ExpiracionSesion.verificar(session, ctx.request().method() + " " + ctx.request().path()))
+			{
+				ctx.args.put("error_cause", "La sesion vencio, vuelva a ingresar");
+				return null;
+			}
+
 //			Account account = session.getUser().getMasterAccount();
 //			if(account.getValidated()==null || !account.getValidated())
 //			{
