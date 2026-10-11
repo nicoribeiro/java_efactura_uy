@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
@@ -28,6 +30,18 @@ import play.mvc.Security;
 public class CAEController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(CAEController.class);
+
+	/**
+	 * CAEs de la empresa (todos, incluidos vencidos y anulados), con su uso
+	 */
+	//TODO agregar validacion de que el usuario tiene permisos sobre esta emepresa
+	public Promise<Result> getCAEs(String rut) throws APIException {
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		JSONArray json = EfacturaJSONSerializerProvider.getCAESerializer().objectToJson(CAE.findByEmpresa(empresa));
+
+		return json(json.toString());
+	}
 
 	//TODO agregar validacion de que el usuario tiene permisos sobre esta emepresa
 	public Promise<Result> addCAE(String rut) throws APIException {

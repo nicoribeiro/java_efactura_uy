@@ -1,6 +1,7 @@
 package com.bluedot.efactura.model;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -11,6 +12,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
+import org.hibernate.criterion.Restrictions;
+
+import com.play4jpa.jpa.models.DefaultQuery;
+import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
 import io.swagger.annotations.ApiModel;
@@ -112,6 +117,19 @@ public class CAE extends Model<CAE>{
 
 	public void setNro(long nro) {
 		this.nro = nro;
+	}
+
+	private static Finder<Integer, CAE> find = new Finder<Integer, CAE>(Integer.class, CAE.class);
+
+	/**
+	 * CAEs de una empresa ordenados por tipo de documento y numero inicial
+	 */
+	public static List<CAE> findByEmpresa(Empresa empresa) {
+		DefaultQuery<CAE> q = (DefaultQuery<CAE>) find.query();
+		q.getCriteria().add(Restrictions.eq("empresa", empresa));
+		q.orderByAsc("tipo");
+		q.orderByAsc("inicial");
+		return q.findList();
 	}
 
 	public TipoDoc getTipo() {

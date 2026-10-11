@@ -63,6 +63,7 @@ GET      /api/v1/empresa/:rut/sobre/enviarSobreEmpresa           com.bluedot.efa
 ###### CAEs
 
 # Agrega un CAE a la empresa
+GET      /api/v1/empresa/:rut/cae                                com.bluedot.efactura.controllers.CAEController.getCAEs(rut:String)
 POST     /api/v1/empresa/:rut/cae                                com.bluedot.efactura.controllers.CAEController.addCAE(rut:String)
 
 ###### EMPRESAS
