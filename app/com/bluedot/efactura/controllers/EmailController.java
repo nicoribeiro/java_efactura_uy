@@ -21,6 +21,7 @@ import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Attachment;
 import com.bluedot.commons.security.AttachmentEstado;
 import com.bluedot.commons.security.EmailMessage;
+import com.bluedot.commons.security.PermissionValidator;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.serializers.JSONSerializerProvider;
 import com.bluedot.commons.utils.JSONUtils;
@@ -48,6 +49,8 @@ public class EmailController extends AbstractController
 {
 
 	final static Logger logger = LoggerFactory.getLogger(EmailController.class);
+
+	final static Logger auditoria = LoggerFactory.getLogger("auditoria");
 
 	@Inject
 	public EmailController(PollerManager pollerManager)
@@ -267,10 +270,38 @@ public class EmailController extends AbstractController
 			int i = 1;
 			
 			if (id != null) {
-				EmailMessage email = EmailMessage.findById(id,true);
-				serviceMicroController.procesarAttachments(i, email, true);
-				JSONObject jsonObject = JSONSerializerProvider.getEmailMessageSerializer().objectToJson(email);
-				return json(jsonObject.toString());
+				// El email tiene que ser de esta empresa (antes se podia reprocesar el de cualquiera)
+				EmailMessage email = EmailMessage.findById(id, true);
+				if (email.getEmpresa() == null || email.getEmpresa().getId() != empresaReceptora.getId())
+					throw APIException.raise(APIErrors.NO_EXISTE_EMAIL).withParams("id", String.valueOf(id));
+
+				// Solo los adjuntos que no estan procesados OK (con retry=true se reprocesaban todos)
+				serviceMicroController.procesarAttachments(i, email, false);
+
+				// Estado de cada adjunto despues del reintento (leido de la base: el procesamiento puede limpiar el contexto)
+				JSONArray adjuntos = new JSONArray();
+				int ok = 0, omitidos = 0, errores = 0, pendientes = 0;
+				for (Object[] fila : Attachment.findResumenByEmails(java.util.Collections.singletonList(id))) {
+					AttachmentEstado estado = (AttachmentEstado) fila[2];
+					JSONObject adjunto = new JSONObject();
+					adjunto.put("id", fila[0]);
+					adjunto.put("name", fila[1] != null ? fila[1] : JSONObject.NULL);
+					adjunto.put("estado", estado != null ? estado.name() : JSONObject.NULL);
+					adjunto.put("error", fila[5] != null ? fila[5] : JSONObject.NULL);
+					adjuntos.put(adjunto);
+					if (estado == AttachmentEstado.PROCESADO_OK) ok++;
+					else if (estado == AttachmentEstado.OMITIDO) omitidos++;
+					else if (estado == AttachmentEstado.PROCESADO_ERROR) errores++;
+					else pendientes++;
+				}
+
+				auditoria.info(PermissionValidator.getSessionUser(ctx()).getEmailAddress() + " reintentó el email " + id + " de la empresa " + rut
+						+ ": " + ok + " procesado(s), " + omitidos + " omitido(s), " + errores + " con error, " + pendientes + " pendiente(s)");
+
+				JSONObject resultado = new JSONObject();
+				resultado.put("id", id);
+				resultado.put("attachments", adjuntos);
+				return json(JSONUtils.merge(resultado, new JSONObject(OK)).toString());
 				
 			} else {
 				JSONArray jsonArray = new JSONArray();
