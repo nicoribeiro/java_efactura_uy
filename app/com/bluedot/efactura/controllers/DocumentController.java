@@ -643,7 +643,8 @@ public class DocumentController extends AbstractController {
 			}
 			
 			/*
-			 * Sin numero (o sin serie) se lista: idTipoDoc y serie, si vienen, filtran el listado
+			 * Sin tipo, serie y numero juntos se lista: idTipoDoc, serie y nro, si vienen, filtran el listado (ej. buscar un
+			 * numero en todos los tipos y series)
 			 */
 			TipoDoc tipoFiltro = null;
 			if (idTipoDoc != null) {
@@ -662,9 +663,9 @@ public class DocumentController extends AbstractController {
 			Tuple<List<CFE>, Long> cfes;
 			
 			if (direccion == DireccionDocumento.EMITIDO)
-				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, tipoFiltro, serie, estadoFiltro, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion);
 			else
-				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, tipoFiltro, serie, estadoFiltro, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion);
 			
 			JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
 			
