@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.microControllers.implementation.ServiceMicroControllerDefault;
+import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.security.EmpresaAccess;
 
 import com.bluedot.commons.controllers.AbstractController;
@@ -346,18 +348,38 @@ public class DocumentController extends AbstractController {
 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
 		
 		CFE cfe = cfes.get(0);
+		SobreEmitido sobre = cfe.getSobreEmitido();
 		
 		JSONObject error = null;
 
-		try {
-			if (cfe.getEstado() == null)
-				factory.getServiceMicroController(empresa).consultaResultado(cfe.getSobreEmitido());
-		} catch (APIException e) {
-			logger.error("APIException:", e);
-			error = e.getJSONObject();
+		/*
+		 * consultaDgi: que paso con la consulta (YA_TENIA_RESPUESTA, SIN_SOBRE, ANTES_DE_TIEMPO, RESPONDIO,
+		 * SIN_RESPUESTA)
+		 */
+		String consultaDgi;
+		if (cfe.getEstado() != null)
+			consultaDgi = "YA_TENIA_RESPUESTA";
+		else if (sobre == null)
+			consultaDgi = "SIN_SOBRE";
+		else if (ServiceMicroControllerDefault.antesDeFechaConsulta(sobre))
+			consultaDgi = "ANTES_DE_TIEMPO";
+		else {
+			try {
+				factory.getServiceMicroController(empresa).consultaResultado(sobre);
+			} catch (APIException e) {
+				logger.error("APIException:", e);
+				error = e.getJSONObject();
+			}
+			// Si al sobre le faltaban token o idReceptor se recuperan con la consulta y puede quedar antes de tiempo
+			consultaDgi = cfe.getEstado() != null ? "RESPONDIO"
+					: ServiceMicroControllerDefault.antesDeFechaConsulta(sobre) ? "ANTES_DE_TIEMPO" : "SIN_RESPUESTA";
 		}
 
 		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
+		cfeJson.put("consultaDgi", consultaDgi);
+		if (sobre != null && sobre.getFechaConsulta() != null)
+			cfeJson.put("respuestaDisponibleDesde",
+					new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(sobre.getFechaConsulta()));
 
 		if (error != null)
 			cfeJson = JSONUtils.merge(cfeJson, error);

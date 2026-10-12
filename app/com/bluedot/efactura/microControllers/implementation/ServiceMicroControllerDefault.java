@@ -136,11 +136,25 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 		 * Si el sobreEmitido ya tiene resultado tampoco consulto
 		 */
 		if (sobreEmitido.getToken() != null && sobreEmitido.getIdReceptor() != null){
-			if (sobreEmitido.getResultado_dgi()== null || sobreEmitido.getResultado_dgi().isEmpty())
-				recepcionService.consultaResultadoSobre(sobreEmitido);
+			if (sobreEmitido.getResultado_dgi()== null || sobreEmitido.getResultado_dgi().isEmpty()) {
+				/*
+				 * DGI informa al recibir el sobre (ParamConsulta.Fechahora) desde cuando tiene la respuesta: antes
+				 * devuelve una respuesta vacia, asi que no se consulta
+				 */
+				if (antesDeFechaConsulta(sobreEmitido))
+					logger.info("Sobre id:{} todavia sin respuesta de DGI, disponible desde {}", sobreEmitido.getId(),
+							sobreEmitido.getFechaConsulta());
+				else
+					recepcionService.consultaResultadoSobre(sobreEmitido);
+			}
 		}
 		
 		return sobreEmitido;
+	}
+
+	/** Todavia no es la hora que DGI indico para consultar la respuesta del sobre */
+	public static boolean antesDeFechaConsulta(SobreEmitido sobreEmitido) {
+		return sobreEmitido.getFechaConsulta() != null && sobreEmitido.getFechaConsulta().after(new Date());
 	}
 
 	@Override
