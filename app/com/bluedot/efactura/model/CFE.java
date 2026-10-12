@@ -440,15 +440,24 @@ public class CFE extends Model<CFE>{
 			q.getCriteria().add(Restrictions.eq("empresaReceptora", empresaReceptora));
 		}
 
-		// El alias de la empresa receptora se crea una sola vez: crearlo dos veces (filtrando por RUT y razon) daba error
+		/*
+		 * RUT y razon de la contraparte: el receptor en los emitidos (empresa o titular de un eTicket) y el emisor en los
+		 * recibidos (el receptor de un recibido es siempre la empresa propia, filtrarlo no encontraba nada). El alias se
+		 * crea una sola vez: crearlo dos veces (filtrando por RUT y razon) daba error.
+		 */
+		boolean recibidos = direccion == DireccionDocumento.RECIBIDO;
 		if (rutReceptor != null || razonReceptor != null)
-			q.getCriteria().createAlias("empresaReceptora", "rutEmisor", JoinType.LEFT_OUTER_JOIN);
+			q.getCriteria().createAlias(recibidos ? "empresaEmisora" : "empresaReceptora", "rutEmisor", JoinType.LEFT_OUTER_JOIN);
 
 		if (rutReceptor != null) {
-			q.getCriteria().createAlias("titular", "tit", JoinType.LEFT_OUTER_JOIN);
-			q.getCriteria().add(Restrictions.or(
-					Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START),
-					Restrictions.like("tit.documento", rutReceptor, MatchMode.START)));
+			if (recibidos)
+				q.getCriteria().add(Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START));
+			else {
+				q.getCriteria().createAlias("titular", "tit", JoinType.LEFT_OUTER_JOIN);
+				q.getCriteria().add(Restrictions.or(
+						Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START),
+						Restrictions.like("tit.documento", rutReceptor, MatchMode.START)));
+			}
 		}
 
 		if (razonReceptor != null) {
