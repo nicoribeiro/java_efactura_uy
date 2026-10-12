@@ -39,6 +39,7 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 @ErrorMessage
@@ -426,6 +427,18 @@ public class DocumentController extends AbstractController {
 	 * id puede existir en ambas.
 	 */
 	//TODO agregar validacion de que el usuario tiene permisos sobre esta empresa (cubierto por @EmpresaAccess)
+	/** Nombres de los parametros que identifican un comprobante y faltan, para el mensaje de MISSING_PARAMETER */
+	private static String faltantes(Integer idTipoDoc, String serie, Integer nro) {
+		List<String> faltan = new LinkedList<String>();
+		if (idTipoDoc == null)
+			faltan.add("idTipoDoc");
+		if (serie == null)
+			faltan.add("serie");
+		if (nro == null)
+			faltan.add("nro");
+		return String.join(", ", faltan);
+	}
+
 	/**
 	 * Comprobantes emitidos que referencian al comprobante emitido idTipoDoc/serie/nro (notas de credito o debito, por
 	 * ejemplo). Solo lectura. Solo emitidos: en los recibidos la referencia no se vincula al recibir.
@@ -444,7 +457,7 @@ public class DocumentController extends AbstractController {
 		String serie = request().getQueryString("serie");
 
 		if (idTipoDoc == null || nro == null || serie == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("idTipoDoc, serie y nro son obligatorios");
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(faltantes(idTipoDoc, serie, nro)).setDetailMessage("idTipoDoc, serie y nro son obligatorios");
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 		if (tipo == null)
@@ -477,7 +490,7 @@ public class DocumentController extends AbstractController {
 		String rutExterno = request().getQueryString("rutExterno");
 
 		if (idTipoDoc == null || nro == null || serie == null)
-			throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("idTipoDoc, serie y nro son obligatorios");
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(faltantes(idTipoDoc, serie, nro)).setDetailMessage("idTipoDoc, serie y nro son obligatorios");
 
 		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
 		if (tipo == null)
@@ -488,7 +501,7 @@ public class DocumentController extends AbstractController {
 			cfes = CFE.findByIdEmitido(empresa, tipo, serie, nro, null, true);
 		else {
 			if (rutExterno == null)
-				throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("rutExterno es obligatorio para documentos recibidos");
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("rutExterno").setDetailMessage("rutExterno es obligatorio para documentos recibidos");
 			cfes = CFE.findById(Empresa.findByRUT(rutExterno, true), tipo, serie, nro, null, empresa, true, direccion);
 		}
 
