@@ -212,6 +212,8 @@ public class AccesoEmpresasController extends AbstractController {
 		json.put("lastName", user.getLastName() != null ? user.getLastName() : JSONObject.NULL);
 		json.put("role", user.getRole().name());
 		json.put("acceso", acceso);
+		json.put("activo", user.isActivo());
+		json.put("debeCambiarPassword", user.isDebeCambiarPassword());
 		return json;
 	}
 

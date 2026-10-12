@@ -93,6 +93,9 @@ public class Secured extends Security.Authenticator
 //				return null;
 //			}
 				
+			if (!usuarioHabilitado(ctx, session.getUser(), true))
+				return null;
+
 			// Para el log de acceso: Security.Authenticated borra el username del request al terminar
 			ctx.args.put(ACCESS_USER, session.getUser().getEmailAddress());
 			return session.getUser().getEmailAddress();
@@ -164,6 +167,9 @@ public class Secured extends Security.Authenticator
 				e.printStackTrace();
 			}
 		
+			if (signatureMatches && !usuarioHabilitado(ctx, credential.getUser(), false))
+				return null;
+
 			if (signatureMatches)
 			{
 				credential.setNonce(nonce);
@@ -186,6 +192,31 @@ public class Secured extends Security.Authenticator
 		
 		ctx.args.put("error_cause", Messages.get("auth_token_invalid"));
 		return null;
+	}
+
+	/** Rutas que se pueden usar con una contrasena temporal (para poder cambiarla) */
+	private static final java.util.regex.Pattern CUENTA = java.util.regex.Pattern.compile("^/api/v1/cuenta(/password)?$");
+
+	/**
+	 * Usuario desactivado: rechazado (sesion o HMAC). Con contrasena temporal y sesion: solo puede usar /api/v1/cuenta
+	 * (ver su perfil y cambiar la contrasena).
+	 */
+	private boolean usuarioHabilitado(Context ctx, User user, boolean porSesion)
+	{
+		if (user == null)
+			return true;
+		if (!user.isActivo())
+		{
+			logger.info("Acceso rechazado: usuario desactivado " + user.getEmailAddress());
+			ctx.args.put("error_cause", "usuario_desactivado");
+			return false;
+		}
+		if (porSesion && user.isDebeCambiarPassword() && !CUENTA.matcher(ctx.request().path()).matches())
+		{
+			ctx.args.put("error_cause", "password_change_required");
+			return false;
+		}
+		return true;
 	}
 
 	@Override

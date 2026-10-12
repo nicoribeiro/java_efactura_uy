@@ -210,6 +210,19 @@ GET      /api/v1/users/:uid/acl                                  com.bluedot.com
 GET      /api/v1/usuarios                                        com.bluedot.efactura.controllers.AccesoEmpresasController.getUsuarios()
 GET      /api/v1/procesos                                        com.bluedot.efactura.controllers.ProcesosController.getProcesos()
 GET      /api/v1/usuarios/:uid/sesiones                          com.bluedot.efactura.controllers.AccesoEmpresasController.getSesionesUsuario(uid: Int)
+# Administracion de usuarios (solo ADMIN): sin borrado, se desactiva; contrasenas temporales generadas por la API
+POST     /api/v1/usuarios                                        com.bluedot.efactura.controllers.UsuariosController.crear()
+GET      /api/v1/usuarios/:uid                                   com.bluedot.efactura.controllers.UsuariosController.ver(uid: Int)
+PUT      /api/v1/usuarios/:uid                                   com.bluedot.efactura.controllers.UsuariosController.editar(uid: Int)
+POST     /api/v1/usuarios/:uid/password                          com.bluedot.efactura.controllers.UsuariosController.resetearPassword(uid: Int)
+PUT      /api/v1/usuarios/:uid/activo                            com.bluedot.efactura.controllers.UsuariosController.cambiarActivo(uid: Int)
+POST     /api/v1/usuarios/:uid/sesiones/cerrar                   com.bluedot.efactura.controllers.UsuariosController.cerrarSesiones(uid: Int)
+GET      /api/v1/usuarios/:uid/credenciales                      com.bluedot.efactura.controllers.UsuariosController.verCredenciales(uid: Int)
+POST     /api/v1/usuarios/:uid/credenciales                      com.bluedot.efactura.controllers.UsuariosController.regenerarCredenciales(uid: Int)
+
+# Cuenta propia (cualquier usuario logueado): perfil y cambio de contrasena
+GET      /api/v1/cuenta                                          com.bluedot.efactura.controllers.CuentaController.ver()
+PUT      /api/v1/cuenta/password                                 com.bluedot.efactura.controllers.CuentaController.cambiarPassword()
 GET      /api/v1/users/:uid/empresas                             com.bluedot.efactura.controllers.AccesoEmpresasController.getEmpresasUsuario(uid: Int)
 GET      /api/v1/empresa/:rut/usuarios                           com.bluedot.efactura.controllers.AccesoEmpresasController.getUsuariosEmpresa(rut: String)
 PUT      /api/v1/users/:uid/empresas/:rut                        com.bluedot.efactura.controllers.AccesoEmpresasController.agregarEmpresa(uid: Int, rut: String)

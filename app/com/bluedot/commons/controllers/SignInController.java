@@ -72,6 +72,12 @@ public class SignInController extends AbstractController
 			user = User.findByEmailAddressAndPassword(emailAddress, password);
 		}
 
+		if (user != null && !user.isActivo())
+		{
+			logger.info("Login rechazado: usuario desactivado " + user.getEmailAddress());
+			throw APIException.raise(APIErrors.UNAUTHORIZED).setDetailMessage("Usuario desactivado");
+		}
+
 		if (user != null)
 		{
 			Session session = new Session(user, RequestUtils.requestAddress(request()), request().getHeader("User-Agent"));
@@ -94,6 +100,8 @@ public class SignInController extends AbstractController
 //							"user.masterAccount.gateways.gatewayId", "user.permissions", "user.addresses", "user.accounts.id", "user.accounts.owner.firstName", "user.accounts.owner.lastName",
 //							"user.accounts.companyName").exclude("user.masterAccount.gateways.*", "user.masterAccount.users.masterAccount", "user.accounts.*", "*.class").prettyPrint(true);
 			JSONObject result = JSONSerializerProvider.getSessionSerializer().objectToJson(session);
+			// El panel lo usa para pedir el cambio de una contrasena temporal antes de seguir
+			result.put("debeCambiarPassword", user.isDebeCambiarPassword());
 			
 			
 			return json(result.toString());
@@ -107,6 +115,13 @@ public class SignInController extends AbstractController
 	@Tx
 	public  Promise<Result> signUp() throws APIException
 	{
+		/*
+		 * Registro cerrado: los usuarios los crea un ADMIN (POST /api/v1/usuarios). Solo se permite sin ningun ADMIN, para
+		 * crear el primero en una instalacion nueva.
+		 */
+		if (User.find(Role.ADMIN).size() > 0)
+			throw APIException.raise(APIErrors.SOLO_ADMIN).setDetailMessage("El registro está cerrado: los usuarios los crea un administrador");
+
 		JsonNode userJson = request().body().asJson();
 
 		String emailAddress = userJson.findPath("emailAddress").textValue();

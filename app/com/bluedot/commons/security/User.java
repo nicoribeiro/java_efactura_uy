@@ -97,6 +97,12 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	@Enumerated(EnumType.STRING)
 	private Role role = Role.USER;
 
+	/** Desactivado: no puede ingresar ni usar sus sesiones o credenciales HMAC. null = activo (usuarios anteriores) */
+	private Boolean activo;
+
+	/** Tiene una contrasena temporal: debe cambiarla antes de usar la API. null = no */
+	private Boolean debeCambiarPassword;
+
 	@ManyToMany(mappedBy = "users")
 	private List<Account> accounts;
 
@@ -182,6 +188,51 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	public String getPassword()
 	{
 		return password;
+	}
+
+	public boolean isActivo()
+	{
+		return activo == null || activo;
+	}
+
+	public void setActivo(boolean activo)
+	{
+		this.activo = activo;
+	}
+
+	public boolean isDebeCambiarPassword()
+	{
+		return Boolean.TRUE.equals(debeCambiarPassword);
+	}
+
+	public void setDebeCambiarPassword(boolean debeCambiarPassword)
+	{
+		this.debeCambiarPassword = debeCambiarPassword;
+	}
+
+	private static final String CARACTERES_PASSWORD = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+
+	/** Contrasena temporal aleatoria (sin caracteres que se confunden: 0/O, 1/l/I) */
+	public static String generarPasswordTemporal()
+	{
+		java.security.SecureRandom random = new java.security.SecureRandom();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 14; i++)
+			sb.append(CARACTERES_PASSWORD.charAt(random.nextInt(CARACTERES_PASSWORD.length())));
+		return sb.toString();
+	}
+
+	/** Invalida todas las sesiones del usuario (por ejemplo al cambiar la contrasena o desactivarlo) */
+	public int cerrarSesiones()
+	{
+		int cerradas = 0;
+		for (Session session : Session.findByUser(this))
+			if (Boolean.TRUE.equals(session.isValid())) {
+				session.setValid(false);
+				session.update();
+				cerradas++;
+			}
+		return cerradas;
 	}
 
 	public void setPassword(String password)
