@@ -386,8 +386,20 @@ public class CFE extends Model<CFE>{
 	}
 
 
-	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, String rutReceptor, String razonReceptor, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion) {
+	/**
+	 * @param tipo
+	 *            tipo de comprobante; null = todos
+	 * @param serie
+	 *            serie; null = todas
+	 */
+	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, String rutReceptor, String razonReceptor, TipoDoc tipo, String serie, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion) {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+
+		if (tipo != null)
+			q.getCriteria().add(Restrictions.eq("tipo", tipo));
+
+		if (serie != null && !serie.trim().isEmpty())
+			q.getCriteria().add(Restrictions.eq("serie", serie.trim().toUpperCase()));
 
 		Criterion dateCriteria = null;
 
@@ -406,8 +418,11 @@ public class CFE extends Model<CFE>{
 			q.getCriteria().add(Restrictions.eq("empresaReceptora", empresaReceptora));
 		}
 
-		if (rutReceptor != null) {
+		// El alias de la empresa receptora se crea una sola vez: crearlo dos veces (filtrando por RUT y razon) daba error
+		if (rutReceptor != null || razonReceptor != null)
 			q.getCriteria().createAlias("empresaReceptora", "rutEmisor", JoinType.LEFT_OUTER_JOIN);
+
+		if (rutReceptor != null) {
 			q.getCriteria().createAlias("titular", "tit", JoinType.LEFT_OUTER_JOIN);
 			q.getCriteria().add(Restrictions.or(
 					Restrictions.like("rutEmisor.rut", rutReceptor, MatchMode.START),
@@ -415,7 +430,6 @@ public class CFE extends Model<CFE>{
 		}
 
 		if (razonReceptor != null) {
-			q.getCriteria().createAlias("empresaReceptora", "rutEmisor", JoinType.LEFT_OUTER_JOIN);
 			q.getCriteria().add(Restrictions.ilike("rutEmisor.razon", razonReceptor, MatchMode.START));
 		}
 		

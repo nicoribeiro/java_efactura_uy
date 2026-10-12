@@ -541,12 +541,22 @@ public class DocumentController extends AbstractController {
 				empresaExterna = Empresa.findByRUT(rutExterno, true);
 			}
 			
+			/*
+			 * Sin numero (o sin serie) se lista: idTipoDoc y serie, si vienen, filtran el listado
+			 */
+			TipoDoc tipoFiltro = null;
+			if (idTipoDoc != null) {
+				tipoFiltro = TipoDoc.fromInt(idTipoDoc);
+				if (tipoFiltro == null)
+					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
+			}
+			
 			Tuple<List<CFE>, Long> cfes;
 			
 			if (direccion == DireccionDocumento.EMITIDO)
-				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, tipoFiltro, serie, fromDate, toDate, page, pageSize, direccion);
 			else
-				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, tipoFiltro, serie, fromDate, toDate, page, pageSize, direccion);
 			
 			JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
 			
