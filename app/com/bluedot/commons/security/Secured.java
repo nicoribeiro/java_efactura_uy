@@ -21,6 +21,9 @@ public class Secured extends Security.Authenticator
 {
 
 	public static final String AUTH_HEADER = "AUTH-TOKEN";
+
+	/** Clave en ctx.args con el email del usuario autenticado (lo usa el log de acceso de ErrorAction) */
+	public static final String ACCESS_USER = "access_user";
 	
 	public static final String HMAC_KEY_HEADER = "ACCESS_KEY";
 	public static final String HMAC_SIGNATURE_HEADER = "ACCESS_SIGNATURE";
@@ -90,6 +93,8 @@ public class Secured extends Security.Authenticator
 //				return null;
 //			}
 				
+			// Para el log de acceso: Security.Authenticated borra el username del request al terminar
+			ctx.args.put(ACCESS_USER, session.getUser().getEmailAddress());
 			return session.getUser().getEmailAddress();
 		} else
 		{
@@ -171,6 +176,7 @@ public class Secured extends Security.Authenticator
 //					return null;
 //				}
 					
+				ctx.args.put(ACCESS_USER, credential.getUser().getEmailAddress());
 				return credential.getUser().getEmailAddress();
 			}else{
 				logger.info("HMAC signature not matching. Signature: " + credential.getSecret());
@@ -195,7 +201,7 @@ public class Secured extends Security.Authenticator
 		{
 			JSONArray array = new JSONArray(exceptions);
 			String endpoint = ctx.request().path();
-			logger.info("Endpoint is: " + endpoint);
+			logger.debug("Endpoint is: " + endpoint);
 			
 			for(int i = 0; i< array.length(); i++)
 			{
