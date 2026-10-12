@@ -49,7 +49,7 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 	private Provider<Application> applicationProvider;
 
 	public PollerTipoDeCambioRunner(Provider<Application> applicationProvider) {
-		super(logger, intervaloConfig("TipoDeCambioPoller", 60));
+		super(logger, intervaloConfig(applicationProvider.get().configuration(), "TipoDeCambioPoller", 60));
 		this.applicationProvider = applicationProvider;
 	}
 	

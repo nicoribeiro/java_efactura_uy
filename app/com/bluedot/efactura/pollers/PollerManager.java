@@ -56,7 +56,7 @@ public class PollerManager {
 		
 		if (applicationProvider.get().configuration().getBoolean("EmailEntrantesPoller.run", false)){
 			logger.info("EmailEntrantesPoller: running");
-			runner = new EmailEntrantesPoller();
+			runner = new EmailEntrantesPoller(applicationProvider.get().configuration());
 			executor.execute(runner);
 		}else {
 			logger.info("EmailEntrantesPoller: not running");
@@ -65,7 +65,7 @@ public class PollerManager {
 		
 		if (applicationProvider.get().configuration().getBoolean("NotificationPoller.run", false)){
 			logger.info("NotificationPoller: running");
-			runner = new NotificationPoller();
+			runner = new NotificationPoller(applicationProvider.get().configuration());
 			executor.execute(runner);
 		}else {
 			logger.info("NotificationPoller: not running");
@@ -84,7 +84,7 @@ public class PollerManager {
 
 		if (applicationProvider.get().configuration().getBoolean("ReporteDiarioPoller.run", false)){
 			logger.info("ReporteDiarioPoller: running");
-			runner = new ReporteDiarioPoller();
+			runner = new ReporteDiarioPoller(applicationProvider.get().configuration());
 			executor.execute(runner);
 		}else {
 			logger.info("ReporteDiarioPoller: not running");

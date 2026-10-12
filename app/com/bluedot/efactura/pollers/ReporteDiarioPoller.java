@@ -41,14 +41,14 @@ public class ReporteDiarioPoller extends PollerRunner {
 	/** Dia (yyyyMMdd) de la ultima ejecucion, para correr una sola vez por dia */
 	private String ultimaEjecucion;
 
-	public ReporteDiarioPoller() {
-		super(logger, intervaloConfig("ReporteDiarioPoller", 5));
+	public ReporteDiarioPoller(Configuration config) {
+		super(logger, intervaloConfig(config, "ReporteDiarioPoller", 5));
 		// Desde el arranque, para que /procesos lo muestre antes de la primera ejecucion
-		estado.setProgramacion(programacion(Play.application().configuration().getInt("ReporteDiarioPoller.hora", 15)));
+		estado.setProgramacion(programacion(config, config.getInt("ReporteDiarioPoller.hora", 15)));
 	}
 
-	private static String programacion(int hora) {
-		long minutos = Play.application().configuration().getLong("ReporteDiarioPoller.intervaloMinutos", 5l);
+	private static String programacion(Configuration config, int hora) {
+		long minutos = config.getLong("ReporteDiarioPoller.intervaloMinutos", 5l);
 		return String.format("diario desde las %02d:00 (revisa cada %d minutos)", hora, minutos);
 	}
 
@@ -60,7 +60,7 @@ public class ReporteDiarioPoller extends PollerRunner {
 		int cantReportes = config.getInt("ReporteDiarioPoller.cantReportes", 20);
 		String rutsConfig = config.getString("ReporteDiarioPoller.empresas", "");
 
-		estado.setProgramacion(programacion(hora));
+		estado.setProgramacion(programacion(config, hora));
 
 		Calendar ahora = Calendar.getInstance();
 		String hoy = new SimpleDateFormat("yyyyMMdd").format(ahora.getTime());

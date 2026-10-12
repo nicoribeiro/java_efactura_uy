@@ -21,8 +21,8 @@ public class NotificationPoller extends PollerRunner {
 	final static Logger logger = LoggerFactory.getLogger(NotificationPoller.class);
 
 
-	public NotificationPoller() {
-		super(logger, intervaloConfig("NotificationPoller", 60 * 24));
+	public NotificationPoller(play.Configuration config) {
+		super(logger, intervaloConfig(config, "NotificationPoller", 60 * 24));
 	}
 
 	@Override

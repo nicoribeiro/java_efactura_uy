@@ -13,8 +13,8 @@ public class EmailEntrantesPoller extends PollerRunner {
 	
 	static Logger logger = LoggerFactory.getLogger(EmailEntrantesPoller.class);
 
-	public EmailEntrantesPoller() {
-		super(logger, intervaloConfig("EmailEntrantesPoller", 5));
+	public EmailEntrantesPoller(play.Configuration config) {
+		super(logger, intervaloConfig(config, "EmailEntrantesPoller", 5));
 	}
 
 	@Override
