@@ -391,9 +391,18 @@ public class CFE extends Model<CFE>{
 	 *            tipo de comprobante; null = todos
 	 * @param serie
 	 *            serie; null = todas
+	 * @param estado
+	 *            estado de la respuesta de DGI: AE, BE, CE, o "SIN" para los que no tienen respuesta; null = todos
 	 */
-	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, String rutReceptor, String razonReceptor, TipoDoc tipo, String serie, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion) {
+	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, String rutReceptor, String razonReceptor, TipoDoc tipo, String serie, String estado, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion) {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+
+		if (estado != null && !estado.trim().isEmpty()) {
+			if ("SIN".equalsIgnoreCase(estado.trim()))
+				q.getCriteria().add(Restrictions.isNull("estado"));
+			else
+				q.getCriteria().add(Restrictions.eq("estado", EstadoACKCFEType.valueOf(estado.trim().toUpperCase())));
+		}
 
 		if (tipo != null)
 			q.getCriteria().add(Restrictions.eq("tipo", tipo));

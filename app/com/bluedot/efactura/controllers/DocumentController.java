@@ -652,12 +652,19 @@ public class DocumentController extends AbstractController {
 					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
 			}
 			
+			/*
+			 * Estado de la respuesta de DGI: AE (aceptado), BE (rechazado), CE (observado) o SIN (sin respuesta)
+			 */
+			String estadoFiltro = request().getQueryString("estado");
+			if (estadoFiltro != null && !estadoFiltro.trim().isEmpty() && !estadoFiltro.trim().matches("(?i)AE|BE|CE|SIN"))
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("estado", estadoFiltro);
+			
 			Tuple<List<CFE>, Long> cfes;
 			
 			if (direccion == DireccionDocumento.EMITIDO)
-				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, tipoFiltro, serie, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, tipoFiltro, serie, estadoFiltro, fromDate, toDate, page, pageSize, direccion);
 			else
-				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, tipoFiltro, serie, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, tipoFiltro, serie, estadoFiltro, fromDate, toDate, page, pageSize, direccion);
 			
 			JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
 			
