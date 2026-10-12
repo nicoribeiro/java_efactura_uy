@@ -14,7 +14,7 @@ import play.mvc.Result;
 /**
  * Decide que control aplicar segun la ruta pedida:
  * <ul>
- * <li>/api/v1/init, /api/v1/usuarios, /api/v1/users/{uid}/empresas... y /api/v1/empresa/{rut}/usuarios: solo ADMIN, siempre (sin
+ * <li>/api/v1/init, /api/v1/usuarios, /api/v1/procesos, /api/v1/users/{uid}/empresas... y /api/v1/empresa/{rut}/usuarios: solo ADMIN, siempre (sin
  * importar el modo)</li>
  * <li>POST /api/v1/empresa, /api/v1/empresa/cargar, /api/v1/modo/..., /api/v1/pruebas/...: solo ADMIN</li>
  * <li>/api/v1/empresa/{rut}/...: acceso a esa empresa</li>
@@ -26,7 +26,7 @@ public class EmpresaAccessAction extends Action<EmpresaAccess> {
 	private static final Pattern EMPRESA = Pattern.compile("^/api/v1/empresa/([^/]+)(/.*)?$");
 	private static final Pattern SOLO_ADMIN = Pattern.compile("^/api/v1/(empresa/cargar|modo/.*|pruebas/.*)$");
 	/** Siempre ADMIN: si dependiera del modo, en modo log cualquiera podria asignarse empresas antes de pasar a enforce */
-	private static final Pattern SIEMPRE_ADMIN = Pattern.compile("^/api/v1/(init|usuarios|users/[^/]+/empresas|empresa/[^/]+/usuarios)(/.*)?$");
+	private static final Pattern SIEMPRE_ADMIN = Pattern.compile("^/api/v1/(init|usuarios|procesos|users/[^/]+/empresas|empresa/[^/]+/usuarios)(/.*)?$");
 
 	@Override
 	public Promise<Result> call(Context ctx) throws Throwable {

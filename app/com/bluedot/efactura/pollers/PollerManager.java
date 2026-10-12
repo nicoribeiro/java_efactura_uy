@@ -58,30 +58,38 @@ public class PollerManager {
 			logger.info("EmailEntrantesPoller: running");
 			runner = new EmailEntrantesPoller();
 			executor.execute(runner);
-		}else
+		}else {
 			logger.info("EmailEntrantesPoller: not running");
+			EstadoPoller.registrar("EmailEntrantesPoller", false, 0);
+		}
 		
 		if (applicationProvider.get().configuration().getBoolean("NotificationPoller.run", false)){
 			logger.info("NotificationPoller: running");
 			runner = new NotificationPoller();
 			executor.execute(runner);
-		}else
+		}else {
 			logger.info("NotificationPoller: not running");
+			EstadoPoller.registrar("NotificationPoller", false, 0);
+		}
 		
 		
 		if (applicationProvider.get().configuration().getBoolean("TipoDeCambioPoller.run", false)){
 			logger.info("TipoDeCambioPoller: running");
 			runner = new PollerTipoDeCambioRunner(applicationProvider);
 			executor.execute(runner);
-		}else
+		}else {
 			logger.info("TipoDeCambioPoller: not running");
+			EstadoPoller.registrar("PollerTipoDeCambioRunner", false, 0);
+		}
 
 		if (applicationProvider.get().configuration().getBoolean("ReporteDiarioPoller.run", false)){
 			logger.info("ReporteDiarioPoller: running");
 			runner = new ReporteDiarioPoller();
 			executor.execute(runner);
-		}else
+		}else {
 			logger.info("ReporteDiarioPoller: not running");
+			EstadoPoller.registrar("ReporteDiarioPoller", false, 0);
+		}
 		
 	}
 

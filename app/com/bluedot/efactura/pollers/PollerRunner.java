@@ -16,11 +16,15 @@ public abstract class PollerRunner implements Runnable {
 
 	private long runs;
 
+	/** Estado consultable desde la API (GET /api/v1/procesos) */
+	protected final EstadoPoller estado;
+
 	public PollerRunner(Logger logger, long sleepTimeInMillis) {
 		super();
 		this.logger = logger;
 		this.sleepTimeInMillis = sleepTimeInMillis;
 		runs = 0;
+		this.estado = EstadoPoller.registrar(getClass().getSimpleName(), true, sleepTimeInMillis);
 	}
 
 	public void run() {
@@ -29,6 +33,9 @@ public abstract class PollerRunner implements Runnable {
 			try {
 				if (INTERVAL * runs > sleepTimeInMillis) {
 					runs = 0;
+					// Error de la ejecucion (de la accion o de la transaccion), para el estado del poller
+					final Throwable[] error = new Throwable[1];
+					estado.inicioEjecucion();
 					try {
 						DatabaseExecutor.syncDatabaseAction(new PromiseBlock<Void>() {
 							public Void execute() {
@@ -36,6 +43,7 @@ public abstract class PollerRunner implements Runnable {
 								try {
 									executeConcreteAction();
 								} catch (APIException e) {
+									error[0] = e;
 									e.printStackTrace();
 								}
 
@@ -45,8 +53,10 @@ public abstract class PollerRunner implements Runnable {
 						}, true);
 
 					} catch (Throwable e) {
+						error[0] = e;
 						e.printStackTrace();
 					}
+					estado.finEjecucion(error[0]);
 				}
 				runs++;
 				logger.debug("Tick ...");

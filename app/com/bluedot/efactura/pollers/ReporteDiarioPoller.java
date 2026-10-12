@@ -53,6 +53,8 @@ public class ReporteDiarioPoller extends PollerRunner {
 		int cantReportes = config.getInt("ReporteDiarioPoller.cantReportes", 20);
 		String rutsConfig = config.getString("ReporteDiarioPoller.empresas", "");
 
+		estado.setProgramacion(String.format("diario desde las %02d:00 (revisa cada 5 minutos)", hora));
+
 		Calendar ahora = Calendar.getInstance();
 		String hoy = new SimpleDateFormat("yyyyMMdd").format(ahora.getTime());
 		if (hoy.equals(ultimaEjecucion) || ahora.get(Calendar.HOUR_OF_DAY) < hora)
@@ -68,11 +70,13 @@ public class ReporteDiarioPoller extends PollerRunner {
 		String desdeTexto = new SimpleDateFormat("yyyy-MM-dd").format(desde.getTime());
 
 		List<Empresa> empresas = empresas(rutsConfig);
+		List<String> resumen = new ArrayList<String>();
 		logger.info("Reporte diario: {} empresa(s), {} dias desde {} (solo faltantes)", empresas.size(), cantReportes, desdeTexto);
 
 		for (Empresa empresa : empresas) {
 			if (empresa.getFirmaDigital() == null || empresa.getFirmaDigital().getValidaHasta().before(new Date())) {
 				logger.warn("Reporte diario: empresa {} sin firma digital vigente, se saltea", empresa.getRut());
+				resumen.add(empresa.getRut() + ": sin firma digital vigente");
 				continue;
 			}
 			try {
@@ -90,10 +94,15 @@ public class ReporteDiarioPoller extends PollerRunner {
 				}
 				logger.info("Reporte diario: empresa {}: {} generado(s), {} con error, {} ya aceptado(s)", empresa.getRut(),
 						generados, errores, cantReportes - resultado.length());
+				resumen.add(empresa.getRut() + ": " + generados + " generado(s), " + errores + " con error, "
+						+ (cantReportes - resultado.length()) + " ya aceptado(s)");
 			} catch (Throwable t) {
 				logger.error("Reporte diario: error en empresa " + empresa.getRut(), t);
+				resumen.add(empresa.getRut() + ": error " + t.getMessage());
 			}
 		}
+		estado.setResumen("Días desde " + desdeTexto + " (" + cantReportes + "). "
+				+ (resumen.isEmpty() ? "Sin empresas con firma digital" : String.join("; ", resumen)));
 	}
 
 	/** Las empresas de la configuracion, o todas las que tienen firma digital */
