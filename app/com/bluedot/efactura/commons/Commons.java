@@ -340,23 +340,25 @@ public class Commons {
 		
 	}
 	
-	public static void enviarMail(Sucursal sucursalDesde, String destinatarios, String nombreArchivo, byte[] archivo) throws APIException {
+	public static void enviarMail(Sucursal sucursalDesde, String destinatarios, String nombreArchivo, byte[] archivo,
+			com.bluedot.efactura.model.EnvioMail.Contexto contexto) throws APIException {
 		String body = Play.application().configuration().getString("mail.body")
 		.replace("<nombre>", sucursalDesde.getEmpresa().getNombreComercial())
 		.replace("<mail>", sucursalDesde.getEmpresa().getMailNotificaciones()).replace("<tel>", sucursalDesde.getTelefono())
 		.replace("<nl>", "\n");
-		enviarMail(sucursalDesde.getEmpresa(), destinatarios, nombreArchivo, archivo, body);
+		enviarMail(sucursalDesde.getEmpresa(), destinatarios, nombreArchivo, archivo, body, contexto);
 	}
 	
 	
-	public static void enviarMail(Empresa empresaDesde, String destinatarios, String nombreArchivo, byte[] archivo, String body) throws APIException {
+	/** Envia un mail con un adjunto y registra el intento (EnvioMail), salga bien o mal */
+	public static void enviarMail(Empresa empresaDesde, String destinatarios, String nombreArchivo, byte[] archivo, String body,
+			com.bluedot.efactura.model.EnvioMail.Contexto contexto) throws APIException {
+		String subject = nombreArchivo;
 		try {
 
 			Map<String, byte[]> attachments = new TreeMap<String, byte[]>();
 
 			attachments.put(nombreArchivo, archivo);
-
-			String subject = nombreArchivo;
 
 			new MessagingHelper()
 					.withCustomConfig(empresaDesde.getFromEnvio(), empresaDesde.getHostRecepcion(), Integer.parseInt(empresaDesde.getPuertoRecepcion()),
@@ -365,9 +367,10 @@ public class Commons {
 					.sendEmail(destinatarios, body, null, subject, false);
 
 		} catch (Exception e) {
+			com.bluedot.efactura.model.EnvioMail.registrar(empresaDesde, destinatarios, nombreArchivo, subject, contexto, e);
 			throw APIException.raise(e);
 		}
-
+		com.bluedot.efactura.model.EnvioMail.registrar(empresaDesde, destinatarios, nombreArchivo, subject, contexto, null);
 	}
 	
 	public static String getPDFfilename(CFE cfe) {

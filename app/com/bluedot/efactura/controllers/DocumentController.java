@@ -1,13 +1,17 @@
 package com.bluedot.efactura.controllers;
 
 import com.bluedot.efactura.microControllers.implementation.ServiceMicroControllerDefault;
+import com.bluedot.efactura.model.EnvioMail;
 import com.bluedot.efactura.model.SobreEmitido;
+import com.bluedot.efactura.security.AccesoEmpresa;
 import com.bluedot.efactura.security.EmpresaAccess;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.security.PermissionValidator;
+import com.bluedot.commons.security.User;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.JSONUtils;
@@ -54,6 +58,8 @@ public class DocumentController extends AbstractController {
 	private static boolean initialized = false;
 	
 	final static Logger logger = LoggerFactory.getLogger(DocumentController.class);
+
+	final static Logger auditoria = LoggerFactory.getLogger("auditoria");
 
 	private PollerManager pollerManager;
 	
@@ -415,7 +421,8 @@ public class DocumentController extends AbstractController {
 		JSONObject error = null;
 
 		try {
-			factory.getServiceMicroController(empresa).enviarCfeEmpresa(cfe);
+			User sesion = PermissionValidator.getSessionUser(ctx());
+			factory.getServiceMicroController(empresa).enviarCfeEmpresa(cfe, sesion != null ? sesion.getEmailAddress() : "API");
 		} catch (APIException e) {
 			logger.error("APIException:", e);
 			error = e.getJSONObject();
@@ -426,6 +433,85 @@ public class DocumentController extends AbstractController {
 
 		return json(error.toString());
 
+	}
+
+	/** El CFE emitido identificado por tipo, serie y numero (unico) */
+	private static CFE cfeEmitido(Empresa empresa, int nro, String serie, int idTipoDoc) throws APIException {
+		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+		if (tipo == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
+		List<CFE> cfes = CFE.findByIdEmitido(empresa, tipo, serie, nro, null, true);
+		if (cfes.size() > 1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC", empresa.getRut() + "-" + nro + "-" + serie + "-" + idTipoDoc)
+					.setDetailMessage("No identifica a un unico cfe");
+		return cfes.get(0);
+	}
+
+	/** A donde se enviaria por mail un comprobante emitido (no envia nada) */
+	public Promise<Result> destinosMail(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		CFE cfe = cfeEmitido(empresa, nro, serie, idTipoDoc);
+		JSONObject destinos = (new EfacturaMicroControllersFactoryBuilder()).getMicroControllersFactory()
+				.getServiceMicroController(empresa).destinosCorreo(cfe);
+		return json(JSONUtils.merge(destinos, new JSONObject(OK)).toString());
+	}
+
+	/**
+	 * Reenvia por mail un comprobante emitido: el XML al receptor electronico y el PDF a la direccion del comprobante.
+	 * Cualquier usuario con acceso a la empresa, con auditoria. Si no hay a quien enviarlo da error.
+	 */
+	public Promise<Result> reenviarMail(String rut, int nro, String serie, int idTipoDoc) throws APIException {
+		User usuario = PermissionValidator.getSessionUser(ctx());
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		CFE cfe = cfeEmitido(empresa, nro, serie, idTipoDoc);
+
+		List<String> enviados = (new EfacturaMicroControllersFactoryBuilder()).getMicroControllersFactory()
+				.getServiceMicroController(empresa).enviarCfeEmpresa(cfe, usuario.getEmailAddress());
+		if (enviados.isEmpty())
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("destino", "mail")
+					.setDetailMessage("No hay a quién enviarlo: el receptor no es emisor electrónico (o no tiene mail) y el comprobante no tiene mail para el PDF");
+
+		auditoria.info(usuario.getEmailAddress() + " reenvió por mail el comprobante " + cfe.getTipo().value + " " + cfe.getSerie() + "-"
+				+ cfe.getNro() + " de la empresa " + rut + ": " + String.join(", ", enviados));
+
+		JSONObject resultado = new JSONObject();
+		resultado.put("enviados", new JSONArray(enviados));
+		return json(JSONUtils.merge(resultado, new JSONObject(OK)).toString());
+	}
+
+	/**
+	 * Envios por mail registrados (EnvioMail): de un comprobante emitido (idTipoDoc, serie, nro) o de un sobre (sobre),
+	 * del mas nuevo al mas viejo
+	 */
+	public Promise<Result> enviosMail(String rut) throws APIException {
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		List<EnvioMail> envios;
+		try {
+			if (request().getQueryString("sobre") != null)
+				envios = EnvioMail.findBySobre(empresa, Long.parseLong(request().getQueryString("sobre")));
+			else
+				envios = EnvioMail.findByComprobante(empresa, Integer.parseInt(request().getQueryString("idTipoDoc")),
+						request().getQueryString("serie"), Long.parseLong(request().getQueryString("nro")));
+		} catch (NumberFormatException | NullPointerException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("Indicar sobre, o idTipoDoc, serie y nro");
+		}
+
+		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+		JSONArray lista = new JSONArray();
+		for (EnvioMail e : envios) {
+			JSONObject json = new JSONObject();
+			json.put("id", e.getId());
+			json.put("fecha", sdf.format(e.getFecha()));
+			json.put("tipo", e.getTipo() != null ? e.getTipo().name() : JSONObject.NULL);
+			json.put("destinatarios", e.getDestinatarios() != null ? e.getDestinatarios() : JSONObject.NULL);
+			json.put("archivo", e.getArchivo() != null ? e.getArchivo() : JSONObject.NULL);
+			json.put("ok", e.isOk());
+			json.put("error", e.getError() != null ? e.getError() : JSONObject.NULL);
+			json.put("origen", e.getOrigen() != null ? e.getOrigen() : JSONObject.NULL);
+			lista.put(json);
+		}
+		return json(lista.toString());
 	}
 
 	public Promise<Result> procesarEmailEntrantes(String rut) throws APIException {

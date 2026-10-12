@@ -1,5 +1,7 @@
 package com.bluedot.efactura.services;
 
+import java.util.List;
+
 import java.util.Date;
 
 import com.bluedot.commons.error.APIException;
@@ -24,7 +26,11 @@ public interface RecepcionService {
 
 	void reenviarSobre(SobreEmitido sobre) throws APIException;
 
-	void enviarCorreoReceptorElectronico(CFE cfe) throws APIException;
+	/** Envia el comprobante por mail: XML al receptor electronico, PDF a la direccion del comprobante. Devuelve lo enviado. */
+	List<String> enviarCorreoReceptorElectronico(CFE cfe, String origen) throws APIException;
+
+	/** A donde se enviaria el comprobante (sin enviar nada): xml y pdf con destino o motivo por el que no se envia */
+	org.json.JSONObject destinosCorreo(CFE cfe);
 
 	void enviarCorreoReceptorElectronico(SobreEmitido sobre) throws APIException;
 

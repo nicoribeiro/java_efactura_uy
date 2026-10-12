@@ -33,6 +33,7 @@ import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
 import com.bluedot.efactura.microControllers.interfaces.CFEMicroController;
 import com.bluedot.efactura.microControllers.interfaces.IntercambioMicroController;
+import com.bluedot.efactura.model.EnvioMail;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.DireccionDocumento;
 import com.bluedot.efactura.model.Empresa;
@@ -228,7 +229,8 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				 * Envio la respuesta al emisor
 				 */
 				if (sobreRecibido.getEmpresaEmisora().getMailRecepcion()!=null && !sobreRecibido.getEmpresaEmisora().getMailRecepcion().isEmpty())
-					Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora().getMailRecepcion(), respuestaSobre.getNombreArchivo(), respuestaSobre.getPayload().getBytes(), "");
+					Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora().getMailRecepcion(), respuestaSobre.getNombreArchivo(), respuestaSobre.getPayload().getBytes(), "",
+							EnvioMail.Contexto.automatico(EnvioMail.Tipo.ACK_SOBRE).sobre(sobreRecibido.getId()));
 				
 				sobreRecibido.setAckSobredefType(ackSobredefType);
 				
@@ -299,7 +301,8 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 						/*
 						 * Envio la respuesta al emisor
 						 */
-						Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora().getMailRecepcion(), respuestaCfes.getNombreArchivo(), respuestaCfes.getPayload().getBytes(), "");
+						Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora().getMailRecepcion(), respuestaCfes.getNombreArchivo(), respuestaCfes.getPayload().getBytes(), "",
+								EnvioMail.Contexto.automatico(EnvioMail.Tipo.ACK_CFE).sobre(sobreRecibido.getId()));
 					}
 					
 					return ackcfEdefType;

@@ -48,6 +48,15 @@ GET      /api/v1/empresa/:rut/documentos		                 com.bluedot.efactura.
 # Envia por correo el documento a la empresa
 GET      /api/v1/empresa/:rut/documentos/enviarCfeEmpresa        com.bluedot.efactura.controllers.DocumentController.enviarCfeEmpresa(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
 
+# A donde se enviaria por mail un comprobante emitido (no envia nada)
+GET      /api/v1/empresa/:rut/documentos/destinosMail            com.bluedot.efactura.controllers.DocumentController.destinosMail(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+
+# Reenvia por mail un comprobante emitido (XML al receptor electronico, PDF a la direccion del comprobante)
+POST     /api/v1/empresa/:rut/documentos/reenviarMail            com.bluedot.efactura.controllers.DocumentController.reenviarMail(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
+
+# Envios por mail registrados de un comprobante (idTipoDoc, serie, nro) o de un sobre (sobre)
+GET      /api/v1/empresa/:rut/documentos/enviosMail              com.bluedot.efactura.controllers.DocumentController.enviosMail(rut:String)
+
 ###### EMAIL ENTRANTES
 
 # Obtiene y procesa los email entrantes para una empresa

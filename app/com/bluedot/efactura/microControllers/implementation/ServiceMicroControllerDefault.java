@@ -685,8 +685,13 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	}
 
 	@Override
-	public void enviarCfeEmpresa(CFE cfe) throws APIException{
-		recepcionService.enviarCorreoReceptorElectronico(cfe);
+	public List<String> enviarCfeEmpresa(CFE cfe, String origen) throws APIException{
+		return recepcionService.enviarCorreoReceptorElectronico(cfe, origen);
+	}
+
+	@Override
+	public org.json.JSONObject destinosCorreo(CFE cfe) {
+		return recepcionService.destinosCorreo(cfe);
 	}
 
 	@Override

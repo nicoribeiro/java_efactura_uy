@@ -30,6 +30,7 @@ import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.interceptors.InterceptorContextHolder;
 import com.bluedot.efactura.interceptors.NamespacesInterceptor;
 import com.bluedot.efactura.interceptors.SignatureInterceptor;
+import com.bluedot.efactura.model.EnvioMail;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
@@ -734,11 +735,48 @@ public class RecepcionServiceImpl implements RecepcionService {
 		this.enviarSobreDGI(sobre, sobre.getXmlDgi());
 	}
 
-	@Override
-	public void enviarCorreoReceptorElectronico(CFE cfe) throws APIException {
+	/** Mail del receptor electronico al que va el XML, o null */
+	private static String mailXml(CFE cfe) {
 		SobreEmitido sobre = cfe.getSobreEmitido();
-		
-		if (sobre.getEmpresaReceptora().isEmisorElectronico()){
+		if (sobre == null || sobre.getEmpresaReceptora() == null || !sobre.getEmpresaReceptora().isEmisorElectronico())
+			return null;
+		String mail = sobre.getEmpresaReceptora().getMailRecepcion();
+		return mail != null && !mail.trim().isEmpty() ? mail.trim() : null;
+	}
+
+	@Override
+	public org.json.JSONObject destinosCorreo(CFE cfe) {
+		org.json.JSONObject xml = new org.json.JSONObject();
+		SobreEmitido sobre = cfe.getSobreEmitido();
+		if (mailXml(cfe) != null)
+			xml.put("destino", mailXml(cfe));
+		else if (sobre == null)
+			xml.put("motivo", "el comprobante no tiene sobre");
+		else if (sobre.getEmpresaReceptora() == null || !sobre.getEmpresaReceptora().isEmisorElectronico())
+			xml.put("motivo", "el receptor no es emisor electrónico");
+		else
+			xml.put("motivo", "el receptor no tiene mail de recepción");
+
+		org.json.JSONObject pdf = new org.json.JSONObject();
+		if (cfe.getPdfMailAddress() != null && !cfe.getPdfMailAddress().trim().isEmpty())
+			pdf.put("destino", cfe.getPdfMailAddress().trim());
+		else
+			pdf.put("motivo", "el comprobante no tiene mail para el PDF");
+
+		org.json.JSONObject destinos = new org.json.JSONObject();
+		destinos.put("xml", xml);
+		destinos.put("pdf", pdf);
+		return destinos;
+	}
+
+	@Override
+	public List<String> enviarCorreoReceptorElectronico(CFE cfe, String origen) throws APIException {
+		List<String> enviados = new java.util.ArrayList<String>();
+		SobreEmitido sobre = cfe.getSobreEmitido();
+
+		// XML al receptor electronico
+		String destinoXml = mailXml(cfe);
+		if (destinoXml != null) {
 			if (sobre.getXmlEmpresa()==null){
 				try {
 					EnvioCFE envioCFE = (EnvioCFE) XML.unMarshall(XML.loadXMLFromString(sobre.getXmlDgi()), EnvioCFE.class);
@@ -749,9 +787,30 @@ public class RecepcionServiceImpl implements RecepcionService {
 					e.printStackTrace();
 				}
 			}
-			enviarCorreoReceptorElectronico(sobre);
+			if (sobre.getXmlEmpresa() != null && sobre.getNombreArchivo() != null && !sobre.getNombreArchivo().isEmpty()) {
+				logger.info("ENVIO DE XML");
+				Commons.enviarMail(sobre.getEmpresaEmisora(), destinoXml, sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "",
+						new EnvioMail.Contexto(EnvioMail.Tipo.XML_RECEPTOR, origen).comprobante(cfe).sobre(sobre.getId()));
+				enviados.add("XML a " + destinoXml);
+			}
 		}
-		
+
+		// PDF a la direccion del comprobante (aunque el receptor no sea electronico); si no esta en disco se genera
+		if (cfe.getPdfMailAddress() != null && !cfe.getPdfMailAddress().trim().isEmpty()) {
+			String filename = Commons.getPDFpath(cfe.getEmpresaEmisora(), cfe) + File.separator + Commons.getPDFfilename(cfe);
+			try {
+				byte[] pdf = Files.exists(Paths.get(filename)) ? Files.readAllBytes(Paths.get(filename))
+						: new com.bluedot.efactura.GenerateInvoice(cfe).createPDF().toByteArray();
+				logger.info("ENVIO DE PDF " + filename);
+				Commons.enviarMail(cfe.getSucursal(), cfe.getPdfMailAddress().trim(), Commons.getPDFfilename(cfe), pdf,
+						new EnvioMail.Contexto(EnvioMail.Tipo.PDF, origen).comprobante(cfe));
+				enviados.add("PDF a " + cfe.getPdfMailAddress().trim());
+			} catch (IOException e) {
+				throw APIException.raise(e);
+			}
+		}
+
+		return enviados;
 	}
 
 	@Override
@@ -760,7 +819,10 @@ public class RecepcionServiceImpl implements RecepcionService {
 		if (sobre.getEmpresaReceptora() != null && sobre.getEmpresaReceptora().isEmisorElectronico() && sobre.getXmlEmpresa()!=null && sobre.getNombreArchivo()!=null && !sobre.getNombreArchivo().equals("")) {
 			//ENVIO XML
 			logger.info("ENVIO DE XML");
-			Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "");
+			// El sobre suele tener un solo comprobante: se registra ese
+			CFE unico = sobre.getCfes() != null && sobre.getCfes().size() == 1 ? sobre.getCfes().get(0) : null;
+			Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "",
+					EnvioMail.Contexto.automatico(EnvioMail.Tipo.XML_RECEPTOR).comprobante(unico).sobre(sobre.getId()));
 		}
 		
 		//ENVIO PDF
@@ -771,7 +833,8 @@ public class RecepcionServiceImpl implements RecepcionService {
 					logger.info("ENVIO DE PDF");
 					logger.info("PDF filename: " + filename);
 					byte[] allBytes = Files.readAllBytes(Paths.get(filename));
-					Commons.enviarMail(cfe.getSucursal(), cfe.getPdfMailAddress(), Commons.getPDFfilename(cfe), allBytes);
+					Commons.enviarMail(cfe.getSucursal(), cfe.getPdfMailAddress(), Commons.getPDFfilename(cfe), allBytes,
+							EnvioMail.Contexto.automatico(EnvioMail.Tipo.PDF).comprobante(cfe).sobre(sobre.getId()));
 				} catch (IOException e) {
 					throw APIException.raise(e);
 				}

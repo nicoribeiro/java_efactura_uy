@@ -27,7 +27,10 @@ public interface ServiceMicroController
 
 	List<EmailMessage> obtenerYProcesarEmailsEntrantesDesdeServerCorreo() throws APIException;
 
-	void enviarCfeEmpresa(CFE cfe) throws APIException;
+	/** Reenvia el comprobante por mail; origen: quien lo pide (mail del usuario) para el registro de envios */
+	java.util.List<String> enviarCfeEmpresa(CFE cfe, String origen) throws APIException;
+
+	org.json.JSONObject destinosCorreo(CFE cfe);
 
 	void enviarCorreoReceptorElectronico(SobreEmitido sobre) throws APIException;
 
