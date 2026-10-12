@@ -17,13 +17,12 @@ import play.Play;
 
 public class NotificationPoller extends PollerRunner {
 
-	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l * 60l * 24l;
 
 	final static Logger logger = LoggerFactory.getLogger(NotificationPoller.class);
 
 
 	public NotificationPoller() {
-		super(logger,SLEEP_TIME_IN_MILLIS);
+		super(logger, intervaloConfig("NotificationPoller", 60 * 24));
 	}
 
 	@Override

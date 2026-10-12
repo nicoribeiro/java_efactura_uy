@@ -27,6 +27,7 @@ import play.Play;
  * <ul>
  * <li>ReporteDiarioPoller.run: true para activarlo (solo en una instancia)</li>
  * <li>ReporteDiarioPoller.hora: hora del dia (0-23) a partir de la cual corre, default 15</li>
+ * <li>ReporteDiarioPoller.intervaloMinutos: cada cuanto revisa si ya es la hora, default 5</li>
  * <li>ReporteDiarioPoller.diasDesde: default 30</li>
  * <li>ReporteDiarioPoller.cantReportes: default 20</li>
  * <li>ReporteDiarioPoller.empresas: RUTs separados por coma; vacio = todas las empresas con firma digital</li>
@@ -34,7 +35,6 @@ import play.Play;
  */
 public class ReporteDiarioPoller extends PollerRunner {
 
-	private static final long SLEEP_TIME_IN_MILLIS = 5l * 60l * 1000l; // 5 minutos
 
 	static Logger logger = LoggerFactory.getLogger(ReporteDiarioPoller.class);
 
@@ -42,13 +42,14 @@ public class ReporteDiarioPoller extends PollerRunner {
 	private String ultimaEjecucion;
 
 	public ReporteDiarioPoller() {
-		super(logger, SLEEP_TIME_IN_MILLIS);
+		super(logger, intervaloConfig("ReporteDiarioPoller", 5));
 		// Desde el arranque, para que /procesos lo muestre antes de la primera ejecucion
 		estado.setProgramacion(programacion(Play.application().configuration().getInt("ReporteDiarioPoller.hora", 15)));
 	}
 
 	private static String programacion(int hora) {
-		return String.format("diario desde las %02d:00 (revisa cada 5 minutos)", hora);
+		long minutos = Play.application().configuration().getLong("ReporteDiarioPoller.intervaloMinutos", 5l);
+		return String.format("diario desde las %02d:00 (revisa cada %d minutos)", hora, minutos);
 	}
 
 	@Override

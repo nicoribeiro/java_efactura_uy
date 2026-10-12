@@ -68,6 +68,14 @@ public abstract class PollerRunner implements Runnable {
 		}
 	}
 
+	/**
+	 * Intervalo del poller desde application.conf ({clave}.intervaloMinutos), en milisegundos. Sin la clave se usa el
+	 * valor por defecto.
+	 */
+	protected static long intervaloConfig(String clave, long minutosPorDefecto) {
+		return play.Play.application().configuration().getLong(clave + ".intervaloMinutos", minutosPorDefecto) * 60l * 1000l;
+	}
+
 	protected abstract void executeConcreteAction() throws APIException;
 
 }

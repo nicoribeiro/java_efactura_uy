@@ -10,12 +10,11 @@ import com.bluedot.efactura.model.Empresa;
 
 public class EmailEntrantesPoller extends PollerRunner {
 	
-	private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l* 5l; // 5 Minutes
 	
 	static Logger logger = LoggerFactory.getLogger(EmailEntrantesPoller.class);
 
 	public EmailEntrantesPoller() {
-		super(logger,SLEEP_TIME_IN_MILLIS);
+		super(logger, intervaloConfig("EmailEntrantesPoller", 5));
 	}
 
 	@Override

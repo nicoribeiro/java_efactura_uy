@@ -37,14 +37,9 @@ import com.google.inject.Provider;
 
 import dgi.classes.recepcion.TipMonType;
 import play.Application;
-import play.Play;
 
 public class PollerTipoDeCambioRunner extends PollerRunner {
 
-	/** Cada cuanto revisa (TipoDeCambioPoller.intervaloMinutos, default 60) */
-	private static long intervaloMs() {
-		return Play.application().configuration().getLong("TipoDeCambioPoller.intervaloMinutos", 60l) * 60l * 1000l;
-	}
 	
 	static Logger logger = LoggerFactory.getLogger(PollerTipoDeCambioRunner.class);
 
@@ -54,7 +49,7 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 	private Provider<Application> applicationProvider;
 
 	public PollerTipoDeCambioRunner(Provider<Application> applicationProvider) {
-		super(logger, intervaloMs());
+		super(logger, intervaloConfig("TipoDeCambioPoller", 60));
 		this.applicationProvider = applicationProvider;
 	}
 	
