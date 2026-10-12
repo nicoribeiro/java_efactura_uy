@@ -31,7 +31,8 @@ public class Sucursal extends Model<Sucursal>{
 	@GeneratedValue
 	private int id;
 	
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	/* Sin REMOVE: borrar una sucursal no debe borrar la empresa */
+	@ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH }, fetch = FetchType.LAZY)
 	private Empresa empresa;
 	
 	private String domicilioFiscal;
@@ -46,7 +47,8 @@ public class Sucursal extends Model<Sucursal>{
 	
 	private String codigoPostal;
 	
-	@OneToMany(cascade = CascadeType.ALL, mappedBy="sucursal", fetch=FetchType.LAZY)
+	/* Sin REMOVE: borrar una sucursal no debe borrar sus comprobantes */
+	@OneToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH }, mappedBy="sucursal", fetch=FetchType.LAZY)
 	private List<CFE> cfes;
 	
 	

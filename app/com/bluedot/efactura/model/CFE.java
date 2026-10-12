@@ -246,6 +246,13 @@ public class CFE extends Model<CFE>{
 
 	private static Finder<Integer, CFE> find = new Finder<Integer, CFE>(Integer.class, CFE.class);
 
+	/** Cantidad de comprobantes (emitidos o recibidos) de una sucursal */
+	public static long countBySucursal(Sucursal sucursal) {
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+		q.getCriteria().add(Restrictions.eq("sucursal", sucursal));
+		return q.findRowCount();
+	}
+
 	public static CFE findById(Integer id) {
 		return find.byId(id);
 	}

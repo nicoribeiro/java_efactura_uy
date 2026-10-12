@@ -113,6 +113,9 @@ POST      /api/v1/empresa/:rut/sucursales						 com.bluedot.efactura.controllers
 # Edita una Sucursal
 PUT      /api/v1/empresa/:rut/sucursales/:codigoSuc				 com.bluedot.efactura.controllers.EmpresasController.editarSucursal(rut:String, codigoSuc:Integer)
 
+# Borra una Sucursal sin comprobantes (no la ultima)
+DELETE   /api/v1/empresa/:rut/sucursales/:codigoSuc              com.bluedot.efactura.controllers.EmpresasController.eliminarSucursal(rut:String, codigoSuc:Integer)
+
 
 ###### REPORTE DIARIO
 

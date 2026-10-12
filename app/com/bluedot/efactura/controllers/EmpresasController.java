@@ -42,6 +42,7 @@ import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.empresas.CargaFirmaDigital;
+import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.Sucursal;
@@ -554,6 +555,33 @@ public class EmpresasController extends AbstractController {
 		return json(OK);
 	}
 	
+	/** Borra una sucursal sin comprobantes. Solo ADMIN. No se puede borrar la ultima sucursal de la empresa. */
+	public Promise<Result> eliminarSucursal(String rut, Integer codigoSuc) throws APIException {
+		User usuario = PermissionValidator.getSessionUser(ctx());
+		AccesoEmpresa.verificarAdmin(usuario, "DELETE /empresa/" + rut + "/sucursales/" + codigoSuc, true);
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		Sucursal sucursal = Sucursal.findByCodigoSucursal(empresa.getSucursales(), codigoSuc, true);
+
+		if (empresa.getSucursales().size() <= 1)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("CdgDGISucur", String.valueOf(codigoSuc))
+					.setDetailMessage("No se puede borrar la única sucursal de la empresa");
+
+		long comprobantes = CFE.countBySucursal(sucursal);
+		if (comprobantes > 0)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("CdgDGISucur", String.valueOf(codigoSuc))
+					.setDetailMessage("La sucursal tiene " + comprobantes + " comprobante(s): no se puede borrar");
+
+		// Primero se saca de la empresa: si quedara en la lista, su cascade la volveria a guardar
+		empresa.getSucursales().remove(sucursal);
+		sucursal.delete();
+
+		auditoria.info(usuario.getEmailAddress() + " borró la sucursal " + codigoSuc + " (" + sucursal.getDomicilioFiscal()
+				+ ") de la empresa " + rut);
+
+		return json(OK);
+	}
+
 	// TODO permisis de creacion
 	public Promise<Result> crearSucursal(String rut) throws APIException {
 		User usuario = PermissionValidator.getSessionUser(ctx());
