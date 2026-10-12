@@ -1,5 +1,11 @@
 package com.bluedot.commons.security;
 
+import org.hibernate.criterion.Restrictions;
+
+import com.play4jpa.jpa.models.DefaultQuery;
+
+import java.util.List;
+
 import java.util.Date;
 import java.util.UUID;
 
@@ -48,6 +54,15 @@ public class Session extends Model<Session>
 
 
 	public static Finder<String, Session> find = new Finder<String, Session>(String.class, Session.class);
+
+	/** Sesiones de un usuario, de la mas reciente a la mas vieja */
+	public static List<Session> findByUser(User user)
+	{
+		DefaultQuery<Session> q = (DefaultQuery<Session>) find.query();
+		q.getCriteria().add(Restrictions.eq("user", user));
+		q.orderByDesc("creationTimestamp");
+		return q.findList();
+	}
 
 	public static User findUserByAuthToken(String authToken)
 	{

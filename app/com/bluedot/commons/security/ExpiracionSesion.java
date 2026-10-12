@@ -48,6 +48,14 @@ public class ExpiracionSesion {
 		return Play.application().configuration().getLong("seguridad.sesion.duracionMaximaHoras", 168l) * 60 * 60 * 1000;
 	}
 
+	public static long inactividadMinutos() {
+		return inactividadMs() / (60 * 1000);
+	}
+
+	public static long duracionMaximaHoras() {
+		return duracionMaximaMs() / (60 * 60 * 1000);
+	}
+
 	/**
 	 * @return el motivo por el que la sesion esta vencida, o null si esta vigente
 	 */
