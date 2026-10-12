@@ -58,6 +58,9 @@ GET      /api/v1/empresa/:rut/emails/carpetas                    com.bluedot.efa
 
 ###### SOBRES
 
+# Sobres de la empresa (emitidos o recibidos), paginados, con sus comprobantes
+GET      /api/v1/empresa/:rut/sobres                             com.bluedot.efactura.controllers.SobresController.getSobres(rut: String)
+
 # Obtener un sobre
 GET      /api/v1/empresa/:rut/sobre                              com.bluedot.efactura.controllers.SobresController.getSobre(rut:String, idSobre:Long)
 

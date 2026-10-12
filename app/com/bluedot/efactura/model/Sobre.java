@@ -29,6 +29,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.utils.XML;
+import com.bluedot.commons.utils.Tuple;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
@@ -215,6 +216,52 @@ public abstract class Sobre extends Model<Sobre> {
 		return sobre;
 	}
 	
+	// Finder sin tipar: las subclases extienden Model<Sobre>, no Model<SobreEmitido>, y no cumplen la cota de Finder
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private static Finder findEmitidos = new Finder(Long.class, SobreEmitido.class);
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private static Finder findRecibidos = new Finder(Long.class, SobreRecibido.class);
+
+	/**
+	 * Sobres de una empresa, del mas nuevo al mas viejo: los que emitio (EMITIDO) o los que recibio (RECIBIDO).
+	 * 
+	 * @param estado
+	 *            AS, BS o "SIN" (sin estado); null = todos. En emitidos es el estado de DGI, en recibidos el que respondio
+	 *            la empresa
+	 * @param desde
+	 *            fecha del sobre mayor o igual; null = sin filtro
+	 * @param hasta
+	 *            fecha del sobre menor o igual; null = sin filtro
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static Tuple<List<Sobre>, Long> findByEmpresa(Empresa empresa, DireccionDocumento direccion, String estado, Date desde,
+			Date hasta, int page, int pageSize) {
+		boolean emitidos = direccion == DireccionDocumento.EMITIDO;
+		DefaultQuery q = (DefaultQuery) (emitidos ? findEmitidos.query() : findRecibidos.query());
+
+		q.getCriteria().add(Restrictions.eq(emitidos ? "empresaEmisora" : "empresaReceptora", empresa));
+
+		if (estado != null && !estado.trim().isEmpty()) {
+			String campo = emitidos ? "estadoDgi" : "estadoEmpresa";
+			if ("SIN".equalsIgnoreCase(estado.trim()))
+				q.getCriteria().add(Restrictions.isNull(campo));
+			else
+				q.getCriteria().add(Restrictions.eq(campo, EstadoACKSobreType.valueOf(estado.trim().toUpperCase())));
+		}
+
+		if (desde != null)
+			q.getCriteria().add(Restrictions.ge("fecha", desde));
+		if (hasta != null)
+			q.getCriteria().add(Restrictions.le("fecha", hasta));
+
+		long rowCount = q.findRowCount();
+
+		q.orderByDesc("fecha");
+		q.orderByDesc("id");
+
+		return new Tuple<List<Sobre>, Long>(q.findPage(page, pageSize), rowCount);
+	}
+
 	public static List<Sobre> findByNombre(String name) {
 		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query();
 		

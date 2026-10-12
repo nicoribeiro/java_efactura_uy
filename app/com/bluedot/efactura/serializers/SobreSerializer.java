@@ -57,7 +57,6 @@ public class SobreSerializer<T> extends JSONSerializer<Sobre> {
 				sobreJson.put("respuesta_dgi", sobreEmitido.getRespuesta_dgi());
 				sobreJson.put("resultado_dgi", sobreEmitido.getResultado_dgi());
 				sobreJson.put("idReceptor", sobreEmitido.getIdReceptor());
-				sobreJson.put("token", sobreEmitido.getToken());
 				sobreJson.put("cfes", cfeSerializer.objectToJson(sobreEmitido.getCfes(), true));
 			}
 			

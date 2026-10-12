@@ -16,6 +16,7 @@ import dgi.classes.recepcion.TipMonType;
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import org.hibernate.FetchMode;
 import org.hibernate.annotations.Type;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.MatchMode;
@@ -473,6 +474,26 @@ public class CFE extends Model<CFE>{
 		return new Tuple<List<CFE>, Long>(list, rowCount);
 	}
 
+
+	/**
+	 * Comprobantes de varios sobres (emitidos o recibidos) en una sola consulta, para listar sobres con sus comprobantes
+	 */
+	public static List<CFE> findBySobres(List<Long> idsSobres, DireccionDocumento direccion) {
+		if (idsSobres.isEmpty())
+			return new LinkedList<CFE>();
+
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+		q.getCriteria().add(Restrictions.in(direccion == DireccionDocumento.EMITIDO ? "sobreEmitido.id" : "sobreRecibido.id", idsSobres));
+		// Lo que usa el resumen de cada comprobante, en la misma consulta (si no, una consulta por comprobante)
+		q.getCriteria().setFetchMode("empresaEmisora", FetchMode.JOIN);
+		q.getCriteria().setFetchMode("empresaReceptora", FetchMode.JOIN);
+		q.getCriteria().setFetchMode("titular", FetchMode.JOIN);
+		q.orderByAsc("tipo");
+		q.orderByAsc("serie");
+		q.orderByAsc("nro");
+
+		return q.findList();
+	}
 
 	public Empresa getEmpresaEmisora() {
 		return empresaEmisora;
