@@ -29,6 +29,7 @@ PUT      /api/v1/empresa/:rut/documentos                         com.bluedot.efa
 # Consulta el resultado de un documento
 GET      /api/v1/empresa/:rut/documentos/resultado               com.bluedot.efactura.controllers.DocumentController.resultadoDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer)
 GET      /api/v1/empresa/:rut/documentos/sobre                   com.bluedot.efactura.controllers.DocumentController.getSobreDocumento(rut: String)
+GET      /api/v1/empresa/:rut/documentos/referenciadoPor         com.bluedot.efactura.controllers.DocumentController.getReferenciadoPor(rut: String)
 GET      /api/v1/empresa/:rut/documentos/resumen                 com.bluedot.efactura.controllers.DocumentController.getResumenDocumentos(rut: String)
 
 # Obtiene la representacion en PDF del documento

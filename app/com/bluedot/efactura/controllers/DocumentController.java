@@ -426,6 +426,40 @@ public class DocumentController extends AbstractController {
 	 * id puede existir en ambas.
 	 */
 	//TODO agregar validacion de que el usuario tiene permisos sobre esta empresa (cubierto por @EmpresaAccess)
+	/**
+	 * Comprobantes emitidos que referencian al comprobante emitido idTipoDoc/serie/nro (notas de credito o debito, por
+	 * ejemplo). Solo lectura. Solo emitidos: en los recibidos la referencia no se vincula al recibir.
+	 */
+	public Promise<Result> getReferenciadoPor(String rut) throws APIException {
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		Integer idTipoDoc;
+		Integer nro;
+		try {
+			idTipoDoc = request().getQueryString("idTipoDoc") != null ? Integer.parseInt(request().getQueryString("idTipoDoc")) : null;
+			nro = request().getQueryString("nro") != null ? Integer.parseInt(request().getQueryString("nro")) : null;
+		} catch (IllegalArgumentException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("idTipoDoc o nro invalidos");
+		}
+		String serie = request().getQueryString("serie");
+
+		if (idTipoDoc == null || nro == null || serie == null)
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).setDetailMessage("idTipoDoc, serie y nro son obligatorios");
+
+		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
+		if (tipo == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
+
+		List<CFE> cfes = CFE.findByIdEmitido(empresa, tipo, serie, nro, null, true);
+		if (cfes.size() != 1)
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC", rut + "-" + nro + "-" + serie + "-" + idTipoDoc)
+					.setDetailMessage(cfes.isEmpty() ? "No exite CFE" : "No identifica a un unico cfe");
+
+		JSONArray referencias = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(CFE.findReferenciadoPor(cfes.get(0)));
+
+		return json(referencias.toString());
+	}
+
 	public Promise<Result> getSobreDocumento(String rut) throws APIException {
 		Empresa empresa = Empresa.findByRUT(rut, true);
 

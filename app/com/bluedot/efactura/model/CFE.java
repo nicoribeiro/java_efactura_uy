@@ -476,6 +476,19 @@ public class CFE extends Model<CFE>{
 
 
 	/**
+	 * Comprobantes emitidos que referencian a este (notas de credito o debito sobre una factura, por ejemplo), del mas
+	 * nuevo al mas viejo. Solo emitidos: en los recibidos la referencia no se vincula al recibir.
+	 */
+	public static List<CFE> findReferenciadoPor(CFE cfe) {
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+		q.getCriteria().add(Restrictions.eq("referencia", cfe));
+		q.getCriteria().add(Restrictions.isNotNull("sobreEmitido"));
+		q.orderByDesc("fechaEmision");
+		q.orderByDesc("nro");
+		return q.findList();
+	}
+
+	/**
 	 * Comprobantes de varios sobres (emitidos o recibidos) en una sola consulta, para listar sobres con sus comprobantes
 	 */
 	public static List<CFE> findBySobres(List<Long> idsSobres, DireccionDocumento direccion) {
