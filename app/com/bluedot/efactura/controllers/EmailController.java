@@ -28,6 +28,7 @@ import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
+import com.bluedot.efactura.model.EmailFolderState;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.pollers.PollerManager;
 import com.google.inject.Inject;
@@ -107,6 +108,8 @@ public class EmailController extends AbstractController
 			adjunto.put("name", fila[1] != null ? fila[1] : JSONObject.NULL);
 			adjunto.put("estado", fila[2] != null ? ((AttachmentEstado) fila[2]).name() : JSONObject.NULL);
 			adjunto.put("timestamp", fila[3]);
+			adjunto.put("error", fila[5] != null ? fila[5] : JSONObject.NULL);
+			adjunto.put("errorStack", fila[6] != null ? fila[6] : JSONObject.NULL);
 			adjuntosPorEmail.get((Long) fila[4]).put(adjunto);
 		}
 
@@ -124,6 +127,29 @@ public class EmailController extends AbstractController
 		}
 
 		return json(JSONUtils.createObjectList(results, emails.item2, page, pageSize).toString());
+	}
+
+	/**
+	 * Estado de la sincronizacion IMAP de cada carpeta del buzon de la empresa (solo lectura): ultimo UID procesado y
+	 * fecha de la ultima sincronizacion.
+	 */
+	//TODO agregar validacion de que el usuario tiene permisos sobre esta empresa (cubierto por @EmpresaAccess)
+	public Promise<Result> getCarpetas(String rut) throws APIException
+	{
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+		JSONArray carpetas = new JSONArray();
+		for (EmailFolderState state : EmailFolderState.findByEmpresa(empresa)) {
+			JSONObject json = new JSONObject();
+			json.put("folderName", state.getFolderName());
+			json.put("uidValidity", state.getUidValidity());
+			json.put("lastUid", state.getLastUid());
+			json.put("ultimaSincronizacion", state.getUltimaSincronizacion() != null ? sdf.format(state.getUltimaSincronizacion()) : JSONObject.NULL);
+			carpetas.put(json);
+		}
+
+		return json(carpetas.toString());
 	}
 
 	public Promise<Result> getEmailEntrantes(String rut, String estado) throws APIException

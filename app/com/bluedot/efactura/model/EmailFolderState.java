@@ -69,6 +69,16 @@ public class EmailFolderState extends Model<EmailFolderState> {
 		return q.findUnique();
 	}
 
+	/**
+	 * Estado de todas las carpetas sincronizadas de una empresa, ordenadas por nombre
+	 */
+	public static java.util.List<EmailFolderState> findByEmpresa(Empresa empresa) {
+		DefaultQuery<EmailFolderState> q = (DefaultQuery<EmailFolderState>) find.query();
+		q.getCriteria().add(Restrictions.eq("empresa", empresa));
+		q.orderByAsc("folderName");
+		return q.findList();
+	}
+
 	public long getId() {
 		return id;
 	}

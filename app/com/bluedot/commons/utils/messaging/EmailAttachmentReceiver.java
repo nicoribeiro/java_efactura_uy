@@ -196,6 +196,8 @@ public class EmailAttachmentReceiver {
 
 			if (nuevos.isEmpty()) {
 				logger.debug("Carpeta " + folderName + ": sin mensajes nuevos (lastUid=" + lastUid + ")");
+				// Se registra igual la sincronizacion, para saber que la carpeta se sigue revisando
+				listener.saveState(folderName, uidValidity, lastUid);
 				return resultado;
 			}
 

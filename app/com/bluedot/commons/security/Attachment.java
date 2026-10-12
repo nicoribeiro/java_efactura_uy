@@ -55,6 +55,14 @@ public class Attachment extends Model<Attachment> {
 	
 	@Enumerated(EnumType.STRING)
 	private AttachmentEstado estado;
+
+	/** Descripcion del error si el procesamiento fallo (estado PROCESADO_ERROR); el stack trace completo va al log */
+	@Column(columnDefinition = "TEXT")
+	private String error;
+
+	/** Stack trace completo del error (incluye las causas) */
+	@Column(columnDefinition = "TEXT")
+	private String errorStack;
 	
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private EmailMessage emailMessage;
@@ -180,16 +188,32 @@ public class Attachment extends Model<Attachment> {
 		this.emailMessage = emailMessage;
 	}
 
+	public String getError() {
+		return error;
+	}
+
+	public void setError(String error) {
+		this.error = error;
+	}
+
+	public String getErrorStack() {
+		return errorStack;
+	}
+
+	public void setErrorStack(String errorStack) {
+		this.errorStack = errorStack;
+	}
+
 	/**
 	 * Resumen de los adjuntos de varios emails SIN cargar el contenido (payload puede ser un XML grande).
 	 * 
-	 * @return filas [id, name, estado, timestamp, emailMessageId]
+	 * @return filas [id, name, estado, timestamp, emailMessageId, error, errorStack]
 	 */
 	public static java.util.List<Object[]> findResumenByEmails(java.util.Collection<Long> emailIds) {
 		if (emailIds.isEmpty())
 			return new java.util.LinkedList<Object[]>();
 		return play.db.jpa.JPA.em()
-				.createQuery("select a.id, a.name, a.estado, a.timestamp, a.emailMessage.id from Attachment a"
+				.createQuery("select a.id, a.name, a.estado, a.timestamp, a.emailMessage.id, a.error, a.errorStack from Attachment a"
 						+ " where a.emailMessage.id in :ids order by a.id", Object[].class)
 				.setParameter("ids", emailIds).getResultList();
 	}

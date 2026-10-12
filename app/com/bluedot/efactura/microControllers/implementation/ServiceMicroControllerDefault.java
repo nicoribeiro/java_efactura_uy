@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,7 +18,6 @@ import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.notificationChannels.MessagingHelper;
 import com.bluedot.commons.security.Attachment;
 import com.bluedot.commons.security.AttachmentEstado;
 import com.bluedot.commons.security.EmailMessage;
@@ -588,6 +586,9 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 				
 			}
 			attachment.setEstado(AttachmentEstado.PROCESADO_OK);
+			// Si es un reintento que ahora funciono, se limpia el error anterior
+			attachment.setError(null);
+			attachment.setErrorStack(null);
 			attachment.update();
 			/*
 			 * Para que se guarden en la BBDD los cambios referentes al procesamiento del ultimo attachment
@@ -603,6 +604,8 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			recuperarTransaccion();
 			Attachment attachmentFromBD = Attachment.findById(attachmentId);
 			attachmentFromBD.setEstado(AttachmentEstado.PROCESADO_ERROR);
+			attachmentFromBD.setError(descripcionError(e));
+			attachmentFromBD.setErrorStack(org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace(e));
 			attachmentFromBD.update();
 			ThreadMan.forceTransactionFlush();
 			/*
@@ -626,18 +629,32 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			ThreadMan.forceTransactionFlush();
 			
 			/*
-			 * Envio mail a los administradores notificando del error
+			 * El error (descripcion y stack trace completo) queda registrado en el adjunto, visible en el panel y en
+			 * GET /empresa/:rut/emails. Antes se enviaba un mail con el XML adjunto a mailNotificaciones; si esa casilla era la
+			 * misma que se sincroniza, el mail se volvia a procesar y generaba otro error cada 5 minutos.
 			 */
-			Map<String, byte[]> attachments = new TreeMap<String, byte[]>();
-			attachments.put(attachmentFromBD.getName(), attachmentFromBD.getPayload().getBytes());
-			String fullStackTrace = org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace(e);
-			new MessagingHelper()
-				.withCustomConfig(this.getEmpresa().getFromEnvio(), this.getEmpresa().getHostRecepcion(), Integer.parseInt(this.getEmpresa().getPuertoRecepcion()),
-						this.getEmpresa().getUserRecepcion(), this.getEmpresa().getPassRecepcion())
-				.withAttachment(attachments)
-				.sendEmail(this.getEmpresa().getMailNotificaciones(), fullStackTrace, null, "Error Procesando Archivo Recibido", false);
 			
 		}
+	}
+
+	/**
+	 * Descripcion del error para guardar en el adjunto: mensaje y detalle de la APIException, o tipo y mensaje de la
+	 * excepcion y de su causa raiz
+	 */
+	private static String descripcionError(Throwable e) {
+		if (e instanceof APIException) {
+			APIException apiException = (APIException) e;
+			String detalle = apiException.getDetailMessage();
+			return apiException.getError().name() + ": " + apiException.getInternalMessage()
+					+ (detalle != null && !detalle.isEmpty() ? " (" + detalle + ")" : "");
+		}
+		Throwable causa = e;
+		while (causa.getCause() != null && causa.getCause() != causa)
+			causa = causa.getCause();
+		String descripcion = e.getClass().getSimpleName() + (e.getMessage() != null ? ": " + e.getMessage() : "");
+		if (causa != e)
+			descripcion += " | causa: " + causa.getClass().getSimpleName() + (causa.getMessage() != null ? ": " + causa.getMessage() : "");
+		return descripcion;
 	}
 
 	private void setEmpresa(Attachment attachment) {

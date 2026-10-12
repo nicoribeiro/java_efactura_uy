@@ -17,6 +17,8 @@ public class AttachmentSerializer<T> extends JSONSerializer<Attachment> {
 			json.put("estado", attachment.getEstado().name());
 			json.put("timestamp", attachment.getTimestamp());
 			json.put("name", attachment.getName());
+			json.put("error", attachment.getError() != null ? attachment.getError() : JSONObject.NULL);
+			json.put("errorStack", attachment.getErrorStack() != null ? attachment.getErrorStack() : JSONObject.NULL);
 		}
 		
 		return json;
