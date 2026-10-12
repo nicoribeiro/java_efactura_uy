@@ -2,11 +2,9 @@ package com.bluedot.efactura.controllers;
 
 import com.bluedot.efactura.security.EmpresaAccess;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -20,19 +18,15 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
-import com.bluedot.commons.utils.IO;
-import com.bluedot.commons.utils.JSONUtils;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
-import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.ReporteDiario;
 import com.bluedot.efactura.pollers.PollerManager;
+import com.bluedot.efactura.reportes.ReportesDiarios;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
 
-import dgi.classes.respuestas.reporte.EstadoACKRepType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import play.libs.F.Promise;
@@ -60,87 +54,17 @@ public class ReportController extends AbstractController {
 		    )
 	public Promise<Result> generarReporteDiario(String rut, String fecha, int cantReportes, int soloFaltantes) throws APIException {
 
-		if (cantReportes < 1)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("cantReportes", cantReportes);
-
 		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		if (empresa.getFirmaDigital().getValidaHasta().before(new Date()))
-			throw APIException.raise(APIErrors.FIRMA_DIGITAL_VENCIDA);
-		
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
-
 		Date date = DateHandler.fromStringToDate(fecha, sdf);
 
-		JSONArray reportes = new JSONArray();
-
 		/*
-		 * Body
+		 * Body: Output (opcional) es la carpeta donde guardar el XML de cada reporte
 		 */
 		JsonNode jsonNode = request().body().asJson();
 		JSONObject document = new JSONObject(jsonNode.toString());
-		
-		for (int i = 0; i < cantReportes; i++) {
-			JSONObject error = null;
-			ReporteDiario reporte = null;
-			try {
+		String output = document.has("Output") ? document.getString("Output") : null;
 
-				if (soloFaltantes>0) {
-
-					List<ReporteDiario> reportesList = ReporteDiario.findByEmpresaFecha(empresa, DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
-					
-					if (reportesList!=null && reportesList.size()>0) {
-					
-						ReporteDiario reporteDiario = reportesList.get(0);
-						
-						//Busco el reporte diario mas reciente
-						for (Iterator<ReporteDiario> iterator = reportesList.iterator(); iterator.hasNext();) {
-							ReporteDiario rd = (ReporteDiario) iterator.next();
-							if ((reporteDiario.getEstado()==null && rd.getEstado()!=null) || (rd.getSecuencial()>reporteDiario.getSecuencial()))
-								reporteDiario = rd;
-							
-						}
-						
-						//si solo se pide los faltantes y este existe y esta en estado AR se saltea la invocacion
-						if (reporteDiario.getEstado()==EstadoACKRepType.AR)
-							continue;
-						
-					}
-				}
-				
-				logger.info("Generando reporte diario empresa:{} dia:{}", empresa.getRut(), sdf.format(DateHandler.add(date, i, Calendar.DAY_OF_MONTH)));
-				
-				reporte = factory.getServiceMicroController(empresa)
-						.generarReporteDiario(DateHandler.add(date, i, Calendar.DAY_OF_MONTH));
-				
-				if (document.has("Output")) {
-					String filepath = document.getString("Output");
-					IO.writeFile(filepath + "/reporte_" + reporte.getId() + ".xml", reporte.getXml());
-				}
-			} catch (APIException e) {
-				logger.error("APIException:", e);
-				error = e.getJSONObject();
-			} catch (IOException e) {
-				throw APIException.raise(e);
-			}
-
-			JSONObject reporteJSON = new JSONObject();
-
-			if (reporte != null)
-				reporteJSON = EfacturaJSONSerializerProvider.getReporteDiarioSerializer().objectToJson(reporte);
-			else {
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-				reporteJSON.put("fecha", sdf.format(DateHandler.add(date, i, Calendar.DAY_OF_MONTH)));
-			}
-				
-
-			if (error != null)
-				reportes.put(JSONUtils.merge(reporteJSON, error));
-			else
-				reportes.put(JSONUtils.merge(reporteJSON, new JSONObject(OK)));
-
-		}
+		JSONArray reportes = ReportesDiarios.generar(empresa, date, cantReportes, soloFaltantes > 0, output);
 
 		return json(reportes.toString());
 	}

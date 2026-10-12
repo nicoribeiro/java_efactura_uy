@@ -75,6 +75,13 @@ public class PollerManager {
 			executor.execute(runner);
 		}else
 			logger.info("TipoDeCambioPoller: not running");
+
+		if (applicationProvider.get().configuration().getBoolean("ReporteDiarioPoller.run", false)){
+			logger.info("ReporteDiarioPoller: running");
+			runner = new ReporteDiarioPoller();
+			executor.execute(runner);
+		}else
+			logger.info("ReporteDiarioPoller: not running");
 		
 	}
 
