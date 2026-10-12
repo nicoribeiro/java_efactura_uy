@@ -14,6 +14,7 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 
 @Entity
@@ -63,6 +64,15 @@ public class TipoDeCambio extends Model<TipoDeCambio> {
 		
 	}
 	
+	/** Cotizaciones de una moneda entre dos fechas (inclusive), de la mas nueva a la mas vieja */
+	public static List<TipoDeCambio> findByMonedaEntre(TipMonType moneda, Date desde, Date hasta) {
+		DefaultQuery<TipoDeCambio> q = (DefaultQuery<TipoDeCambio>) find.query();
+		q.getCriteria().add(Restrictions.eq("moneda", moneda));
+		q.getCriteria().add(Restrictions.between("fecha", desde, hasta));
+		q.orderByDesc("fecha");
+		return q.findList();
+	}
+
 	public static TipoDeCambio findByFechaYMoneda(Date fecha, TipMonType moneda, boolean throwExceptionWhenMissing) throws APIException {
 		TipoDeCambio tc = findByFechaYMoneda(fecha, moneda);
 		

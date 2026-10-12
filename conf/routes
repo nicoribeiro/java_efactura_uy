@@ -136,6 +136,10 @@ POST     /api/v1/pruebas/intercambio                             com.bluedot.efa
 # Retorna el Pais
 GET      /api/v1/pais/:id                                        com.bluedot.efactura.controllers.PaisesController.getPais(id:Integer)
 
+# Cotizaciones (INE) y Unidad Indexada por anio, solo lectura
+GET      /api/v1/tiposDeCambio                                   com.bluedot.efactura.controllers.CotizacionesController.getTiposDeCambio()
+GET      /api/v1/ui                                              com.bluedot.efactura.controllers.CotizacionesController.getUI()
+
 ###### SISTEMA
 
 # Cambia el Modo de Ejecucion del Sistema

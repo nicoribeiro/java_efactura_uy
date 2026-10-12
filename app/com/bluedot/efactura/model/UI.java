@@ -1,5 +1,7 @@
 package com.bluedot.efactura.model;
 
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -58,6 +60,13 @@ public class UI extends Model<UI>{
 		return ui;
 	}
 	
+	/** Todos los valores de UI, del anio mas nuevo al mas viejo */
+	public static List<UI> findAll() {
+		DefaultQuery<UI> q = (DefaultQuery<UI>) find.query();
+		q.orderByDesc("anio");
+		return q.findList();
+	}
+
 	public static UI findByAnio(int anio, boolean throwExceptionWhenMissing) throws APIException
 	{
 		DefaultQuery<UI> q = (DefaultQuery<UI>) find.query();
