@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,6 +36,12 @@ public class ReportesDiarios {
 	final static Logger logger = LoggerFactory.getLogger(ReportesDiarios.class);
 
 	/**
+	 * Un lock por empresa para que el poller y el endpoint no generen reportes de la misma empresa a la vez (podrian
+	 * repetir el secuencial de un dia). Es local a la JVM, como el poller.
+	 */
+	private static final ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<String, ReentrantLock>();
+
+	/**
 	 * Genera los reportes de cantReportes dias a partir de desde (inclusive). Con soloFaltantes se saltean los dias cuyo
 	 * reporte mas reciente ya esta aceptado por DGI (AR). Un error en un dia no corta el resto: queda en el resultado de
 	 * ese dia.
@@ -50,6 +58,19 @@ public class ReportesDiarios {
 
 		if (empresa.getFirmaDigital() == null || empresa.getFirmaDigital().getValidaHasta().before(new Date()))
 			throw APIException.raise(APIErrors.FIRMA_DIGITAL_VENCIDA);
+
+		ReentrantLock lock = locks.computeIfAbsent(empresa.getRut(), rut -> new ReentrantLock());
+		if (!lock.tryLock())
+			throw APIException.raise(APIErrors.REPORTE_DIARIO_EN_CURSO).withParams(empresa.getRut());
+		try {
+			return generarConLock(empresa, desde, cantReportes, soloFaltantes, output);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	private static JSONArray generarConLock(Empresa empresa, Date desde, int cantReportes, boolean soloFaltantes,
+			String output) throws APIException {
 
 		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder()).getMicroControllersFactory();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");

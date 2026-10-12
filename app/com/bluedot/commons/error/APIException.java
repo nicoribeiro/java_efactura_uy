@@ -131,7 +131,8 @@ public class APIException extends Throwable
 		 * Control de acceso por empresa: 403 (no 401) para no confundir con una sesion vencida
 		 */
 		ACCESO_EMPRESA_DENEGADO(128, 403, false),
-		SOLO_ADMIN(129, 403, false)
+		SOLO_ADMIN(129, 403, false),
+		REPORTE_DIARIO_EN_CURSO(130, 200, true)
 		;
 
 

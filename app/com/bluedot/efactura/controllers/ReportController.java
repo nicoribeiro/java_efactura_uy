@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.security.AccesoEmpresa;
 import com.bluedot.efactura.security.EmpresaAccess;
 
 import java.text.SimpleDateFormat;
@@ -16,6 +17,7 @@ import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.security.PermissionValidator;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.model.Empresa;
@@ -41,6 +43,8 @@ import play.mvc.Security;
 public class ReportController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(ReportController.class);
+
+	final static Logger auditoria = LoggerFactory.getLogger("auditoria");
 	
 	private static SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 	
@@ -54,17 +58,28 @@ public class ReportController extends AbstractController {
 		    )
 	public Promise<Result> generarReporteDiario(String rut, String fecha, int cantReportes, int soloFaltantes) throws APIException {
 
+		// Envia reportes a DGI: solo ADMIN
+		AccesoEmpresa.verificarAdmin(PermissionValidator.getSessionUser(ctx()), "POST /empresa/" + rut + "/reporteDiario", true);
+
 		Empresa empresa = Empresa.findByRUT(rut, true);
 		Date date = DateHandler.fromStringToDate(fecha, sdf);
 
 		/*
-		 * Body: Output (opcional) es la carpeta donde guardar el XML de cada reporte
+		 * Body (opcional): Output es la carpeta donde guardar el XML de cada reporte
 		 */
 		JsonNode jsonNode = request().body().asJson();
-		JSONObject document = new JSONObject(jsonNode.toString());
+		JSONObject document = jsonNode != null ? new JSONObject(jsonNode.toString()) : new JSONObject();
 		String output = document.has("Output") ? document.getString("Output") : null;
 
 		JSONArray reportes = ReportesDiarios.generar(empresa, date, cantReportes, soloFaltantes > 0, output);
+
+		int generados = 0;
+		for (int i = 0; i < reportes.length(); i++)
+			if (reportes.getJSONObject(i).optInt("result_code", 0) == 0)
+				generados++;
+		auditoria.info(PermissionValidator.getSessionUser(ctx()).getEmailAddress() + " generó el reporte diario de la empresa "
+				+ rut + " desde " + fecha + " (" + cantReportes + " día(s)" + (soloFaltantes > 0 ? ", solo faltantes" : "")
+				+ "): " + generados + " generado(s), " + (reportes.length() - generados) + " con error");
 
 		return json(reportes.toString());
 	}
