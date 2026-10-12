@@ -402,16 +402,30 @@ public class EmailAttachmentReceiver {
 	 * @throws MessagingException
 	 * @throws IOException
 	 */
+	/** El adjunto es texto (XML, txt): se guarda como texto para procesarlo; el resto en base64 */
+	public static boolean esTexto(String fileName, String contentType) {
+		String nombre = fileName != null ? fileName.toLowerCase() : "";
+		if (nombre.endsWith(".xml") || nombre.endsWith(".txt"))
+			return true;
+		String tipo = contentType != null ? contentType.toLowerCase() : "";
+		return tipo.startsWith("text/") || tipo.contains("xml");
+	}
+
 	private void messagePartToAttachment(Email email, Part part) throws MessagingException, IOException {
 		String fileName = part.getFileName();
 //							attachFiles += fileName + ", ";
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		part.getDataHandler().writeTo(bos);
 
-		String decodedContent = bos.toString();
 		Attachment attachment = new Attachment();
-		attachment.setAttachmentType(AttachmentType.TEXT);
-		attachment.setPayload(decodedContent);
+		if (esTexto(fileName, part.getContentType())) {
+			attachment.setAttachmentType(AttachmentType.TEXT);
+			attachment.setPayload(bos.toString());
+		} else {
+			// Binario (PDF, imagenes, planillas): como texto se perderian los bytes que no son UTF-8
+			attachment.setAttachmentType(AttachmentType.BASE64);
+			attachment.setPayload(java.util.Base64.getEncoder().encodeToString(bos.toByteArray()));
+		}
 		attachment.setName(fileName);
 		email.getAttachments().add(attachment);
 	}

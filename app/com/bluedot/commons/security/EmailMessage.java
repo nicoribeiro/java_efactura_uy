@@ -111,8 +111,12 @@ public class EmailMessage extends Model<EmailMessage> {
 	 * @param hasta
 	 *            fecha de envio menor o igual; null = sin filtro
 	 */
-	public static Tuple<List<EmailMessage>, Long> find(Empresa empresa, String texto, AttachmentEstado estado, Date desde,
-			Date hasta, int page, int pageSize) {
+	/**
+	 * @param conAdjuntos
+	 *            true = solo con adjuntos, false = solo sin adjuntos, null = todos
+	 */
+	public static Tuple<List<EmailMessage>, Long> find(Empresa empresa, String texto, AttachmentEstado estado, Boolean conAdjuntos,
+			Date desde, Date hasta, int page, int pageSize) {
 		DefaultQuery<EmailMessage> q = (DefaultQuery<EmailMessage>) find.query();
 
 		q.getCriteria().add(Restrictions.eq("empresa", empresa));
@@ -127,6 +131,14 @@ public class EmailMessage extends Model<EmailMessage> {
 					.add(Restrictions.eq("adjunto.estado", estado))
 					.setProjection(Projections.property("adjunto.emailMessage.id"));
 			q.getCriteria().add(Subqueries.propertyIn("id", conAdjuntoEnEstado));
+		}
+
+		if (conAdjuntos != null) {
+			// Sin los adjuntos huerfanos: un NULL en la subconsulta hace que NOT IN no devuelva nada
+			DetachedCriteria conAdjunto = DetachedCriteria.forClass(Attachment.class, "adj")
+					.add(Restrictions.isNotNull("adj.emailMessage"))
+					.setProjection(Projections.property("adj.emailMessage.id"));
+			q.getCriteria().add(conAdjuntos ? Subqueries.propertyIn("id", conAdjunto) : Subqueries.propertyNotIn("id", conAdjunto));
 		}
 
 		if (desde != null)

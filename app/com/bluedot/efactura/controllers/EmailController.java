@@ -25,6 +25,8 @@ import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.serializers.JSONSerializerProvider;
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.Tuple;
+import com.bluedot.commons.utils.messaging.AttachmentType;
+import com.bluedot.commons.utils.messaging.EmailAttachmentReceiver;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
 import com.bluedot.efactura.microControllers.interfaces.ServiceMicroController;
@@ -93,7 +95,20 @@ public class EmailController extends AbstractController
 			}
 		}
 
-		Tuple<List<EmailMessage>, Long> emails = EmailMessage.find(empresa, request().getQueryString("q"), estado, desde, hasta, page, pageSize);
+		// adjuntos: "si" = solo con adjuntos, "no" = solo sin adjuntos; sin parametro = todos
+		String adjuntosParam = request().getQueryString("adjuntos");
+		Boolean conAdjuntos = null;
+		if (adjuntosParam != null && !adjuntosParam.isEmpty()) {
+			if ("si".equalsIgnoreCase(adjuntosParam))
+				conAdjuntos = true;
+			else if ("no".equalsIgnoreCase(adjuntosParam))
+				conAdjuntos = false;
+			else
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("adjuntos", adjuntosParam);
+		}
+
+		Tuple<List<EmailMessage>, Long> emails = EmailMessage.find(empresa, request().getQueryString("q"), estado, conAdjuntos, desde, hasta, page,
+				pageSize);
 
 		// Adjuntos de la pagina en una sola consulta y sin el contenido
 		Map<Long, JSONArray> adjuntosPorEmail = new HashMap<Long, JSONArray>();
@@ -110,6 +125,7 @@ public class EmailController extends AbstractController
 			adjunto.put("timestamp", fila[3]);
 			adjunto.put("error", fila[5] != null ? fila[5] : JSONObject.NULL);
 			adjunto.put("errorStack", fila[6] != null ? fila[6] : JSONObject.NULL);
+			adjunto.put("integro", integro((String) fila[1], (AttachmentType) fila[7]));
 			adjuntosPorEmail.get((Long) fila[4]).put(adjunto);
 		}
 
@@ -127,6 +143,67 @@ public class EmailController extends AbstractController
 		}
 
 		return json(JSONUtils.createObjectList(results, emails.item2, page, pageSize).toString());
+	}
+
+	/**
+	 * El contenido guardado del adjunto es el original: los binarios guardados como texto (antes de BASE64) perdieron los
+	 * bytes que no eran UTF-8
+	 */
+	private static boolean integro(String nombre, AttachmentType tipo) {
+		return tipo == AttachmentType.BASE64 || EmailAttachmentReceiver.esTexto(nombre, null);
+	}
+
+	private static final Map<String, String> TIPOS_ARCHIVO = new HashMap<String, String>();
+	static {
+		TIPOS_ARCHIVO.put("xml", "application/xml");
+		TIPOS_ARCHIVO.put("txt", "text/plain");
+		TIPOS_ARCHIVO.put("pdf", "application/pdf");
+		TIPOS_ARCHIVO.put("png", "image/png");
+		TIPOS_ARCHIVO.put("jpg", "image/jpeg");
+		TIPOS_ARCHIVO.put("jpeg", "image/jpeg");
+		TIPOS_ARCHIVO.put("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		TIPOS_ARCHIVO.put("xls", "application/vnd.ms-excel");
+		TIPOS_ARCHIVO.put("doc", "application/msword");
+		TIPOS_ARCHIVO.put("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+	}
+
+	/**
+	 * Descarga un adjunto de un email recibido por la empresa, con su nombre original. Si es un binario guardado antes de
+	 * BASE64 se devuelve igual, pero el archivo puede estar danado (ver integro en getEmails).
+	 */
+	public Promise<Result> getAdjunto(String rut, long emailId, int adjuntoId) throws APIException
+	{
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		Attachment adjunto = Attachment.findById(adjuntoId);
+		if (adjunto == null || adjunto.getEmailMessage() == null || adjunto.getEmailMessage().getId() != emailId
+				|| adjunto.getEmailMessage().getEmpresa() == null || adjunto.getEmailMessage().getEmpresa().getId() != empresa.getId())
+			throw APIException.raise(APIErrors.ATTACHMENT_NOT_FOUND).withParams("id", String.valueOf(adjuntoId));
+
+		byte[] contenido;
+		if (adjunto.getPayload() == null)
+			contenido = new byte[0];
+		else if (adjunto.getAttachmentType() == AttachmentType.BASE64)
+			contenido = java.util.Base64.getDecoder().decode(adjunto.getPayload());
+		else
+			contenido = adjunto.getPayload().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+		String nombre = adjunto.getName() != null ? adjunto.getName() : "adjunto-" + adjunto.getId();
+		int punto = nombre.lastIndexOf('.');
+		String extension = punto >= 0 ? nombre.substring(punto + 1).toLowerCase() : "";
+		String tipo = TIPOS_ARCHIVO.containsKey(extension) ? TIPOS_ARCHIVO.get(extension) : "application/octet-stream";
+
+		// Nombre en ASCII para el header (los demas caracteres se reemplazan) y completo en filename* (RFC 5987)
+		String ascii = nombre.replaceAll("[^A-Za-z0-9._ -]", "_");
+		String utf8;
+		try {
+			utf8 = java.net.URLEncoder.encode(nombre, "UTF-8").replace("+", "%20");
+		} catch (java.io.UnsupportedEncodingException e) {
+			utf8 = ascii;
+		}
+		response().setHeader("Content-Disposition", "attachment; filename=\"" + ascii + "\"; filename*=UTF-8''" + utf8);
+		response().setHeader("X-Adjunto-Integro", String.valueOf(integro(adjunto.getName(), adjunto.getAttachmentType())));
+		return Promise.<Result>pure(ok(contenido).as(tipo));
 	}
 
 	/**

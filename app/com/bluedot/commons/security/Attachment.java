@@ -207,13 +207,13 @@ public class Attachment extends Model<Attachment> {
 	/**
 	 * Resumen de los adjuntos de varios emails SIN cargar el contenido (payload puede ser un XML grande).
 	 * 
-	 * @return filas [id, name, estado, timestamp, emailMessageId, error, errorStack]
+	 * @return filas [id, name, estado, timestamp, emailMessageId, error, errorStack, attachmentType]
 	 */
 	public static java.util.List<Object[]> findResumenByEmails(java.util.Collection<Long> emailIds) {
 		if (emailIds.isEmpty())
 			return new java.util.LinkedList<Object[]>();
 		return play.db.jpa.JPA.em()
-				.createQuery("select a.id, a.name, a.estado, a.timestamp, a.emailMessage.id, a.error, a.errorStack from Attachment a"
+				.createQuery("select a.id, a.name, a.estado, a.timestamp, a.emailMessage.id, a.error, a.errorStack, a.attachmentType from Attachment a"
 						+ " where a.emailMessage.id in :ids order by a.id", Object[].class)
 				.setParameter("ids", emailIds).getResultList();
 	}

@@ -56,6 +56,8 @@ PUT      /api/v1/empresa/:rut/emailEntrantes/:id    		     com.bluedot.efactura.
 GET		 /api/v1/empresa/:rut/emailEntrantes   	    	     com.bluedot.efactura.controllers.EmailController.getEmailEntrantes(rut:String, estado:String)
 GET      /api/v1/empresa/:rut/emails                             com.bluedot.efactura.controllers.EmailController.getEmails(rut:String)
 GET      /api/v1/empresa/:rut/emails/carpetas                    com.bluedot.efactura.controllers.EmailController.getCarpetas(rut:String)
+# Descarga un adjunto de un email recibido
+GET      /api/v1/empresa/:rut/emails/:emailId/adjuntos/:id       com.bluedot.efactura.controllers.EmailController.getAdjunto(rut:String, emailId:Long, id:Integer)
 
 ###### SOBRES
 
