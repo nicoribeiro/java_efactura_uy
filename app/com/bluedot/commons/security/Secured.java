@@ -179,7 +179,8 @@ public class Secured extends Security.Authenticator
 				ctx.args.put(ACCESS_USER, credential.getUser().getEmailAddress());
 				return credential.getUser().getEmailAddress();
 			}else{
-				logger.info("HMAC signature not matching. Signature: " + credential.getSecret());
+				// Nunca loguear el secret de la credencial
+				logger.info("HMAC signature not matching for key " + key + ", nonce " + nonce);
 			}
 		}
 		
