@@ -37,6 +37,7 @@ import play.mvc.Security;
 import java.awt.print.PrinterException;
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -467,6 +468,106 @@ public class DocumentController extends AbstractController {
 		JSONObject result = new JSONObject();
 		result.put("direccion", direccion.name());
 		result.put("sobre", sobre != null ? EfacturaJSONSerializerProvider.getSobreSerializer().objectToJson(sobre, false) : JSONObject.NULL);
+
+		return json(result.toString());
+	}
+
+	/**
+	 * Resumen de comprobantes de la empresa en un periodo, para el tablero del panel (solo lectura). Agregado en la
+	 * base: no trae los comprobantes.
+	 * 
+	 * Parametros: fromDate / toDate (epoch en segundos, fecha de emision; por defecto los ultimos 30 dias).
+	 * Mismos criterios que el listado: emitidos con sobre emitido, recibidos con sobre recibido.
+	 */
+	//TODO agregar validacion de que el usuario tiene permisos sobre esta empresa (cubierto por @EmpresaAccess)
+	public Promise<Result> getResumenDocumentos(String rut) throws APIException {
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		Date hasta;
+		Date desde;
+		try {
+			hasta = request().getQueryString("toDate") != null ? new Date(Long.parseLong(request().getQueryString("toDate")) * 1000) : new Date();
+			desde = request().getQueryString("fromDate") != null ? new Date(Long.parseLong(request().getQueryString("fromDate")) * 1000)
+					: DateHandler.add(hasta, -29, Calendar.DAY_OF_MONTH);
+		} catch (NumberFormatException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("fromDate y toDate deben ser numericos (epoch en segundos)");
+		}
+
+		javax.persistence.EntityManager em = play.db.jpa.JPA.em();
+		SimpleDateFormat dia = new SimpleDateFormat("yyyy-MM-dd");
+
+		List<Object[]> emitidos = em.createQuery("select c.tipo, c.estado, c.moneda, count(c), sum(c.totMntTotal) from CFE c"
+				+ " where c.empresaEmisora = :empresa and c.sobreEmitido is not null and c.fechaEmision between :desde and :hasta"
+				+ " group by c.tipo, c.estado, c.moneda", Object[].class)
+				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta).getResultList();
+
+		List<Object[]> recibidos = em.createQuery("select c.tipo, c.moneda, count(c), sum(c.totMntTotal) from CFE c"
+				+ " where c.empresaReceptora = :empresa and c.sobreRecibido is not null and c.fechaEmision between :desde and :hasta"
+				+ " group by c.tipo, c.moneda", Object[].class)
+				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta).getResultList();
+
+		List<Object[]> emitidosPorDia = em.createQuery("select c.fechaEmision, count(c) from CFE c"
+				+ " where c.empresaEmisora = :empresa and c.sobreEmitido is not null and c.fechaEmision between :desde and :hasta"
+				+ " group by c.fechaEmision", Object[].class)
+				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta).getResultList();
+
+		List<Object[]> recibidosPorDia = em.createQuery("select c.fechaEmision, count(c) from CFE c"
+				+ " where c.empresaReceptora = :empresa and c.sobreRecibido is not null and c.fechaEmision between :desde and :hasta"
+				+ " group by c.fechaEmision", Object[].class)
+				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta).getResultList();
+
+		JSONArray emitidosJson = new JSONArray();
+		for (Object[] fila : emitidos) {
+			JSONObject json = new JSONObject();
+			json.put("tipo", fila[0] != null ? ((TipoDoc) fila[0]).name() : JSONObject.NULL);
+			json.put("idTipoDoc", fila[0] != null ? ((TipoDoc) fila[0]).value : JSONObject.NULL);
+			json.put("estado", fila[1] != null ? fila[1].toString() : JSONObject.NULL);
+			json.put("moneda", fila[2] != null ? fila[2].toString() : JSONObject.NULL);
+			json.put("cantidad", fila[3]);
+			json.put("total", fila[4] != null ? fila[4] : 0);
+			emitidosJson.put(json);
+		}
+
+		JSONArray recibidosJson = new JSONArray();
+		for (Object[] fila : recibidos) {
+			JSONObject json = new JSONObject();
+			json.put("tipo", fila[0] != null ? ((TipoDoc) fila[0]).name() : JSONObject.NULL);
+			json.put("idTipoDoc", fila[0] != null ? ((TipoDoc) fila[0]).value : JSONObject.NULL);
+			json.put("moneda", fila[1] != null ? fila[1].toString() : JSONObject.NULL);
+			json.put("cantidad", fila[2]);
+			json.put("total", fila[3] != null ? fila[3] : 0);
+			recibidosJson.put(json);
+		}
+
+		// Un elemento por dia con comprobantes: {fecha, emitidos, recibidos}
+		java.util.TreeMap<String, long[]> porDia = new java.util.TreeMap<String, long[]>();
+		for (Object[] fila : emitidosPorDia)
+			if (fila[0] != null) {
+				long[] valores = porDia.containsKey(dia.format((Date) fila[0])) ? porDia.get(dia.format((Date) fila[0])) : new long[2];
+				valores[0] += (Long) fila[1];
+				porDia.put(dia.format((Date) fila[0]), valores);
+			}
+		for (Object[] fila : recibidosPorDia)
+			if (fila[0] != null) {
+				long[] valores = porDia.containsKey(dia.format((Date) fila[0])) ? porDia.get(dia.format((Date) fila[0])) : new long[2];
+				valores[1] += (Long) fila[1];
+				porDia.put(dia.format((Date) fila[0]), valores);
+			}
+		JSONArray porDiaJson = new JSONArray();
+		for (java.util.Map.Entry<String, long[]> entrada : porDia.entrySet()) {
+			JSONObject json = new JSONObject();
+			json.put("fecha", entrada.getKey());
+			json.put("emitidos", entrada.getValue()[0]);
+			json.put("recibidos", entrada.getValue()[1]);
+			porDiaJson.put(json);
+		}
+
+		JSONObject result = new JSONObject();
+		result.put("desde", dia.format(desde));
+		result.put("hasta", dia.format(hasta));
+		result.put("emitidos", emitidosJson);
+		result.put("recibidos", recibidosJson);
+		result.put("porDia", porDiaJson);
 
 		return json(result.toString());
 	}
