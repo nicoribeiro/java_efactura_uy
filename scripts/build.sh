@@ -13,7 +13,8 @@ INCREMENT=0
 VERSION=$MAJOR.$(($MINOR + $INCREMENT))
 BUILD_LOG=$BUILDS/build.log
 BUILD_NAME=java_efactura_uy-$VERSION.zip
-JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home
+# sbt usa JAVA_HOME: sin export tomaria el Java de la terminal
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home
 
 if [ ! -d "$BUILDS" ]; then
 	# Control will enter here if $BUILDS doesn't exist.
@@ -29,7 +30,8 @@ mv $PROYECT_DIR/build.sbt.new $PROYECT_DIR/build.sbt
 
 cd $PROYECT_DIR
 
-sbt dist
+# Si falla no se sigue: el deploy tomaria el zip anterior sin avisar
+sbt dist || { echo "ERROR: fallo sbt dist, no se genero el build $VERSION"; exit 1; }
 
 mv $PROYECT_DIR/target/universal/$BUILD_NAME $BUILDS/.
 
