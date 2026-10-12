@@ -68,6 +68,9 @@ GET      /api/v1/empresa/:rut/sobre                              com.bluedot.efa
 # Envia por correo el sobre a la empresa
 GET      /api/v1/empresa/:rut/sobre/enviarSobreEmpresa           com.bluedot.efactura.controllers.SobresController.enviarSobreEmpresa(rut:String, idSobre:Long)
 
+# Corrige los montos (totales y descuentos/recargos de las lineas) de los CFE recibidos con su XML (guardar=1 guarda; si no solo informa)
+POST     /api/v1/empresa/:rut/sobres/recibidos/corregirMontos    com.bluedot.efactura.controllers.SobresController.corregirMontosRecibidos(rut:String, guardar:Integer?=0)
+
 ###### CAEs
 
 # Agrega un CAE a la empresa

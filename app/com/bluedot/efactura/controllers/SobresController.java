@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.security.AccesoEmpresa;
 import com.bluedot.efactura.security.EmpresaAccess;
 
 import java.text.SimpleDateFormat;
@@ -19,6 +20,7 @@ import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
+import com.bluedot.commons.security.PermissionValidator;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactory;
 import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFactoryBuilder;
@@ -31,6 +33,7 @@ import com.bluedot.efactura.model.Sobre;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.pollers.PollerManager;
+import com.bluedot.efactura.recibidos.MontosRecibidos;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
@@ -54,6 +57,57 @@ public class SobresController extends AbstractController {
 		super();
 	}
 	
+	final static Logger auditoria = LoggerFactory.getLogger("auditoria");
+
+	/**
+	 * Corrige los montos de los CFE recibidos con el XML de cada sobre: los totales (antes se calculaban a partir de las
+	 * lineas, sin descuentos ni redondeos) y los descuentos y recargos de las lineas (antes no se guardaban). Solo ADMIN.
+	 *
+	 * Query: fromDate y toDate (segundos, opcionales, por fecha del sobre); guardar=1 para guardar, si no solo informa.
+	 */
+	public Promise<Result> corregirMontosRecibidos(String rut, int guardar) throws APIException {
+
+		AccesoEmpresa.verificarAdmin(PermissionValidator.getSessionUser(ctx()), "POST /empresa/" + rut + "/sobres/recibidos/corregirMontos", true);
+
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		Date fromDate;
+		Date toDate;
+		try {
+			fromDate = request().getQueryString("fromDate") != null ? new Date(Long.parseLong(request().getQueryString("fromDate")) * 1000) : null;
+			toDate = request().getQueryString("toDate") != null ? new Date(Long.parseLong(request().getQueryString("toDate")) * 1000) : null;
+		} catch (NumberFormatException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("fromDate o toDate invalidos");
+		}
+
+		JSONArray corregidos = new JSONArray();
+		int sobres = 0;
+		for (int page = 1;; page++) {
+			List<Sobre> pagina = Sobre.findByEmpresa(empresa, DireccionDocumento.RECIBIDO, null, fromDate, toDate, page, 200).item1;
+			for (Sobre sobre : pagina) {
+				sobres++;
+				for (JSONObject corregido : MontosRecibidos.corregirSobre(sobre, guardar > 0)) {
+					corregido.put("sobre", sobre.getId());
+					corregido.put("emisor", sobre.getEmpresaEmisora() != null ? sobre.getEmpresaEmisora().getRut() : JSONObject.NULL);
+					corregidos.put(corregido);
+				}
+			}
+			if (pagina.size() < 200)
+				break;
+		}
+
+		if (guardar > 0)
+			auditoria.info(PermissionValidator.getSessionUser(ctx()).getEmailAddress() + " corrigió los montos de "
+					+ corregidos.length() + " CFE recibidos de la empresa " + rut + " (" + sobres + " sobres revisados)");
+
+		JSONObject resultado = new JSONObject();
+		resultado.put("guardado", guardar > 0);
+		resultado.put("sobresRevisados", sobres);
+		resultado.put("cantidad", corregidos.length());
+		resultado.put("corregidos", corregidos);
+		return json(JSONUtils.merge(resultado, new JSONObject(OK)).toString());
+	}
+
 	public Promise<Result> enviarSobreEmpresa(String rut, long sobreId) throws APIException {
 
 		Sobre sobre = sobreDeLaEmpresa(Empresa.findByRUT(rut, true), sobreId);

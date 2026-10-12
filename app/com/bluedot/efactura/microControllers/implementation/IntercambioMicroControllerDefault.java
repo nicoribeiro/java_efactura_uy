@@ -26,6 +26,7 @@ import org.w3c.dom.Document;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.XML;
+import com.bluedot.efactura.recibidos.MontosRecibidos;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.Environment;
 import com.bluedot.efactura.commons.Commons;
@@ -326,6 +327,8 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		 * Creo un CFE de mi modelo
 		 */
  		CFE cfe = cfeMicroController.create(tipoDoc, cfeJson, false);
+ 		// Los montos se toman del XML del emisor: los que calcula el builder no consideran descuentos ni redondeos
+ 		MontosRecibidos.aplicar(cfe, cfeEmpresasTypeWrapper.getCfeEmpresasType().getCFE(), true);
  		cfe.setSobreRecibido(sobreRecibido);
  		cfe.setOrdinal(ordinal);
 		

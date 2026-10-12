@@ -113,14 +113,22 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 				detalle.setTpoCod(tpoCod);
 			}
 			
-			if (itemJson.has("RecargoPct"))
+			if (itemJson.has("RecargoPct")) {
 				item.setRecargoPct(new BigDecimal(Commons.safeGetString(itemJson,"RecargoPct")));
-			if (itemJson.has("RecargoMnt"))
+				detalle.setRecargoPorcentaje(item.getRecargoPct().doubleValue());
+			}
+			if (itemJson.has("RecargoMnt")) {
 				item.setRecargoMnt(new BigDecimal(Commons.safeGetString(itemJson,"RecargoMnt")));
-			if (itemJson.has("DescuentoPct"))
+				detalle.setRecargoMonto(item.getRecargoMnt().doubleValue());
+			}
+			if (itemJson.has("DescuentoPct")) {
 				item.setDescuentoPct(new BigDecimal(Commons.safeGetString(itemJson,"DescuentoPct")));
-			if (itemJson.has("DescuentoMonto"))
+				detalle.setDescuentoPorcentaje(item.getDescuentoPct().doubleValue());
+			}
+			if (itemJson.has("DescuentoMonto")) {
 				item.setDescuentoMonto(new BigDecimal(Commons.safeGetString(itemJson,"DescuentoMonto")));
+				detalle.setDescuentoMonto(item.getDescuentoMonto().doubleValue());
+			}
 
 			strategy.getCFE().getDetalle().add(detalle);
 		}
