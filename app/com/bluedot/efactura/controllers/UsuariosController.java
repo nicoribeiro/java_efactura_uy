@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -116,6 +117,9 @@ public class UsuariosController extends AbstractController {
 
 	private static void darAccesoEmpresa(User user, String rut) throws APIException {
 		Empresa.findByRUT(rut, true);
+		// Un usuario recien creado no tiene la lista de permisos inicializada
+		if (user.getPermissions() == null)
+			user.setPermissions(new ArrayList<Permission>());
 		String permisoId = AccesoEmpresa.permisoEmpresa(rut);
 		if (!user.hasPermission(permisoId)) {
 			Permission permiso = new Permission();
