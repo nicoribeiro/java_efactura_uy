@@ -93,6 +93,9 @@ GET      /api/v1/rut/:rut                                        com.bluedot.efa
 # Obtiene la informacion de una Empresa
 GET      /api/v1/empresa/:rut                                    com.bluedot.efactura.controllers.EmpresasController.getEmpresaByRut(rut:String)
 
+# Logo de la Empresa (el de los PDF)
+GET      /api/v1/empresa/:rut/logo                               com.bluedot.efactura.controllers.EmpresasController.getLogo(rut:String)
+
 # Consulta la informacion de todas las Empresas
 GET      /api/v1/empresa										 com.bluedot.efactura.controllers.EmpresasController.getEmpresas()
 

@@ -41,6 +41,7 @@ public class EmpresaSerializer<T> extends JSONSerializer<Empresa> {
 			empresa.put("offsetMail", p.getOffsetMail());
 			empresa.put("paginaWeb", p.getPaginaWeb());
 			empresa.put("resolucion", p.getResolucion());
+			empresa.put("tieneLogo", p.getLogo() != null && p.getLogo().length > 0);
 			empresa.put("sucursales", sucursalSerializer.objectToJson(p.getSucursales(), false));
 			// Solo las fechas de validez: nunca el certificado ni la clave privada
 			if (p.getFirmaDigital() != null) {

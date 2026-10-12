@@ -41,6 +41,7 @@ import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.commons.Commons;
+import com.bluedot.efactura.empresas.CargaFirmaDigital;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.FirmaDigital;
 import com.bluedot.efactura.model.Sucursal;
@@ -64,6 +65,8 @@ import play.mvc.Security;
 public class EmpresasController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(EmpresasController.class);
+
+	final static Logger auditoria = LoggerFactory.getLogger("auditoria");
 
 //	private Mutex mutex;
 //	
@@ -339,109 +342,167 @@ public class EmpresasController extends AbstractController {
 		return json(OK);
 	}
 
-	//TODO permisis de edicion 
+	/** Tamano maximo del logo (va en el PDF de cada comprobante) */
+	private static final int MAX_LOGO = 512 * 1024;
+
+	/**
+	 * Edita los datos de una empresa. Solo ADMIN. Cada campo es opcional: los que no vienen no cambian.
+	 * <ul>
+	 * <li>razon, nombreComercial, paginaWeb, resolucion</li>
+	 * <li>mailRecepcion, hostRecepcion, puertoRecepcion, userRecepcion, passRecepcion (nunca se devuelve),
+	 * mailNotificaciones, fromEnvio</li>
+	 * <li>logo: imagen PNG o JPEG en base64 (hasta 512 KB)</li>
+	 * <li>firma digital: certificado + privateKey (PEM), o pkcs12 (archivo .p12/.pfx en base64) + pkcs12Password; si el
+	 * certificado no menciona el RUT de la empresa se rechaza salvo forzarFirma=true</li>
+	 * </ul>
+	 * Devuelve la empresa y, si se cargo firma, sus datos (titular, emisor, validez, rutEnCertificado).
+	 */
 	public Promise<Result> editarEmpresa(String rut) throws APIException
 	{
+		User usuario = PermissionValidator.getSessionUser(ctx());
+		AccesoEmpresa.verificarAdmin(usuario, "PUT /empresa/" + rut, true);
+
 		Empresa empresa = Empresa.findByRUT(rut,true);
 		
 		JsonNode empresaJson = request().body().asJson();
-		
-		String nombreComercial = empresaJson.has("nombreComercial") ? empresaJson.findPath("nombreComercial").asText() : null;
-		String logoPath = empresaJson.has("logoPath") ? empresaJson.findPath("logoPath").asText() : null;
-		String paginaWeb = empresaJson.has("paginaWeb") ? empresaJson.findPath("paginaWeb").asText() : null;
-		String resolucion = empresaJson.has("resolucion") ? empresaJson.findPath("resolucion").asText() : null;
-		String razon = empresaJson.has("razon") ? empresaJson.findPath("razon").asText() : null;
-		
-		String hostRecepcion = empresaJson.has("hostRecepcion") ? empresaJson.findPath("hostRecepcion").asText() : null;
-		String passRecepcion = empresaJson.has("passRecepcion") ? empresaJson.findPath("passRecepcion").asText() : null;
-		String puertoRecepcion = empresaJson.has("puertoRecepcion") ? empresaJson.findPath("puertoRecepcion").asText() : null;
-		String userRecepcion = empresaJson.has("userRecepcion") ? empresaJson.findPath("userRecepcion").asText() : null;
-		String mailNotificaciones = empresaJson.has("mailNotificaciones") ? empresaJson.findPath("mailNotificaciones").asText() : null;
-		String mailRecepcion = empresaJson.has("mailRecepcion") ? empresaJson.findPath("mailRecepcion").asText() : null;
-		String fromEnvio = empresaJson.has("fromEnvio") ? empresaJson.findPath("fromEnvio").asText() : null;
-		
-		String certificado = empresaJson.has("certificado") ? empresaJson.findPath("certificado").asText() : null;
-		String privateKey = empresaJson.has("privateKey") ? empresaJson.findPath("privateKey").asText() : null;
-		
-		if (hostRecepcion != null)
-			empresa.setHostRecepcion(hostRecepcion);
-		
-		if (passRecepcion != null)
+		if (empresaJson == null)
+			throw APIException.raise(APIErrors.BAD_JSON);
+
+		java.util.List<String> cambios = new java.util.ArrayList<String>();
+
+		if (texto(empresaJson, "razon") != null && !Objects.equals(texto(empresaJson, "razon"), empresa.getRazon())) {
+			empresa.setRazon(texto(empresaJson, "razon"));
+			cambios.add("razon");
+		}
+		if (texto(empresaJson, "nombreComercial") != null && !Objects.equals(texto(empresaJson, "nombreComercial"), empresa.getNombreComercial())) {
+			empresa.setNombreComercial(texto(empresaJson, "nombreComercial"));
+			cambios.add("nombreComercial");
+		}
+		if (texto(empresaJson, "paginaWeb") != null && !Objects.equals(texto(empresaJson, "paginaWeb"), empresa.getPaginaWeb())) {
+			empresa.setPaginaWeb(texto(empresaJson, "paginaWeb"));
+			cambios.add("paginaWeb");
+		}
+		if (texto(empresaJson, "resolucion") != null && !Objects.equals(texto(empresaJson, "resolucion"), empresa.getResolucion())) {
+			empresa.setResolucion(texto(empresaJson, "resolucion"));
+			cambios.add("resolucion");
+		}
+		if (texto(empresaJson, "mailRecepcion") != null && !Objects.equals(texto(empresaJson, "mailRecepcion"), empresa.getMailRecepcion())) {
+			empresa.setMailRecepcion(texto(empresaJson, "mailRecepcion"));
+			cambios.add("mailRecepcion");
+		}
+		if (texto(empresaJson, "hostRecepcion") != null && !Objects.equals(texto(empresaJson, "hostRecepcion"), empresa.getHostRecepcion())) {
+			empresa.setHostRecepcion(texto(empresaJson, "hostRecepcion"));
+			cambios.add("hostRecepcion");
+		}
+		if (texto(empresaJson, "puertoRecepcion") != null && !Objects.equals(texto(empresaJson, "puertoRecepcion"), empresa.getPuertoRecepcion())) {
+			empresa.setPuertoRecepcion(texto(empresaJson, "puertoRecepcion"));
+			cambios.add("puertoRecepcion");
+		}
+		if (texto(empresaJson, "userRecepcion") != null && !Objects.equals(texto(empresaJson, "userRecepcion"), empresa.getUserRecepcion())) {
+			empresa.setUserRecepcion(texto(empresaJson, "userRecepcion"));
+			cambios.add("userRecepcion");
+		}
+		// La contrasena nunca se devuelve: vacia o ausente = no cambia
+		String passRecepcion = texto(empresaJson, "passRecepcion");
+		if (passRecepcion != null && !passRecepcion.isEmpty()) {
 			empresa.setPassRecepcion(passRecepcion);
-		
-		if (puertoRecepcion != null)
-			empresa.setPuertoRecepcion(puertoRecepcion);
-		
-		if (userRecepcion != null)
-			empresa.setUserRecepcion(userRecepcion);
-		
-		if (mailNotificaciones != null)
-			empresa.setMailNotificaciones(mailNotificaciones);
-		
-		if (mailRecepcion != null)
-			empresa.setMailRecepcion(mailRecepcion);
-		
-		if (fromEnvio != null)
-			empresa.setFromEnvio(fromEnvio);
-		
-		if (paginaWeb != null)
-			empresa.setPaginaWeb(paginaWeb);
-		
-		if (nombreComercial != null)
-			empresa.setNombreComercial(nombreComercial);
-		
-		if (resolucion != null)
-			empresa.setResolucion(resolucion);
-		
-		if (razon != null)
-			empresa.setRazon(razon);
-		
-		if (logoPath!=null){
-			Path path = IO.resolve(logoPath).toPath();
-			try {
-				byte[] logo = Files.readAllBytes(path);
-				empresa.setLogo(logo);
-			} catch (IOException e) {
-			}
-			
+			cambios.add("passRecepcion");
 		}
-		
-		if (certificado != null){
-			if (privateKey ==null)
+		if (texto(empresaJson, "mailNotificaciones") != null && !Objects.equals(texto(empresaJson, "mailNotificaciones"), empresa.getMailNotificaciones())) {
+			empresa.setMailNotificaciones(texto(empresaJson, "mailNotificaciones"));
+			cambios.add("mailNotificaciones");
+		}
+		if (texto(empresaJson, "fromEnvio") != null && !Objects.equals(texto(empresaJson, "fromEnvio"), empresa.getFromEnvio())) {
+			empresa.setFromEnvio(texto(empresaJson, "fromEnvio"));
+			cambios.add("fromEnvio");
+		}
+
+		// Logo: imagen en base64 (antes era logoPath, un archivo del servidor)
+		String logo = texto(empresaJson, "logo");
+		if (logo != null && !logo.isEmpty()) {
+			byte[] imagen;
+			try {
+				imagen = java.util.Base64.getMimeDecoder().decode(logo.replaceFirst("^data:[^,]*,", ""));
+			} catch (IllegalArgumentException e) {
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logo", "base64");
+			}
+			if (imagen.length > MAX_LOGO)
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logo", "tamaño")
+						.setDetailMessage("El logo no puede superar los 512 KB");
+			if (tipoImagen(imagen) == null)
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logo", "formato")
+						.setDetailMessage("El logo tiene que ser PNG o JPEG");
+			empresa.setLogo(imagen);
+			cambios.add("logo");
+		}
+
+		// Firma digital: PEM (certificado + privateKey) o PKCS#12 (.p12/.pfx)
+		CargaFirmaDigital.Resultado firma = null;
+		String certificado = texto(empresaJson, "certificado");
+		String privateKey = texto(empresaJson, "privateKey");
+		String pkcs12 = texto(empresaJson, "pkcs12");
+		if (pkcs12 != null && !pkcs12.isEmpty())
+			firma = CargaFirmaDigital.desdePkcs12(empresa, pkcs12, texto(empresaJson, "pkcs12Password"));
+		else if (certificado != null && !certificado.isEmpty()) {
+			if (privateKey == null || privateKey.isEmpty())
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("privateKey").setDetailMessage("privateKey");
-			
-			FirmaDigital firmaDigital = new FirmaDigital();
-			
-			firmaDigital.setCertificate(certificado);
-			firmaDigital.setPrivateKey(privateKey);
-			try {
-				
-				KeyStore keystore = firmaDigital.getKeyStore();
-			
-			
-				if(keystore.getCertificate(FirmaDigital.KEY_ALIAS).getType().equals("X.509")){
-					X509Certificate certificate  = (X509Certificate) keystore.getCertificate(FirmaDigital.KEY_ALIAS);
-					
-					firmaDigital.setValidaHasta(certificate.getNotAfter());
-					firmaDigital.setValidaDesde(certificate.getNotBefore());
-					
-					if (empresa.getFirmaDigital()!=null)
-						empresa.getFirmaDigital().delete();
-					
-					firmaDigital.setEmpresa(empresa);
-					firmaDigital.save();
-					
-	            }
-			} catch (IOException | GeneralSecurityException e) {
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("certificado invalido o clave privada invalida");
-			}
-			
-			
+			firma = CargaFirmaDigital.desdePem(empresa, certificado, privateKey);
 		}
-		
+		// Un certificado sin el RUT de la empresa puede ser de otra: se carga solo si se confirma (forzarFirma)
+		if (firma != null && !firma.rutEnCertificado
+				&& !(empresaJson.has("forzarFirma") && empresaJson.get("forzarFirma").asBoolean()))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("firmaDigital", "rut")
+					.setDetailMessage("El certificado no menciona el RUT " + rut + " (titular: "
+							+ firma.certificado.getSubjectX500Principal().getName() + "). Para cargarlo igual enviar forzarFirma");
+		if (firma != null) {
+			if (empresa.getFirmaDigital() != null)
+				empresa.getFirmaDigital().delete();
+			firma.firma.setEmpresa(empresa);
+			firma.firma.save();
+			empresa.setFirmaDigital(firma.firma);
+			cambios.add("firmaDigital (válida hasta " + new java.text.SimpleDateFormat("yyyy-MM-dd").format(firma.firma.getValidaHasta()) + ")");
+		}
+
 		empresa.update();
-		
-		return json(OK);
+
+		if (!cambios.isEmpty())
+			auditoria.info(usuario.getEmailAddress() + " modificó la empresa " + rut + ": " + String.join(", ", cambios));
+
+		JSONObject respuesta = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresa);
+		respuesta.put("cambios", new JSONArray(cambios));
+		if (firma != null) {
+			JSONObject datosFirma = new JSONObject();
+			datosFirma.put("titular", firma.certificado.getSubjectX500Principal().getName());
+			datosFirma.put("emisor", firma.certificado.getIssuerX500Principal().getName());
+			datosFirma.put("rutEnCertificado", firma.rutEnCertificado);
+			respuesta.put("firmaCargada", datosFirma);
+		}
+		return json(JSONUtils.merge(respuesta, new JSONObject(OK)).toString());
+	}
+
+	/** Texto de un campo, sin espacios al borde; null si no viene */
+	private static String texto(JsonNode json, String campo) {
+		return json.has(campo) && !json.get(campo).isNull() ? json.get(campo).asText().trim() : null;
+	}
+
+	/** Tipo MIME de la imagen por su firma (magic bytes): PNG o JPEG; null si no es ninguna */
+	private static String tipoImagen(byte[] imagen) {
+		if (imagen.length > 8 && (imagen[0] & 0xFF) == 0x89 && imagen[1] == 'P' && imagen[2] == 'N' && imagen[3] == 'G')
+			return "image/png";
+		if (imagen.length > 3 && (imagen[0] & 0xFF) == 0xFF && (imagen[1] & 0xFF) == 0xD8 && (imagen[2] & 0xFF) == 0xFF)
+			return "image/jpeg";
+		return null;
+	}
+
+	/** Logo de la empresa (el que va en los PDF), 404 si no tiene */
+	public Promise<Result> getLogo(String rut) throws APIException
+	{
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		byte[] logo = empresa.getLogo();
+		if (logo == null || logo.length == 0)
+			return Promise.<Result>pure(notFound());
+		String tipo = tipoImagen(logo);
+		return Promise.<Result>pure(ok(logo).as(tipo != null ? tipo : "application/octet-stream"));
 	}
 	
 	/*
@@ -459,6 +520,9 @@ public class EmpresasController extends AbstractController {
 	
 	// TODO permisis de edicion
 	public Promise<Result> editarSucursal(String rut, Integer codigoSuc) throws APIException {
+		User usuario = PermissionValidator.getSessionUser(ctx());
+		AccesoEmpresa.verificarAdmin(usuario, "PUT /empresa/" + rut + "/sucursales/" + codigoSuc, true);
+
 		Empresa empresa = Empresa.findByRUT(rut, true);
 		
 		Sucursal sucursal = Sucursal.findByCodigoSucursal(empresa.getSucursales(), codigoSuc, true);
@@ -485,11 +549,16 @@ public class EmpresasController extends AbstractController {
 
 		sucursal.update();
 
+		auditoria.info(usuario.getEmailAddress() + " modificó la sucursal " + codigoSuc + " de la empresa " + rut);
+
 		return json(OK);
 	}
 	
 	// TODO permisis de creacion
 	public Promise<Result> crearSucursal(String rut) throws APIException {
+		User usuario = PermissionValidator.getSessionUser(ctx());
+		AccesoEmpresa.verificarAdmin(usuario, "POST /empresa/" + rut + "/sucursales", true);
+
 		Empresa empresa = Empresa.findByRUT(rut, true);
 		
 		JsonNode sucursalJson = request().body().asJson();
@@ -515,6 +584,8 @@ public class EmpresasController extends AbstractController {
 		empresa.getSucursales().add(sucursal);
 		
 		empresa.update();
+
+		auditoria.info(usuario.getEmailAddress() + " creó la sucursal " + codigoSucursal + " de la empresa " + rut);
 
 		return json(OK);
 	}
