@@ -14,6 +14,11 @@ import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.GregorianCalendar;
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Date;
+import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -28,16 +33,18 @@ import com.bluedot.commons.utils.ExcelToJSONConverter2;
 import com.bluedot.efactura.model.TipoCotizacion;
 import com.bluedot.efactura.model.TipoDeCambio;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.google.inject.Provider;
 
 import dgi.classes.recepcion.TipMonType;
 import play.Application;
+import play.Play;
 
 public class PollerTipoDeCambioRunner extends PollerRunner {
 
-	//private static final long SLEEP_TIME_IN_MILLIS = 60l * 1000l * 60l * 1l; // 1 Hour
-	private static final long SLEEP_TIME_IN_MILLIS = 10l * 1000l; // 10 sec
+	/** Cada cuanto revisa (TipoDeCambioPoller.intervaloMinutos, default 60) */
+	private static long intervaloMs() {
+		return Play.application().configuration().getLong("TipoDeCambioPoller.intervaloMinutos", 60l) * 60l * 1000l;
+	}
 	
 	static Logger logger = LoggerFactory.getLogger(PollerTipoDeCambioRunner.class);
 
@@ -47,56 +54,88 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 	private Provider<Application> applicationProvider;
 
 	public PollerTipoDeCambioRunner(Provider<Application> applicationProvider) {
-		super(logger, SLEEP_TIME_IN_MILLIS);
+		super(logger, intervaloMs());
 		this.applicationProvider = applicationProvider;
 	}
 	
+	/**
+	 * Completa las cotizaciones USD que faltan (o les falta el interbancario) de los ultimos
+	 * TipoDeCambioPoller.diasAtras dias (default 30), hasta ayer. Primero consulta la base en una sola consulta y solo
+	 * descarga el archivo de INE si falta algo. Antes recorria 10 anios dia por dia y descargaba el archivo en cada
+	 * ejecucion (cada 10 segundos).
+	 */
 	@Override
 	protected void executeConcreteAction() throws APIException {
-		
-		
-		GregorianCalendar gc_fecha =  new GregorianCalendar();
-		gc_fecha.add((GregorianCalendar.DAY_OF_MONTH), -3650); //10 año para atras
+		int diasAtras = applicationProvider.get().configuration().getInt("TipoDeCambioPoller.diasAtras", 30);
 
-		GregorianCalendar gc_hoy =  new GregorianCalendar();// hoy
-		gc_hoy.add((GregorianCalendar.MINUTE), -5); //le resto 5 min para que funcione bien la condicion del while
+		// De hace diasAtras dias hasta ayer (el dia actual no se carga: INE lo publica despues)
+		GregorianCalendar hasta = new GregorianCalendar();
+		hasta.set(GregorianCalendar.HOUR_OF_DAY, 0);
+		hasta.set(GregorianCalendar.MINUTE, 0);
+		hasta.set(GregorianCalendar.SECOND, 0);
+		hasta.set(GregorianCalendar.MILLISECOND, 0);
+		hasta.add(GregorianCalendar.DAY_OF_MONTH, -1);
+		GregorianCalendar desde = (GregorianCalendar) hasta.clone();
+		desde.add(GregorianCalendar.DAY_OF_MONTH, -(diasAtras - 1));
 
-		JsonNode cotizaciones = JsonNodeFactory.instance.objectNode();
+		Map<String, TipoDeCambio> existentes = new HashMap<String, TipoDeCambio>();
+		for (TipoDeCambio tc : TipoDeCambio.findByMonedaEntre(TipMonType.USD, desde.getTime(), hasta.getTime()))
+			existentes.put(simpleDateFormat.format(tc.getFecha()), tc);
+
+		List<Date> faltantes = new ArrayList<Date>();
+		List<TipoDeCambio> sinInterbancario = new ArrayList<TipoDeCambio>();
+		for (GregorianCalendar dia = (GregorianCalendar) desde.clone(); !dia.after(hasta); dia.add(GregorianCalendar.DAY_OF_MONTH, 1)) {
+			TipoDeCambio tc = existentes.get(simpleDateFormat.format(dia.getTime()));
+			if (tc == null)
+				faltantes.add(dia.getTime());
+			else if (tc.getInterbancario() == null)
+				sinInterbancario.add(tc);
+		}
+
+		if (faltantes.isEmpty() && sinInterbancario.isEmpty()) {
+			estado.setResumen("Sin días faltantes en los últimos " + diasAtras + " días (hasta " + simpleDateFormat.format(hasta.getTime()) + ")");
+			return;
+		}
+
+		JsonNode cotizaciones;
 		try {
 			cotizaciones = getCotizaciones();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("No se pudo descargar el archivo de cotizaciones de INE", e);
+			estado.setResumen("Faltan " + faltantes.size() + " día(s) y no se pudo descargar el archivo de INE: " + e.getMessage());
+			return;
 		}
-		
-		while (gc_hoy.getTime().after(gc_fecha.getTime())) { // No ejecuta para el dia actual 
 
-			TipoDeCambio tipodecambio = TipoDeCambio.findByFechaYMoneda(gc_fecha.getTime(), TipMonType.USD);
-
-			if (tipodecambio==null) {
-				logger.info("Falta cotizacion para: " + simpleDateFormat.format(gc_fecha.getTime()) + ".");
-				if (getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.COMPRA) != BigDecimal.ZERO && getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.VENTA) != BigDecimal.ZERO) {
-					tipodecambio = new TipoDeCambio();
-					tipodecambio.save();
-					tipodecambio.setFecha(gc_fecha.getTime());
-					tipodecambio.setMoneda(TipMonType.USD);
-					tipodecambio.setCompra(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.COMPRA));
-					tipodecambio.setVenta(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.VENTA));
-					tipodecambio.setInterbancario(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.PROMEDIO));
-					logger.info("Valor de la cotizacion COMPRA para " + simpleDateFormat.format(gc_fecha.getTime()) + " es " + tipodecambio.getCompra().doubleValue());
-					logger.info("Valor de la cotizacion VENTA para " + simpleDateFormat.format(gc_fecha.getTime()) + " es " + tipodecambio.getVenta().doubleValue());
-				}else {
-					logger.info("Valor de la cotizacion para " + simpleDateFormat.format(gc_fecha.getTime()) + " es cero, no se guarda el valor.");
-				}
-			} else { 
-				if (tipodecambio.getInterbancario() == null) {
-					tipodecambio.setInterbancario(getCotizacionPesosFecha(gc_fecha.toZonedDateTime().toLocalDate(), cotizaciones, TipoCotizacion.PROMEDIO));
-					tipodecambio.update();
-				}
+		int cargados = 0, sinDato = 0;
+		for (Date fecha : faltantes) {
+			LocalDate dia = new java.sql.Date(fecha.getTime()).toLocalDate();
+			logger.info("Falta cotizacion para: " + simpleDateFormat.format(fecha) + ".");
+			BigDecimal compra = getCotizacionPesosFecha(dia, cotizaciones, TipoCotizacion.COMPRA);
+			BigDecimal venta = getCotizacionPesosFecha(dia, cotizaciones, TipoCotizacion.VENTA);
+			// compareTo: la funcion devuelve new BigDecimal(0) cuando no hay dato (con != nunca era igual a ZERO)
+			if (compra.compareTo(BigDecimal.ZERO) != 0 && venta.compareTo(BigDecimal.ZERO) != 0) {
+				TipoDeCambio tipodecambio = new TipoDeCambio();
+				tipodecambio.save();
+				tipodecambio.setFecha(fecha);
+				tipodecambio.setMoneda(TipMonType.USD);
+				tipodecambio.setCompra(compra);
+				tipodecambio.setVenta(venta);
+				tipodecambio.setInterbancario(getCotizacionPesosFecha(dia, cotizaciones, TipoCotizacion.PROMEDIO));
+				logger.info("Cotizacion " + simpleDateFormat.format(fecha) + ": compra " + compra + ", venta " + venta);
+				cargados++;
+			} else {
+				logger.info("Valor de la cotizacion para " + simpleDateFormat.format(fecha) + " es cero, no se guarda el valor.");
+				sinDato++;
 			}
-			gc_fecha.add((GregorianCalendar.DAY_OF_MONTH), 1);
 		}
 
-		
+		for (TipoDeCambio tc : sinInterbancario) {
+			tc.setInterbancario(getCotizacionPesosFecha(new java.sql.Date(tc.getFecha().getTime()).toLocalDate(), cotizaciones, TipoCotizacion.PROMEDIO));
+			tc.update();
+		}
+
+		estado.setResumen(cargados + " cotización(es) cargada(s)" + (sinDato > 0 ? ", " + sinDato + " sin dato en INE" : "")
+				+ (sinInterbancario.isEmpty() ? "" : ", " + sinInterbancario.size() + " interbancario(s) completado(s)"));
 	}
 
 	private JsonNode getCotizaciones() throws IOException {
