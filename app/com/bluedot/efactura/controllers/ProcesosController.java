@@ -12,6 +12,7 @@ import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.efactura.pollers.EstadoPoller;
 import com.bluedot.efactura.security.EmpresaAccess;
+import com.play4jpa.jpa.db.Tx;
 
 import play.libs.F.Promise;
 import play.mvc.Result;
@@ -19,9 +20,11 @@ import play.mvc.Security;
 
 /**
  * Estado de los procesos automaticos (pollers) de esta instancia: si estan activos, cuando corrieron y con que
- * resultado. Solo lectura, solo ADMIN (siempre). El estado es en memoria: cuenta desde que arranco la instancia.
+ * resultado. Solo lectura, solo ADMIN (siempre). El estado es en memoria: cuenta desde que arranco la instancia. @Tx
+ * hace falta igual: la autenticacion busca la sesion en la base.
  */
 @ErrorMessage
+@Tx
 @Security.Authenticated(Secured.class)
 @EmpresaAccess
 public class ProcesosController extends AbstractController {

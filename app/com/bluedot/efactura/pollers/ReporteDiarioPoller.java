@@ -43,6 +43,12 @@ public class ReporteDiarioPoller extends PollerRunner {
 
 	public ReporteDiarioPoller() {
 		super(logger, SLEEP_TIME_IN_MILLIS);
+		// Desde el arranque, para que /procesos lo muestre antes de la primera ejecucion
+		estado.setProgramacion(programacion(Play.application().configuration().getInt("ReporteDiarioPoller.hora", 15)));
+	}
+
+	private static String programacion(int hora) {
+		return String.format("diario desde las %02d:00 (revisa cada 5 minutos)", hora);
 	}
 
 	@Override
@@ -53,7 +59,7 @@ public class ReporteDiarioPoller extends PollerRunner {
 		int cantReportes = config.getInt("ReporteDiarioPoller.cantReportes", 20);
 		String rutsConfig = config.getString("ReporteDiarioPoller.empresas", "");
 
-		estado.setProgramacion(String.format("diario desde las %02d:00 (revisa cada 5 minutos)", hora));
+		estado.setProgramacion(programacion(hora));
 
 		Calendar ahora = Calendar.getInstance();
 		String hoy = new SimpleDateFormat("yyyyMMdd").format(ahora.getTime());
