@@ -289,6 +289,15 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 	
 	
 	/**
+	 * Marca el adjunto como omitido (no corresponde procesarlo para esta empresa) para que no quede pendiente
+	 */
+	private void omitirAttachment(Attachment attachment) {
+		attachment.setEstado(AttachmentEstado.OMITIDO);
+		attachment.update();
+		ThreadMan.forceTransactionFlush();
+	}
+
+	/**
 	 * Deja la transaccion en un estado usable despues de un error: rollback si sigue activa, limpia el persistence
 	 * context (si no, Hibernate reintenta en el proximo flush la operacion que fallo), abre una nueva y vuelve a cargar
 	 * la empresa.
@@ -421,12 +430,19 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			if (attachment.getName().substring(0, 3).equalsIgnoreCase("ME_") && procesar_ME){
 				ACKCFEdefType ackCFEdefType = (ACKCFEdefType) XML.unMarshall(document,
 						ACKCFEdefType.class);
-				Sobre sobre = SobreEmitido.findById(ackCFEdefType.getCaratula().getIDEmisor().longValue(), true);
 				
+				/*
+				 * Se chequea antes de buscar el sobre: si el emisor del sobre no es la empresa local (ej: es una copia de
+				 * la respuesta que la empresa local envio a un proveedor) IDEmisor es el id del sobre en el sistema del
+				 * proveedor y no existe aca
+				 */
 				if (!ackCFEdefType.getCaratula().getRUCEmisor().equals(this.getEmpresa().getRut())) {
 					logger.info(index+"-La empresa emisora no es igual a la empresa local, se aborta el procesamiento");
+					omitirAttachment(attachment);
 					return;
 				}
+				
+				Sobre sobre = SobreEmitido.findById(ackCFEdefType.getCaratula().getIDEmisor().longValue(), true);
 				
 				if (sobre.getEmpresaEmisora() != getEmpresa()) {
 					logger.info(index+"-La empresa emisora del sobre no es igual a la empresa local, se aborta el procesamiento");
@@ -458,12 +474,19 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 			if (attachment.getName().substring(0, 2).equalsIgnoreCase("M_") && procesar_M){
 				ACKSobredefType ackSobredefType = (ACKSobredefType) XML.unMarshall(document,
 						ACKSobredefType.class);
-				Sobre sobre = SobreEmitido.findById(ackSobredefType.getCaratula().getIDEmisor().longValue(), true);
 				
+				/*
+				 * Se chequea antes de buscar el sobre: si el emisor del sobre no es la empresa local (ej: es una copia de
+				 * la respuesta que la empresa local envio a un proveedor) IDEmisor es el id del sobre en el sistema del
+				 * proveedor y no existe aca
+				 */
 				if (!ackSobredefType.getCaratula().getRUCEmisor().equals(this.getEmpresa().getRut())) {
 					logger.info(index+"-La empresa emisora no es igual a la empresa local, se aborta el procesamiento");
+					omitirAttachment(attachment);
 					return;
 				}
+				
+				Sobre sobre = SobreEmitido.findById(ackSobredefType.getCaratula().getIDEmisor().longValue(), true);
 				
 				if (sobre.getEmpresaEmisora() != getEmpresa()) {
 					logger.info(index+"-La empresa emisora del sobre no es igual a la empresa local, se aborta el procesamiento");
