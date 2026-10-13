@@ -19,6 +19,10 @@ public abstract class PollerRunner implements Runnable {
 	/** Estado consultable desde la API (GET /api/v1/procesos) */
 	protected final EstadoPoller estado;
 
+	/** Resultado de la ejecucion en curso (ver resultado); null si no hizo nada que registrar */
+	private String resumenEjecucion;
+	private org.json.JSONObject detalleEjecucion;
+
 	public PollerRunner(Logger logger, long sleepTimeInMillis) {
 		super();
 		this.logger = logger;
@@ -35,6 +39,9 @@ public abstract class PollerRunner implements Runnable {
 					runs = 0;
 					// Error de la ejecucion (de la accion o de la transaccion), para el estado del poller
 					final Throwable[] error = new Throwable[1];
+					java.util.Date inicio = new java.util.Date();
+					resumenEjecucion = null;
+					detalleEjecucion = null;
 					estado.inicioEjecucion();
 					try {
 						DatabaseExecutor.syncDatabaseAction(new PromiseBlock<Void>() {
@@ -57,6 +64,7 @@ public abstract class PollerRunner implements Runnable {
 						e.printStackTrace();
 					}
 					estado.finEjecucion(error[0]);
+					registrarEjecucion(inicio, error[0]);
 				}
 				runs++;
 				logger.debug("Tick ...");
@@ -75,6 +83,43 @@ public abstract class PollerRunner implements Runnable {
 	 */
 	protected static long intervaloConfig(play.Configuration config, String clave, long minutosPorDefecto) {
 		return config.getLong(clave + ".intervaloMinutos", minutosPorDefecto) * 60l * 1000l;
+	}
+
+	/**
+	 * El resultado de la ejecucion en curso: queda como resumen en /procesos y la ejecucion se registra (EjecucionProceso,
+	 * Ejecuciones en el panel) con su resumen en el log. Las ejecuciones que no lo llaman y no fallan (no hubo nada que
+	 * hacer) no se registran: los pollers que corren cada pocos minutos llenarian la tabla.
+	 *
+	 * @param detalle
+	 *            JSON con el detalle (opcional)
+	 */
+	protected void resultado(String resumen, org.json.JSONObject detalle) {
+		estado.setResumen(resumen);
+		resumenEjecucion = resumen;
+		detalleEjecucion = detalle;
+	}
+
+	/** true si el poller registra sus ejecuciones por su cuenta (ej. EmisoresElectronicos, que tambien corre a mano) */
+	protected boolean registraSusEjecuciones() {
+		return false;
+	}
+
+	private void registrarEjecucion(java.util.Date inicio, Throwable error) {
+		if (registraSusEjecuciones() || (error == null && resumenEjecucion == null))
+			return;
+		String nombre = getClass().getSimpleName();
+		long segundos = (new java.util.Date().getTime() - inicio.getTime()) / 1000;
+		String resumen;
+		if (error == null) {
+			resumen = resumenEjecucion;
+			logger.info("EJECUCION {} (automático) OK en {} s: {}", nombre, segundos, resumen);
+		} else {
+			resumen = "Error: " + (error.getMessage() != null ? error.getMessage() : error.getClass().getSimpleName())
+					+ (resumenEjecucion != null ? ". " + resumenEjecucion : "");
+			logger.error("EJECUCION {} (automático) CON ERROR en {} s: {}", nombre, segundos, resumen);
+		}
+		com.bluedot.efactura.model.EjecucionProceso.registrar(nombre, inicio, error == null, "automático", resumen,
+				detalleEjecucion != null ? detalleEjecucion.toString() : null);
 	}
 
 	protected abstract void executeConcreteAction() throws APIException;

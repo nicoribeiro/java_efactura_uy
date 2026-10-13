@@ -97,7 +97,7 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 			cotizaciones = getCotizaciones();
 		} catch (IOException e) {
 			logger.error("No se pudo descargar el archivo de cotizaciones de INE", e);
-			estado.setResumen("Faltan " + faltantes.size() + " día(s) y no se pudo descargar el archivo de INE: " + e.getMessage());
+			resultado("Faltan " + faltantes.size() + " día(s) y no se pudo descargar el archivo de INE: " + e.getMessage(), null);
 			return;
 		}
 
@@ -129,8 +129,8 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 			tc.update();
 		}
 
-		estado.setResumen(cargados + " cotización(es) cargada(s)" + (sinDato > 0 ? ", " + sinDato + " sin dato en INE" : "")
-				+ (sinInterbancario.isEmpty() ? "" : ", " + sinInterbancario.size() + " interbancario(s) completado(s)"));
+		resultado(cargados + " cotización(es) cargada(s)" + (sinDato > 0 ? ", " + sinDato + " sin dato en INE" : "")
+				+ (sinInterbancario.isEmpty() ? "" : ", " + sinInterbancario.size() + " interbancario(s) completado(s)"), null);
 	}
 
 	private JsonNode getCotizaciones() throws IOException {

@@ -45,6 +45,12 @@ public class EmisoresElectronicosPoller extends PollerRunner {
 		return String.format("diario desde las %02d:00", hora);
 	}
 
+	/** EmisoresElectronicos.ejecutar registra la ejecucion (tambien cuando se pide a mano) */
+	@Override
+	protected boolean registraSusEjecuciones() {
+		return true;
+	}
+
 	@Override
 	protected void executeConcreteAction() throws APIException {
 		Configuration config = Play.application().configuration();

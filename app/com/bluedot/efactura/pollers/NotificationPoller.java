@@ -21,6 +21,9 @@ public class NotificationPoller extends PollerRunner {
 	final static Logger logger = LoggerFactory.getLogger(NotificationPoller.class);
 
 
+	/** Avisos enviados en la ejecucion en curso */
+	private org.json.JSONArray avisos = new org.json.JSONArray();
+
 	public NotificationPoller(play.Configuration config) {
 		super(logger, intervaloConfig(config, "NotificationPoller", 60 * 24));
 	}
@@ -35,6 +38,8 @@ public class NotificationPoller extends PollerRunner {
 
 		logger.info(empresas.size() + " empresas con firma digital o CAEs");
 
+		avisos = new org.json.JSONArray();
+		int errores = 0;
 		for (Empresa empresa : empresas) {
 			// Un error en una empresa (ej: configuracion de mail incompleta) no debe impedir notificar a las demas
 			try {
@@ -42,16 +47,21 @@ public class NotificationPoller extends PollerRunner {
 					checkFechaVencimientoFirma(empresa);
 			} catch (RuntimeException e) {
 				logger.error("Error chequeando vencimiento de firma de la empresa " + empresa.getRut(), e);
+				errores++;
 			}
 			try {
 				if (empresa.getCaes() != null && !empresa.getCaes().isEmpty())
 					checkCAEs(empresa);
 			} catch (APIException | RuntimeException e) {
 				logger.error("Error chequeando CAEs de la empresa " + empresa.getRut(), e);
+				errores++;
 			}
 		}
 
 		logger.info("Finaliza Procesamiento de Empresas ...");
+		resultado(empresas.size() + " empresa(s) revisada(s), " + avisos.length() + " aviso(s) enviado(s)"
+				+ (errores > 0 ? ", " + errores + " error(es) (ver el log)" : ""),
+				new org.json.JSONObject().put("empresas", empresas.size()).put("avisos", avisos).put("errores", errores));
 		
 	}
 
@@ -91,6 +101,8 @@ public class NotificationPoller extends PollerRunner {
 						Integer.parseInt(empresa.getPuertoRecepcion()), empresa.getUserRecepcion(),
 						empresa.getPassRecepcion())
 				.sendEmail(empresa.getMailNotificaciones(), body, null, subject, false);
+		// Despues del envio: si falla no cuenta como aviso enviado
+		avisos.put(new org.json.JSONObject().put("rut", empresa.getRut()).put("asunto", subject).put("para", String.valueOf(empresa.getMailNotificaciones())));
 	}
 
 	private void checkCAEs(Empresa empresa) throws APIException {

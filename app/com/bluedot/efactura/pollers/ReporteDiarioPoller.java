@@ -78,12 +78,14 @@ public class ReporteDiarioPoller extends PollerRunner {
 
 		List<Empresa> empresas = empresas(rutsConfig);
 		List<String> resumen = new ArrayList<String>();
+		JSONArray porEmpresa = new JSONArray();
 		logger.info("Reporte diario: {} empresa(s), {} dias desde {} (solo faltantes)", empresas.size(), cantReportes, desdeTexto);
 
 		for (Empresa empresa : empresas) {
 			if (empresa.getFirmaDigital() == null || empresa.getFirmaDigital().getValidaHasta().before(new Date())) {
 				logger.warn("Reporte diario: empresa {} sin firma digital vigente, se saltea", empresa.getRut());
 				resumen.add(empresa.getRut() + ": sin firma digital vigente");
+				porEmpresa.put(new JSONObject().put("rut", empresa.getRut()).put("error", "sin firma digital vigente"));
 				continue;
 			}
 			try {
@@ -103,13 +105,17 @@ public class ReporteDiarioPoller extends PollerRunner {
 						generados, errores, cantReportes - resultado.length());
 				resumen.add(empresa.getRut() + ": " + generados + " generado(s), " + errores + " con error, "
 						+ (cantReportes - resultado.length()) + " ya aceptado(s)");
+				porEmpresa.put(new JSONObject().put("rut", empresa.getRut()).put("generados", generados).put("conError", errores)
+						.put("yaAceptados", cantReportes - resultado.length()).put("reportes", resultado));
 			} catch (Throwable t) {
 				logger.error("Reporte diario: error en empresa " + empresa.getRut(), t);
 				resumen.add(empresa.getRut() + ": error " + t.getMessage());
+				porEmpresa.put(new JSONObject().put("rut", empresa.getRut()).put("error", String.valueOf(t.getMessage())));
 			}
 		}
-		estado.setResumen("Días desde " + desdeTexto + " (" + cantReportes + "). "
-				+ (resumen.isEmpty() ? "Sin empresas con firma digital" : String.join("; ", resumen)));
+		resultado("Días desde " + desdeTexto + " (" + cantReportes + "). "
+				+ (resumen.isEmpty() ? "Sin empresas con firma digital" : String.join("; ", resumen)),
+				new JSONObject().put("desde", desdeTexto).put("cantReportes", cantReportes).put("empresas", porEmpresa));
 	}
 
 	/** Las empresas de la configuracion, o todas las que tienen firma digital */

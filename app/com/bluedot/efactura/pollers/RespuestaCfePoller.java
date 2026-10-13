@@ -54,7 +54,13 @@ public class RespuestaCfePoller extends PollerRunner {
 				logger.warn("Respuesta a CFE: no se pudo enviar la del sobre " + sobre.getNombreArchivo() + ": " + t.getMessage());
 			}
 		}
-		estado.setResumen(pendientes + " sobre(s) pendiente(s), " + enviadas + " respuesta(s) enviada(s)"
-				+ (errores > 0 ? ", " + errores + " con error (" + String.join("; ", fallidos.subList(0, Math.min(3, fallidos.size()))) + ")" : ""));
+		String resumen = pendientes + " sobre(s) pendiente(s), " + enviadas + " respuesta(s) enviada(s)"
+				+ (errores > 0 ? ", " + errores + " con error (" + String.join("; ", fallidos.subList(0, Math.min(3, fallidos.size()))) + ")" : "");
+		// Se registra solo si se envio algo o fallo (corre cada 30 minutos)
+		if (enviadas > 0 || errores > 0)
+			resultado(resumen, new org.json.JSONObject().put("pendientes", pendientes).put("enviadas", enviadas).put("conError", errores)
+					.put("errores", new org.json.JSONArray(fallidos)));
+		else
+			estado.setResumen(resumen);
 	}
 }
