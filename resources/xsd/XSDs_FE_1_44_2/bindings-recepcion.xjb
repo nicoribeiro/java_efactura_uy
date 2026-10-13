@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Bindings de xjc para dgi.classes.recepcion y dgi.classes.entreEmpresas (EnvioCFE.xsd y EnvioCFE_entreEmpresas.xsd).
+  Los usa scripts/generar-clases-dgi.sh; los schemaLocation son relativos a la copia de los XSD que arma el script.
+
+  - xjc:simple: el modo con el que se generaron las clases en 2016 (Signature, KeyInfo, Transforms... con
+    @XmlRootElement y sin el sufijo Type)
+  - xmldsig ReferenceType -> DsigReferenceType: xenc tambien tiene un ReferenceType (y un TransformsType)
+  - Referencia -> ReferenciaTipo: el tipo Referencia tiene un elemento Referencia y la clase interna chocaria con la
+    externa
+-->
+<jxb:bindings version="2.1" xmlns:jxb="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc" jxb:extensionBindingPrefixes="xjc">
+	<jxb:globalBindings>
+		<xjc:simple />
+	</jxb:globalBindings>
+	<jxb:bindings schemaLocation="xmldsig-core-schema.xsd" node="/xs:schema">
+		<jxb:bindings node="//xs:complexType[@name='ReferenceType']">
+			<jxb:class name="DsigReferenceType" />
+		</jxb:bindings>
+	</jxb:bindings>
+	<jxb:bindings schemaLocation="CFEType.xsd" node="/xs:schema">
+		<jxb:bindings node="//xs:complexType[@name='Referencia']">
+			<jxb:class name="ReferenciaTipo" />
+		</jxb:bindings>
+	</jxb:bindings>
+</jxb:bindings>
