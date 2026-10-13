@@ -16,6 +16,8 @@ public enum MotivoRechazoCFE {
 	
 	E08("No coinciden RUC emisor de CFE y Complemento Fiscal"),
 
+	E10("Tipo de cambio no válido"),
+
 	E12("Información en Zona de Referencia no existe en los registros"),
 
 	E13("Tipo de CAE del CFE no se corresponde con el CAE utilizado"),

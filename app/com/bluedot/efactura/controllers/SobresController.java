@@ -110,7 +110,7 @@ public class SobresController extends AbstractController {
 	}
 
 	/**
-	 * Simula los controles de recepcion (E02, E03, E04, E05, E07, E12) sobre los CFE de los sobres recibidos ya guardados, sin
+	 * Simula los controles de recepcion (E02, E03, E04, E05, E07, E10, E12) sobre los CFE de los sobres recibidos ya guardados, sin
 	 * cambiar nada: cuantos no pasarian cada control y ejemplos. Sirve para medir un control antes de activarlo. Solo
 	 * ADMIN. Query: fromDate y toDate (segundos, por fecha del sobre), limite (sobres, por defecto 500).
 	 */
@@ -129,7 +129,7 @@ public class SobresController extends AbstractController {
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("fromDate, toDate o limite invalidos");
 		}
 
-		String[] controles = { "E02", "E03", "E04", "E05", "E07", "E12" };
+		String[] controles = { "E02", "E03", "E04", "E05", "E07", "E10", "E12" };
 		Map<String, Integer> fallan = new HashMap<String, Integer>();
 		Map<String, JSONArray> ejemplos = new HashMap<String, JSONArray>();
 		for (String c : controles) {
@@ -164,6 +164,7 @@ public class SobresController extends AbstractController {
 				resultado.put("E04", ControlesRecepcion.e04(sobre.getXmlEmpresa(), ordinal, xml));
 				resultado.put("E05", ControlesRecepcion.e05(sobre.getXmlEmpresa(), ordinal));
 				resultado.put("E07", ControlesRecepcion.e07(xml));
+				resultado.put("E10", ControlesRecepcion.e10(xml));
 				if (cfe != null)
 					resultado.put("E12", ControlesRecepcion.e12(xml, empresa, cfe.getEmpresaEmisora()));
 				for (String c : controles) {

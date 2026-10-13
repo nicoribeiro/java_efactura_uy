@@ -3,11 +3,13 @@ package com.bluedot.efactura.recibidos;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.xml.crypto.dsig.Reference;
@@ -38,6 +40,7 @@ import java.util.List;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.TipoDeCambio;
 import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
@@ -45,6 +48,7 @@ import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.recepcion.ReferenciaTipo;
+import dgi.classes.recepcion.TipMonType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -241,6 +245,82 @@ public class ControlesRecepcion {
 		return "referencia a documento" + (faltan.size() == 1 ? "" : "s") + " que no está" + (faltan.size() == 1 ? "" : "n")
 				+ " en los registros (" + (esResguardo ? "ni recibido de este emisor ni emitido a él" : "en los recibidos de este emisor")
 				+ "): " + String.join(", ", faltan);
+	}
+
+	/** Tolerancia de E10 (en %) si no se configura otra */
+	static final double TOLERANCIA_E10_DEFECTO = 5;
+
+	/**
+	 * E10: el tipo de cambio es valido. Segun el formato de CFE de DGI (A-C111) es obligatorio y mayor que cero si la moneda
+	 * no es UYU (no corresponde en el e-Remito). Para USD ademas se compara con la cotizacion interbancaria de INE
+	 * (TipoDeCambio) del dia de emision o, si falta, de la ultima de la semana anterior: no pasa si difiere mas de
+	 * RecepcionCFE.tipoCambio.toleranciaPorcentaje (5% por defecto). Si no hay cotizacion para comparar, solo se controla lo
+	 * primero.
+	 *
+	 * @return null si pasa; si no, el detalle de por que no
+	 */
+	public static String e10(CFEDefType xml) {
+		if (xml == null || xml.getERem() != null)
+			return null;
+		TipMonType moneda = null;
+		BigDecimal tipoCambio = null;
+		XMLGregorianCalendar fchEmis = null;
+		if (xml.getEFact() != null) {
+			moneda = xml.getEFact().getEncabezado().getTotales().getTpoMoneda();
+			tipoCambio = xml.getEFact().getEncabezado().getTotales().getTpoCambio();
+			fchEmis = xml.getEFact().getEncabezado().getIdDoc().getFchEmis();
+		} else if (xml.getETck() != null) {
+			moneda = xml.getETck().getEncabezado().getTotales().getTpoMoneda();
+			tipoCambio = xml.getETck().getEncabezado().getTotales().getTpoCambio();
+			fchEmis = xml.getETck().getEncabezado().getIdDoc().getFchEmis();
+		} else if (xml.getEResg() != null) {
+			moneda = xml.getEResg().getEncabezado().getTotales().getTpoMoneda();
+			tipoCambio = xml.getEResg().getEncabezado().getTotales().getTpoCambio();
+			fchEmis = xml.getEResg().getEncabezado().getIdDoc().getFchEmis();
+		} else if (xml.getEFactExp() != null) {
+			moneda = xml.getEFactExp().getEncabezado().getTotales().getTpoMoneda();
+			tipoCambio = xml.getEFactExp().getEncabezado().getTotales().getTpoCambio();
+			fchEmis = xml.getEFactExp().getEncabezado().getIdDoc().getFchEmis();
+		} else if (xml.getERemExp() != null) {
+			moneda = xml.getERemExp().getEncabezado().getTotales().getTpoMoneda();
+			tipoCambio = xml.getERemExp().getEncabezado().getTotales().getTpoCambio();
+			fchEmis = xml.getERemExp().getEncabezado().getIdDoc().getFchEmis();
+		}
+		if (moneda == null || moneda == TipMonType.UYU)
+			return null;
+		if (tipoCambio == null || tipoCambio.signum() <= 0)
+			return "en " + moneda + " sin tipo de cambio (o no es mayor que cero)";
+		if (moneda != TipMonType.USD || fchEmis == null)
+			return null;
+
+		// Cotizacion interbancaria de INE del dia de emision o la ultima de la semana anterior
+		Date emision = fchEmis.toGregorianCalendar().getTime();
+		List<TipoDeCambio> cotizaciones = TipoDeCambio.findByMonedaEntre(TipMonType.USD, new Date(emision.getTime() - 7L * 24 * 3600 * 1000),
+				emision);
+		TipoDeCambio referencia = null;
+		for (TipoDeCambio tc : cotizaciones)
+			if (tc.getInterbancario() != null && tc.getInterbancario().signum() > 0) {
+				referencia = tc;
+				break;
+			}
+		if (referencia == null)
+			return null;
+
+		double tolerancia = TOLERANCIA_E10_DEFECTO;
+		try {
+			String valor = Play.application().configuration().getString("RecepcionCFE.tipoCambio.toleranciaPorcentaje",
+					String.valueOf(TOLERANCIA_E10_DEFECTO));
+			double configurada = Double.parseDouble(valor.trim());
+			if (configurada > 0)
+				tolerancia = configurada;
+		} catch (RuntimeException e) {
+		}
+		double diferencia = (tipoCambio.doubleValue() / referencia.getInterbancario().doubleValue() - 1) * 100;
+		if (Math.abs(diferencia) <= tolerancia)
+			return null;
+		return String.format("tipo de cambio %s difiere %+.1f%% del interbancario de INE del %s (%s); la tolerancia es %s%%",
+				tipoCambio.toPlainString(), diferencia, new SimpleDateFormat("dd/MM/yyyy").format(referencia.getFecha()),
+				referencia.getInterbancario().toPlainString(), new java.text.DecimalFormat("0.##").format(tolerancia));
 	}
 
 	private static final String NS_CFE = "http://cfe.dgi.gub.uy";

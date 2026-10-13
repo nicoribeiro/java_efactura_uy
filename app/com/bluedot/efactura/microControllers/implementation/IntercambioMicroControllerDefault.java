@@ -382,6 +382,12 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E07, ControlesRecepcion.e07(xmlCfe));
 	 		
 	 		/*
+			 * E10: tipo de cambio valido (y cerca del interbancario de INE para USD)
+			 */
+	 		if (ControlesRecepcion.modo("E10") != ControlesRecepcion.Modo.OFF)
+	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E10, ControlesRecepcion.e10(xmlCfe));
+	 		
+	 		/*
 			 * E12: los documentos referenciados (zona de referencia) estan en los recibidos de este emisor
 			 */
 	 		if (ControlesRecepcion.modo("E12") != ControlesRecepcion.Modo.OFF)
