@@ -82,7 +82,8 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 					.getElementsByTagNameNS("http://cfe.dgi.gub.uy", "ACKCFE_Det");
 			for (int i = 0; i < dets.getLength(); i++) {
 				org.w3c.dom.Element det = (org.w3c.dom.Element) dets.item(i);
-				if (String.valueOf(cfe.getTipo().value).equals(hijo(det, "TipoCFE")) && String.valueOf(cfe.getNro()).equals(hijo(det, "NroCFE"))
+				// Tipo y numero como numeros: algunos receptores los mandan con ceros adelante (NroCFE 0002295)
+				if (numero(hijo(det, "TipoCFE")) == cfe.getTipo().value && numero(hijo(det, "NroCFE")) == cfe.getNro()
 						&& (cfe.getSerie() == null || cfe.getSerie().equals(hijo(det, "Serie")))) {
 					String estado = hijo(det, "Estado");
 					return estado != null ? estado : "RECIBIDA";
@@ -91,6 +92,14 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 		} catch (Exception e) {
 		}
 		return "RECIBIDA";
+	}
+
+	private static long numero(String texto) {
+		try {
+			return texto != null ? Long.parseLong(texto.trim()) : -1;
+		} catch (NumberFormatException e) {
+			return -1;
+		}
 	}
 
 	private static String hijo(org.w3c.dom.Element padre, String nombre) {
