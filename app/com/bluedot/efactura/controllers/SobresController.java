@@ -36,6 +36,8 @@ import com.bluedot.efactura.pollers.PollerManager;
 import com.bluedot.efactura.recibidos.ControlesRecepcion;
 import com.bluedot.efactura.recibidos.ControlesSobre;
 import com.bluedot.efactura.recibidos.MontosRecibidos;
+import com.bluedot.efactura.recibidos.RespuestaCfes;
+import com.bluedot.efactura.model.MotivoRechazoCFE;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
@@ -60,6 +62,108 @@ public class SobresController extends AbstractController {
 	}
 	
 	final static Logger auditoria = LoggerFactory.getLogger("auditoria");
+
+	/**
+	 * Envia ahora la respuesta a los CFE (ME_) de un sobre recibido que la tiene pendiente, sin esperar el plazo de la
+	 * empresa. ADMIN y USER con acceso a la empresa.
+	 */
+	public Promise<Result> responderCfes(String rut, Long id) throws APIException {
+		com.bluedot.commons.security.User usuario = PermissionValidator.getSessionUser(ctx());
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		SobreRecibido sobre = sobreRecibido(empresa, id);
+		if (!sobre.isRespuestaCfePendiente())
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("sobre", id)
+					.setDetailMessage("El sobre no tiene la respuesta a sus CFE pendiente");
+		com.bluedot.efactura.model.Respuesta respuesta = RespuestaCfes.enviar(sobre, usuario.getEmailAddress());
+		auditoria.info(usuario.getEmailAddress() + " envió la respuesta a los CFE del sobre " + sobre.getId() + " (" + sobre.getNombreArchivo()
+				+ ") de la empresa " + rut + ": " + respuesta.getNombreArchivo());
+		JSONObject resultado = new JSONObject();
+		resultado.put("respuesta", respuesta.getNombreArchivo());
+		return json(JSONUtils.merge(resultado, new JSONObject(OK)).toString());
+	}
+
+	/**
+	 * Rechaza a mano un CFE recibido (rechazo comercial, E20 a E26) o deshace ese rechazo, mientras la respuesta a los CFE
+	 * de su sobre esta pendiente: el rechazo va en esa respuesta (ME_). Body: {"motivo": "E20".."E26", "detalle": "..."};
+	 * motivo vacio o null deshace el rechazo comercial. ADMIN y USER con acceso a la empresa.
+	 */
+	public Promise<Result> rechazoCfe(String rut, Long id) throws APIException {
+		com.bluedot.commons.security.User usuario = PermissionValidator.getSessionUser(ctx());
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		CFE cfe = id != null && id <= Integer.MAX_VALUE ? CFE.findById(id.intValue()) : null;
+		if (cfe == null || cfe.getSobreRecibido() == null || cfe.getEmpresaReceptora() == null || cfe.getEmpresaReceptora().getId() != empresa.getId())
+			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("id", id);
+		SobreRecibido sobre = cfe.getSobreRecibido();
+		if (!sobre.isRespuestaCfePendiente())
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("cfe", id)
+					.setDetailMessage("La respuesta a los CFE de este sobre ya se envió (o es anterior a esta funcionalidad): ya no se puede rechazar");
+
+		com.fasterxml.jackson.databind.JsonNode body = request().body().asJson();
+		String motivoTexto = body != null && body.hasNonNull("motivo") ? body.get("motivo").asText().trim() : "";
+		String detalle = body != null && body.hasNonNull("detalle") ? body.get("detalle").asText().trim() : "";
+
+		// Se sacan los rechazos comerciales que tuviera; quedan los de los controles de recepcion (enforce)
+		cfe.getMotivo().removeIf(RespuestaCfes::esComercial);
+		String doc = cfe.getTipo().value + " " + cfe.getSerie() + "-" + cfe.getNro();
+		if (motivoTexto.isEmpty()) {
+			cfe.setDetalleRechazo(null);
+			cfe.setEstado(cfe.getMotivo().isEmpty() ? dgi.classes.respuestas.cfe.EstadoACKCFEType.AE : dgi.classes.respuestas.cfe.EstadoACKCFEType.BE);
+			ControlesRecepcion.observar(cfe, "Rechazo comercial deshecho", "por " + usuario.getEmailAddress());
+			auditoria.info(usuario.getEmailAddress() + " deshizo el rechazo comercial del CFE recibido " + doc + " (id " + cfe.getId() + ") de la empresa " + rut);
+		} else {
+			MotivoRechazoCFE motivo;
+			try {
+				motivo = MotivoRechazoCFE.valueOf(motivoTexto.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				motivo = null;
+			}
+			if (motivo == null || !RespuestaCfes.esComercial(motivo))
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("motivo", motivoTexto)
+						.setDetailMessage("El motivo tiene que ser un rechazo comercial (E20 a E26)");
+			cfe.getMotivo().add(motivo);
+			cfe.setDetalleRechazo(detalle.isEmpty() ? null : detalle);
+			cfe.setEstado(dgi.classes.respuestas.cfe.EstadoACKCFEType.BE);
+			ControlesRecepcion.observar(cfe, motivo.name() + " (rechazo comercial)",
+					motivo.getMotivo() + (detalle.isEmpty() ? "" : ": " + detalle) + ", por " + usuario.getEmailAddress());
+			auditoria.info(usuario.getEmailAddress() + " rechazó el CFE recibido " + doc + " (id " + cfe.getId() + ") de la empresa " + rut + " con "
+					+ motivo.name() + (detalle.isEmpty() ? "" : ": " + detalle));
+		}
+		cfe.update();
+
+		JSONObject resultado = new JSONObject();
+		resultado.put("estado", cfe.getEstado().name());
+		resultado.put("motivosRechazo", new JSONArray(cfe.getMotivo().stream().map(Enum::name).toArray()));
+		return json(JSONUtils.merge(resultado, new JSONObject(OK)).toString());
+	}
+
+	/**
+	 * Vista previa de la respuesta a los CFE (ME_) de un sobre recibido: el XML firmado como se enviaria y si cumple el XSD
+	 * de DGI. No guarda ni envia nada. Solo ADMIN.
+	 */
+	public Promise<Result> vistaPreviaRespuestaCfes(String rut, Long id) throws APIException {
+		AccesoEmpresa.verificarAdmin(PermissionValidator.getSessionUser(ctx()), "GET /empresa/" + rut + "/sobres/recibidos/" + id + "/respuestaCfes", true);
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		SobreRecibido sobre = sobreRecibido(empresa, id);
+		String[] vista = RespuestaCfes.vistaPrevia(sobre);
+		JSONObject resultado = new JSONObject();
+		resultado.put("sobre", sobre.getId());
+		resultado.put("pendiente", sobre.isRespuestaCfePendiente());
+		resultado.put("yaRespondido", sobre.getRespuestaCfes() != null);
+		java.util.Date programada = RespuestaCfes.programada(sobre);
+		resultado.put("programada", programada != null ? new SimpleDateFormat("yyyy-MM-dd HH:mm").format(programada) : JSONObject.NULL);
+		resultado.put("cumpleXsd", vista[1] == null);
+		resultado.put("errores", vista[1] != null ? vista[1] : JSONObject.NULL);
+		resultado.put("xml", vista[0]);
+		return json(JSONUtils.merge(resultado, new JSONObject(OK)).toString());
+	}
+
+	/** Un sobre recibido por la empresa, o error si no existe o no es de ella */
+	private static SobreRecibido sobreRecibido(Empresa empresa, Long id) throws APIException {
+		Sobre sobre = id != null ? Sobre.findById(id) : null;
+		if (!(sobre instanceof SobreRecibido) || sobre.getEmpresaReceptora() == null || sobre.getEmpresaReceptora().getId() != empresa.getId())
+			throw APIException.raise(APIErrors.SOBRE_NO_ENCONTRADO).withParams("id", id);
+		return (SobreRecibido) sobre;
+	}
 
 	/**
 	 * Corrige los montos de los CFE recibidos con el XML de cada sobre: los totales (antes se calculaban a partir de las

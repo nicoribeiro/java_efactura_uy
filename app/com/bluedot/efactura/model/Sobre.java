@@ -120,6 +120,13 @@ public abstract class Sobre extends Model<Sobre> {
 	@Type(type="text")
 	private String xmlEmpresa;
 
+	/**
+	 * Sobre recibido cuya respuesta a los CFE (ME_) todavia no se envio: la envia RespuestaCfePoller cuando se cumple el
+	 * plazo de la empresa (Empresa.diasRespuestaCfe) o alguien a mano. Los sobres anteriores a esta funcionalidad quedan en
+	 * null y nunca se responden solos.
+	 */
+	private Boolean respuestaCfePendiente;
+
 	/** Lo que observaron los controles de recepcion del sobre (ControlesSobre), en modo log o enforce */
 	@Type(type="text")
 	private String observacionesRecepcion;
@@ -350,6 +357,14 @@ public abstract class Sobre extends Model<Sobre> {
 
 	public String getXmlEmpresa() {
 		return xmlEmpresa;
+	}
+
+	public boolean isRespuestaCfePendiente() {
+		return Boolean.TRUE.equals(respuestaCfePendiente);
+	}
+
+	public void setRespuestaCfePendiente(boolean respuestaCfePendiente) {
+		this.respuestaCfePendiente = respuestaCfePendiente;
 	}
 
 	public String getObservacionesRecepcion() {

@@ -23,6 +23,7 @@ import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.recibidos.ControlesRecepcion;
 import com.bluedot.efactura.recibidos.ControlesSobre;
 import com.bluedot.efactura.recibidos.MontosRecibidos;
+import com.bluedot.efactura.recibidos.RespuestaCfes;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.Environment;
 import com.bluedot.efactura.commons.Commons;
@@ -217,36 +218,20 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 						i++;
 					}
 					
-					boolean responderAutomaticamenteCFE = Play.application().configuration().getBoolean("responderAutomaticamenteCFE", false);
-					
-					if (responderAutomaticamenteCFE) {
-						//TODO aca tendria que haber autorizacion/rechazo de administracion, ahora se envia automaticamente
-						Respuesta respuestaCfes = new Respuesta();
-						sobreRecibido.setRespuestaCfes(respuestaCfes);
-						/*
-						 * solo se asigna el id
-						 * ver: https://stackoverflow.com/questions/25862537/hibernate-persist-vs-save-method
-						 */
-						play.db.jpa.JPA.em().persist(respuestaCfes);
-						sobreRecibido.update();
-						respuestaCfes.setNombreArchivo("ME_" + respuestaCfes.getId() + "_" + sobreRecibido.getNombreArchivo());
-						
-						
-						/*
-						 * Serializo el XML respuesta
-						 */
-						DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-						dbf.setNamespaceAware(true);
-						Document allDocument = XML.marshall(ackcfEdefType);
-						allDocument = SignatureInterceptor.signDocument(dbf, allDocument,null,null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
-						respuestaCfes.setPayload(XML.documentToString(allDocument));
-						respuestaCfes.update();
-						
-						/*
-						 * Envio la respuesta al emisor
-						 */
-						Commons.enviarMail(empresa, sobreRecibido.getEmpresaEmisora().getMailRecepcion(), respuestaCfes.getNombreArchivo(), respuestaCfes.getPayload().getBytes(), "",
-								EnvioMail.Contexto.automatico(EnvioMail.Tipo.ACK_CFE).sobre(sobreRecibido.getId()));
+					/*
+					 * La respuesta a los CFE (ME_) no se envia ahora: queda pendiente hasta que se cumpla el plazo de la empresa
+					 * (en ese tiempo se puede rechazar un CFE desde el panel) y la envia RespuestaCfePoller. Con plazo 0 se envia
+					 * enseguida. Ver RespuestaCfes.
+					 */
+					sobreRecibido.setRespuestaCfePendiente(true);
+					sobreRecibido.update();
+					if (RespuestaCfes.dias(empresa) == 0) {
+						try {
+							RespuestaCfes.enviar(sobreRecibido, "automático");
+						} catch (APIException e) {
+							// Queda pendiente: la reintenta RespuestaCfePoller
+							logger.warn("No se pudo enviar la respuesta a los CFE del sobre " + sobreRecibido.getNombreArchivo() + ": " + e.getMessage());
+						}
 					}
 					
 					return ackcfEdefType;

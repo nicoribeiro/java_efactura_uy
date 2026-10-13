@@ -19,7 +19,7 @@ public class PollerManager {
 
 	static Logger logger = LoggerFactory.getLogger(PollerManager.class);
 
-	private static ExecutorService executor = Executors.newFixedThreadPool(5);
+	private static ExecutorService executor = Executors.newFixedThreadPool(8);
 	
 	public static boolean shutdownInProgress = false;
 	
@@ -89,6 +89,15 @@ public class PollerManager {
 		}else {
 			logger.info("ReporteDiarioPoller: not running");
 			EstadoPoller.registrar("ReporteDiarioPoller", false, 0);
+		}
+
+		if (applicationProvider.get().configuration().getBoolean("RespuestaCfePoller.run", false)){
+			logger.info("RespuestaCfePoller: running");
+			runner = new RespuestaCfePoller(applicationProvider.get().configuration());
+			executor.execute(runner);
+		}else {
+			logger.info("RespuestaCfePoller: not running");
+			EstadoPoller.registrar("RespuestaCfePoller", false, 0);
 		}
 		
 	}

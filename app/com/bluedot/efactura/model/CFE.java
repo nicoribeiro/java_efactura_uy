@@ -241,6 +241,10 @@ public class CFE extends Model<CFE>{
 	@Column(columnDefinition = "TEXT")
 	private String observacionesRecepcion;
 
+	/** Detalle del rechazo de un CFE recibido hecho a mano (rechazo comercial, E20 en adelante): va en la respuesta ME_ */
+	@Column(columnDefinition = "TEXT")
+	private String detalleRechazo;
+
 	@Transient
 	private EstrategiaNumeracion estrategiaNumeracion;
 
@@ -1020,6 +1024,22 @@ public class CFE extends Model<CFE>{
 
 	public void setObservacionesRecepcion(String observacionesRecepcion) {
 		this.observacionesRecepcion = observacionesRecepcion;
+	}
+
+	public String getDetalleRechazo() {
+		return detalleRechazo;
+	}
+
+	public void setDetalleRechazo(String detalleRechazo) {
+		this.detalleRechazo = detalleRechazo;
+	}
+
+	/** CFE de un sobre recibido, por orden en el sobre */
+	public static List<CFE> findBySobreRecibido(SobreRecibido sobre) {
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+		q.getCriteria().add(Restrictions.eq("sobreRecibido", sobre));
+		q.orderByAsc("ordinal");
+		return q.findList();
 	}
 
 	public String getPdfMailAddress() {

@@ -85,6 +85,15 @@ POST     /api/v1/empresa/:rut/sobres/recibidos/corregirMontos    com.bluedot.efa
 # Simula los controles de recepcion de los sobres (S02-S06, S20) y de los CFE (E02-E05, E07, E10, E12) sobre los recibidos guardados, sin cambiar nada (solo ADMIN)
 GET      /api/v1/empresa/:rut/sobres/recibidos/simularControles  com.bluedot.efactura.controllers.SobresController.simularControles(rut:String)
 
+# Vista previa de la respuesta a los CFE (ME_) de un sobre recibido: XML firmado y validacion XSD, sin guardar ni enviar (solo ADMIN)
+GET      /api/v1/empresa/:rut/sobres/recibidos/:id/respuestaCfes  com.bluedot.efactura.controllers.SobresController.vistaPreviaRespuestaCfes(rut:String, id:Long)
+
+# Envia ahora la respuesta a los CFE (ME_) de un sobre recibido que la tiene pendiente
+POST     /api/v1/empresa/:rut/sobres/recibidos/:id/responderCfes  com.bluedot.efactura.controllers.SobresController.responderCfes(rut:String, id:Long)
+
+# Rechaza a mano un CFE recibido (E20-E26) o deshace el rechazo, mientras la respuesta de su sobre esta pendiente
+PUT      /api/v1/empresa/:rut/documentos/recibidos/:id/rechazo    com.bluedot.efactura.controllers.SobresController.rechazoCfe(rut:String, id:Long)
+
 ###### CAEs
 
 # Agrega un CAE a la empresa

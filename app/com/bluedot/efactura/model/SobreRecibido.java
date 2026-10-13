@@ -50,6 +50,18 @@ public class SobreRecibido extends Sobre{
 		this.cfes = cfes;
 	}
 
+	/** Sobres recibidos con la respuesta a sus CFE (ME_) pendiente, del mas viejo al mas nuevo */
+	public static List<SobreRecibido> findRespuestaCfePendiente(int maximo) {
+		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query();
+		q.getCriteria().add(Restrictions.eq("respuestaCfePendiente", Boolean.TRUE));
+		q.orderByAsc("id");
+		LinkedList<SobreRecibido> sobres = new LinkedList<SobreRecibido>();
+		for (Sobre sobre : q.findPage(1, maximo))
+			if (sobre instanceof SobreRecibido)
+				sobres.add((SobreRecibido) sobre);
+		return sobres;
+	}
+
 	public static List<SobreRecibido> findSobreRecibido(long idEmisor, Empresa empresaEmisora, Empresa empresaReceptora) {
 		DefaultQuery<Sobre> q = (DefaultQuery<Sobre>) find.query();
 

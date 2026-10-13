@@ -71,6 +71,13 @@ public class Empresa extends Model<Empresa>{
 	
 	private int offsetMail;
 	
+	/**
+	 * Dias desde que se recibe un sobre hasta que se envia la respuesta a sus CFE (ME_) con la aceptacion o el rechazo
+	 * de cada uno (ver RespuestaCfes). En ese plazo se puede rechazar un CFE desde el panel. 0 = enseguida, -1 = nunca
+	 * automaticamente (solo a mano), null = el valor por defecto de la configuracion (RespuestaCFE.diasPorDefecto).
+	 */
+	private Integer diasRespuestaCfe;
+	
 	@ApiModelProperty(hidden = true)
 	@Lob
 	private byte[] logo;
@@ -406,6 +413,14 @@ public class Empresa extends Model<Empresa>{
 
 	public int getOffsetMail() {
 		return offsetMail;
+	}
+
+	public Integer getDiasRespuestaCfe() {
+		return diasRespuestaCfe;
+	}
+
+	public void setDiasRespuestaCfe(Integer diasRespuestaCfe) {
+		this.diasRespuestaCfe = diasRespuestaCfe;
 	}
 
 	public void setOffsetMail(int offsetMail) {

@@ -417,6 +417,25 @@ public class EmpresasController extends AbstractController {
 			empresa.setFromEnvio(texto(empresaJson, "fromEnvio"));
 			cambios.add("fromEnvio");
 		}
+		// Dias de espera de la respuesta a los CFE recibidos (ME_): null = el de la configuracion, -1 = nunca automaticamente
+		if (empresaJson.has("diasRespuestaCfe")) {
+			Integer dias = null;
+			com.fasterxml.jackson.databind.JsonNode valor = empresaJson.get("diasRespuestaCfe");
+			if (valor != null && !valor.isNull() && !valor.asText().trim().isEmpty()) {
+				try {
+					dias = Integer.valueOf(valor.asText().trim());
+				} catch (NumberFormatException e) {
+					dias = Integer.MIN_VALUE;
+				}
+				if (dias < -1 || dias > 90)
+					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("diasRespuestaCfe", valor.asText())
+							.setDetailMessage("Los días de espera de la respuesta a los CFE tienen que ser de -1 (nunca automáticamente) a 90");
+			}
+			if (!Objects.equals(dias, empresa.getDiasRespuestaCfe())) {
+				empresa.setDiasRespuestaCfe(dias);
+				cambios.add("diasRespuestaCfe");
+			}
+		}
 
 		// Logo: imagen en base64 (antes era logoPath, un archivo del servidor)
 		String logo = texto(empresaJson, "logo");

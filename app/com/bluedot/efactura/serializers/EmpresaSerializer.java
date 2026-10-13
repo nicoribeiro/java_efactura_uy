@@ -39,6 +39,8 @@ public class EmpresaSerializer<T> extends JSONSerializer<Empresa> {
 			empresa.put("mailNotificaciones", p.getMailNotificaciones());
 			empresa.put("fromEnvio", p.getFromEnvio());
 			empresa.put("offsetMail", p.getOffsetMail());
+			empresa.put("diasRespuestaCfe", p.getDiasRespuestaCfe() != null ? p.getDiasRespuestaCfe() : JSONObject.NULL);
+			empresa.put("diasRespuestaCfeEfectivo", com.bluedot.efactura.recibidos.RespuestaCfes.dias(p));
 			empresa.put("paginaWeb", p.getPaginaWeb());
 			empresa.put("resolucion", p.getResolucion());
 			empresa.put("tieneLogo", p.getLogo() != null && p.getLogo().length > 0);

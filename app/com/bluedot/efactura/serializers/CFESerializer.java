@@ -9,6 +9,8 @@ import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Detalle;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.Sobre;
+import com.bluedot.efactura.model.SobreEmitido;
+import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.model.Titular;
 
 public class CFESerializer<T> extends JSONSerializer<CFE> {
@@ -34,6 +36,68 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 		this.sobreSerializer = sobreSerializer;
 	}
 
+	/**
+	 * Respuestas entre empresas del formato de mensaje de respuesta de DGI: respuestaM = la del sobre (AS recibido, BS
+	 * rechazado) y respuestaME = la del CFE (AE aceptado, BE rechazado). En los recibidos son las nuestras (ME puede estar
+	 * PENDIENTE); en los emitidos, las de la empresa receptora (ME se lee de su respuesta). null = no hay.
+	 */
+	private static void respuestasEntreEmpresas(CFE cfe, JSONObject cfeJson) {
+		Object m = JSONObject.NULL, me = JSONObject.NULL;
+		if (cfe.getSobreRecibido() != null) {
+			SobreRecibido sobre = cfe.getSobreRecibido();
+			if (sobre.getEstadoEmpresa() != null)
+				m = sobre.getEstadoEmpresa().name();
+			if (sobre.getRespuestaCfes() != null)
+				me = cfe.getEstado() != null ? cfe.getEstado().name() : "ENVIADA";
+			else if (sobre.isRespuestaCfePendiente())
+				me = "PENDIENTE";
+		} else if (cfe.getSobreEmitido() != null) {
+			SobreEmitido sobre = cfe.getSobreEmitido();
+			if (sobre.getEstadoEmpresa() != null)
+				m = sobre.getEstadoEmpresa().name();
+			if (sobre.getRespuestaCfes() != null)
+				me = estadoEnRespuesta(sobre.getRespuestaCfes().getPayload(), cfe);
+		}
+		cfeJson.put("respuestaM", m);
+		cfeJson.put("respuestaME", me);
+	}
+
+	/** Estado del CFE en una respuesta a CFE (ACKCFE) de la empresa receptora; RECIBIDA si no se puede leer */
+	private static String estadoEnRespuesta(String payload, CFE cfe) {
+		if (payload == null || payload.isEmpty())
+			return "RECIBIDA";
+		try {
+			javax.xml.parsers.DocumentBuilderFactory dbf = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+			dbf.setNamespaceAware(true);
+			javax.xml.parsers.DocumentBuilder builder = dbf.newDocumentBuilder();
+			// Sin handler el parser escribe "[Fatal Error] ..." en la consola
+			builder.setErrorHandler(new org.xml.sax.helpers.DefaultHandler() {
+				@Override
+				public void fatalError(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
+					throw e;
+				}
+			});
+			String texto = payload.charAt(0) == '\uFEFF' ? payload.substring(1) : payload;
+			org.w3c.dom.NodeList dets = builder.parse(new org.xml.sax.InputSource(new java.io.StringReader(texto)))
+					.getElementsByTagNameNS("http://cfe.dgi.gub.uy", "ACKCFE_Det");
+			for (int i = 0; i < dets.getLength(); i++) {
+				org.w3c.dom.Element det = (org.w3c.dom.Element) dets.item(i);
+				if (String.valueOf(cfe.getTipo().value).equals(hijo(det, "TipoCFE")) && String.valueOf(cfe.getNro()).equals(hijo(det, "NroCFE"))
+						&& (cfe.getSerie() == null || cfe.getSerie().equals(hijo(det, "Serie")))) {
+					String estado = hijo(det, "Estado");
+					return estado != null ? estado : "RECIBIDA";
+				}
+			}
+		} catch (Exception e) {
+		}
+		return "RECIBIDA";
+	}
+
+	private static String hijo(org.w3c.dom.Element padre, String nombre) {
+		org.w3c.dom.NodeList l = padre.getElementsByTagNameNS("http://cfe.dgi.gub.uy", nombre);
+		return l.getLength() > 0 && l.item(0).getTextContent() != null ? l.item(0).getTextContent().trim() : null;
+	}
+
 	@Override
 	public JSONObject objectToJson(CFE cfe, boolean shrinkSerializarion) throws JSONException
 	{
@@ -56,6 +120,9 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 			cfeJson.put("detalle", cfe.getDetalle()!=null? detalleSerializer.objectToJson(cfe.getDetalle()): JSONObject.NULL);
 			cfeJson.put("estado", cfe.getEstado());
 			cfeJson.put("observacionesRecepcion", cfe.getObservacionesRecepcion() != null ? cfe.getObservacionesRecepcion() : JSONObject.NULL);
+			cfeJson.put("motivosRechazo", cfe.getMotivo() != null ? new org.json.JSONArray(cfe.getMotivo().stream().map(Enum::name).toArray()) : new org.json.JSONArray());
+			cfeJson.put("detalleRechazo", cfe.getDetalleRechazo() != null ? cfe.getDetalleRechazo() : JSONObject.NULL);
+			respuestasEntreEmpresas(cfe, cfeJson);
 			
 			if (cfe.getTitular()!=null) 
 					cfeJson.put("titular", titularSerializer.objectToJson(cfe.getTitular()));

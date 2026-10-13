@@ -64,6 +64,10 @@ public class SobreSerializer<T> extends JSONSerializer<Sobre> {
 				SobreRecibido sobreRecibido = (SobreRecibido) sobre;
 				sobreJson.put("timestampRecibido", sobreRecibido.getTimestampRecibido() != null ? sdf.format(sobreRecibido.getTimestampRecibido()) : JSONObject.NULL);
 				sobreJson.put("timestampProcesado", sobreRecibido.getTimestampProcesado() != null ? sdf.format(sobreRecibido.getTimestampProcesado()) : JSONObject.NULL);
+				sobreJson.put("respuestaCfePendiente", sobreRecibido.isRespuestaCfePendiente());
+				java.util.Date programada = com.bluedot.efactura.recibidos.RespuestaCfes.programada(sobreRecibido);
+				sobreJson.put("respuestaCfeProgramada", programada != null ? sdf.format(programada) : JSONObject.NULL);
+				sobreJson.put("observacionesRecepcion", sobreRecibido.getObservacionesRecepcion() != null ? sobreRecibido.getObservacionesRecepcion() : JSONObject.NULL);
 				sobreJson.put("cfes", cfeSerializer.objectToJson(sobreRecibido.getCfes(), true));
 			}
 		
