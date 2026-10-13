@@ -119,6 +119,7 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 	public void setIdDoc() throws APIException {
 		try {
 			IdDocTck idDocTck = caeMicroController.getIdDocTick(cfe.getTipo(), cfe.isIndMontoBruto(), cfe.getFormaDePago().value, cfe.getFechaEmision(), cfe.getEstrategiaNumeracion());
+			idDocTck.setNroInterno(cfe.getNroInterno());
 			getEncabezado().setIdDoc(idDocTck);
 			cfe.setSerie(idDocTck.getSerie());
 			cfe.setNro(idDocTck.getNro().intValue());

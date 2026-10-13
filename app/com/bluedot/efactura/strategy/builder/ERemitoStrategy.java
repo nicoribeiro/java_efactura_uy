@@ -110,6 +110,7 @@ public class ERemitoStrategy extends CommonStrategy implements CFEStrategy {
 	public void setIdDoc() throws APIException {
 		try {
 			IdDocRem idDocResg = caeMicroController.getIdDocRem(cfe.getTipo(), cfe.getFechaEmision(), cfe.getEstrategiaNumeracion());
+			idDocResg.setNroInterno(cfe.getNroInterno());
 			getEncabezado().setIdDoc(idDocResg);
 			cfe.setSerie(idDocResg.getSerie());
 			cfe.setNro(idDocResg.getNro().intValue());

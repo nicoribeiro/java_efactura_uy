@@ -115,6 +115,21 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 			cfeBuilder.getCFE().setGeneradorId(UUID.randomUUID().toString());
 		
 		/*
+		 * Nro interno (IdDoc/NroInterno): el del JSON; si no viene y CFE.nroInternoDesdeId, el id del generador
+		 */
+		JSONObject idDocJSON = Commons.safeGetJSONObject(encabezadoJSON, "IdDoc");
+		String nroInterno = idDocJSON.has("NroInterno") && !idDocJSON.isNull("NroInterno") ? idDocJSON.get("NroInterno").toString().trim() : null;
+		if ((nroInterno == null || nroInterno.isEmpty()) && esCfeEmitido && idDocJSON.has("id")
+				&& play.Play.application().configuration().getBoolean("CFE.nroInternoDesdeId", false))
+			nroInterno = idDocJSON.get("id").toString().trim();
+		if (nroInterno != null && !nroInterno.isEmpty()) {
+			if (nroInterno.length() > 50)
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("NroInterno", nroInterno)
+						.setDetailMessage("NroInterno admite hasta 50 caracteres");
+			cfeBuilder.getCFE().setNroInterno(nroInterno);
+		}
+
+		/*
 		 * Ordinal
 		 */
 		cfeBuilder.getCFE().setOrdinal(1);

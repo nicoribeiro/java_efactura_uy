@@ -211,6 +211,10 @@ public class CFE extends Model<CFE>{
 
 	private String generadorId;
 
+	/** Numero interno del CFE para el emisor (IdDoc/NroInterno, XSD 1.40+): hasta 50 caracteres, opcional */
+	@javax.persistence.Column(length = 50)
+	private String nroInterno;
+
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private Sucursal sucursal;
 
@@ -894,6 +898,14 @@ public class CFE extends Model<CFE>{
 
 	public void setGeneradorId(String generadorId) {
 		this.generadorId = generadorId;
+	}
+
+	public String getNroInterno() {
+		return nroInterno;
+	}
+
+	public void setNroInterno(String nroInterno) {
+		this.nroInterno = nroInterno;
 	}
 
 	public CAE getCae() {

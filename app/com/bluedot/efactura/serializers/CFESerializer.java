@@ -175,6 +175,7 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 			cfeJson.put("estado", cfe.getEstado());
 			cfeJson.put("generadorJson", new JSONObject(cfe.getGeneradorJson()));
 			cfeJson.put("generadorId", cfe.getGeneradorId());
+			cfeJson.put("nroInterno", cfe.getNroInterno() != null ? cfe.getNroInterno() : org.json.JSONObject.NULL);
 			cfeJson.put("cae", cfe.getCae()!=null? caeSerializer.objectToJson(cfe.getCae()): JSONObject.NULL);
 			
 			if (cfe.getSobreEmitido()!=null)
