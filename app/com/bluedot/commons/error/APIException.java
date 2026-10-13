@@ -85,7 +85,6 @@ public class APIException extends Throwable
 		SESSION_NOT_FOUND(13,  200, true),
 		INVALID_VALIDATION_KEY(14,  200, true),
 		NO_AUTH_METHOD_DEFINED(15,  200, true),
-		HAZELCAST(16,  200, true),
 		USER_NOT_PART_OF_ACCOUNT(17,  200, true),
 		USER_ALREADY_EXISTS(18,  200, true),
 		EMAIL_EXISTS(19,  200, true), 

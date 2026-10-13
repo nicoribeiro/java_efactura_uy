@@ -48,12 +48,6 @@ libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.21"
 libraryDependencies += "org.slf4j" % "jcl-over-slf4j" % "1.7.21"
 libraryDependencies += "javassist" % "javassist" % "3.12.1.GA"
 
-libraryDependencies += "com.hazelcast" % "hazelcast" % "3.6.3"
-
-libraryDependencies += "com.hazelcast" % "hazelcast-client" % "3.6.3"
-
-libraryDependencies += "com.hazelcast" % "hazelcast-cloud" % "3.6.3"
-
 // https://mvnrepository.com/artifact/com.google.guava/guava
 libraryDependencies += "com.google.guava" % "guava" % "30.1-jre"
 

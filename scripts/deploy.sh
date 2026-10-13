@@ -36,7 +36,6 @@ rm -r $DEPLOYS/$SERVER_GROUP/*
 
 # ENVIRONMENT CONFIG
 cp $DEPLOY_CONF/$SERVER_GROUP/application.conf $DEPLOYS/$SERVER_GROUP/$BUILD_NAME/conf/application.conf
-cp $DEPLOY_CONF/$SERVER_GROUP/hazelcast.xml $DEPLOYS/$SERVER_GROUP/$BUILD_NAME/conf/hazelcast.xml
 cp -r $BASE/resources $DEPLOYS/$SERVER_GROUP/$BUILD_NAME/.
 
 echo "Deploy done: push config and restart the app for the changes to take effect"

@@ -28,7 +28,6 @@ CREDENTIAL_NOT_FOUND= Credential with {0}:{1} not found
 SESSION_NOT_FOUND= Session with {0}:{1} not found 
 INVALID_VALIDATION_KEY = Key is not valid
 NO_AUTH_METHOD_DEFINED= No authentication method defined
-HAZELCAST= Hazelcast error 
 USER_NOT_PART_OF_ACCOUNT= User not part of account
 USER_ALREADY_EXISTS= User with {0}:{1} already exists
 EMAIL_EXISTS= Email {0} exists

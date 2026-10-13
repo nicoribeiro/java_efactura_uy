@@ -41,7 +41,6 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 {
 	
 
-	//TODO se podria hacer un cache de esta info en hazelcast
 	
 	private HashMap<TipoDoc, List<CAE>> caesMap;
 	
