@@ -529,6 +529,9 @@ public class SobresController extends AbstractController {
 			json.put("direccion", DireccionDocumento.RECIBIDO.name());
 			json.put("timestampRecibido", fecha(recibido.getTimestampRecibido()));
 			json.put("timestampProcesado", fecha(recibido.getTimestampProcesado()));
+			// Respuesta a sus CFE (ME_): pendiente y cuando sale sola (null: solo a mano)
+			json.put("respuestaCfePendiente", recibido.isRespuestaCfePendiente());
+			json.put("respuestaCfeProgramada", fecha(RespuestaCfes.programada(recibido)));
 		}
 		json.put("comprobantes", comprobantes);
 		return json;
