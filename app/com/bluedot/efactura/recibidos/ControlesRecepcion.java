@@ -38,18 +38,20 @@ import java.util.List;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType;
+import dgi.classes.recepcion.ReferenciaTipo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import play.Play;
 
 /**
- * Controles de DGI sobre los CFE recibidos (E01-E07). Cada control tiene un modo en application.conf
+ * Controles de DGI sobre los CFE recibidos (los que puede usar el receptor: E02-E07, E10-E12). Cada control tiene un modo en application.conf
  * (RecepcionCFE.control.EXX):
  * <ul>
  * <li>OFF: no se controla</li>
@@ -180,6 +182,65 @@ public class ControlesRecepcion {
 		if (diaFirma.isAfter(vencimiento))
 			return "firmado el " + diaFirma + ", después del vencimiento del CAE " + cae.getCAEID() + " (" + vencimiento + ")";
 		return null;
+	}
+
+	/** Zona de referencia del CFE, sea cual sea el tipo; null si no tiene */
+	static ReferenciaTipo referencia(CFEDefType xml) {
+		if (xml == null)
+			return null;
+		if (xml.getEFact() != null)
+			return xml.getEFact().getReferencia();
+		if (xml.getETck() != null)
+			return xml.getETck().getReferencia();
+		if (xml.getERem() != null)
+			return xml.getERem().getReferencia();
+		if (xml.getEResg() != null)
+			return xml.getEResg().getReferencia();
+		if (xml.getEFactExp() != null)
+			return xml.getEFactExp().getReferencia();
+		if (xml.getERemExp() != null)
+			return xml.getERemExp().getReferencia();
+		return null;
+	}
+
+	/**
+	 * E12: los documentos que el CFE referencia (zona F del formato de CFE de DGI) existen en los registros, en cualquier
+	 * estado. Segun el formato, lo referenciado es del mismo emisor (lo que corrige una nota de credito/debito, lo que se
+	 * cobra con cobranza propia, el e-Remito que se ajusta, el e-Resguardo que se anula), salvo en el e-Resguardo, que
+	 * ademas referencia los comprobantes sobre los que se practico la retencion: los que la empresa le emitio al agente de
+	 * retencion. Asi que se busca en los recibidos de ese emisor y, solo para el e-Resguardo, tambien en los emitidos por la
+	 * empresa a el. No se controlan las referencias globales (IndGlobal=1: el motivo va en la razon) ni las que no indican
+	 * tipo y numero.
+	 *
+	 * @return null si pasa; si no, el detalle de cuales no se encontraron
+	 */
+	public static String e12(CFEDefType xml, Empresa empresaReceptora, Empresa empresaEmisora) {
+		ReferenciaTipo referencia = referencia(xml);
+		if (referencia == null || empresaEmisora == null)
+			return null;
+		boolean esResguardo = xml.getEResg() != null;
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		List<String> faltan = new ArrayList<String>();
+		for (ReferenciaTipo.Referencia ref : referencia.getReferencias()) {
+			if (ref.getIndGlobal() != null || ref.getTpoDocRef() == null || ref.getNroCFERef() == null)
+				continue;
+			String serie = ref.getSerie() != null && !ref.getSerie().trim().isEmpty() ? ref.getSerie().trim() : null;
+			String doc = ref.getTpoDocRef() + " " + (serie != null ? serie + "-" : "") + ref.getNroCFERef();
+			TipoDoc tipo = TipoDoc.fromInt(ref.getTpoDocRef().intValue());
+			if (tipo == null) {
+				faltan.add(doc + " (tipo desconocido)");
+				continue;
+			}
+			long nro = ref.getNroCFERef().longValue();
+			if (CFE.countEntre(empresaEmisora, empresaReceptora, tipo, serie, nro) == 0
+					&& !(esResguardo && CFE.countEntre(empresaReceptora, empresaEmisora, tipo, serie, nro) > 0))
+				faltan.add(doc + (ref.getFechaCFEref() != null ? " del " + sdf.format(ref.getFechaCFEref().toGregorianCalendar().getTime()) : ""));
+		}
+		if (faltan.isEmpty())
+			return null;
+		return "referencia a documento" + (faltan.size() == 1 ? "" : "s") + " que no está" + (faltan.size() == 1 ? "" : "n")
+				+ " en los registros (" + (esResguardo ? "ni recibido de este emisor ni emitido a él" : "en los recibidos de este emisor")
+				+ "): " + String.join(", ", faltan);
 	}
 
 	private static final String NS_CFE = "http://cfe.dgi.gub.uy";

@@ -32,7 +32,7 @@ fi
 
 rm -r $DEPLOYS/$SERVER_GROUP/*
 
-/usr/bin/unzip $BUILDS/$BUILD_NAME.zip -d  $DEPLOYS/$SERVER_GROUP
+/usr/bin/unzip -q $BUILDS/$BUILD_NAME.zip -d  $DEPLOYS/$SERVER_GROUP
 
 # ENVIRONMENT CONFIG
 cp $DEPLOY_CONF/$SERVER_GROUP/application.conf $DEPLOYS/$SERVER_GROUP/$BUILD_NAME/conf/application.conf

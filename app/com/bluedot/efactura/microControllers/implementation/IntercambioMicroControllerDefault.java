@@ -349,26 +349,6 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				cfe.getMotivo().add(MotivoRechazoCFE.E05);
 	 		}
 		} else {
-	 		/*
-			 * CONTROLES CFE
-			 * 
-			 * E01 Tipo y No de CFE ya fue reportado como anulado
-			 * 
-			 * E02 Tipo y No de CFE ya existe en los registros
-			 * 
-			 * E03 Tipo y No de CFE no se corresponden con el CAE
-			 * 
-			 * E04 Firma electrónica no es válida
-			 * 
-			 * E05 No cumple validaciones (*) de Formato comprobantes
-			 * 
-			 * E07 Fecha Firma de CFE no se corresponde con fecha CAE
-			 */
-			
-	 		/*
-			 * E01
-			 */
-	 		
 			/*
 			 * E02: el mismo CFE (emisor, tipo, serie y numero) ya se recibio y acepto. Se busca entre los recibidos por la
 			 * empresa (antes se buscaba entre los emitidos y nunca encontraba nada), sin contar al que se esta procesando.
@@ -376,7 +356,6 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 	 		if (ControlesRecepcion.modo("E02") != ControlesRecepcion.Modo.OFF)
 	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E02, ControlesRecepcion.e02(cfe, sobreRecibido.getEmpresaReceptora()));
 	 		
-
 	 		/*
 			 * E03: el numero del CFE esta en el rango del CAE (CAEData)
 			 */
@@ -401,6 +380,12 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 			 */
 	 		if (ControlesRecepcion.modo("E07") != ControlesRecepcion.Modo.OFF)
 	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E07, ControlesRecepcion.e07(xmlCfe));
+	 		
+	 		/*
+			 * E12: los documentos referenciados (zona de referencia) estan en los recibidos de este emisor
+			 */
+	 		if (ControlesRecepcion.modo("E12") != ControlesRecepcion.Modo.OFF)
+	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E12, ControlesRecepcion.e12(xmlCfe, sobreRecibido.getEmpresaReceptora(), cfe.getEmpresaEmisora()));
 		}
 		
 		/*

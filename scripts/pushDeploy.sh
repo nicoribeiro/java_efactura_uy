@@ -50,7 +50,7 @@ pushDeploy() {
 		instanceKey=$(instanceKey $instance)
 		instanceUser=$(instanceUser $instance)
                 INFO "Pushing config to Server: $instance ($instanceIp:$instancePort)"
-                rsync -av -e "ssh -p $instancePort -i $instanceKey" --del $DEPLOY $instanceUser@$instanceIp:$DEST
+                rsync -a --stats -e "ssh -p $instancePort -i $instanceKey" --del $DEPLOY $instanceUser@$instanceIp:$DEST
 
         done
 

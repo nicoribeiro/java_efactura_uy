@@ -258,6 +258,21 @@ public class CFE extends Model<CFE>{
 		return q.findRowCount();
 	}
 
+	/**
+	 * Cantidad de CFE con ese tipo, serie y numero emitidos por una empresa a otra, en cualquier estado (para el control E12
+	 * de las referencias). Serie null: cualquier serie.
+	 */
+	public static long countEntre(Empresa empresaEmisora, Empresa empresaReceptora, TipoDoc tipo, String serie, long nro) {
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+		q.getCriteria().add(Restrictions.eq("empresaEmisora", empresaEmisora));
+		q.getCriteria().add(Restrictions.eq("empresaReceptora", empresaReceptora));
+		q.getCriteria().add(Restrictions.eq("tipo", tipo));
+		if (serie != null)
+			q.getCriteria().add(Restrictions.eq("serie", serie));
+		q.getCriteria().add(Restrictions.eq("nro", nro));
+		return q.findRowCount();
+	}
+
 	public static CFE findById(Integer id) {
 		return find.byId(id);
 	}
