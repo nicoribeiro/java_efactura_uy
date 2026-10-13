@@ -66,6 +66,7 @@ public interface ConsultasService {
 	 *  - Filtro_eFacRUCEmisorAudFchHora (obligatorio): Los RUC Emisores contenidos en la consulta existen como Emisores Electrónicos o sufrieron alguna modificación de sus datos a partir de la fecha indicada. 
 	 *    (Ejemplo: se modificó el mail de contacto a partir de la fecha)
 	 */
-	RucEmisoresMail consutarRucEmisores(String eFacDocNro, String eFacDenominacion, Date eFacRUCEmisorAudFchHora) throws APIException;
+	RucEmisoresMail consutarRucEmisores(String eFacDocNro, String eFacDenominacion, Date eFacRUCEmisorAudFchHora, Empresa firmante)
+			throws APIException;
 	
 }

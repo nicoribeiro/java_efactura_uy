@@ -27,6 +27,9 @@ import dgi.soap.consultas.ACKConsultaEstadoCFE;
 import dgi.soap.consultas.CFEId;
 import dgi.soap.consultas.ConsultaEnviosSobre;
 import dgi.soap.consultas.RucEmisoresMail;
+import dgi.soap.consultas.WSEFacturaConsultasEFACCONSULTARRUCEMISORESResponse;
+import dgi.soap.consultas.WSEFacturaConsultasEFACCONSULTARRUCEMISORES;
+import dgi.soap.consultas.ConsultaRUCEmisores;
 import dgi.soap.consultas.WSEFacturaConsultasEFACCONSULTARENVIOSSOBRE;
 import dgi.soap.consultas.WSEFacturaConsultasEFACCONSULTARENVIOSSOBREResponse;
 import dgi.soap.consultas.WSEFacturaConsultasEFACCONSULTARESTADOCFE;
@@ -134,10 +137,45 @@ public class ConsultasServiceImpl implements ConsultasService {
 	}
 
 	@Override
-	public RucEmisoresMail consutarRucEmisores(String eFacDocNro, String eFacDenominacion,
-			Date eFacRUCEmisorAudFchHora) throws APIException {
-		// TODO Auto-generated method stub
-		return null;
+	public RucEmisoresMail consutarRucEmisores(String eFacDocNro, String eFacDenominacion, Date eFacRUCEmisorAudFchHora,
+			Empresa firmante) throws APIException {
+
+		/*
+		 * EFACCONSULTARRUCEMISORES del servicio de consultas de DGI (documento "Servicios Consultas eFactura 1.10"): emisores
+		 * electronicos que existen o cambiaron desde la fecha, filtrando opcionalmente por RUC y denominacion (contienen).
+		 * Firmada con el certificado de la empresa firmante (los interceptors la toman del ThreadLocal).
+		 */
+		InterceptorContextHolder.setEmpresa(firmante);
+
+		try {
+			WSEFacturaConsultasSoapPortWrapper portWrapper = WSConsultasPool.getInstance().checkOut();
+			// DGI manda FECHA_FIN 0000-00-00 cuando no hay fecha: que JAXB la deje en null en vez de fallar la respuesta
+			((javax.xml.ws.BindingProvider) portWrapper.getPort()).getRequestContext().put("set-jaxb-validation-event-handler", Boolean.FALSE);
+
+			ConsultaRUCEmisores consulta = new ConsultaRUCEmisores();
+			consulta.setFiltroEFacDocNro(eFacDocNro != null ? eFacDocNro : "");
+			consulta.setFiltroEFacDenominacion(eFacDenominacion != null ? eFacDenominacion : "");
+			GregorianCalendar c = new GregorianCalendar();
+			c.setTime(eFacRUCEmisorAudFchHora);
+			consulta.setFiltroEFacRUCEmisorAudFchHora(DatatypeFactory.newInstance().newXMLGregorianCalendar(c));
+
+			WSEFacturaConsultasEFACCONSULTARRUCEMISORES parameters = new WSEFacturaConsultasEFACCONSULTARRUCEMISORES();
+			parameters.setConsultarucemisores(consulta);
+
+			WSEFacturaConsultasEFACCONSULTARRUCEMISORESResponse output;
+			try {
+				output = portWrapper.getPort().efacconsultarrucemisores(parameters);
+			} finally {
+				// El puerto es del pool: el resto de las consultas sigue con la validacion por defecto
+				((javax.xml.ws.BindingProvider) portWrapper.getPort()).getRequestContext().remove("set-jaxb-validation-event-handler");
+			}
+
+			WSConsultasPool.getInstance().checkIn(portWrapper);
+
+			return output.getRucemisoresmail();
+		} catch (Throwable e) {
+			throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e);
+		}
 	}
 
 }

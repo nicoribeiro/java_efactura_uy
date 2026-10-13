@@ -91,6 +91,15 @@ public class PollerManager {
 			EstadoPoller.registrar("ReporteDiarioPoller", false, 0);
 		}
 
+		if (applicationProvider.get().configuration().getBoolean("EmisoresElectronicosPoller.run", false)){
+			logger.info("EmisoresElectronicosPoller: running");
+			runner = new EmisoresElectronicosPoller(applicationProvider.get().configuration());
+			executor.execute(runner);
+		}else {
+			logger.info("EmisoresElectronicosPoller: not running");
+			EstadoPoller.registrar("EmisoresElectronicosPoller", false, 0);
+		}
+
 		if (applicationProvider.get().configuration().getBoolean("RespuestaCfePoller.run", false)){
 			logger.info("RespuestaCfePoller: running");
 			runner = new RespuestaCfePoller(applicationProvider.get().configuration());

@@ -4,30 +4,20 @@ import com.bluedot.efactura.security.AccesoEmpresa;
 import com.bluedot.efactura.security.EmpresaAccess;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.zip.GZIPInputStream;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
@@ -38,7 +28,6 @@ import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.security.User;
 import com.bluedot.commons.utils.IO;
 import com.bluedot.commons.utils.JSONUtils;
-import com.bluedot.commons.utils.ThreadMan;
 import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.empresas.CargaFirmaDigital;
@@ -112,82 +101,67 @@ public class EmpresasController extends AbstractController {
 		return null;
 	}
 
-	public Promise<Result> cargarEmpresas(String path) throws APIException {
-		try {
-
-			File fXmlFile = IO.resolve(path);
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			Document doc;
-			// El archivo de emisores es muy grande, se versiona comprimido (.gz)
-			if (path.toLowerCase().endsWith(".gz")) {
-				try (InputStream in = new GZIPInputStream(new FileInputStream(fXmlFile))) {
-					doc = dBuilder.parse(in);
-				}
-			} else
-				doc = dBuilder.parse(fXmlFile);
-
-			// optional, but recommended
-			// read this -
-			// http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
-			doc.getDocumentElement().normalize();
-
-			NodeList nList = doc.getElementsByTagName("RucEmisoresTransicionMailProv.RucEmisoresTransicionMailProvItem");
-
-			List<Empresa> empresas = Empresa.findAll();
-			
-			HashMap<String, Empresa> empresasMap = new HashMap<String, Empresa>();
-			
-			for (Empresa empresa : empresas) {
-				empresasMap.put(empresa.getRut(), empresa);
-			}
-			
-			for (int temp = 0; temp < nList.getLength(); temp++) {
-
-				Node nNode = nList.item(temp);
-
-				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-
-					Element eElement = (Element) nNode;
-
-					String rut = eElement.getElementsByTagName("RUC").item(0).getTextContent();
-
-					logger.info("Procesando RUT: " + rut + " " + (temp + 1) + "/" + nList.getLength());
-
-					String denominacion = eElement.getElementsByTagName("DENOMINACION").item(0).getTextContent();
-					//String fechaInicio = eElement.getElementsByTagName("FECHA_INICIO").item(0).getTextContent();
-					String mail = eElement.getElementsByTagName("MAIL").item(0).getTextContent();
-
-					Empresa empresa = empresasMap.get(rut);
-					
-					if ( empresa == null) {
-						empresa = new Empresa(rut, null, null);
-						empresa.setEmisorElectronico(true);
-						empresa.setMailRecepcion(mail);
-						empresa.setRazon(denominacion);
-						empresasMap.put(rut, empresa);
-						empresa.save();
-					}else{
-						if (!empresa.isEmisorElectronico() || !Objects.equals(empresa.getMailRecepcion(), mail) || !Objects.equals(empresa.getRazon(), denominacion)) {
-							empresa.setEmisorElectronico(true);
-							empresa.setMailRecepcion(mail);
-							empresa.setRazon(denominacion);
-							empresa.update();
-						}
-					}
-					
-					if (temp % 1000 == 0) 
-						ThreadMan.forceTransactionFlush();
-
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return json(OK);
+	/**
+	 * Vista previa de la sincronizacion de emisores electronicos con DGI (ver EmisoresElectronicos): lo que cambiaria
+	 * desde la fecha, sin guardar nada. Query: desde (yyyy-MM-dd, obligatorio), empresa (RUT con cuya firma se consulta;
+	 * si no, la primera con firma vigente). Solo ADMIN.
+	 */
+	public Promise<Result> cambiosEmisoresElectronicos() throws APIException {
+		return emisoresElectronicos(true, "GET /emisoresElectronicos/cambios");
 	}
-	
+
+	/** Sincroniza los emisores electronicos con DGI desde la fecha (crea y actualiza empresas). Solo ADMIN. */
+	public Promise<Result> sincronizarEmisoresElectronicos() throws APIException {
+		return emisoresElectronicos(false, "POST /emisoresElectronicos/sincronizar");
+	}
+
+	private Promise<Result> emisoresElectronicos(boolean simular, String operacion) throws APIException {
+		User usuario = PermissionValidator.getSessionUser(ctx());
+		AccesoEmpresa.verificarAdmin(usuario, operacion, true);
+		java.util.Date desde;
+		try {
+			desde = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(request().getQueryString("desde"));
+		} catch (Exception e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("desde", request().getQueryString("desde"))
+					.setDetailMessage("desde tiene que ser una fecha yyyy-MM-dd");
+		}
+		String rutFirmante = request().getQueryString("empresa");
+		Empresa firmante = rutFirmante != null && !rutFirmante.trim().isEmpty() ? Empresa.findByRUT(rutFirmante.trim(), true)
+				: com.bluedot.efactura.empresas.EmisoresElectronicos.firmantePorDefecto();
+		org.json.JSONObject resultado = simular ? com.bluedot.efactura.empresas.EmisoresElectronicos.sincronizar(desde, firmante, true)
+				: com.bluedot.efactura.empresas.EmisoresElectronicos.ejecutar(desde, firmante, usuario.getEmailAddress());
+		if (!simular)
+			auditoria.info(usuario.getEmailAddress() + " sincronizo los emisores electronicos con DGI desde "
+					+ request().getQueryString("desde") + ": " + resultado.getInt("nuevas") + " nuevas, " + resultado.getInt("actualizadas")
+					+ " actualizadas, " + resultado.getInt("bajas") + " bajas");
+		return json(resultado.toString());
+	}
+
+	/**
+	 * Carga el archivo de emisores de DGI (RucEmisoresTransicionMailProv, XML o .gz) que esta en el servidor: crea y
+	 * actualiza empresas con la misma logica que la sincronizacion (ver EmisoresElectronicos). Query: path, simular=true
+	 * para ver lo que cambiaria sin guardar. Solo ADMIN.
+	 */
+	public Promise<Result> cargarEmpresas(final String path) throws APIException {
+		User usuario = PermissionValidator.getSessionUser(ctx());
+		AccesoEmpresa.verificarAdmin(usuario, "POST /empresa/cargar", true);
+		final File archivo = IO.resolve(path);
+		if (archivo == null || !archivo.isFile())
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("path", path).setDetailMessage("No existe el archivo " + path);
+		if ("true".equals(request().getQueryString("simular")))
+			return json(com.bluedot.efactura.empresas.EmisoresElectronicos.cargarArchivo(archivo, true).toString());
+
+		JSONObject resultado = com.bluedot.efactura.empresas.EmisoresElectronicos.ejecutar(usuario.getEmailAddress(), "Archivo " + archivo.getName(),
+				new com.bluedot.efactura.empresas.EmisoresElectronicos.Operacion() {
+					@Override
+					public JSONObject ejecutar() throws APIException {
+						return com.bluedot.efactura.empresas.EmisoresElectronicos.cargarArchivo(archivo, false);
+					}
+				});
+		auditoria.info(usuario.getEmailAddress() + " cargo el archivo de emisores electronicos " + path + ": " + resultado.getString("resumen"));
+		return json(resultado.toString());
+	}
+
 	public Promise<Result> getEmpresaById(int id) throws APIException {
 		
 		Empresa empresa = Empresa.findById(id, true);

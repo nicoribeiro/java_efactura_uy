@@ -35,6 +35,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @Entity
+// Las empresas se buscan por RUT en todos lados (y de a miles en la sincronizacion de emisores electronicos)
+@javax.persistence.Table(indexes = @javax.persistence.Index(name = "empresa_rut_idx", columnList = "rut"))
 @ApiModel
 public class Empresa extends Model<Empresa>{
 
@@ -64,6 +66,34 @@ public class Empresa extends Model<Empresa>{
 	private String puertoRecepcion;
 	
 	private boolean emisorElectronico;
+
+	/*
+	 * Datos de emisor electronico segun DGI (EFACCONSULTARRUCEMISORES y el archivo de emisores de DGI, ver
+	 * EmisoresElectronicos). La razon social (DENOMINACION) va en razon y el mail de intercambio (MAIL) en mailRecepcion.
+	 */
+
+	/** Desde cuando es emisor electronico (FECHA_INICIO) */
+	@javax.persistence.Temporal(javax.persistence.TemporalType.DATE)
+	private java.util.Date fechaInicioEmisorDgi;
+
+	/** Fin del periodo de transicion (FECHA_FIN_TRANSICION); solo lo trae el archivo */
+	@javax.persistence.Temporal(javax.persistence.TemporalType.DATE)
+	private java.util.Date fechaFinTransicionDgi;
+
+	/**
+	 * Fecha en la que deja de ser emisor electronico (FECHA_FIN). Se guarda porque DGI solo vuelve a informar un RUT si
+	 * cambia: cuando la fecha pasa, la sincronizacion le saca emisorElectronico.
+	 */
+	@javax.persistence.Temporal(javax.persistence.TemporalType.DATE)
+	private java.util.Date fechaFinEmisorDgi;
+
+	/** URL del web service del proveedor de facturacion del emisor (URL_WEBSERVICE); solo lo trae el archivo */
+	@javax.persistence.Column(columnDefinition = "TEXT")
+	private String urlWebserviceDgi;
+
+	/** Mail del contacto tecnico (MAIL_CONTACTO_TECNICO); solo lo trae el archivo */
+	@javax.persistence.Column(columnDefinition = "TEXT")
+	private String mailContactoTecnicoDgi;
 	
 	private String mailNotificaciones;
 	
@@ -141,6 +171,22 @@ public class Empresa extends Model<Empresa>{
 		return find.query().eq("rut", rut).findUnique();
 	}
 	
+	/** Empresas con esos RUT, por RUT (de a 1000 por consulta) */
+	public static java.util.Map<String, Empresa> findByRUTs(java.util.Collection<String> ruts) {
+		java.util.Map<String, Empresa> mapa = new java.util.HashMap<String, Empresa>();
+		java.util.List<String> lista = new java.util.ArrayList<String>(ruts);
+		for (int i = 0; i < lista.size(); i += 1000) {
+			DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
+			q.getCriteria().add(Restrictions.in("rut", lista.subList(i, Math.min(i + 1000, lista.size()))));
+			// firmaDigital es el lado inverso del OneToOne: Hibernate la trae siempre, con un select por empresa si no va en
+			// el mismo join (con miles de empresas eran miles de consultas)
+			q.getCriteria().setFetchMode("firmaDigital", org.hibernate.FetchMode.JOIN);
+			for (Empresa e : q.findList())
+				mapa.put(e.getRut(), e);
+		}
+		return mapa;
+	}
+
 	public static List<Empresa> findEmpresasConMail()
 	{
 		return find.query().isNotNull("hostRecepcion").findList();
@@ -310,6 +356,55 @@ public class Empresa extends Model<Empresa>{
 
 	public void setEmisorElectronico(boolean emisorElectronico) {
 		this.emisorElectronico = emisorElectronico;
+	}
+
+	public java.util.Date getFechaFinEmisorDgi() {
+		return fechaFinEmisorDgi;
+	}
+
+	public void setFechaFinEmisorDgi(java.util.Date fechaFinEmisorDgi) {
+		this.fechaFinEmisorDgi = fechaFinEmisorDgi;
+	}
+
+	public java.util.Date getFechaInicioEmisorDgi() {
+		return fechaInicioEmisorDgi;
+	}
+
+	public void setFechaInicioEmisorDgi(java.util.Date fechaInicioEmisorDgi) {
+		this.fechaInicioEmisorDgi = fechaInicioEmisorDgi;
+	}
+
+	public java.util.Date getFechaFinTransicionDgi() {
+		return fechaFinTransicionDgi;
+	}
+
+	public void setFechaFinTransicionDgi(java.util.Date fechaFinTransicionDgi) {
+		this.fechaFinTransicionDgi = fechaFinTransicionDgi;
+	}
+
+	public String getUrlWebserviceDgi() {
+		return urlWebserviceDgi;
+	}
+
+	public void setUrlWebserviceDgi(String urlWebserviceDgi) {
+		this.urlWebserviceDgi = urlWebserviceDgi;
+	}
+
+	public String getMailContactoTecnicoDgi() {
+		return mailContactoTecnicoDgi;
+	}
+
+	public void setMailContactoTecnicoDgi(String mailContactoTecnicoDgi) {
+		this.mailContactoTecnicoDgi = mailContactoTecnicoDgi;
+	}
+
+	/** Empresas marcadas como emisor electronico cuya fecha de fin en DGI ya llego */
+	public static List<Empresa> findEmisoresVencidos(java.util.Date hoy) {
+		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
+		q.getCriteria().add(Restrictions.eq("emisorElectronico", true));
+		q.getCriteria().add(Restrictions.le("fechaFinEmisorDgi", hoy));
+		q.getCriteria().setFetchMode("firmaDigital", org.hibernate.FetchMode.JOIN);
+		return q.findList();
 	}
 	
 	

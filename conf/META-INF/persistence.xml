@@ -52,6 +52,7 @@
 		<class>com.bluedot.efactura.model.RetencionPercepcion</class>
 		<class>com.bluedot.efactura.model.EmailFolderState</class>
 		<class>com.bluedot.efactura.model.EnvioMail</class>
+		<class>com.bluedot.efactura.model.EjecucionProceso</class>
 		
 		
 		  

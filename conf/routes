@@ -123,6 +123,10 @@ GET      /api/v1/empresa										 com.bluedot.efactura.controllers.EmpresasCont
 # Carga/Actualiza la informacion de las Empresas a partir el XML provisto por DGI
 POST     /api/v1/empresa/cargar									 com.bluedot.efactura.controllers.EmpresasController.cargarEmpresas(path:String)
 
+# Emisores electronicos segun DGI (EFACCONSULTARRUCEMISORES): vista previa de los cambios desde una fecha y sincronizacion (solo ADMIN)
+GET      /api/v1/emisoresElectronicos/cambios                     com.bluedot.efactura.controllers.EmpresasController.cambiosEmisoresElectronicos()
+POST     /api/v1/emisoresElectronicos/sincronizar                 com.bluedot.efactura.controllers.EmpresasController.sincronizarEmisoresElectronicos()
+
 ###### SUCURSALES
 
 # Obtiene las Sucursales
@@ -241,6 +245,8 @@ GET      /api/v1/users/:uid/acl                                  com.bluedot.com
 # Acceso a empresas de efactura (solo ADMIN)
 GET      /api/v1/usuarios                                        com.bluedot.efactura.controllers.AccesoEmpresasController.getUsuarios()
 GET      /api/v1/procesos                                        com.bluedot.efactura.controllers.ProcesosController.getProcesos()
+# Ejecuciones registradas de un proceso (los que las registran, ej. EmisoresElectronicosPoller), paginadas
+GET      /api/v1/procesos/:nombre/ejecuciones                    com.bluedot.efactura.controllers.ProcesosController.getEjecuciones(nombre:String)
 GET      /api/v1/usuarios/:uid/sesiones                          com.bluedot.efactura.controllers.AccesoEmpresasController.getSesionesUsuario(uid: Int)
 # Administracion de usuarios (solo ADMIN): sin borrado, se desactiva; contrasenas temporales generadas por la API
 POST     /api/v1/usuarios                                        com.bluedot.efactura.controllers.UsuariosController.crear()

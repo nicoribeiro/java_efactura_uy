@@ -36,6 +36,12 @@ public class EmpresaSerializer<T> extends JSONSerializer<Empresa> {
 			empresa.put("userRecepcion", p.getUserRecepcion());
 			empresa.put("puertoRecepcion", p.getPuertoRecepcion());
 			empresa.put("emisorElectronico", p.isEmisorElectronico());
+			java.text.SimpleDateFormat dia = new java.text.SimpleDateFormat("yyyy-MM-dd");
+			empresa.put("fechaInicioEmisorDgi", p.getFechaInicioEmisorDgi() != null ? dia.format(p.getFechaInicioEmisorDgi()) : JSONObject.NULL);
+			empresa.put("fechaFinTransicionDgi", p.getFechaFinTransicionDgi() != null ? dia.format(p.getFechaFinTransicionDgi()) : JSONObject.NULL);
+			empresa.put("fechaFinEmisorDgi", p.getFechaFinEmisorDgi() != null ? dia.format(p.getFechaFinEmisorDgi()) : JSONObject.NULL);
+			empresa.put("urlWebserviceDgi", p.getUrlWebserviceDgi() != null ? p.getUrlWebserviceDgi() : JSONObject.NULL);
+			empresa.put("mailContactoTecnicoDgi", p.getMailContactoTecnicoDgi() != null ? p.getMailContactoTecnicoDgi() : JSONObject.NULL);
 			empresa.put("mailNotificaciones", p.getMailNotificaciones());
 			empresa.put("fromEnvio", p.getFromEnvio());
 			empresa.put("offsetMail", p.getOffsetMail());

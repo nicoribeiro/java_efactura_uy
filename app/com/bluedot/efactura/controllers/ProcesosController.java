@@ -10,6 +10,7 @@ import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
+import com.bluedot.efactura.model.EjecucionProceso;
 import com.bluedot.efactura.pollers.EstadoPoller;
 import com.bluedot.efactura.security.EmpresaAccess;
 import com.play4jpa.jpa.db.Tx;
@@ -61,6 +62,38 @@ public class ProcesosController extends AbstractController {
 		result.put("ahora", sdf.format(new Date()));
 		result.put("procesos", procesos);
 		return json(result.toString());
+	}
+
+	/**
+	 * Ejecuciones registradas de un proceso (EjecucionProceso), de la mas nueva a la mas vieja. Query: page, pageSize
+	 * (maximo 50). Solo ADMIN (siempre, por la ruta /procesos).
+	 */
+	public Promise<Result> getEjecuciones(String nombre) throws APIException {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+		int page = 1, pageSize = 20;
+		try {
+			if (request().getQueryString("page") != null)
+				page = Math.max(1, Integer.parseInt(request().getQueryString("page")));
+			if (request().getQueryString("pageSize") != null)
+				pageSize = Math.max(1, Math.min(50, Integer.parseInt(request().getQueryString("pageSize"))));
+		} catch (NumberFormatException e) {
+			throw APIException.raise(com.bluedot.commons.error.APIException.APIErrors.BAD_PARAMETER_VALUE).withParams("page/pageSize");
+		}
+		com.bluedot.commons.utils.Tuple<java.util.List<EjecucionProceso>, Long> ejecuciones = EjecucionProceso.findByProceso(nombre, page, pageSize);
+		JSONArray lista = new JSONArray();
+		for (EjecucionProceso e : ejecuciones.item1) {
+			JSONObject json = new JSONObject();
+			json.put("id", e.getId());
+			json.put("inicio", fecha(sdf, e.getInicio()));
+			json.put("fin", fecha(sdf, e.getFin()));
+			json.put("duracionMs", e.getInicio() != null && e.getFin() != null ? e.getFin().getTime() - e.getInicio().getTime() : JSONObject.NULL);
+			json.put("ok", e.isOk());
+			json.put("origen", texto(e.getOrigen()));
+			json.put("resumen", texto(e.getResumen()));
+			json.put("detalle", texto(e.getDetalle()));
+			lista.put(json);
+		}
+		return json(com.bluedot.commons.utils.JSONUtils.createObjectList(lista, ejecuciones.item2, page, pageSize).toString());
 	}
 
 	private static Object fecha(SimpleDateFormat sdf, Date date) {
