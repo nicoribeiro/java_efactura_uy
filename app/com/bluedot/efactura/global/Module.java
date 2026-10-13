@@ -15,8 +15,6 @@ public class Module extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(OnStart.class).asEagerSingleton();
-
 		bind(PollerManager.class).asEagerSingleton();
 	}
 

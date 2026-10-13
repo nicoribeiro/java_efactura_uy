@@ -286,9 +286,6 @@ GET      /api/v1/users/:uid/notificationChannels/:ncid/test      com.bluedot.com
 #GET      /api/v1/accounts/:aid/alerts/count                      com.bluedot.commons.controllers.AccountController.getAlertCount(aid: Int)
 
 # Access Levels
-#GET      /api/v1/properties/acl                                  com.bluedot.commons.controllers.AccessLevelsController.getAvailablePropertyAccessLevels()
-#GET      /api/v1/tags/acl                                        com.bluedot.commons.controllers.AccessLevelsController.getAvailableTagAccessLevels()
-#GET      /api/v1/accounts/acl                                    com.bluedot.commons.controllers.AccessLevelsController.getAvailableAccountAccessLevels()
 PUT      /api/v1/accounts/:aid/users/:uid/acl                    com.bluedot.commons.controllers.AccountController.setAcl(aid: Int, uid: Int)
 
 # Dashboard
