@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import com.bluedot.efactura.microControllers.implementation.ServiceMicroControllerDefault;
 import com.bluedot.efactura.model.EnvioMail;
 import com.bluedot.efactura.model.SobreEmitido;
@@ -656,10 +657,13 @@ public class DocumentController extends AbstractController {
 				+ " group by c.tipo, c.estado, c.moneda", Object[].class)
 				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta).getResultList();
 
+		// Recibidos sin los que la empresa rechazo (BE, ej: duplicados E02): no son compras validas
 		List<Object[]> recibidos = em.createQuery("select c.tipo, c.moneda, count(c), sum(c.totMntTotal) from CFE c"
 				+ " where c.empresaReceptora = :empresa and c.sobreRecibido is not null and c.fechaEmision between :desde and :hasta"
+				+ " and (c.estado is null or c.estado <> :rechazado)"
 				+ " group by c.tipo, c.moneda", Object[].class)
-				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta).getResultList();
+				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta)
+				.setParameter("rechazado", EstadoACKCFEType.BE).getResultList();
 
 		List<Object[]> emitidosPorDia = em.createQuery("select c.fechaEmision, count(c) from CFE c"
 				+ " where c.empresaEmisora = :empresa and c.sobreEmitido is not null and c.fechaEmision between :desde and :hasta"
@@ -668,8 +672,10 @@ public class DocumentController extends AbstractController {
 
 		List<Object[]> recibidosPorDia = em.createQuery("select c.fechaEmision, count(c) from CFE c"
 				+ " where c.empresaReceptora = :empresa and c.sobreRecibido is not null and c.fechaEmision between :desde and :hasta"
+				+ " and (c.estado is null or c.estado <> :rechazado)"
 				+ " group by c.fechaEmision", Object[].class)
-				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta).getResultList();
+				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta)
+				.setParameter("rechazado", EstadoACKCFEType.BE).getResultList();
 
 		JSONArray emitidosJson = new JSONArray();
 		for (Object[] fila : emitidos) {

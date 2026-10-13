@@ -376,20 +376,11 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 			 */
 	 		
 			/*
-			 * E02
+			 * E02: el mismo CFE (emisor, tipo, serie y numero) ya se recibio y acepto. Se busca entre los recibidos por la
+			 * empresa (antes se buscaba entre los emitidos y nunca encontraba nada), sin contar al que se esta procesando.
 			 */
-	 		List<CFE> cfes = CFE.findByIdEmitido(cfe.getEmpresaEmisora(), cfe.getTipo(), cfe.getSerie(), cfe.getNro(), EstadoACKCFEType.AE, false);
-	
-	 		if (cfes.size()>1)
-	 			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",cfe.getEmpresaEmisora().getRut()+"-"+cfe.getNro()+"-"+cfe.getSerie()+"-"+cfe.getTipo()).setDetailMessage("No identifica a un unico cfe");
-	 		
-	 		if (cfes.size()==1){
-		 		rechazo = new RechazoCFEDGIType();
-				rechazo.setMotivo("E02");
-				rechazo.setGlosa("Tipo y No de CFE ya existe en los registros");
-				cfe.getMotivo().add(MotivoRechazoCFE.E02);
-				cfe.setEstado(EstadoACKCFEType.BE);
-	 		}
+	 		if (ControlesRecepcion.modo("E02") != ControlesRecepcion.Modo.OFF)
+	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E02, ControlesRecepcion.e02(cfe, sobreRecibido.getEmpresaReceptora()));
 	 		
 
 	 		/*

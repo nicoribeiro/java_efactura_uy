@@ -5,7 +5,15 @@ import java.time.LocalDate;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.bluedot.commons.error.APIException;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.efactura.model.Empresa;
+
+import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType;
@@ -72,6 +80,32 @@ public class ControlesRecepcion {
 		if (numero.compareTo(desde) < 0 || numero.compareTo(hasta) > 0)
 			return "el número " + nro + " está fuera del rango del CAE " + cae.getCAEID() + " (" + desde + " a " + hasta + ")";
 		return null;
+	}
+
+	/**
+	 * E02: el CFE (emisor, tipo, serie y numero) ya se habia recibido y aceptado. No cuenta al CFE que se esta procesando
+	 * (ya esta guardado cuando se controla).
+	 *
+	 * @return null si pasa; si no, el detalle con las copias anteriores
+	 */
+	public static String e02(CFE cfe, Empresa empresaReceptora) throws APIException {
+		List<CFE> anteriores = new ArrayList<CFE>();
+		for (CFE otro : CFE.findByIdRecibido(empresaReceptora, cfe.getTipo(), cfe.getSerie(), cfe.getNro(), EstadoACKCFEType.AE,
+				cfe.getEmpresaEmisora(), false))
+			if (otro.getId() != cfe.getId())
+				anteriores.add(otro);
+		if (anteriores.isEmpty())
+			return null;
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		StringBuilder copias = new StringBuilder();
+		for (CFE otro : anteriores) {
+			if (copias.length() > 0)
+				copias.append(", ");
+			copias.append("id ").append(otro.getId());
+			if (otro.getSobreRecibido() != null && otro.getSobreRecibido().getFecha() != null)
+				copias.append(" (sobre del ").append(sdf.format(otro.getSobreRecibido().getFecha())).append(")");
+		}
+		return "ya se había recibido y aceptado: " + copias;
 	}
 
 	/** Fecha y hora de firma del CFE (TmstFirma), sea cual sea el tipo; null si no tiene */
