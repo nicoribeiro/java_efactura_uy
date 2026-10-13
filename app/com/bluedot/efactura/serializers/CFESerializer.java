@@ -178,8 +178,13 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 			cfeJson.put("nroInterno", cfe.getNroInterno() != null ? cfe.getNroInterno() : org.json.JSONObject.NULL);
 			cfeJson.put("cae", cfe.getCae()!=null? caeSerializer.objectToJson(cfe.getCae()): JSONObject.NULL);
 			
-			if (cfe.getSobreEmitido()!=null)
-				cfeJson.put("sobreEmitido", sobreSerializer.objectToJson(cfe.getSobreEmitido(), true));
+			if (cfe.getSobreEmitido()!=null) {
+				JSONObject sobreJson = sobreSerializer.objectToJson(cfe.getSobreEmitido(), true);
+				// Para el panel: si DGI ya acepto el sobre (AS) y todavia no respondio por el CFE, el CFE esta "Recibido"
+				if (cfe.getSobreEmitido().getEstadoDgi() != null)
+					sobreJson.put("estadoDgi", cfe.getSobreEmitido().getEstadoDgi().name());
+				cfeJson.put("sobreEmitido", sobreJson);
+			}
 			
 			if (cfe.getSobreRecibido()!=null)
 				cfeJson.put("sobreRecibido", sobreSerializer.objectToJson(cfe.getSobreRecibido(), true));
