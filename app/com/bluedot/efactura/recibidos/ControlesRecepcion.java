@@ -1,6 +1,9 @@
 package com.bluedot.efactura.recibidos;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
+
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.bluedot.efactura.model.CFE;
 
@@ -68,6 +71,49 @@ public class ControlesRecepcion {
 		BigInteger numero = BigInteger.valueOf(nro);
 		if (numero.compareTo(desde) < 0 || numero.compareTo(hasta) > 0)
 			return "el número " + nro + " está fuera del rango del CAE " + cae.getCAEID() + " (" + desde + " a " + hasta + ")";
+		return null;
+	}
+
+	/** Fecha y hora de firma del CFE (TmstFirma), sea cual sea el tipo; null si no tiene */
+	static XMLGregorianCalendar tmstFirma(CFEDefType xml) {
+		if (xml == null)
+			return null;
+		if (xml.getEFact() != null)
+			return xml.getEFact().getTmstFirma();
+		if (xml.getETck() != null)
+			return xml.getETck().getTmstFirma();
+		if (xml.getERem() != null)
+			return xml.getERem().getTmstFirma();
+		if (xml.getEResg() != null)
+			return xml.getEResg().getTmstFirma();
+		if (xml.getEFactExp() != null)
+			return xml.getEFactExp().getTmstFirma();
+		if (xml.getERemExp() != null)
+			return xml.getERemExp().getTmstFirma();
+		return null;
+	}
+
+	private static LocalDate dia(XMLGregorianCalendar fecha) {
+		return LocalDate.of(fecha.getYear(), fecha.getMonth(), fecha.getDay());
+	}
+
+	/**
+	 * E07: el CFE se tiene que haber firmado con el CAE vigente: la fecha de firma (TmstFirma, el dia en la zona horaria
+	 * de la firma) no puede ser posterior al vencimiento del CAE (CAEData FecVenc).
+	 *
+	 * @return null si pasa; si no, el detalle de por que no
+	 */
+	public static String e07(CFEDefType xml) {
+		CAEDataType cae = caeData(xml);
+		if (cae == null || cae.getFecVenc() == null)
+			return "el CAE no indica la fecha de vencimiento";
+		XMLGregorianCalendar firma = tmstFirma(xml);
+		if (firma == null)
+			return "el CFE no trae la fecha de firma (TmstFirma)";
+		LocalDate diaFirma = dia(firma);
+		LocalDate vencimiento = dia(cae.getFecVenc());
+		if (diaFirma.isAfter(vencimiento))
+			return "firmado el " + diaFirma + ", después del vencimiento del CAE " + cae.getCAEID() + " (" + vencimiento + ")";
 		return null;
 	}
 

@@ -47,6 +47,7 @@ import com.bluedot.efactura.model.TipoDoc;
 import com.bluedot.efactura.serializers.CFEEmpresasTypeWrapper;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 
+import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.entreEmpresas.CFEEmpresasType;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.respuestas.cfe.ACKCFEdefType;
@@ -394,22 +395,9 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 	 		/*
 			 * E03: el numero del CFE esta en el rango del CAE (CAEData)
 			 */
-	 		ControlesRecepcion.Modo modoE03 = ControlesRecepcion.modo("E03");
-	 		if (modoE03 != ControlesRecepcion.Modo.OFF) {
-	 			String e03 = ControlesRecepcion.e03(cfeEmpresasTypeWrapper.getCfeEmpresasType().getCFE(), cfe.getNro());
-	 			if (e03 != null) {
-	 				logger.warn("CONTROL E03 (" + modoE03 + ") CFE " + cfe.getTipo().value + " " + cfe.getSerie() + "-" + cfe.getNro()
-	 						+ " de " + (cfe.getEmpresaEmisora() != null ? cfe.getEmpresaEmisora().getRut() : "?") + ": " + e03);
-	 				ControlesRecepcion.observar(cfe, "E03" + (modoE03 == ControlesRecepcion.Modo.LOG ? " (observado)" : ""), e03);
-	 				if (modoE03 == ControlesRecepcion.Modo.ENFORCE && rechazo == null) {
-	 					rechazo = new RechazoCFEDGIType();
-	 					rechazo.setMotivo("E03");
-	 					rechazo.setGlosa("Tipo y No de CFE no se corresponden con el CAE");
-	 					cfe.getMotivo().add(MotivoRechazoCFE.E03);
-	 					cfe.setEstado(EstadoACKCFEType.BE);
-	 				}
-	 			}
-	 		}
+	 		CFEDefType xmlCfe = cfeEmpresasTypeWrapper.getCfeEmpresasType().getCFE();
+	 		if (ControlesRecepcion.modo("E03") != ControlesRecepcion.Modo.OFF)
+	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E03, ControlesRecepcion.e03(xmlCfe, cfe.getNro()));
 	 		
 	 		/*
 			 * E04
@@ -429,8 +417,10 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 	 		*/
 	 		
 	 		/*
-			 * E07
+			 * E07: fecha de firma del CFE dentro de la vigencia del CAE
 			 */
+	 		if (ControlesRecepcion.modo("E07") != ControlesRecepcion.Modo.OFF)
+	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E07, ControlesRecepcion.e07(xmlCfe));
 		}
 		
 		/*
@@ -448,6 +438,29 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 		cfe.save();
 	}
 
+
+	/**
+	 * Aplica el resultado de un control de recepcion (ControlesRecepcion) al CFE: si no paso (detalle != null) lo registra
+	 * en el log y en las observaciones del CFE y, en modo ENFORCE, lo rechaza con ese motivo (si no tenia ya otro rechazo).
+	 *
+	 * @return el rechazo del CFE (el que tenia o el nuevo)
+	 */
+	private RechazoCFEDGIType aplicarControl(CFE cfe, RechazoCFEDGIType rechazo, MotivoRechazoCFE motivo, String detalle) {
+		if (detalle == null)
+			return rechazo;
+		ControlesRecepcion.Modo modo = ControlesRecepcion.modo(motivo.name());
+		logger.warn("CONTROL " + motivo.name() + " (" + modo + ") CFE " + cfe.getTipo().value + " " + cfe.getSerie() + "-" + cfe.getNro()
+				+ " de " + (cfe.getEmpresaEmisora() != null ? cfe.getEmpresaEmisora().getRut() : "?") + ": " + detalle);
+		ControlesRecepcion.observar(cfe, motivo.name() + (modo == ControlesRecepcion.Modo.LOG ? " (observado)" : ""), detalle);
+		if (modo == ControlesRecepcion.Modo.ENFORCE && rechazo == null) {
+			rechazo = new RechazoCFEDGIType();
+			rechazo.setMotivo(motivo.name());
+			rechazo.setGlosa(motivo.getMotivo());
+			cfe.getMotivo().add(motivo);
+			cfe.setEstado(EstadoACKCFEType.BE);
+		}
+		return rechazo;
+	}
 
 	/**
 	 * @param ordinal
