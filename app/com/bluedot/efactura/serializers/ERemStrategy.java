@@ -29,6 +29,8 @@ public class ERemStrategy implements CFEEmpresasStrategy {
 		idDoc.put("Serie", documento.getEncabezado().getIdDoc().getSerie());
 		idDoc.put("FchEmis", CFEBuilderImpl.simpleDateFormat.format(documento.getEncabezado().getIdDoc().getFchEmis().toGregorianCalendar().getTime()));
 		idDoc.put("TipoCFE", documento.getEncabezado().getIdDoc().getTipoCFE());
+		if (documento.getEncabezado().getIdDoc().getNroInterno() != null)
+			idDoc.put("NroInterno", documento.getEncabezado().getIdDoc().getNroInterno());
 		
 		receptor.put("TipoDocRecep", documento.getEncabezado().getReceptor().getTipoDocRecep());
 		receptor.put("CiudadRecep", documento.getEncabezado().getReceptor().getCiudadRecep());

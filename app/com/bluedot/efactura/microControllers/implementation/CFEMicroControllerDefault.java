@@ -123,9 +123,12 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 				&& play.Play.application().configuration().getBoolean("CFE.nroInternoDesdeId", false))
 			nroInterno = idDocJSON.get("id").toString().trim();
 		if (nroInterno != null && !nroInterno.isEmpty()) {
-			if (nroInterno.length() > 50)
+			// Emitido: error; recibido (lo manda otra empresa) no se rechaza por esto, se guardan los primeros 50
+			if (nroInterno.length() > 50 && esCfeEmitido)
 				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("NroInterno", nroInterno)
 						.setDetailMessage("NroInterno admite hasta 50 caracteres");
+			if (nroInterno.length() > 50)
+				nroInterno = nroInterno.substring(0, 50);
 			cfeBuilder.getCFE().setNroInterno(nroInterno);
 		}
 

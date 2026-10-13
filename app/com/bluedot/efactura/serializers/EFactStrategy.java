@@ -34,6 +34,8 @@ public class EFactStrategy extends CommonStrategy {
 		idDoc.put("Serie", documento.getEncabezado().getIdDoc().getSerie());
 		idDoc.put("FchEmis", CFEBuilderImpl.simpleDateFormat.format(documento.getEncabezado().getIdDoc().getFchEmis().toGregorianCalendar().getTime()));
 		idDoc.put("TipoCFE", documento.getEncabezado().getIdDoc().getTipoCFE());
+		if (documento.getEncabezado().getIdDoc().getNroInterno() != null)
+			idDoc.put("NroInterno", documento.getEncabezado().getIdDoc().getNroInterno());
 		idDoc.put("FmaPago", documento.getEncabezado().getIdDoc().getFmaPago());
 		idDoc.put("MntBruto", documento.getEncabezado().getIdDoc().getMntBruto()==null? 0:documento.getEncabezado().getIdDoc().getMntBruto());
 		
