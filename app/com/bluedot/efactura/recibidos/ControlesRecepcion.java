@@ -1,6 +1,7 @@
 package com.bluedot.efactura.recibidos;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.StringReader;
 import java.math.BigInteger;
 import java.security.cert.CertificateFactory;
@@ -13,12 +14,19 @@ import javax.xml.crypto.dsig.Reference;
 import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.crypto.dsig.XMLSignatureFactory;
 import javax.xml.crypto.dsig.dom.DOMValidateContext;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSInput;
 import org.xml.sax.InputSource;
 
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -35,6 +43,9 @@ import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.CFEDefType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import play.Play;
 
 /**
@@ -49,15 +60,17 @@ import play.Play;
  */
 public class ControlesRecepcion {
 
+	final static Logger logger = LoggerFactory.getLogger(ControlesRecepcion.class);
+
 	public enum Modo {
 		OFF, LOG, ENFORCE
 	}
 
 	public static Modo modo(String control) {
-		String valor = Play.application().configuration().getString("RecepcionCFE.control." + control, Modo.LOG.name());
 		try {
+			String valor = Play.application().configuration().getString("RecepcionCFE.control." + control, Modo.LOG.name());
 			return Modo.valueOf(valor.trim().toUpperCase());
-		} catch (IllegalArgumentException e) {
+		} catch (RuntimeException e) {
 			return Modo.LOG;
 		}
 	}
@@ -190,17 +203,7 @@ public class ControlesRecepcion {
 		try {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			dbf.setNamespaceAware(true);
-			javax.xml.parsers.DocumentBuilder builder = dbf.newDocumentBuilder();
-			// Sin handler el parser escribe "[Fatal Error] ..." en la consola; el error ya se informa en el detalle
-			builder.setErrorHandler(new org.xml.sax.helpers.DefaultHandler() {
-				@Override
-				public void fatalError(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
-					throw e;
-				}
-			});
-			// Algunos emisores mandan el XML con BOM (U+FEFF) al principio: el parser no lo acepta antes de <?xml
-			String texto = xmlSobre.charAt(0) == '\uFEFF' ? xmlSobre.substring(1) : xmlSobre;
-			Document sobre = builder.parse(new InputSource(new StringReader(texto)));
+			Document sobre = parsearSobre(xmlSobre);
 
 			NodeList cfes = sobre.getElementsByTagNameNS(NS_CFE, "CFE");
 			if (ordinal < 1 || ordinal > cfes.getLength())
@@ -259,6 +262,126 @@ public class ControlesRecepcion {
 		} catch (Exception e) {
 			return "no se pudo validar la firma: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
 		}
+	}
+
+	/** XSD con el que se valida el formato (E05) si no se configura otro */
+	static final String XSD_E05_DEFECTO = "resources/xsd/XSDs_FE_1_44_2/original/CFEEmpresas.xsd";
+
+	private static Schema schemaE05;
+	private static String schemaE05Path;
+
+	/**
+	 * El XSD de E05 (RecepcionCFE.formato.xsd, el CFE con su adenda: CFE_Adenda), compilado una vez. El esquema de la
+	 * firma (xmldsig) referencia el DTD de XMLSchema en w3.org: se le pasa uno vacio para no depender de internet.
+	 *
+	 * @return null si no se puede cargar (se loguea): no es culpa del emisor, no hay que rechazar por eso
+	 */
+	private static synchronized Schema schemaE05() {
+		String path = Play.application().configuration().getString("RecepcionCFE.formato.xsd", XSD_E05_DEFECTO);
+		if (path == null || path.trim().isEmpty())
+			path = XSD_E05_DEFECTO;
+		if (schemaE05 != null && path.equals(schemaE05Path))
+			return schemaE05;
+		try {
+			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+			DOMImplementationLS ls = (DOMImplementationLS) DocumentBuilderFactory.newInstance().newDocumentBuilder().getDOMImplementation();
+			factory.setResourceResolver((type, namespace, publicId, systemId, baseUri) -> {
+				if (systemId == null || !systemId.endsWith(".dtd"))
+					return null;
+				LSInput dtd = ls.createLSInput();
+				dtd.setPublicId(publicId);
+				dtd.setSystemId(systemId);
+				dtd.setStringData("<!-- -->");
+				return dtd;
+			});
+			schemaE05 = factory.newSchema(new File(path));
+			schemaE05Path = path;
+			return schemaE05;
+		} catch (Exception e) {
+			logger.error("E05: no se pudo cargar el XSD " + path + ", no se controla el formato", e);
+			return null;
+		}
+	}
+
+	/**
+	 * E05: el CFE cumple el formato (XSD de DGI). Se valida el CFE con su adenda (CFE_Adenda) sobre una copia, parseada de
+	 * nuevo desde el XML del sobre. Si no se puede cargar el XSD no se controla (devuelve null y se loguea).
+	 *
+	 * @param xmlSobre
+	 *            el XML del sobre recibido (como llego)
+	 * @param ordinal
+	 *            posicion del CFE en el sobre, desde 1
+	 * @return null si pasa; si no, el detalle de por que no (los primeros errores del XSD)
+	 */
+	public static String e05(String xmlSobre, int ordinal) {
+		if (xmlSobre == null || xmlSobre.isEmpty())
+			return "no está el XML del sobre para validar el formato";
+		Schema schema = schemaE05();
+		if (schema == null)
+			return null;
+		try {
+			Document sobre = parsearSobre(xmlSobre);
+			NodeList cfes = sobre.getElementsByTagNameNS(NS_CFE, "CFE");
+			if (ordinal < 1 || ordinal > cfes.getLength())
+				return "no se encontró el CFE " + ordinal + " en el sobre";
+
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			dbf.setNamespaceAware(true);
+			Document doc = dbf.newDocumentBuilder().newDocument();
+			Node cfe = cfes.item(ordinal - 1);
+			Node padre = cfe.getParentNode();
+			if (padre != null && NS_CFE.equals(padre.getNamespaceURI()) && "CFE_Adenda".equals(padre.getLocalName()))
+				doc.appendChild(doc.importNode(padre, true));
+			else {
+				Element adenda = doc.createElementNS(NS_CFE, "CFE_Adenda");
+				adenda.appendChild(doc.importNode(cfe, true));
+				doc.appendChild(adenda);
+			}
+
+			// Se juntan los errores (sin repetir) para informar mas de uno
+			List<String> errores = new ArrayList<>();
+			Validator validator = schema.newValidator();
+			validator.setErrorHandler(new org.xml.sax.helpers.DefaultHandler() {
+				@Override
+				public void error(org.xml.sax.SAXParseException e) {
+					String mensaje = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+					if (!errores.contains(mensaje))
+						errores.add(mensaje);
+				}
+
+				@Override
+				public void fatalError(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
+					throw e;
+				}
+			});
+			validator.validate(new DOMSource(doc));
+			if (errores.isEmpty())
+				return null;
+			int mostrar = Math.min(errores.size(), 4);
+			return "no cumple el formato (XSD): " + String.join("; ", errores.subList(0, mostrar))
+					+ (errores.size() > mostrar ? " (y " + (errores.size() - mostrar) + " más)" : "");
+		} catch (Exception e) {
+			return "no se pudo validar el formato: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+		}
+	}
+
+	/**
+	 * Parsea de nuevo el XML del sobre (como llego), aparte del que se procesa. Algunos emisores lo mandan con BOM (U+FEFF)
+	 * al principio, que el parser no acepta antes de <?xml.
+	 */
+	private static Document parsearSobre(String xmlSobre) throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setNamespaceAware(true);
+		javax.xml.parsers.DocumentBuilder builder = dbf.newDocumentBuilder();
+		// Sin handler el parser escribe "[Fatal Error] ..." en la consola; el error ya se informa en el detalle
+		builder.setErrorHandler(new org.xml.sax.helpers.DefaultHandler() {
+			@Override
+			public void fatalError(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
+				throw e;
+			}
+		});
+		String texto = xmlSobre.charAt(0) == '\uFEFF' ? xmlSobre.substring(1) : xmlSobre;
+		return builder.parse(new InputSource(new StringReader(texto)));
 	}
 
 	private static String texto(Node nodo) {

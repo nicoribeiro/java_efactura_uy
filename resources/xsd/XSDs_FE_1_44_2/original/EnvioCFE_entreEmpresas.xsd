@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Envío Sobre CFE - DGI (Comprobante Fiscal Electrónico)
+El presente documento define el esquema XML que debe ser utilizado
+para realizar los envios de Comprobantes Fiscales Electronicos (CFE)
+hacia DGI
+FUA:  10/07/14 
+Version: 1.32
+ -->
+<xs:schema xmlns:DGICFE="http://cfe.dgi.gub.uy" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="CFE_Empresas_Type.xsd"/>
+	<xs:element name="EnvioCFE_entreEmpresas">
+		<xs:annotation>
+			<xs:documentation>Envio de CFEs</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Caratula" maxOccurs="1" minOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Resumen de Informacion Enviada</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="RutReceptor" type="DGICFE:RUCType" maxOccurs="1" minOccurs="1">
+								<xs:annotation>
+									<xs:documentation>RUT al que se le envian los CFE</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="RUCEmisor" type="DGICFE:RUCType" maxOccurs="1" minOccurs="1">
+								<xs:annotation>
+									<xs:documentation>RUT Emisor de los CFE</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Idemisor" maxOccurs="1" minOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Número asignado por el emisor al envío</xs:documentation>
+								</xs:annotation>
+								<xs:simpleType>
+									<xs:restriction base="xs:integer">
+										<xs:totalDigits value="10"/>
+										<xs:minInclusive value="0"/>
+									</xs:restriction>
+								</xs:simpleType>
+							</xs:element>
+							<xs:element name="CantCFE" maxOccurs="1" minOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Numero de CFE Enviados</xs:documentation>
+								</xs:annotation>
+								<xs:simpleType>
+									<xs:restriction base="xs:integer">
+										<xs:minInclusive value="1"/>
+										<xs:maxInclusive value="250"/>
+									</xs:restriction>
+								</xs:simpleType>
+							</xs:element>
+							<xs:element name="Fecha" type="DGICFE:FechaHoraType" maxOccurs="1" minOccurs="1">
+								<xs:annotation>
+									<xs:documentation>Fecha y Hora de creación del sobre (envío)</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="X509Certificate" type="xs:base64Binary" maxOccurs="1" minOccurs="1"/>
+						</xs:sequence>
+						<xs:attribute name="version" use="required" fixed="1.0">
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="3"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="CFE_Adenda" type="DGICFE:CFE_Empresas_Type" maxOccurs="250">
+					<xs:annotation>
+						<xs:documentation>Comprobante Fiscal Electronico</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="version" use="required" fixed="1.0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="3"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
+
+

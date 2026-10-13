@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Comprobante Fiscal Electrónico (CFE) - DGI
+El presente documento define un CFE para las Empresas.  Incluye adenda
+FUA:  10/07/14 
+Version: 1.20
+  -->
+<xs:schema xmlns:ns0="http://cfe.dgi.gub.uy" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="CFEType.xsd"/>
+	<xs:complexType name="CFE_Empresas_Type">
+			<xs:sequence>
+				<xs:element name="CFE" type="ns0:CFEDefType"/>
+				<xs:element name="Adenda" minOccurs="0"/>
+			</xs:sequence>
+	</xs:complexType>
+</xs:schema>
+
+
+

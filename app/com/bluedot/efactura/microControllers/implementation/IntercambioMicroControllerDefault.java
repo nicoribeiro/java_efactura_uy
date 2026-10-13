@@ -1,6 +1,5 @@
 package com.bluedot.efactura.microControllers.implementation;
 
-import java.io.File;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -8,15 +7,10 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.XMLConstants;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -397,17 +391,10 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E04, ControlesRecepcion.e04(sobreRecibido.getXmlEmpresa(), ordinal, xmlCfe));
 	 		
 	 		/*
-			 * E05
+			 * E05: formato del CFE (XSD de DGI, RecepcionCFE.formato.xsd)
 			 */
-	 		
-	 		/*
-	 		 * TODO:
-	 		String xsdPath = "/resources/xsd/originales/EnvioCFE_entreEmpresasv1.32.xsd";
-	 		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-	        Schema schema = factory.newSchema(new File(xsdPath));
-	        Validator validator = schema.newValidator();
-	        validator.validate(new StreamSource(new File(xmlPath)));
-	 		*/
+	 		if (ControlesRecepcion.modo("E05") != ControlesRecepcion.Modo.OFF)
+	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E05, ControlesRecepcion.e05(sobreRecibido.getXmlEmpresa(), ordinal));
 	 		
 	 		/*
 			 * E07: fecha de firma del CFE dentro de la vigencia del CAE

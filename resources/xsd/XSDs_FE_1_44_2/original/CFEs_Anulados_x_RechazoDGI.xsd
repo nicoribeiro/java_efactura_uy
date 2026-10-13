@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ACK de CFEs  - DGI (Comprobante Fiscal Electrónico)
+El presente documento define el esquema XML que debe ser utilizado
+para realizar los envios de acuses de recibo de CFE a DGI
+FUA: 10/07/14
+Version: 1.11
+-->
+<xs:schema xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ns1="http://cfe.dgi.gub.uy" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cfe.dgi.gub.uy" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="DGITypes.xsd"/>
+	<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+	<xs:complexType name="CFEsAnuladosdefType">
+		<xs:sequence>
+			<xs:element name="Caratula" minOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+                        <xs:element name="RUCEmisor" type="ns1:RUCType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Es el RUC del contribuyente que hizo el envío que se acusa (el emisor)</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+                        <xs:element name="RUCReceptor" type="ns1:RUCType" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Es el RUC del receptor del envío que se acusa.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="IDComunicacion" minOccurs="0" maxOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Número único de identificación de la respuesta asignado por quien responde</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="10"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="CantCFEAnulados" minOccurs="1" maxOccurs="1">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+									<xs:minInclusive value="0"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Tmst" type="ns1:FechaHoraType" minOccurs="1"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="CFEAnulado" minOccurs="1" maxOccurs="250">
+				<xs:complexType>
+					<xs:sequence>						<xs:element name="TipoCFE" type="ns1:CFEType"
+							minOccurs="1" maxOccurs="1"/>
+						<xs:element name="Serie" type="ns1:SerieType"
+							minOccurs="1" maxOccurs="1"/>
+						<xs:element name="NroCFE" type="ns1:NroCFEType"
+							minOccurs="1" maxOccurs="1"/>
+						<xs:element name="FechaCFE" type="ns1:FechaType"
+							minOccurs="1" maxOccurs="1"/>						
+						<xs:element name="Motivo_Cod" maxOccurs="1" minOccurs="1">
+							<xs:simpleType>
+								<xs:restriction base="xs:string">									<xs:length value="2"/>
+									<xs:enumeration value="RD"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="Motivo_Glosa" maxOccurs="1" minOccurs="1">
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="40"/>
+									<xs:enumeration value="Comprobante anulado por rechazo de DGI"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element ref="ds:Signature" minOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required" fixed="1.0">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="3"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:element name="CFEs_Anulados_x_RechazoDGI" type="ns1:CFEsAnuladosdefType"/>
+
+	<xs:simpleType name="EstadoType">
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+
+    <xs:complexType name="EstadoPartes_type"/>
+</xs:schema>
+
+
