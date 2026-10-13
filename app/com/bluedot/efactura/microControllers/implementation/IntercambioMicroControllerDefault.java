@@ -21,6 +21,7 @@ import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.XML;
 import com.bluedot.efactura.recibidos.ControlesRecepcion;
+import com.bluedot.efactura.recibidos.ControlesSobre;
 import com.bluedot.efactura.recibidos.MontosRecibidos;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.Environment;
@@ -107,87 +108,34 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				ackSobredefType.setCaratula(caratula);
 				ackSobredefType.setDetalle(new Detalle());
 				
-				//TODO terminar de implementar controles que faltan
 				/*
-				 * CONTROLES SOBRE
-				 * 
-				 * S01 Formato del archivo no es el indicado
-				 * 
-				 * S02 No coincide RUC de Sobre, Certificado, envío o CFE
-				 * 
-				 * S03 Certificado electrónico no es válido
-				 * 
-				 * S04 No cumple validaciones según Formato de sobre
-				 * 
-				 * S05 No coinciden cantidad CFE de carátula y contenido
-				 * 
-				 * S06 No coinciden certificado de sobre y comprobantes
-				 * 
-				 * S07 Sobre enviado supera el tamaño máximo admitido
-				 * 
-				 * S08 Ya existe sobre con el mismo idEmisor
-				 * 
+				 * CONTROLES DEL SOBRE (ver ControlesSobre: cuales se implementan, cuales no y por que)
 				 */
+				if (!envioCFEEntreEmpresas.getCaratula().getRutReceptor().equals(empresa.getRut()))
+					rechazarSobre(ackSobredefType, sobreRecibido, MotivoRechazoSobre.S02,
+							"el sobre es para el RUC " + envioCFEEntreEmpresas.getCaratula().getRutReceptor() + ", no para " + empresa.getRut());
 
-				/*
-				 * Controlo que no exista el sobre en mi sistema (para evitar envios dobles)
-				 */
-				List<SobreRecibido> sobres = SobreRecibido.findSobreRecibido(envioCFEEntreEmpresas.getCaratula().getIdemisor().longValue(), sobreRecibido.getEmpresaEmisora(),sobreRecibido.getEmpresaReceptora());
-				/*
-				 * S01
-				 */
-				
-				/*
-				 * S02
-				 */
-				if (!envioCFEEntreEmpresas.getCaratula().getRutReceptor().equals(empresa.getRut())){
-					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo(MotivoRechazoSobre.S02.name());
-					rechazo.setGlosa("No coincide RUC de Sobre, Certificado, envío o CFE");
-					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
+				ControlesSobre.Sobre xmlSobre = null;
+				try {
+					xmlSobre = ControlesSobre.leer(sobreRecibido.getXmlEmpresa());
+				} catch (Exception e) {
+					logger.warn("No se pudo leer el XML del sobre " + sobreRecibido.getNombreArchivo() + " para los controles: " + e.getMessage());
 				}
-				
-				/*
-				 * S03
-				 */
-//				if (!XmlSignature.veryfySignatures(documentCrudo)){
-//					RechazoSobreType rechazo = new RechazoSobreType();
-//					rechazo.setMotivo(MotivoRechazoSobre.S03.name());
-//					rechazo.setGlosa(MotivoRechazoSobre.S03.getMotivo());
-//					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
-//				}
-				
-				/*
-				 * S04
-				 */
-				
-				/*
-				 * S05
-				 */
-				if (envioCFEEntreEmpresas.getCaratula().getCantCFE() != envioCFEEntreEmpresas.getCFEAdendas().size()){
-					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo(MotivoRechazoSobre.S05.name());
-					rechazo.setGlosa("No coinciden cantidad CFE de carátula y contenido");
-					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
+				if (xmlSobre != null) {
+					if (ControlesSobre.modo("S02") != ControlesRecepcion.Modo.OFF)
+						aplicarControlSobre(ackSobredefType, sobreRecibido, MotivoRechazoSobre.S02, ControlesSobre.s02(xmlSobre));
+					if (ControlesSobre.modo("S03") != ControlesRecepcion.Modo.OFF)
+						aplicarControlSobre(ackSobredefType, sobreRecibido, MotivoRechazoSobre.S03, ControlesSobre.s03(xmlSobre));
+					if (ControlesSobre.modo("S04") != ControlesRecepcion.Modo.OFF)
+						aplicarControlSobre(ackSobredefType, sobreRecibido, MotivoRechazoSobre.S04, ControlesSobre.s04(xmlSobre));
+					if (ControlesSobre.modo("S05") != ControlesRecepcion.Modo.OFF)
+						aplicarControlSobre(ackSobredefType, sobreRecibido, MotivoRechazoSobre.S05, ControlesSobre.s05(xmlSobre));
+					if (ControlesSobre.modo("S06") != ControlesRecepcion.Modo.OFF)
+						aplicarControlSobre(ackSobredefType, sobreRecibido, MotivoRechazoSobre.S06, ControlesSobre.s06(xmlSobre));
 				}
-				
-				/*
-				 * S06
-				 */
-				
-				/*
-				 * S07
-				 */
-				
-				/*
-				 * S08
-				 */
-				if (sobres.size()>1){
-					RechazoSobreType rechazo = new RechazoSobreType();
-					rechazo.setMotivo(MotivoRechazoSobre.S08.name());
-					rechazo.setGlosa("Ya existe sobre con idEmisor:" + envioCFEEntreEmpresas.getCaratula().getIdemisor());
-					ackSobredefType.getDetalle().getMotivosRechazo().add(rechazo);
-				}
+				if (ControlesSobre.modo("S20") != ControlesRecepcion.Modo.OFF)
+					aplicarControlSobre(ackSobredefType, sobreRecibido, MotivoRechazoSobre.S20,
+							ControlesSobre.s20(sobreRecibido, envioCFEEntreEmpresas.getCaratula().getIdemisor().longValue()));
 				
 				if (ackSobredefType.getDetalle().getMotivosRechazo().size()==0){
 					/*
@@ -445,6 +393,40 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 			cfe.setEstado(EstadoACKCFEType.BE);
 		}
 		return rechazo;
+	}
+
+	/**
+	 * Aplica el resultado de un control del sobre (ControlesSobre): si no paso (detalle != null) lo registra en el log y en
+	 * las observaciones del sobre y, en modo ENFORCE, lo rechaza con ese motivo.
+	 */
+	private void aplicarControlSobre(ACKSobredefType ack, SobreRecibido sobre, MotivoRechazoSobre motivo, String detalle) {
+		if (detalle == null)
+			return;
+		ControlesRecepcion.Modo modo = ControlesSobre.modo(motivo.name());
+		if (modo == ControlesRecepcion.Modo.ENFORCE) {
+			rechazarSobre(ack, sobre, motivo, detalle);
+			return;
+		}
+		logger.warn("CONTROL " + motivo.name() + " (" + modo + ") sobre " + sobre.getNombreArchivo() + ": " + detalle);
+		observarSobre(sobre, motivo.name() + " (observado)", detalle);
+	}
+
+	/** Rechaza el sobre con ese motivo: la glosa es la de la tabla de DGI y el detalle va aparte (hasta 500 caracteres) */
+	private void rechazarSobre(ACKSobredefType ack, SobreRecibido sobre, MotivoRechazoSobre motivo, String detalle) {
+		logger.warn("CONTROL " + motivo.name() + " (ENFORCE) sobre " + sobre.getNombreArchivo() + ": " + detalle);
+		observarSobre(sobre, motivo.name(), detalle);
+		RechazoSobreType rechazo = new RechazoSobreType();
+		rechazo.setMotivo(motivo.name());
+		rechazo.setGlosa(motivo.getMotivo());
+		if (detalle != null)
+			rechazo.setDetalle(detalle.length() > 500 ? detalle.substring(0, 497) + "..." : detalle);
+		ack.getDetalle().getMotivosRechazo().add(rechazo);
+	}
+
+	private static void observarSobre(SobreRecibido sobre, String control, String detalle) {
+		String linea = control + ": " + detalle;
+		String actuales = sobre.getObservacionesRecepcion();
+		sobre.setObservacionesRecepcion(actuales == null || actuales.isEmpty() ? linea : actuales + "; " + linea);
 	}
 
 	/**

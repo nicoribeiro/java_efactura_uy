@@ -324,7 +324,7 @@ public class ControlesRecepcion {
 				referencia.getInterbancario().toPlainString(), new java.text.DecimalFormat("0.##").format(tolerancia));
 	}
 
-	private static final String NS_CFE = "http://cfe.dgi.gub.uy";
+	static final String NS_CFE = "http://cfe.dgi.gub.uy";
 
 	/**
 	 * E04: la firma electronica del CFE es valida. El emisor firma el CFE como documento propio (Reference URI="" con
@@ -409,21 +409,21 @@ public class ControlesRecepcion {
 	/** XSD con el que se valida el formato (E05) si no se configura otro */
 	static final String XSD_E05_DEFECTO = "resources/xsd/XSDs_FE_1_44_2/original/CFEEmpresas.xsd";
 
-	private static Schema schemaE05;
-	private static String schemaE05Path;
+	/** XSD compilados, por path */
+	private static final java.util.Map<String, Schema> schemas = new java.util.HashMap<String, Schema>();
 
 	/**
-	 * El XSD de E05 (RecepcionCFE.formato.xsd, el CFE con su adenda: CFE_Adenda), compilado una vez. El esquema de la
-	 * firma (xmldsig) referencia el DTD de XMLSchema en w3.org: se le pasa uno vacio para no depender de internet.
+	 * Un XSD de DGI (el path sale de la configuracion clave, o defecto si falta), compilado una vez. El esquema de la firma
+	 * (xmldsig) referencia el DTD de XMLSchema en w3.org: se le pasa uno vacio para no depender de internet.
 	 *
 	 * @return null si no se puede cargar (se loguea): no es culpa del emisor, no hay que rechazar por eso
 	 */
-	private static synchronized Schema schemaE05() {
-		String path = Play.application().configuration().getString("RecepcionCFE.formato.xsd", XSD_E05_DEFECTO);
+	static synchronized Schema schema(String clave, String defecto) {
+		String path = Play.application().configuration().getString(clave, defecto);
 		if (path == null || path.trim().isEmpty())
-			path = XSD_E05_DEFECTO;
-		if (schemaE05 != null && path.equals(schemaE05Path))
-			return schemaE05;
+			path = defecto;
+		if (schemas.containsKey(path))
+			return schemas.get(path);
 		try {
 			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 			DOMImplementationLS ls = (DOMImplementationLS) DocumentBuilderFactory.newInstance().newDocumentBuilder().getDOMImplementation();
@@ -436,13 +436,42 @@ public class ControlesRecepcion {
 				dtd.setStringData("<!-- -->");
 				return dtd;
 			});
-			schemaE05 = factory.newSchema(new File(path));
-			schemaE05Path = path;
-			return schemaE05;
+			Schema schema = factory.newSchema(new File(path));
+			schemas.put(path, schema);
+			return schema;
 		} catch (Exception e) {
-			logger.error("E05: no se pudo cargar el XSD " + path + ", no se controla el formato", e);
+			logger.error("No se pudo cargar el XSD " + path + " (" + clave + "), no se controla el formato", e);
 			return null;
 		}
+	}
+
+	/**
+	 * Valida un documento contra un XSD y junta los errores (sin repetir).
+	 *
+	 * @return null si cumple; si no, los primeros errores
+	 */
+	static String validarXsd(Schema schema, Document doc) throws Exception {
+		List<String> errores = new ArrayList<>();
+		Validator validator = schema.newValidator();
+		validator.setErrorHandler(new org.xml.sax.helpers.DefaultHandler() {
+			@Override
+			public void error(org.xml.sax.SAXParseException e) {
+				String mensaje = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+				if (!errores.contains(mensaje))
+					errores.add(mensaje);
+			}
+
+			@Override
+			public void fatalError(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
+				throw e;
+			}
+		});
+		validator.validate(new DOMSource(doc));
+		if (errores.isEmpty())
+			return null;
+		int mostrar = Math.min(errores.size(), 4);
+		return "no cumple el formato (XSD): " + String.join("; ", errores.subList(0, mostrar))
+				+ (errores.size() > mostrar ? " (y " + (errores.size() - mostrar) + " más)" : "");
 	}
 
 	/**
@@ -458,7 +487,7 @@ public class ControlesRecepcion {
 	public static String e05(String xmlSobre, int ordinal) {
 		if (xmlSobre == null || xmlSobre.isEmpty())
 			return "no está el XML del sobre para validar el formato";
-		Schema schema = schemaE05();
+		Schema schema = schema("RecepcionCFE.formato.xsd", XSD_E05_DEFECTO);
 		if (schema == null)
 			return null;
 		try {
@@ -480,28 +509,7 @@ public class ControlesRecepcion {
 				doc.appendChild(adenda);
 			}
 
-			// Se juntan los errores (sin repetir) para informar mas de uno
-			List<String> errores = new ArrayList<>();
-			Validator validator = schema.newValidator();
-			validator.setErrorHandler(new org.xml.sax.helpers.DefaultHandler() {
-				@Override
-				public void error(org.xml.sax.SAXParseException e) {
-					String mensaje = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-					if (!errores.contains(mensaje))
-						errores.add(mensaje);
-				}
-
-				@Override
-				public void fatalError(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
-					throw e;
-				}
-			});
-			validator.validate(new DOMSource(doc));
-			if (errores.isEmpty())
-				return null;
-			int mostrar = Math.min(errores.size(), 4);
-			return "no cumple el formato (XSD): " + String.join("; ", errores.subList(0, mostrar))
-					+ (errores.size() > mostrar ? " (y " + (errores.size() - mostrar) + " más)" : "");
+			return validarXsd(schema, doc);
 		} catch (Exception e) {
 			return "no se pudo validar el formato: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
 		}
@@ -511,7 +519,7 @@ public class ControlesRecepcion {
 	 * Parsea de nuevo el XML del sobre (como llego), aparte del que se procesa. Algunos emisores lo mandan con BOM (U+FEFF)
 	 * al principio, que el parser no acepta antes de <?xml.
 	 */
-	private static Document parsearSobre(String xmlSobre) throws Exception {
+	static Document parsearSobre(String xmlSobre) throws Exception {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware(true);
 		javax.xml.parsers.DocumentBuilder builder = dbf.newDocumentBuilder();
@@ -526,7 +534,7 @@ public class ControlesRecepcion {
 		return builder.parse(new InputSource(new StringReader(texto)));
 	}
 
-	private static String texto(Node nodo) {
+	static String texto(Node nodo) {
 		return nodo.getTextContent() != null ? nodo.getTextContent().trim() : "";
 	}
 

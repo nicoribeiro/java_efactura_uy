@@ -119,6 +119,10 @@ public abstract class Sobre extends Model<Sobre> {
 	 */
 	@Type(type="text")
 	private String xmlEmpresa;
+
+	/** Lo que observaron los controles de recepcion del sobre (ControlesSobre), en modo log o enforce */
+	@Type(type="text")
+	private String observacionesRecepcion;
 	
 
 //	@Type(type="text")
@@ -346,6 +350,14 @@ public abstract class Sobre extends Model<Sobre> {
 
 	public String getXmlEmpresa() {
 		return xmlEmpresa;
+	}
+
+	public String getObservacionesRecepcion() {
+		return observacionesRecepcion;
+	}
+
+	public void setObservacionesRecepcion(String observacionesRecepcion) {
+		this.observacionesRecepcion = observacionesRecepcion;
 	}
 
 	public void setXmlEmpresa(String xmlEmpresa) {

@@ -34,6 +34,7 @@ import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.pollers.PollerManager;
 import com.bluedot.efactura.recibidos.ControlesRecepcion;
+import com.bluedot.efactura.recibidos.ControlesSobre;
 import com.bluedot.efactura.recibidos.MontosRecibidos;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.google.inject.Inject;
@@ -110,7 +111,7 @@ public class SobresController extends AbstractController {
 	}
 
 	/**
-	 * Simula los controles de recepcion (E02, E03, E04, E05, E07, E10, E12) sobre los CFE de los sobres recibidos ya guardados, sin
+	 * Simula los controles de recepcion de los sobres (S02, S03, S04, S05, S06, S20) y de los CFE (E02, E03, E04, E05, E07, E10, E12) sobre los CFE de los sobres recibidos ya guardados, sin
 	 * cambiar nada: cuantos no pasarian cada control y ejemplos. Sirve para medir un control antes de activarlo. Solo
 	 * ADMIN. Query: fromDate y toDate (segundos, por fecha del sobre), limite (sobres, por defecto 500).
 	 */
@@ -129,7 +130,7 @@ public class SobresController extends AbstractController {
 			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("fromDate, toDate o limite invalidos");
 		}
 
-		String[] controles = { "E02", "E03", "E04", "E05", "E07", "E10", "E12" };
+		String[] controles = { "S02", "S03", "S04", "S05", "S06", "S20", "E02", "E03", "E04", "E05", "E07", "E10", "E12" };
 		Map<String, Integer> fallan = new HashMap<String, Integer>();
 		Map<String, JSONArray> ejemplos = new HashMap<String, JSONArray>();
 		for (String c : controles) {
@@ -144,6 +145,34 @@ public class SobresController extends AbstractController {
 			dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas envio = sobre.getEnvioCFEEntreEmpresas();
 			if (envio == null)
 				continue;
+
+			// Controles del sobre
+			Map<String, String> delSobre = new HashMap<String, String>();
+			try {
+				ControlesSobre.Sobre xmlSobre = ControlesSobre.leer(sobre.getXmlEmpresa());
+				delSobre.put("S02", ControlesSobre.s02(xmlSobre));
+				delSobre.put("S03", ControlesSobre.s03(xmlSobre));
+				delSobre.put("S04", ControlesSobre.s04(xmlSobre));
+				delSobre.put("S05", ControlesSobre.s05(xmlSobre));
+				delSobre.put("S06", ControlesSobre.s06(xmlSobre));
+			} catch (Exception e) {
+				delSobre.put("S04", "no se pudo leer el XML del sobre: " + e.getMessage());
+			}
+			if (sobre instanceof SobreRecibido && envio.getCaratula() != null && envio.getCaratula().getIdemisor() != null)
+				delSobre.put("S20", ControlesSobre.s20((SobreRecibido) sobre, envio.getCaratula().getIdemisor().longValue()));
+			for (Map.Entry<String, String> r : delSobre.entrySet()) {
+				if (r.getValue() == null)
+					continue;
+				fallan.put(r.getKey(), fallan.get(r.getKey()) + 1);
+				if (ejemplos.get(r.getKey()).length() < 20) {
+					JSONObject ej = new JSONObject();
+					ej.put("sobre", sobre.getId());
+					ej.put("archivo", sobre.getNombreArchivo());
+					ej.put("cfe", "(sobre)");
+					ej.put("detalle", r.getValue());
+					ejemplos.get(r.getKey()).put(ej);
+				}
+			}
 			int ordinal = 0;
 			for (dgi.classes.entreEmpresas.CFEEmpresasType cfeEmpresas : envio.getCFEAdendas()) {
 				ordinal++;

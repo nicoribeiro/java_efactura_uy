@@ -16,7 +16,9 @@ public enum MotivoRechazoSobre {
 	
 	S07("Sobre enviado supera el tamaño máximo admitido"),
 	
-	S08("Sobre enviado ya existe en los registros de DGI");
+	S08("Sobre enviado ya existe en los registros de DGI"),
+
+	S20("Sobre enviado ya existe en los registros del receptor");
 	
 	private String motivo;
 
