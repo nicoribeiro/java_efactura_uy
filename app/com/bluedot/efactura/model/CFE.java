@@ -24,6 +24,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import javax.imageio.ImageIO;
+import javax.persistence.Column;
 import javax.persistence.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -235,6 +236,10 @@ public class CFE extends Model<CFE>{
 	private List<RetencionPercepcion> retencionesPercepciones;
 
 	private String pdfMailAddress;
+
+	/** Controles de recepcion (E01-E07) que no paso un CFE recibido y no se aplicaron (modo LOG): "E03: ...; E07: ..." */
+	@Column(columnDefinition = "TEXT")
+	private String observacionesRecepcion;
 
 	@Transient
 	private EstrategiaNumeracion estrategiaNumeracion;
@@ -992,6 +997,14 @@ public class CFE extends Model<CFE>{
 
 	public void setFechaGeneracion(Date fechaGeneracion) {
 		this.fechaGeneracion = fechaGeneracion;
+	}
+
+	public String getObservacionesRecepcion() {
+		return observacionesRecepcion;
+	}
+
+	public void setObservacionesRecepcion(String observacionesRecepcion) {
+		this.observacionesRecepcion = observacionesRecepcion;
 	}
 
 	public String getPdfMailAddress() {

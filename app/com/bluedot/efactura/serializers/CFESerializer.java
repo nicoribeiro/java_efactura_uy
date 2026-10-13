@@ -55,6 +55,7 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 			
 			cfeJson.put("detalle", cfe.getDetalle()!=null? detalleSerializer.objectToJson(cfe.getDetalle()): JSONObject.NULL);
 			cfeJson.put("estado", cfe.getEstado());
+			cfeJson.put("observacionesRecepcion", cfe.getObservacionesRecepcion() != null ? cfe.getObservacionesRecepcion() : JSONObject.NULL);
 			
 			if (cfe.getTitular()!=null) 
 					cfeJson.put("titular", titularSerializer.objectToJson(cfe.getTitular()));

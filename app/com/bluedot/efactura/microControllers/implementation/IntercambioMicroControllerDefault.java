@@ -26,6 +26,7 @@ import org.w3c.dom.Document;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.XML;
+import com.bluedot.efactura.recibidos.ControlesRecepcion;
 import com.bluedot.efactura.recibidos.MontosRecibidos;
 import com.bluedot.efactura.Constants;
 import com.bluedot.efactura.Environment;
@@ -389,10 +390,26 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				cfe.setEstado(EstadoACKCFEType.BE);
 	 		}
 	 		
-	 		//TODO estos controles
+
 	 		/*
-			 * E03
+			 * E03: el numero del CFE esta en el rango del CAE (CAEData)
 			 */
+	 		ControlesRecepcion.Modo modoE03 = ControlesRecepcion.modo("E03");
+	 		if (modoE03 != ControlesRecepcion.Modo.OFF) {
+	 			String e03 = ControlesRecepcion.e03(cfeEmpresasTypeWrapper.getCfeEmpresasType().getCFE(), cfe.getNro());
+	 			if (e03 != null) {
+	 				logger.warn("CONTROL E03 (" + modoE03 + ") CFE " + cfe.getTipo().value + " " + cfe.getSerie() + "-" + cfe.getNro()
+	 						+ " de " + (cfe.getEmpresaEmisora() != null ? cfe.getEmpresaEmisora().getRut() : "?") + ": " + e03);
+	 				ControlesRecepcion.observar(cfe, "E03" + (modoE03 == ControlesRecepcion.Modo.LOG ? " (observado)" : ""), e03);
+	 				if (modoE03 == ControlesRecepcion.Modo.ENFORCE && rechazo == null) {
+	 					rechazo = new RechazoCFEDGIType();
+	 					rechazo.setMotivo("E03");
+	 					rechazo.setGlosa("Tipo y No de CFE no se corresponden con el CAE");
+	 					cfe.getMotivo().add(MotivoRechazoCFE.E03);
+	 					cfe.setEstado(EstadoACKCFEType.BE);
+	 				}
+	 			}
+	 		}
 	 		
 	 		/*
 			 * E04
