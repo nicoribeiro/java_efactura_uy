@@ -33,6 +33,7 @@ import com.bluedot.efactura.model.Sobre;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.SobreRecibido;
 import com.bluedot.efactura.pollers.PollerManager;
+import com.bluedot.efactura.recibidos.ControlesRecepcion;
 import com.bluedot.efactura.recibidos.MontosRecibidos;
 import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.google.inject.Inject;
@@ -106,6 +107,117 @@ public class SobresController extends AbstractController {
 		resultado.put("cantidad", corregidos.length());
 		resultado.put("corregidos", corregidos);
 		return json(JSONUtils.merge(resultado, new JSONObject(OK)).toString());
+	}
+
+	/**
+	 * Simula los controles de recepcion (E02, E03, E04, E07) sobre los CFE de los sobres recibidos ya guardados, sin
+	 * cambiar nada: cuantos no pasarian cada control y ejemplos. Sirve para medir un control antes de activarlo. Solo
+	 * ADMIN. Query: fromDate y toDate (segundos, por fecha del sobre), limite (sobres, por defecto 500).
+	 */
+	public Promise<Result> simularControles(String rut) throws APIException {
+		AccesoEmpresa.verificarAdmin(PermissionValidator.getSessionUser(ctx()), "GET /empresa/" + rut + "/sobres/recibidos/simularControles", true);
+		Empresa empresa = Empresa.findByRUT(rut, true);
+
+		Date fromDate;
+		Date toDate;
+		int limite;
+		try {
+			fromDate = request().getQueryString("fromDate") != null ? new Date(Long.parseLong(request().getQueryString("fromDate")) * 1000) : null;
+			toDate = request().getQueryString("toDate") != null ? new Date(Long.parseLong(request().getQueryString("toDate")) * 1000) : null;
+			limite = request().getQueryString("limite") != null ? Integer.parseInt(request().getQueryString("limite")) : 500;
+		} catch (NumberFormatException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("fromDate, toDate o limite invalidos");
+		}
+
+		String[] controles = { "E02", "E03", "E04", "E07" };
+		Map<String, Integer> fallan = new HashMap<String, Integer>();
+		Map<String, JSONArray> ejemplos = new HashMap<String, JSONArray>();
+		for (String c : controles) {
+			fallan.put(c, 0);
+			ejemplos.put(c, new JSONArray());
+		}
+		int sobres = 0, cfes = 0;
+
+		List<Sobre> lista = Sobre.findByEmpresa(empresa, DireccionDocumento.RECIBIDO, null, fromDate, toDate, 1, Math.max(1, limite)).item1;
+		for (Sobre sobre : lista) {
+			sobres++;
+			dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas envio = sobre.getEnvioCFEEntreEmpresas();
+			if (envio == null)
+				continue;
+			int ordinal = 0;
+			for (dgi.classes.entreEmpresas.CFEEmpresasType cfeEmpresas : envio.getCFEAdendas()) {
+				ordinal++;
+				dgi.classes.recepcion.CFEDefType xml = cfeEmpresas.getCFE();
+				if (xml == null)
+					continue;
+				cfes++;
+				CFE cfe = cfeDelSobre(sobre, xml);
+				Map<String, String> resultado = new HashMap<String, String>();
+				try {
+					if (cfe != null)
+						resultado.put("E02", ControlesRecepcion.e02(cfe, empresa));
+				} catch (APIException e) {
+					resultado.put("E02", "error: " + e.getMessage());
+				}
+				if (cfe != null)
+					resultado.put("E03", ControlesRecepcion.e03(xml, cfe.getNro()));
+				resultado.put("E04", ControlesRecepcion.e04(sobre.getXmlEmpresa(), ordinal, xml));
+				resultado.put("E07", ControlesRecepcion.e07(xml));
+				for (String c : controles) {
+					String detalle = resultado.get(c);
+					if (detalle == null)
+						continue;
+					fallan.put(c, fallan.get(c) + 1);
+					if (ejemplos.get(c).length() < 20) {
+						JSONObject ej = new JSONObject();
+						ej.put("sobre", sobre.getId());
+						ej.put("archivo", sobre.getNombreArchivo());
+						ej.put("cfe", cfe != null ? cfe.getTipo().value + " " + cfe.getSerie() + "-" + cfe.getNro() : "(no guardado)");
+						ej.put("detalle", detalle);
+						ejemplos.get(c).put(ej);
+					}
+				}
+			}
+		}
+
+		JSONObject resumen = new JSONObject();
+		resumen.put("sobres", sobres);
+		resumen.put("cfes", cfes);
+		JSONObject porControl = new JSONObject();
+		for (String c : controles) {
+			JSONObject r = new JSONObject();
+			r.put("noPasan", fallan.get(c));
+			r.put("ejemplos", ejemplos.get(c));
+			porControl.put(c, r);
+		}
+		resumen.put("controles", porControl);
+		return json(JSONUtils.merge(resumen, new JSONObject(OK)).toString());
+	}
+
+	/** El CFE guardado que corresponde a un CFE del XML del sobre (por tipo, serie y numero) */
+	private static CFE cfeDelSobre(Sobre sobre, dgi.classes.recepcion.CFEDefType xml) {
+		java.math.BigInteger tipo = null, nro = null;
+		String serie = null;
+		if (xml.getEFact() != null) {
+			tipo = xml.getEFact().getEncabezado().getIdDoc().getTipoCFE();
+			serie = xml.getEFact().getEncabezado().getIdDoc().getSerie();
+			nro = xml.getEFact().getEncabezado().getIdDoc().getNro();
+		} else if (xml.getETck() != null) {
+			tipo = xml.getETck().getEncabezado().getIdDoc().getTipoCFE();
+			serie = xml.getETck().getEncabezado().getIdDoc().getSerie();
+			nro = xml.getETck().getEncabezado().getIdDoc().getNro();
+		} else if (xml.getERem() != null) {
+			tipo = xml.getERem().getEncabezado().getIdDoc().getTipoCFE();
+			serie = xml.getERem().getEncabezado().getIdDoc().getSerie();
+			nro = xml.getERem().getEncabezado().getIdDoc().getNro();
+		} else if (xml.getEResg() != null) {
+			tipo = xml.getEResg().getEncabezado().getIdDoc().getTipoCFE();
+			serie = xml.getEResg().getEncabezado().getIdDoc().getSerie();
+			nro = xml.getEResg().getEncabezado().getIdDoc().getNro();
+		}
+		if (tipo == null || nro == null)
+			return null;
+		return sobre.getCFE(nro.longValue(), serie, com.bluedot.efactura.model.TipoDoc.fromInt(tipo.intValue()));
 	}
 
 	public Promise<Result> enviarSobreEmpresa(String rut, long sobreId) throws APIException {

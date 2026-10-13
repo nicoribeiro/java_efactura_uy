@@ -82,6 +82,9 @@ GET      /api/v1/empresa/:rut/sobre/enviarSobreEmpresa           com.bluedot.efa
 # Corrige los montos (totales y descuentos/recargos de las lineas) de los CFE recibidos con su XML (guardar=1 guarda; si no solo informa)
 POST     /api/v1/empresa/:rut/sobres/recibidos/corregirMontos    com.bluedot.efactura.controllers.SobresController.corregirMontosRecibidos(rut:String, guardar:Integer?=0)
 
+# Simula los controles de recepcion (E02, E03, E04, E07) sobre los recibidos guardados, sin cambiar nada (solo ADMIN)
+GET      /api/v1/empresa/:rut/sobres/recibidos/simularControles  com.bluedot.efactura.controllers.SobresController.simularControles(rut:String)
+
 ###### CAEs
 
 # Agrega un CAE a la empresa

@@ -391,8 +391,10 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E03, ControlesRecepcion.e03(xmlCfe, cfe.getNro()));
 	 		
 	 		/*
-			 * E04
+			 * E04: firma electronica del CFE valida (con el certificado de la firma, vigente al firmar)
 			 */
+	 		if (ControlesRecepcion.modo("E04") != ControlesRecepcion.Modo.OFF)
+	 			rechazo = aplicarControl(cfe, rechazo, MotivoRechazoCFE.E04, ControlesRecepcion.e04(sobreRecibido.getXmlEmpresa(), ordinal, xmlCfe));
 	 		
 	 		/*
 			 * E05
