@@ -1,5 +1,9 @@
 package com.bluedot.efactura.model;
 
+/**
+ * Motivos de rechazo de un CFE (Formato_Mensaje_de_Respuesta v19, tabla 4.3): E01-E15 los usa DGI; E02-E07, E10-E12 y
+ * E20-E60 (rechazo comercial) los pueden usar los receptores.
+ */
 public enum MotivoRechazoCFE {
 
 	E01("Tipo y No de CFE ya fue reportado como anulado"),
@@ -11,16 +15,26 @@ public enum MotivoRechazoCFE {
 	E04("Firma electrónica no es válida"),
 	
 	E05("No cumple validaciones (*) de Formato comprobantes"),
+
+	E06("Importe informado en el CFE excede montos habituales"),
 	
 	E07("Fecha Firma de CFE no se corresponde con fecha CAE"),
 	
 	E08("No coinciden RUC emisor de CFE y Complemento Fiscal"),
 
+	E09("RUC emisor y/o tipo de CFE no se corresponden con el CAE"),
+
 	E10("Tipo de cambio no válido"),
+
+	E11("Tipo de CAE especial del CFE no se corresponde con el CAE"),
 
 	E12("Información en Zona de Referencia no existe en los registros"),
 
 	E13("Tipo de CAE del CFE no se corresponde con el CAE utilizado"),
+
+	E14("Irregularidades detectadas"),
+
+	E15("Deudor contumaz sin informar situación"),
 	
 	E20("Orden de compra vencida"),
 	

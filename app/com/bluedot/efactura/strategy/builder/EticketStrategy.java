@@ -168,40 +168,51 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 		return cfe;
 	}
 
+	private static boolean vacio(String s) {
+		return s == null || s.trim().isEmpty();
+	}
+
 	@Override
 	public void buildReceptor(TipoDocumento tipoDocRecep, String codPaisRecep, String docRecep, String docRecepExt,
 			String rznSocRecep, String dirRecep, String ciudadRecep, String deptoRecep, String pdfMailAddress, String CompraID) throws APIException {
 		ReceptorInterface receptor = getReceptor();
 
-		if (superaTopeUI()) {
+		/*
+		 * Identificacion del receptor (Formato CFE A-C60 a A-C62.1): obligatoria si supera el tope de UI; si viene tipo, pais o
+		 * documento (con cualquier monto) tiene que estar completa y ser coherente, como valida DGI (si no, DGI rechaza el CFE
+		 * con E05 y el numero se pierde)
+		 */
+		boolean hayIdentificacion = tipoDocRecep != null || !vacio(codPaisRecep) || !vacio(docRecep) || !vacio(docRecepExt);
+		if (superaTopeUI() || hayIdentificacion) {
 			
 			if (tipoDocRecep==null)
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("tipoDocRecep");
 			
-			if (codPaisRecep == null)
+			if (vacio(codPaisRecep))
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("codPaisRecep");
 			
 			switch (tipoDocRecep) {
 			case RUC:
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("tipoDocRecep").setDetailMessage("Deberia ser distinto de 2 (RUC)");
+			case NIE:
 			case CI:
 				if (!codPaisRecep.equals("UY"))
 					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("codPaisRecep").setDetailMessage("Debe ser UY");
-				if (docRecep == null)
+				if (vacio(docRecep))
 					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecep");
 				break;
 			case DNI:
 				if ((!codPaisRecep.equals("AR") && !codPaisRecep.equals("BR") && !codPaisRecep.equals("CL") && !codPaisRecep.equals("PY"))   )
 					throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("codPaisRecep").setDetailMessage("Debe ser AR o BR o CL o PY");
-				if (docRecepExt == null)
+				if (vacio(docRecepExt))
 					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecepExt");
 			case OTROS:
-				if (docRecepExt == null)
+				if (vacio(docRecepExt))
 					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecepExt");
 				break;
 			
 			case PASAPORTE:
-				if (docRecepExt == null)
+			case NIFE:
+				if (vacio(docRecepExt))
 					throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("docRecepExt");
 				break;
 			}

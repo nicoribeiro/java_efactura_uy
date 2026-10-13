@@ -52,7 +52,10 @@ public enum IndicadorFacturacion {
 
 	INDICADOR_FACTURACION_IMPUESTO_PERCIBIDO(11),
 
-	INDICADOR_FACTURACION_IVA_SUSPENSO(12, true);
+	INDICADOR_FACTURACION_IVA_SUSPENSO(12, true),
+
+	/** Solo e-Boleta de entrada y sus notas: item vendido por un no contribuyente */
+	INDICADOR_FACTURACION_VENDIDO_POR_NO_CONTRIBUYENTE(13);
 
 	private int indice;
 	private boolean soportado;

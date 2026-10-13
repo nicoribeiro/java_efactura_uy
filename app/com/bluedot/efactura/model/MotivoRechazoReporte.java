@@ -10,7 +10,8 @@ public enum MotivoRechazoReporte {
 
 	R04("No cumple validaciones según Formato de Reporte"),
 
-	R05("La secuencia indicada en el reporte no es correcta");
+	R05("La secuencia indicada en el reporte no es correcta"),
+	R06("Fecha recepción no puede ser menor a fecha resumen");
 
 	private String motivo;
 

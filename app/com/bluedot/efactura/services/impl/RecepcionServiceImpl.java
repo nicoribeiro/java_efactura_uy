@@ -575,10 +575,29 @@ public class RecepcionServiceImpl implements RecepcionService {
 							 */
 							this.enviarCorreoReceptorElectronico(sobre);
 						}else{
+							// Un codigo que no conocemos (DGI agrega motivos) no corta el procesamiento del resto del sobre;
+							// el texto de DGI (glosa y detalle) queda en detalleRechazo
+							List<String> textos = new java.util.ArrayList<String>();
 							for (Iterator<RechazoCFEDGIType> iterator2 = ACKcfeDet.getMotivosRechazoCF()
 									.iterator(); iterator2.hasNext();) {
 								RechazoCFEDGIType rechazo = iterator2.next();
-								cfe.getMotivo().add(MotivoRechazoCFE.valueOf(rechazo.getMotivo()));
+								try {
+									cfe.getMotivo().add(MotivoRechazoCFE.valueOf(rechazo.getMotivo()));
+								} catch (IllegalArgumentException | NullPointerException e) {
+									logger.warn("Motivo de rechazo de DGI desconocido " + rechazo.getMotivo() + " en el CFE " + cfe.getTipo() + " "
+											+ cfe.getSerie() + "-" + cfe.getNro());
+								}
+								// DGI manda el texto en UTF-8 decodificado como ISO-8859-1 ("DÃ­gito"): se corrige como en la consulta de RUT
+								String glosa = ConsultaRutServiceImpl.utf8(rechazo.getGlosa());
+								String detalle = ConsultaRutServiceImpl.utf8(rechazo.getDetalle());
+								String texto = rechazo.getMotivo()
+										+ (glosa != null && !glosa.trim().isEmpty() ? ": " + glosa.trim() : "")
+										+ (detalle != null && !detalle.trim().isEmpty() ? " (" + detalle.trim() + ")" : "");
+								textos.add(texto);
+							}
+							if (!textos.isEmpty()) {
+								cfe.setDetalleRechazo(String.join("; ", textos));
+								cfe.update();
 							}
 	
 						}

@@ -5,11 +5,13 @@ import java.util.TreeMap;
 
 public enum TipoDocumento {
 
+	NIE(1,"NIE (Uruguay)"),
 	RUC(2,"RUC (Uruguay)"), 
 	CI(3,"C.I. (Uruguay)"), 
 	OTROS(4,"Otros"), 
 	PASAPORTE(5,"Pasaporte"), 
-	DNI(6,"DNI (Argentina, Brasil, Chile o Paraguay)");
+	DNI(6,"DNI (Argentina, Brasil, Chile o Paraguay)"),
+	NIFE(7,"NIFE (identificación fiscal extranjera)");
 	
 	private int id;
 	private String descripcion;
