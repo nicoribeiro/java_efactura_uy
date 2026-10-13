@@ -39,7 +39,8 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 	/**
 	 * Respuestas entre empresas del formato de mensaje de respuesta de DGI: respuestaM = la del sobre (AS recibido, BS
 	 * rechazado) y respuestaME = la del CFE (AE aceptado, BE rechazado). En los recibidos son las nuestras (ME puede estar
-	 * PENDIENTE); en los emitidos, las de la empresa receptora (ME se lee de su respuesta). null = no hay.
+	 * PENDIENTE); en los emitidos, las de la empresa receptora (ME se lee de su respuesta). null = no hay; NO_CORRESPONDE =
+	 * emitido cuyo sobre nunca se le envio al receptor (no es emisor electronico): nunca va a haber respuesta.
 	 */
 	private static void respuestasEntreEmpresas(CFE cfe, JSONObject cfeJson) {
 		Object m = JSONObject.NULL, me = JSONObject.NULL;
@@ -51,6 +52,8 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 				me = cfe.getEstado() != null ? cfe.getEstado().name() : "ENVIADA";
 			else if (sobre.isRespuestaCfePendiente())
 				me = "PENDIENTE";
+		} else if (cfe.getSobreEmitido() != null && cfe.getSobreEmitido().getXmlEmpresa() == null) {
+			m = me = "NO_CORRESPONDE";
 		} else if (cfe.getSobreEmitido() != null) {
 			SobreEmitido sobre = cfe.getSobreEmitido();
 			if (sobre.getEstadoEmpresa() != null)

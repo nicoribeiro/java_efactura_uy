@@ -189,7 +189,7 @@ public class SobresController extends AbstractController {
 		JSONArray corregidos = new JSONArray();
 		int sobres = 0;
 		for (int page = 1;; page++) {
-			List<Sobre> pagina = Sobre.findByEmpresa(empresa, DireccionDocumento.RECIBIDO, null, fromDate, toDate, page, 200).item1;
+			List<Sobre> pagina = Sobre.findByEmpresa(empresa, DireccionDocumento.RECIBIDO, (Sobre.Filtros) null, fromDate, toDate, page, 200).item1;
 			for (Sobre sobre : pagina) {
 				sobres++;
 				for (JSONObject corregido : MontosRecibidos.corregirSobre(sobre, guardar > 0)) {
@@ -243,7 +243,7 @@ public class SobresController extends AbstractController {
 		}
 		int sobres = 0, cfes = 0;
 
-		List<Sobre> lista = Sobre.findByEmpresa(empresa, DireccionDocumento.RECIBIDO, null, fromDate, toDate, 1, Math.max(1, limite)).item1;
+		List<Sobre> lista = Sobre.findByEmpresa(empresa, DireccionDocumento.RECIBIDO, (Sobre.Filtros) null, fromDate, toDate, 1, Math.max(1, limite)).item1;
 		for (Sobre sobre : lista) {
 			sobres++;
 			dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas envio = sobre.getEnvioCFEEntreEmpresas();
@@ -434,11 +434,22 @@ public class SobresController extends AbstractController {
 			pageSize = 20;
 		pageSize = Math.min(pageSize, 50);
 
-		String estado = request().getQueryString("estado");
-		if (estado != null && !estado.trim().isEmpty() && !estado.trim().matches("(?i)AS|BS|SIN"))
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("estado", estado);
+		// estado (compatibilidad): el de DGI en los emitidos, M en los recibidos
+		Sobre.Filtros filtros = new Sobre.Filtros();
+		String estado = parametro("estado", "AS|BS|SIN");
+		filtros.estadoDgi = parametro("estadoDgi", "AS|BS|SIN");
+		filtros.respuestaM = parametro("respuestaM", "AS|BS|SIN|NO_CORRESPONDE");
+		filtros.respuestaME = parametro("respuestaME", "PENDIENTE|ENVIADA|SIN");
+		if (estado != null) {
+			if (direccion == DireccionDocumento.EMITIDO && filtros.estadoDgi == null)
+				filtros.estadoDgi = estado;
+			else if (direccion == DireccionDocumento.RECIBIDO && filtros.respuestaM == null)
+				filtros.respuestaM = estado;
+		}
+		filtros.rutContraparte = request().getQueryString("rutContraparte");
+		filtros.razonContraparte = request().getQueryString("razonContraparte");
 
-		Tuple<List<Sobre>, Long> sobres = Sobre.findByEmpresa(empresa, direccion, estado, fromDate, toDate, page, pageSize);
+		Tuple<List<Sobre>, Long> sobres = Sobre.findByEmpresa(empresa, direccion, filtros, fromDate, toDate, page, pageSize);
 
 		// Comprobantes de todos los sobres de la pagina en una sola consulta
 		List<Long> ids = new LinkedList<Long>();
@@ -457,6 +468,16 @@ public class SobresController extends AbstractController {
 			lista.put(resumenSobre(sobre, comprobantes.containsKey(sobre.getId()) ? comprobantes.get(sobre.getId()) : new JSONArray()));
 
 		return json(JSONUtils.createObjectList(lista, sobres.item2, page, pageSize).toString());
+	}
+
+	/** Parametro de la query con valores permitidos (regex, sin distinguir mayusculas); null si no viene o esta vacio */
+	private String parametro(String nombre, String permitidos) throws APIException {
+		String valor = request().getQueryString(nombre);
+		if (valor == null || valor.trim().isEmpty())
+			return null;
+		if (!valor.trim().matches("(?i)" + permitidos))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams(nombre, valor);
+		return valor.trim().toUpperCase();
 	}
 
 	/**
@@ -501,6 +522,8 @@ public class SobresController extends AbstractController {
 			json.put("direccion", DireccionDocumento.EMITIDO.name());
 			json.put("estadoDgi", emitido.getEstadoDgi() != null ? emitido.getEstadoDgi().name() : JSONObject.NULL);
 			json.put("fechaConsulta", fecha(emitido.getFechaConsulta()));
+			// Sin XML para la empresa receptora el sobre nunca se le envio (no es emisor electronico): no va a responder
+			json.put("enviadoAEmpresa", emitido.getXmlEmpresa() != null);
 		} else if (sobre instanceof SobreRecibido) {
 			SobreRecibido recibido = (SobreRecibido) sobre;
 			json.put("direccion", DireccionDocumento.RECIBIDO.name());

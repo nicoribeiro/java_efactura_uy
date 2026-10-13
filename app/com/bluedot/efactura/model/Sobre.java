@@ -247,17 +247,78 @@ public abstract class Sobre extends Model<Sobre> {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Tuple<List<Sobre>, Long> findByEmpresa(Empresa empresa, DireccionDocumento direccion, String estado, Date desde,
 			Date hasta, int page, int pageSize) {
+		Filtros filtros = new Filtros();
+		// estado: el de DGI en los emitidos, la respuesta al sobre (M) en los recibidos
+		if (direccion == DireccionDocumento.EMITIDO)
+			filtros.estadoDgi = estado;
+		else
+			filtros.respuestaM = estado;
+		return findByEmpresa(empresa, direccion, filtros, desde, hasta, page, pageSize);
+	}
+
+	/** Filtros opcionales del listado de sobres (null o vacio = no filtra) */
+	public static class Filtros {
+		/** Emitidos: estado de DGI (AS, BS, SIN) */
+		public String estadoDgi;
+		/** Respuesta al sobre entre empresas, M (AS, BS, SIN; en emitidos tambien NO_CORRESPONDE: nunca se le envio) */
+		public String respuestaM;
+		/** Recibidos: respuesta a los CFE, ME (PENDIENTE, ENVIADA, SIN) */
+		public String respuestaME;
+		/** RUT de la contraparte (receptor en emitidos, emisor en recibidos), por prefijo */
+		public String rutContraparte;
+		/** Razon social de la contraparte, contiene (sin distinguir mayusculas) */
+		public String razonContraparte;
+	}
+
+	private static boolean hay(String valor) {
+		return valor != null && !valor.trim().isEmpty();
+	}
+
+	/** Estado de sobre (AS/BS) o SIN (null) sobre un campo */
+	private static void filtrarEstado(DefaultQuery q, String campo, String valor) {
+		if ("SIN".equalsIgnoreCase(valor.trim()))
+			q.getCriteria().add(Restrictions.isNull(campo));
+		else
+			q.getCriteria().add(Restrictions.eq(campo, EstadoACKSobreType.valueOf(valor.trim().toUpperCase())));
+	}
+
+	public static Tuple<List<Sobre>, Long> findByEmpresa(Empresa empresa, DireccionDocumento direccion, Filtros filtros, Date desde,
+			Date hasta, int page, int pageSize) {
 		boolean emitidos = direccion == DireccionDocumento.EMITIDO;
 		DefaultQuery q = (DefaultQuery) (emitidos ? findEmitidos.query() : findRecibidos.query());
 
 		q.getCriteria().add(Restrictions.eq(emitidos ? "empresaEmisora" : "empresaReceptora", empresa));
 
-		if (estado != null && !estado.trim().isEmpty()) {
-			String campo = emitidos ? "estadoDgi" : "estadoEmpresa";
-			if ("SIN".equalsIgnoreCase(estado.trim()))
-				q.getCriteria().add(Restrictions.isNull(campo));
-			else
-				q.getCriteria().add(Restrictions.eq(campo, EstadoACKSobreType.valueOf(estado.trim().toUpperCase())));
+		Filtros f = filtros != null ? filtros : new Filtros();
+		if (emitidos && hay(f.estadoDgi))
+			filtrarEstado(q, "estadoDgi", f.estadoDgi);
+		if (hay(f.respuestaM)) {
+			// En los emitidos sin XML para el receptor el sobre nunca se le envio: no corresponde respuesta
+			if ("NO_CORRESPONDE".equalsIgnoreCase(f.respuestaM.trim()))
+				q.getCriteria().add(Restrictions.isNull("xmlEmpresa"));
+			else {
+				if (emitidos)
+					q.getCriteria().add(Restrictions.isNotNull("xmlEmpresa"));
+				filtrarEstado(q, "estadoEmpresa", f.respuestaM);
+			}
+		}
+		if (!emitidos && hay(f.respuestaME)) {
+			String me = f.respuestaME.trim().toUpperCase();
+			if (me.equals("PENDIENTE"))
+				q.getCriteria().add(Restrictions.eq("respuestaCfePendiente", Boolean.TRUE));
+			else if (me.equals("ENVIADA"))
+				q.getCriteria().add(Restrictions.isNotNull("respuestaCfes"));
+			else {
+				q.getCriteria().add(Restrictions.isNull("respuestaCfes"));
+				q.getCriteria().add(Restrictions.or(Restrictions.isNull("respuestaCfePendiente"), Restrictions.eq("respuestaCfePendiente", Boolean.FALSE)));
+			}
+		}
+		if (hay(f.rutContraparte) || hay(f.razonContraparte)) {
+			q.getCriteria().createAlias(emitidos ? "empresaReceptora" : "empresaEmisora", "contraparte");
+			if (hay(f.rutContraparte))
+				q.getCriteria().add(Restrictions.like("contraparte.rut", f.rutContraparte.trim() + "%"));
+			if (hay(f.razonContraparte))
+				q.getCriteria().add(Restrictions.ilike("contraparte.razon", "%" + f.razonContraparte.trim() + "%"));
 		}
 
 		if (desde != null)
