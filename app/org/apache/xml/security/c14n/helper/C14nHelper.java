@@ -25,20 +25,16 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
 /*
- * TODO: esta clase hay que injectarla para que el webservice de consulta por RUT funcione.
- * 
- * Esta clase tiene un hack en el metodo namespaceIsAbsolute para que funcione con el webservice de la DGI
- * 
- * Para cambiar la clase de los paquetes por esta hay que hacerlo en runtime, 
- * 
- * para ello se podria utilizar un javaagent:
- * 
- * http://javabeat.net/introduction-to-java-agents/
- * 
- * https://stackoverflow.com/questions/11898566/tutorials-about-javaagents
- * 
- * https://www.javacodegeeks.com/2012/02/patching-java-at-runtime.html
- * 
+ * Copia de la clase de xmlsec (santuario) con el mismo paquete y nombre, para la consulta de RUT a DGI
+ * (WS_PersonaGetActEmpresarial, ver ConsultaRutServiceImpl).
+ *
+ * Ese servicio usa el namespace "DGI_Modernizacion_Consolidado", que no es una URI: para xmlsec es un namespace relativo
+ * y al canonicalizar el mensaje para firmarlo (WS-Security) tira un error. El unico cambio respecto de la original es
+ * namespaceIsAbsolute, que lo acepta como absoluto.
+ *
+ * Reemplaza a la de la libreria porque el jar de la aplicacion va primero en el classpath (bin/java_efactura_uy del
+ * dist de Play): no hace falta un javaagent. Si cambia el orden del classpath o se actualiza xmlsec y la clase cambia,
+ * hay que revisar que esta copia siga teniendo los mismos metodos publicos que la original.
  */
 
 /**
@@ -98,8 +94,8 @@ public final class C14nHelper {
             return true;
         }
 
-        // Note: this is the dirty hack
-        if ("DGI_Modernizacion_Consolidado".equals(namespaceValue) || "http://dgi.gub.uy".equals(namespaceValue)) {
+        // Unico cambio respecto de xmlsec: el namespace del servicio de consulta de RUT de DGI no es una URI
+        if ("DGI_Modernizacion_Consolidado".equals(namespaceValue)) {
             return true;
         }
 
