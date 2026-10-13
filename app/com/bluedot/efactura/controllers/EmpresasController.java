@@ -70,14 +70,46 @@ public class EmpresasController extends AbstractController {
 	final static Logger auditoria = LoggerFactory.getLogger("auditoria");
 
 	
+	/**
+	 * Datos de un RUT en DGI, en JSON (ver DatosRutDgi) o, con formato=xml, el XML que devuelve DGI tal cual. La consulta
+	 * se firma con el certificado de una empresa: la del parametro empresa (RUT, el usuario tiene que tener acceso) o, si
+	 * no viene, la primera con firma digital vigente a la que el usuario tiene acceso.
+	 */
 	public Promise<Result> darInformacionRut(String idrut) throws APIException {
-		//TODO tomar este consulta rut de un factory
-		ConsultaRutService service = new ConsultaRutServiceImpl();
+		if (idrut == null || !idrut.trim().matches("\\d{1,12}"))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("rut", idrut).setDetailMessage("El RUT tiene que ser numérico, de hasta 12 dígitos");
+		idrut = idrut.trim();
+		User usuario = PermissionValidator.getSessionUser(ctx());
+		Empresa firmante;
+		String rutFirmante = request().getQueryString("empresa");
+		if (rutFirmante != null && !rutFirmante.trim().isEmpty()) {
+			AccesoEmpresa.verificarEmpresa(usuario, rutFirmante.trim(), "GET /rut/" + idrut);
+			firmante = Empresa.findByRUT(rutFirmante.trim(), true);
+		} else
+			firmante = empresaFirmante(usuario);
 
-		// Call the service
-		String response = service.getRutData(idrut);
+		String xml = new ConsultaRutServiceImpl().getRutData(idrut, firmante);
+		if (xml == null || xml.trim().isEmpty())
+			throw APIException.raise(APIErrors.RUT_DGI).setDetailMessage("DGI no devolvió datos para el RUT " + idrut);
 
-		return json(response);
+		if ("xml".equalsIgnoreCase(request().getQueryString("formato")))
+			return Promise.<Result> pure(ok(xml).as("application/xml; charset=utf-8"));
+		try {
+			return json(com.bluedot.efactura.empresas.DatosRutDgi.aJson(xml).toString());
+		} catch (Exception e) {
+			logger.error("No se pudo leer la respuesta de DGI para el RUT " + idrut + ": " + xml, e);
+			throw APIException.raise(APIErrors.ERROR_COMUNICACION_DGI, e).setDetailMessage("No se pudo leer la respuesta de DGI");
+		}
+	}
+
+	/** Primera empresa con firma digital vigente a la que el usuario tiene acceso; null si no hay */
+	private static Empresa empresaFirmante(User usuario) {
+		java.util.Date ahora = new java.util.Date();
+		for (Empresa e : Empresa.find(null, null, true, null, 1, 1000).item1)
+			if (e.getFirmaDigital() != null && e.getFirmaDigital().getValidaHasta() != null && e.getFirmaDigital().getValidaHasta().after(ahora)
+					&& AccesoEmpresa.tieneAcceso(usuario, e.getRut()))
+				return e;
+		return null;
 	}
 
 	public Promise<Result> cargarEmpresas(String path) throws APIException {

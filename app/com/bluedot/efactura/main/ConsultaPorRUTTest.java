@@ -22,12 +22,12 @@ public class ConsultaPorRUTTest {
 
     public static void main(String[] args) {
 
-        ConsultaRutService service = new ConsultaRutServiceImpl();
-     
-        // Call the service
-        String response = service.getRutData("219000090011");
-
-        
-        System.out.println("Output data:\n" + response);
+        // TODO comentado: getRutData ahora necesita la empresa que firma la consulta (Empresa con FirmaDigital)
+        // ConsultaRutService service = new ConsultaRutServiceImpl();
+        //
+        // // Call the service
+        // String response = service.getRutData("219000090011");
+        //
+        // System.out.println("Output data:\n" + response);
     }
 }

@@ -131,7 +131,9 @@ public class APIException extends Throwable
 		 */
 		ACCESO_EMPRESA_DENEGADO(128, 403, false),
 		SOLO_ADMIN(129, 403, false),
-		REPORTE_DIARIO_EN_CURSO(130, 200, true)
+		REPORTE_DIARIO_EN_CURSO(130, 200, true),
+		/** La consulta de RUT a DGI respondio con un error de negocio (ej: nunca tuvo actividad, cancelada) */
+		RUT_DGI(131, 200, true)
 		;
 
 

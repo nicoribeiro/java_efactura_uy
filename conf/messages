@@ -62,5 +62,6 @@ TIPO_CAMBIO_NO_ENCONTRADO=No se encuentra tipo de cambio para la {0}:{1}
 ACCESO_EMPRESA_DENEGADO=No tiene acceso a esta empresa
 SOLO_ADMIN=Operacion permitida solo a administradores
 REPORTE_DIARIO_EN_CURSO=Ya se esta generando un reporte diario de la empresa {0}, intente en unos minutos
+RUT_DGI=DGI no devolvio los datos del RUT
 ATTACHMENT_NOT_FOUND=No se encontro el adjunto con {0}:{1}
 NO_EXISTE_EMAIL=No se encontro el email con {0}:{1}
