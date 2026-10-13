@@ -350,6 +350,20 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 	 		}
 		} else {
 			/*
+			 * CONTROLES DE RECEPCION (ver ControlesRecepcion). Segun la tabla 4.3 del formato de DGI (motivos de rechazo
+			 * de un CFE), el receptor puede usar E02 a E07 y E10 a E12; E01 y E08, E09, E13 a E15 son solo de DGI. Se
+			 * implementan E02, E03, E04, E05, E07, E10 y E12. No se implementan:
+			 * 
+			 * E06 (importe excede montos habituales): "habitual" no esta definido por DGI y depende de cada relacion
+			 * comercial; un umbral contra el historial del emisor daria falsos positivos (compras puntuales grandes) y
+			 * rechazar por eso le corresponde a una persona, no a un control automatico.
+			 * 
+			 * E11 (tipo de CAE especial no se corresponde con el CAE): lo unico que se puede controlar con el CFE es la
+			 * coherencia interna de CAEEspecial, CausalCAEEsp, IndMontoBruto y los indicadores de facturacion, que DGI ya
+			 * valida antes de aceptar el CFE; el tipo de CAE que DGI le asigno al emisor no se puede consultar.
+			 */
+			
+			/*
 			 * E02: el mismo CFE (emisor, tipo, serie y numero) ya se recibio y acepto. Se busca entre los recibidos por la
 			 * empresa (antes se buscaba entre los emitidos y nunca encontraba nada), sin contar al que se esta procesando.
 			 */

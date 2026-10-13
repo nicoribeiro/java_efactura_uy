@@ -55,8 +55,9 @@ import org.slf4j.LoggerFactory;
 import play.Play;
 
 /**
- * Controles de DGI sobre los CFE recibidos (los que puede usar el receptor: E02-E07, E10-E12). Cada control tiene un modo en application.conf
- * (RecepcionCFE.control.EXX):
+ * Controles de DGI sobre los CFE recibidos (los que puede usar el receptor: E02-E07, E10-E12). Se implementan E02, E03,
+ * E04, E05, E07, E10 y E12; E06 y E11 no (el motivo esta en IntercambioMicroControllerDefault.procesarCfeEntrante). Cada
+ * control tiene un modo en application.conf (RecepcionCFE.control.EXX):
  * <ul>
  * <li>OFF: no se controla</li>
  * <li>LOG (por defecto): si no pasa se registra en el CFE (observacionesRecepcion) y en el log, pero se acepta igual</li>
