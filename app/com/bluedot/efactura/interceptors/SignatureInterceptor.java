@@ -161,6 +161,16 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		allDocument = signDocument(dbf, allDocument,"ns0:CFE","DGICFE:EnvioCFE", sobreEmitido.getEmpresaEmisora().getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS, FirmaDigital.KEYSTORE_PASSWORD);
 		
 		String documentString = XML.documentToString(allDocument);
+
+		/*
+		 * Formato del sobre contra el XSD de DGI antes de mandarlo (EnvioCFE.control.formato: off, log o enforce)
+		 */
+		String erroresFormato = com.bluedot.efactura.commons.ControlFormatoEnvio.controlar(documentString, sobreEmitido);
+		if (erroresFormato != null
+				&& com.bluedot.efactura.commons.ControlFormatoEnvio.modo() == com.bluedot.efactura.commons.ControlFormatoEnvio.Modo.ENFORCE)
+			throw APIException.raise(APIException.APIErrors.MALFORMED_CFE)
+					.setDetailMessage("El sobre no cumple el formato de DGI, no se envia: " + erroresFormato);
+
 		data.setXmlData(documentString);
 		message.setContent(List.class, list);
 		

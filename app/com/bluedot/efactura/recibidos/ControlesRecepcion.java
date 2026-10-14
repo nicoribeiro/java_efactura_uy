@@ -418,7 +418,7 @@ public class ControlesRecepcion {
 	 *
 	 * @return null si no se puede cargar (se loguea): no es culpa del emisor, no hay que rechazar por eso
 	 */
-	static synchronized Schema schema(String clave, String defecto) {
+	public static synchronized Schema schema(String clave, String defecto) {
 		String path = Play.application().configuration().getString(clave, defecto);
 		if (path == null || path.trim().isEmpty())
 			path = defecto;
@@ -450,7 +450,7 @@ public class ControlesRecepcion {
 	 *
 	 * @return null si cumple; si no, los primeros errores
 	 */
-	static String validarXsd(Schema schema, Document doc) throws Exception {
+	public static String validarXsd(Schema schema, Document doc) throws Exception {
 		List<String> errores = new ArrayList<>();
 		Validator validator = schema.newValidator();
 		validator.setErrorHandler(new org.xml.sax.helpers.DefaultHandler() {

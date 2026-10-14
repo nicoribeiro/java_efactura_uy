@@ -86,6 +86,9 @@ POST     /api/v1/empresa/:rut/sobres/recibidos/corregirMontos    com.bluedot.efa
 GET      /api/v1/empresa/:rut/sobres/recibidos/simularControles  com.bluedot.efactura.controllers.SobresController.simularControles(rut:String)
 
 # Vista previa de la respuesta a los CFE (ME_) de un sobre recibido: XML firmado y validacion XSD, sin guardar ni enviar (solo ADMIN)
+# Vuelve a procesar la respuesta de DGI ya guardada de un sobre emitido, sin consultar a DGI ni mandar mails (solo ADMIN)
+POST     /api/v1/empresa/:rut/sobres/emitidos/:id/reprocesarResultadoDgi  com.bluedot.efactura.controllers.SobresController.reprocesarResultadoDgi(rut:String, id:Long)
+
 GET      /api/v1/empresa/:rut/sobres/recibidos/:id/respuestaCfes  com.bluedot.efactura.controllers.SobresController.vistaPreviaRespuestaCfes(rut:String, id:Long)
 
 # Envia ahora la respuesta a los CFE (ME_) de un sobre recibido que la tiene pendiente

@@ -357,6 +357,36 @@ public class SobresController extends AbstractController {
 		return sobre.getCFE(nro.longValue(), serie, com.bluedot.efactura.model.TipoDoc.fromInt(tipo.intValue()));
 	}
 
+	/**
+	 * Vuelve a procesar la respuesta de DGI a los CFE de un sobre emitido que ya esta guardada, sin consultar a DGI ni mandar
+	 * mails: completa estados, motivos y el texto de DGI que no se guardaron (ej. motivos que antes no se conocian). Solo ADMIN.
+	 * Devuelve como quedo cada CFE del sobre.
+	 */
+	public Promise<Result> reprocesarResultadoDgi(String rut, long sobreId) throws APIException {
+		com.bluedot.commons.security.User usuario = PermissionValidator.getSessionUser(ctx());
+		AccesoEmpresa.verificarAdmin(usuario, "POST /empresa/" + rut + "/sobres/emitidos/" + sobreId + "/reprocesarResultadoDgi", true);
+		Sobre sobre = sobreDeLaEmpresa(Empresa.findByRUT(rut, true), sobreId);
+		if (!(sobre instanceof SobreEmitido))
+			throw APIException.raise(APIErrors.SOBRE_NO_ENCONTRADO).withParams("id", sobreId);
+
+		new com.bluedot.efactura.services.impl.RecepcionServiceImpl().reprocesarResultadoSobre((SobreEmitido) sobre);
+
+		JSONArray cfes = new JSONArray();
+		List<String> resumen = new java.util.ArrayList<String>();
+		for (CFE cfe : sobre.getCfes()) {
+			JSONArray motivos = new JSONArray();
+			for (com.bluedot.efactura.model.MotivoRechazoCFE m : cfe.getMotivo())
+				motivos.put(m.name());
+			cfes.put(new JSONObject().put("tipo", cfe.getTipo().name()).put("serie", cfe.getSerie()).put("nro", cfe.getNro())
+					.put("estado", cfe.getEstado() != null ? cfe.getEstado().name() : JSONObject.NULL).put("motivos", motivos)
+					.put("detalleRechazo", cfe.getDetalleRechazo() != null ? cfe.getDetalleRechazo() : JSONObject.NULL));
+			resumen.add(cfe.getSerie() + "-" + cfe.getNro() + " " + cfe.getEstado() + " " + motivos);
+		}
+		auditoria.info(usuario.getEmailAddress() + " reprocesó la respuesta de DGI del sobre emitido " + sobre.getId() + " de la empresa " + rut
+				+ ": " + String.join(", ", resumen));
+		return json(new JSONObject().put("sobre", sobre.getId()).put("cfes", cfes).toString());
+	}
+
 	public Promise<Result> enviarSobreEmpresa(String rut, long sobreId) throws APIException {
 
 		Sobre sobre = sobreDeLaEmpresa(Empresa.findByRUT(rut, true), sobreId);

@@ -20,6 +20,9 @@ public interface RecepcionService {
 
 	void consultaResultadoSobre(SobreEmitido sobre) throws APIException;
 
+	/** Vuelve a procesar la respuesta de DGI ya guardada de un sobre (sin consultar a DGI ni mandar mails) */
+	void reprocesarResultadoSobre(SobreEmitido sobre) throws APIException;
+
 	ReporteDiario generarReporteDiario(Date date, Empresa empresa) throws APIException;
 
 //	void consultarResultados(Date date, Empresa empresa) throws APIException;

@@ -546,9 +546,41 @@ public class RecepcionServiceImpl implements RecepcionService {
 			
 			Data result = consultaResultadoSobre(sobre.getToken(), sobre.getIdReceptor());
 
-			
-			ACKCFEdefType ACKcfe = (ACKCFEdefType) XML.unMarshall(XML.loadXMLFromString(result.getXmlData()),
-					ACKCFEdefType.class);
+			procesarResultadoSobre(sobre, result.getXmlData(), false);
+
+		} catch (Exception e) {
+			throw APIException.raise(e);
+		}finally{
+			/*
+			 * Borramos el contexto
+			 */
+			InterceptorContextHolder.clear();
+		}
+
+	}
+
+	/**
+	 * Vuelve a procesar la respuesta de DGI a los CFE de un sobre que ya esta guardada (resultado_dgi), sin consultar a DGI:
+	 * para completar estados y motivos que no se guardaron (ej. motivos que la version anterior no conocia). No manda mails.
+	 */
+	@Override
+	public void reprocesarResultadoSobre(SobreEmitido sobre) throws APIException {
+		if (sobre.getResultado_dgi() == null || sobre.getResultado_dgi().trim().isEmpty())
+			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("resultado_dgi")
+					.setDetailMessage("El sobre " + sobre.getId() + " no tiene guardada la respuesta de DGI a sus comprobantes");
+		try {
+			procesarResultadoSobre(sobre, sobre.getResultado_dgi(), true);
+		} catch (Exception e) {
+			throw APIException.raise(e);
+		}
+	}
+
+	/**
+	 * Procesa la respuesta de DGI a los CFE de un sobre (ACKCFE): estado de cada CFE y, si no es AE, sus motivos y el texto
+	 * de DGI. Con reproceso no se mandan los mails al receptor (ya se mandaron, o no corresponde mandarlos ahora).
+	 */
+	private void procesarResultadoSobre(SobreEmitido sobre, String xml, boolean reproceso) throws Exception, APIException {
+			ACKCFEdefType ACKcfe = (ACKCFEdefType) XML.unMarshall(XML.loadXMLFromString(xml), ACKCFEdefType.class);
 			
 			if (ACKcfe.getACKCFEDet().isEmpty() && ACKcfe.getCaratula()==null && ACKcfe.getSignature()==null) {
 				/*
@@ -559,8 +591,10 @@ public class RecepcionServiceImpl implements RecepcionService {
 				/*
 				 * Proceso la respuesta
 				 */
-				sobre.setResultado_dgi(result.getXmlData());
-				sobre.update();
+				if (!reproceso) {
+					sobre.setResultado_dgi(xml);
+					sobre.update();
+				}
 	
 				for (Iterator<ACKCFEDet> iterator = ACKcfe.getACKCFEDet().iterator(); iterator.hasNext();) {
 					ACKCFEDet ACKcfeDet = iterator.next();
@@ -573,8 +607,11 @@ public class RecepcionServiceImpl implements RecepcionService {
 							/*
 							 * Envio correos al receptor
 							 */
-							this.enviarCorreoReceptorElectronico(sobre);
+							if (!reproceso)
+								this.enviarCorreoReceptorElectronico(sobre);
 						}else{
+							// Los motivos son los de esta respuesta (al reprocesar no se duplican)
+							cfe.getMotivo().clear();
 							// Un codigo que no conocemos (DGI agrega motivos) no corta el procesamiento del resto del sobre;
 							// el texto de DGI (glosa y detalle) queda en detalleRechazo
 							List<String> textos = new java.util.ArrayList<String>();
@@ -607,16 +644,6 @@ public class RecepcionServiceImpl implements RecepcionService {
 					}
 				}
 			}
-
-		} catch (Exception e) {
-			throw APIException.raise(e);
-		}finally{
-			/*
-			 * Borramos el contexto
-			 */
-			InterceptorContextHolder.clear();
-		}
-
 	}
 
 	// TODO agregar mutex en los cfe y sobres
