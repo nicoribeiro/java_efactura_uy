@@ -66,8 +66,17 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	@Column(length = 256, unique = true, nullable = false)
 	private String emailAddress;
 
+	/**
+	 * Hash viejo: SHA-512 sin sal. Solo para los usuarios que todavia no entraron desde el cambio a passwordHash; al
+	 * entrar se pasa a passwordHash y aca quedan bytes al azar (la columna no admite nulos)
+	 */
 	@Column(length = 64, nullable = false)
 	private byte[] shaPassword;
+
+	/** Hash con sal (PasswordHash): pbkdf2-sha256$iteraciones$sal$hash */
+	@Column(length = 128)
+	@JsonIgnore
+	private String passwordHash;
 
 	@Transient
 	@JsonIgnore
@@ -140,9 +149,30 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	 */
 	private static Finder<Integer, User> find = new Finder<Integer, User>(Integer.class, User.class);
 
+	/**
+	 * El usuario si la contrasena es correcta, si no null. Si el usuario todavia tiene el hash viejo (SHA-512 sin sal) y
+	 * la contrasena es correcta, lo pasa al hash con sal y borra el viejo
+	 */
 	public static User findByEmailAddressAndPassword(String emailAddress, String password)
 	{
-		return find.query().ieq("emailAddress", emailAddress).eq("shaPassword", getSha512(password)).findUnique();
+		User user = emailAddress != null ? find.query().ieq("emailAddress", emailAddress).findUnique() : null;
+		if (user == null || password == null)
+		{
+			PasswordHash.verificarFicticio(password);
+			return null;
+		}
+		if (user.passwordHash != null)
+			return PasswordHash.verificar(password, user.passwordHash) ? user : null;
+		if (!PasswordHash.igualesSha(getSha512(password), user.shaPassword))
+		{
+			// Que tarde lo mismo que con el hash nuevo: si no, se distinguiria que usuarios existen
+			PasswordHash.verificarFicticio(password);
+			return null;
+		}
+		user.setPassword(password);
+		user.update();
+		logger.info("Contrasena de " + user.getEmailAddress() + " pasada al hash con sal");
+		return user;
 	}
 
 	public static User findByEmailAddress(String emailAddress) throws APIException
@@ -238,7 +268,8 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	public void setPassword(String password)
 	{
 		this.password = password;
-		shaPassword = getSha512(password);
+		passwordHash = PasswordHash.hash(password);
+		shaPassword = PasswordHash.bytesAlAzar(64);
 	}
 
 	private String generateRandomPassword()
@@ -325,6 +356,17 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	public void setShaPassword(byte[] shaPassword)
 	{
 		this.shaPassword = shaPassword;
+	}
+
+	@JsonIgnore
+	public String getPasswordHash()
+	{
+		return passwordHash;
+	}
+
+	public void setPasswordHash(String passwordHash)
+	{
+		this.passwordHash = passwordHash;
 	}
 
 	public String getLastName()
