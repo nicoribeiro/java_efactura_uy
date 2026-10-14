@@ -111,6 +111,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 		try {
 			IdDocResg idDocResg = caeMicroController.getIdDocResg(cfe.getTipo(), cfe.getFechaEmision(), cfe.getEstrategiaNumeracion());
 			idDocResg.setNroInterno(cfe.getNroInterno());
+			DatosIdDoc.aplicar(cfe.getDatosIdDoc(), idDocResg);
 			getEncabezado().setIdDoc(idDocResg);
 			cfe.setSerie(idDocResg.getSerie());
 			cfe.setNro(idDocResg.getNro().intValue());

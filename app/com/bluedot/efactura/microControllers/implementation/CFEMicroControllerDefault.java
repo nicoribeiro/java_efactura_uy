@@ -86,6 +86,19 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 		cfeBuilder.buildReceptor(Commons.safeGetJSONObject(encabezadoJSON,"Receptor"));
 		
 		/*
+		 * Campos opcionales del IdDoc (IVAalDia, SecProf, IndPagCta3ros, IndCobPropia, ModVenta, InfoAdicionalDoc, FchValor)
+		 */
+		if (esCfeEmitido) {
+			String datosIdDoc = com.bluedot.efactura.strategy.builder.DatosIdDoc.leer(cfeBuilder.getCFE().getTipo(), Commons.safeGetJSONObject(encabezadoJSON, "IdDoc"));
+			// DGI: con IndCobPropia=1 es obligatorio referenciar los comprobantes que se cobran (si no rechaza con E05)
+			if (datosIdDoc != null && new JSONObject(datosIdDoc).has("IndCobPropia")
+					&& (!docJSON.has("Referencia") || Commons.safeGetJSONArray(docJSON, "Referencia").length() == 0))
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia")
+						.setDetailMessage("Con IndCobPropia hay que referenciar los comprobantes que se cobran (Referencia)");
+			cfeBuilder.getCFE().setDatosIdDoc(datosIdDoc);
+		}
+
+		/*
 		 * Referencia
 		 */
 		cfeBuilder.buildReferencia(this.getEmpresa(), docJSON.has("Referencia") ?  Commons.safeGetJSONArray(docJSON,"Referencia") : null);
@@ -131,6 +144,7 @@ public class CFEMicroControllerDefault extends MicroControllerDefault implements
 				nroInterno = nroInterno.substring(0, 50);
 			cfeBuilder.getCFE().setNroInterno(nroInterno);
 		}
+
 
 		/*
 		 * Ordinal

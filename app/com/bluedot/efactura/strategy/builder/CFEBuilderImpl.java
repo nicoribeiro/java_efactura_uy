@@ -471,7 +471,10 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 	public void buildReferencia(Empresa empresaEmisora, JSONArray referenciasJSON) throws APIException {
 
 		try {
-			if (strategy.getCFE().isObligatorioReferencia()) {
+			// Tambien con cobranza propia (IndCobPropia): DGI exige referenciar los comprobantes que se cobran
+			boolean cobranzaPropia = strategy.getCFE().getDatosIdDoc() != null
+					&& new JSONObject(strategy.getCFE().getDatosIdDoc()).has("IndCobPropia");
+			if (strategy.getCFE().isObligatorioReferencia() || (cobranzaPropia && referenciasJSON != null)) {
 
 				for (int i = 0; i< referenciasJSON.length(); i++ ) {
 					

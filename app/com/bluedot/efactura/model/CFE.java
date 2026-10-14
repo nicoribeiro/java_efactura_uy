@@ -215,6 +215,10 @@ public class CFE extends Model<CFE>{
 	@javax.persistence.Column(length = 50)
 	private String nroInterno;
 
+	/** Campos opcionales del IdDoc (XSD 1.40+: IVAalDia, SecProf, ModVenta, FchValor...), JSON; ver DatosIdDoc */
+	@javax.persistence.Column(columnDefinition = "TEXT")
+	private String datosIdDoc;
+
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private Sucursal sucursal;
 
@@ -906,6 +910,14 @@ public class CFE extends Model<CFE>{
 
 	public void setNroInterno(String nroInterno) {
 		this.nroInterno = nroInterno;
+	}
+
+	public String getDatosIdDoc() {
+		return datosIdDoc;
+	}
+
+	public void setDatosIdDoc(String datosIdDoc) {
+		this.datosIdDoc = datosIdDoc;
 	}
 
 	public CAE getCae() {

@@ -120,6 +120,7 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 		try {
 			IdDocFact idDocFact = caeMicroController.getIdDocFact(cfe.getTipo(), cfe.isIndMontoBruto(), cfe.getFormaDePago().value, cfe.getFechaEmision(), cfe.getEstrategiaNumeracion());
 			idDocFact.setNroInterno(cfe.getNroInterno());
+			DatosIdDoc.aplicar(cfe.getDatosIdDoc(), idDocFact);
 			getEncabezado().setIdDoc(idDocFact);
 			cfe.setSerie(idDocFact.getSerie());
 			cfe.setNro(idDocFact.getNro().intValue());

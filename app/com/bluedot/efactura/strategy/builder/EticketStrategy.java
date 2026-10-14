@@ -120,6 +120,7 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 		try {
 			IdDocTck idDocTck = caeMicroController.getIdDocTick(cfe.getTipo(), cfe.isIndMontoBruto(), cfe.getFormaDePago().value, cfe.getFechaEmision(), cfe.getEstrategiaNumeracion());
 			idDocTck.setNroInterno(cfe.getNroInterno());
+			DatosIdDoc.aplicar(cfe.getDatosIdDoc(), idDocTck);
 			getEncabezado().setIdDoc(idDocTck);
 			cfe.setSerie(idDocTck.getSerie());
 			cfe.setNro(idDocTck.getNro().intValue());
