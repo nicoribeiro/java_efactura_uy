@@ -161,9 +161,10 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 			PasswordHash.verificarFicticio(password);
 			return null;
 		}
-		if (user.passwordHash != null)
-			return PasswordHash.verificar(password, user.passwordHash) ? user : null;
-		if (!PasswordHash.igualesSha(getSha512(password), user.shaPassword))
+		// Por los getters: el usuario puede ser un proxy de Hibernate (ej. el de la sesion), con los campos sin cargar
+		if (user.getPasswordHash() != null)
+			return PasswordHash.verificar(password, user.getPasswordHash()) ? user : null;
+		if (!PasswordHash.igualesSha(getSha512(password), user.getShaPassword()))
 		{
 			// Que tarde lo mismo que con el hash nuevo: si no, se distinguiria que usuarios existen
 			PasswordHash.verificarFicticio(password);
