@@ -274,13 +274,14 @@ public class Crypto
 		try
 		{
 			mac = Mac.getInstance("HmacSHA256");
-			mac.init(new SecretKeySpec(secret.getBytes(), "HmacSHA256"));
+			mac.init(new SecretKeySpec(secret.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
 		} catch (Throwable t)
 		{
 			throw new IOException(t);
 		}
 
-		return new String(Hex.encodeHex(mac.doFinal(message.getBytes())));
+		// UTF-8 explicito: el cliente firma los mismos bytes que manda (no depende de la codificacion de la JVM)
+		return new String(Hex.encodeHex(mac.doFinal(message.getBytes(java.nio.charset.StandardCharsets.UTF_8))));
 
 	}
 

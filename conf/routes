@@ -202,6 +202,9 @@ POST     /api/v1/modo/:modo                                      com.bluedot.efa
 
 
 # Session management
+# Monitoreo (ej. Zabbix): sin sesion, solo desde las redes de seguridad.ping.redes; {"ok":true} si la API y la base responden
+GET      /api/v1/ping                                            com.bluedot.efactura.controllers.PingController.ping()
+
 POST     /api/v1/signin                                          com.bluedot.commons.controllers.SignInController.signIn()
 POST     /api/v1/signup                                          com.bluedot.commons.controllers.SignInController.signUp()
 #POST     /api/v1/forgot                                          com.bluedot.commons.controllers.SignInController.forgotPassword()

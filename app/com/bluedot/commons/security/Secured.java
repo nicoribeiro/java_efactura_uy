@@ -132,7 +132,8 @@ public class Secured extends Security.Authenticator
 			return null;
 		}
 		
-		logger.info("HMAC auth request received. Key: " + key + ", signature: " + signature + ", nonce: " + nonce);
+		// Nunca loguear la key entera, la firma ni el secret: solo el comienzo de la key
+		logger.debug("HMAC auth request received. Key: " + prefijo(key) + ", nonce: " + nonce);
 		
 		Credential credential = null;
 		try
@@ -156,7 +157,7 @@ public class Secured extends Security.Authenticator
 			String message = nonce + url + ((ctx.request().body() != null && ctx.request().body().asJson() != null)? ctx.request().body().asJson().toString() : "");
 			
 			
-			logger.info("HMAC computing Signature for: " + message);
+			logger.debug("HMAC computing Signature for " + url + " (nonce " + nonce + ", " + message.length() + " caracteres)");
 			
 			boolean signatureMatches = false;
 			try
@@ -186,12 +187,22 @@ public class Secured extends Security.Authenticator
 				return credential.getUser().getEmailAddress();
 			}else{
 				// Nunca loguear el secret de la credencial
-				logger.info("HMAC signature not matching for key " + key + ", nonce " + nonce);
+				logger.warn("HMAC: la firma no coincide para la key " + prefijo(key) + " (nonce " + nonce + ", " + ctx.request().method() + " "
+						+ ctx.request().path() + ")");
 			}
-		}
+		} else if (credential == null || !credential.isValid())
+			logger.warn("HMAC: key " + prefijo(key) + " inexistente o revocada (" + ctx.request().method() + " " + ctx.request().path() + ")");
+		else
+			logger.warn("HMAC: nonce " + nonce + " no es mayor al ultimo usado (" + credential.getNonce() + ") para la key " + prefijo(key) + " ("
+					+ ctx.request().method() + " " + ctx.request().path() + ")");
 		
 		ctx.args.put("error_cause", Messages.get("auth_token_invalid"));
 		return null;
+	}
+
+	/** Comienzo de la key, para el log (la key entera no se loguea) */
+	private static String prefijo(String key) {
+		return key == null ? null : key.length() <= 8 ? key : key.substring(0, 8) + "...";
 	}
 
 	/** Rutas que se pueden usar con una contrasena temporal (para poder cambiarla) */
