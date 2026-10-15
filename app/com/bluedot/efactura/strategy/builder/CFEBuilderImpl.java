@@ -253,7 +253,8 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		/*
 		 * id:113
 		 */
-		totales.setMntExpoyAsim(new BigDecimal("0"));
+		// Items de exportacion y asimiladas (IndFact 10): antes se aceptaban pero quedaban afuera del total (siempre 0)
+		totales.setMntExpoyAsim(iva[IndicadorFacturacion.INDICADOR_FACTURACION_EXPORTACION_Y_ASIMILADAS.getIndice()].setScale(2, BigDecimal.ROUND_HALF_UP));
 		strategy.getCFE().setTotMntExpyAsim(totales.getMntExpoyAsim().doubleValue());
 
 		/*

@@ -85,40 +85,75 @@ public interface SummaryStrategy {
 			case eResguardo_Contingencia:
 				return new Strategy_282();
 
+			// Notas de credito y debito de contingencia (antes no se reportaban)
+			case Nota_de_Credito_de_eTicket_Contingencia:
+				return ResumenPorTipo.tckCont(tipo, ReporteDefType.RsmnTckContNotaCredito::new, ReporteDefType.RsmnTckContNotaCredito::setTipoComp,
+						ReporteDefType.RsmnTckContNotaCredito::setRsmnData, ReporteDefType::setRsmnTckContNotaCredito);
+			case Nota_de_Debito_de_eTicket_Contingencia:
+				return ResumenPorTipo.tckCont(tipo, ReporteDefType.RsmnTckContNotaDebito::new, ReporteDefType.RsmnTckContNotaDebito::setTipoComp,
+						ReporteDefType.RsmnTckContNotaDebito::setRsmnData, ReporteDefType::setRsmnTckContNotaDebito);
 			case Nota_de_Credito_de_eFactura_Contingencia:
+				return ResumenPorTipo.facCont(tipo, ReporteDefType.RsmnFacContNotaCredito::new, ReporteDefType.RsmnFacContNotaCredito::setTipoComp,
+						ReporteDefType.RsmnFacContNotaCredito::setRsmnData, ReporteDefType::setRsmnFacContNotaCredito);
+			case Nota_de_Debito_de_eFactura_Contingencia:
+				return ResumenPorTipo.facCont(tipo, ReporteDefType.RsmnFacContNotaDebito::new, ReporteDefType.RsmnFacContNotaDebito::setTipoComp,
+						ReporteDefType.RsmnFacContNotaDebito::setRsmnData, ReporteDefType::setRsmnFacContNotaDebito);
+
+			// Venta por cuenta ajena: e-Ticket (131-133, 231-233)
+			case eTicket_Venta_por_Cuenta_Ajena:
+				return ResumenPorTipo.tck(tipo, ReporteDefType.RsmnTckCtaAj::new, ReporteDefType.RsmnTckCtaAj::setTipoComp,
+						ReporteDefType.RsmnTckCtaAj::setRsmnData, ReporteDefType::setRsmnTckCtaAj);
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
+				return ResumenPorTipo.tck(tipo, ReporteDefType.RsmnTckNotaCreditoCtaAj::new, ReporteDefType.RsmnTckNotaCreditoCtaAj::setTipoComp,
+						ReporteDefType.RsmnTckNotaCreditoCtaAj::setRsmnData, ReporteDefType::setRsmnTckNotaCreditoCtaAj);
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
+				return ResumenPorTipo.tck(tipo, ReporteDefType.RsmnTckNotaDebitoCtaAj::new, ReporteDefType.RsmnTckNotaDebitoCtaAj::setTipoComp,
+						ReporteDefType.RsmnTckNotaDebitoCtaAj::setRsmnData, ReporteDefType::setRsmnTckNotaDebitoCtaAj);
+			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+				return ResumenPorTipo.tckCont(tipo, ReporteDefType.RsmnTckCtaAjCont::new, ReporteDefType.RsmnTckCtaAjCont::setTipoComp,
+						ReporteDefType.RsmnTckCtaAjCont::setRsmnData, ReporteDefType::setRsmnTckCtaAjCont);
+			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+				return ResumenPorTipo.tckCont(tipo, ReporteDefType.RsmnTckCtaAjContNotaCredito::new,
+						ReporteDefType.RsmnTckCtaAjContNotaCredito::setTipoComp, ReporteDefType.RsmnTckCtaAjContNotaCredito::setRsmnData,
+						ReporteDefType::setRsmnTckCtaAjContNotaCredito);
+			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+				return ResumenPorTipo.tckCont(tipo, ReporteDefType.RsmnTckCtaAjContNotaDebito::new,
+						ReporteDefType.RsmnTckCtaAjContNotaDebito::setTipoComp, ReporteDefType.RsmnTckCtaAjContNotaDebito::setRsmnData,
+						ReporteDefType::setRsmnTckCtaAjContNotaDebito);
+
+			// Venta por cuenta ajena: e-Factura (141-143, 241-243)
+			case eFactura_Venta_por_Cuenta_Ajena:
+				return ResumenPorTipo.fac(tipo, ReporteDefType.RsmnFacCtaAj::new, ReporteDefType.RsmnFacCtaAj::setTipoComp,
+						ReporteDefType.RsmnFacCtaAj::setRsmnData, ReporteDefType::setRsmnFacCtaAj);
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
+				return ResumenPorTipo.fac(tipo, ReporteDefType.RsmnFacNotaCreditoCtaAj::new, ReporteDefType.RsmnFacNotaCreditoCtaAj::setTipoComp,
+						ReporteDefType.RsmnFacNotaCreditoCtaAj::setRsmnData, ReporteDefType::setRsmnFacNotaCreditoCtaAj);
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
+				return ResumenPorTipo.fac(tipo, ReporteDefType.RsmnFacNotaDebitoCtaAj::new, ReporteDefType.RsmnFacNotaDebitoCtaAj::setTipoComp,
+						ReporteDefType.RsmnFacNotaDebitoCtaAj::setRsmnData, ReporteDefType::setRsmnFacNotaDebitoCtaAj);
+			case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+				return ResumenPorTipo.facCont(tipo, ReporteDefType.RsmnFacCtaAjCont::new, ReporteDefType.RsmnFacCtaAjCont::setTipoComp,
+						ReporteDefType.RsmnFacCtaAjCont::setRsmnData, ReporteDefType::setRsmnFacCtaAjCont);
+			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+				return ResumenPorTipo.facCont(tipo, ReporteDefType.RsmnFacCtaAjContNotaCredito::new,
+						ReporteDefType.RsmnFacCtaAjContNotaCredito::setTipoComp, ReporteDefType.RsmnFacCtaAjContNotaCredito::setRsmnData,
+						ReporteDefType::setRsmnFacCtaAjContNotaCredito);
+			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
+				return ResumenPorTipo.facCont(tipo, ReporteDefType.RsmnFacCtaAjContNotaDebito::new,
+						ReporteDefType.RsmnFacCtaAjContNotaDebito::setTipoComp, ReporteDefType.RsmnFacCtaAjContNotaDebito::setRsmnData,
+						ReporteDefType::setRsmnFacCtaAjContNotaDebito);
+
+			// Exportacion y remitos: todavia no se emiten (ver CFEStrategy)
 			case Nota_de_Credito_de_eFactura_Exportacion:
 			case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
-			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena:
-			case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-
-			case Nota_de_Credito_de_eTicket_Contingencia:
-			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena:
-			case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-
-			case Nota_de_Debito_de_eFactura_Contingencia:
 			case Nota_de_Debito_de_eFactura_Exportacion:
 			case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
-			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena:
-			case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-
-			case Nota_de_Debito_de_eTicket_Contingencia:
-			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
-			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-
 			case eFactura_Exportacion:
 			case eFactura_Exportacion_Contingencia:
-			case eFactura_Venta_por_Cuenta_Ajena:
-			case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-
 			case eRemito:
 			case eRemito_Contingencia:
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
-
-			
-
-			case eTicket_Venta_por_Cuenta_Ajena:
-			case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 				return null;
 			default:
 				return null;

@@ -249,9 +249,10 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 	
 	@Override
 	public ComplFiscalType getComplementoFiscal() {
-		if (cfe.getEfactura().getComplFiscal() == null)
-			cfe.getEfactura().setComplFiscal(new ComplFiscalType());
-		return cfe.getEfactura().getComplFiscal();
+		// El del e-Ticket (venta por cuenta ajena 131-133): antes se leia el de la e-Factura, que en un e-Ticket es null
+		if (cfe.getEticket().getComplFiscal() == null)
+			cfe.getEticket().setComplFiscal(new ComplFiscalType());
+		return cfe.getEticket().getComplFiscal();
 	}
 	
 }

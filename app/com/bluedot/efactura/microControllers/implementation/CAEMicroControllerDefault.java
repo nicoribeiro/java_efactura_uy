@@ -161,6 +161,9 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	{
 		IdDocFact iddoc = new IdDocFact();
 
+		// Sin CAE para el tipo: error claro en lugar de NullPointerException (como getIdDocTick)
+		if (!caesMap.containsKey(tipoDoc))
+			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		if (montosIncluyenIva)
@@ -187,6 +190,9 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	public synchronized IdDocResg getIdDocResg(TipoDoc tipoDoc, Date fchEmis, EstrategiaNumeracion estrategia) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocResg iddoc = new IdDocResg();
 
+		// Sin CAE para el tipo: error claro en lugar de NullPointerException (como getIdDocTick)
+		if (!caesMap.containsKey(tipoDoc))
+			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
@@ -206,6 +212,9 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	public synchronized IdDocRem getIdDocRem(TipoDoc tipoDoc, Date fchEmis, EstrategiaNumeracion estrategia) throws APIException, DatatypeConfigurationException, IOException {
 		IdDocRem iddoc = new IdDocRem();
 
+		// Sin CAE para el tipo: error claro en lugar de NullPointerException (como getIdDocTick)
+		if (!caesMap.containsKey(tipoDoc))
+			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
 		CAE cae = caesMap.get(tipoDoc).get(0);
 
 		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));

@@ -395,6 +395,15 @@ public class GenerateInvoice {
 			break;
 		}
 
+		/*
+		 * Venta por cuenta ajena: el mandante (complemento fiscal), debajo de los datos del receptor. No se guarda en el CFE,
+		 * se toma del generador_json como el resto de los datos del receptor
+		 */
+		JSONObject complFiscal = complementoFiscal(cfe);
+		if (complFiscal != null)
+			createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 6, "POR CUENTA DE: " + complFiscal.optString("NombreMdte", "") + " ("
+					+ complFiscal.optString("Pais", "") + " " + complFiscal.optString("DocMdte", "") + ")", PdfContentByte.ALIGN_LEFT);
+
 		
 
 	}
@@ -690,6 +699,18 @@ public class GenerateInvoice {
 	/*
 	 * 5) Pie del comprobante.(todas las paginas)
 	 */
+	/** El complemento fiscal (mandante) de una venta por cuenta ajena, del generador_json; null si no tiene */
+	private static JSONObject complementoFiscal(CFE cfe) {
+		try {
+			if (cfe.getGeneradorJson() == null)
+				return null;
+			JSONObject generador = new JSONObject(cfe.getGeneradorJson());
+			return generador.has("CompFiscal") ? generador.getJSONObject("CompFiscal") : null;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 	private void generateSelloDigital(Document doc, PdfContentByte cb)
 			throws DocumentException, MalformedURLException, IOException {
 
@@ -938,9 +959,9 @@ public class GenerateInvoice {
 		
 		if (cfe.getSobreEmitido()!=null) {
 		
-			// es un cfe emitido
+			// es un cfe emitido (sin adenda: lista vacia, como en las otras secciones de la adenda)
 			
-			JSONArray array = new JSONArray(cfe.getAdenda());
+			JSONArray array = cfe.getAdenda() != null ? new JSONArray(cfe.getAdenda()) : new JSONArray();
 			
 			for (int i = 0; i < array.length(); i++) {
 				try {
