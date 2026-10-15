@@ -21,6 +21,7 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Attachment;
 import com.bluedot.commons.security.AttachmentEstado;
+import com.bluedot.commons.security.User;
 import com.bluedot.commons.security.EmailMessage;
 import com.bluedot.commons.security.PermissionValidator;
 import com.bluedot.commons.security.Secured;
@@ -264,6 +265,33 @@ public class EmailController extends AbstractController
 			List<EmailMessage> emailsModelo = factory.getServiceMicroController(empresaReceptora).obtenerYProcesarEmailsEntrantesDesdeServerCorreo();
 			JSONArray jsonArray = JSONSerializerProvider.getEmailMessageSerializer().objectToJson(emailsModelo, true);
 			return json(jsonArray.toString());
+		}
+
+		if (emailAction == EmailAction.OMIT) {
+			User usuario = PermissionValidator.getSessionUser(ctx());
+			com.bluedot.efactura.security.AccesoEmpresa.verificarAdmin(usuario, "PUT /emailEntrantes/" + id + "?accion=OMIT", true);
+			if (id == null)
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("id");
+			EmailMessage email = EmailMessage.findById(id, true);
+			if (email.getEmpresa() == null || email.getEmpresa().getId() != empresaReceptora.getId())
+				throw APIException.raise(APIErrors.NO_EXISTE_EMAIL).withParams("id", String.valueOf(id));
+
+			// Los procesados OK quedan como estan; el error de los omitidos se conserva
+			List<String> omitidos = new LinkedList<String>();
+			for (Attachment adjunto : email.getAttachments())
+				if (adjunto.getEstado() == AttachmentEstado.PROCESADO_ERROR || adjunto.getEstado() == AttachmentEstado.PENDIENTE) {
+					adjunto.setEstado(AttachmentEstado.OMITIDO);
+					adjunto.update();
+					omitidos.add(adjunto.getName() != null ? adjunto.getName() : String.valueOf(adjunto.getId()));
+				}
+
+			auditoria.info(usuario.getEmailAddress() + " omitió " + omitidos.size() + " adjunto(s) del email " + id + " de la empresa " + rut
+					+ (omitidos.isEmpty() ? "" : ": " + String.join(", ", omitidos)));
+
+			JSONObject resultado = new JSONObject();
+			resultado.put("id", id);
+			resultado.put("omitidos", new JSONArray(omitidos));
+			return json(JSONUtils.merge(resultado, new JSONObject(OK)).toString());
 		}
 
 		if (emailAction == EmailAction.RETRY) {
