@@ -47,7 +47,7 @@ public class SignInController extends AbstractController
 		// Limite de intentos fallidos por usuario y por IP (ver LimiteIntentosLogin): antes de verificar la contrasena
 		LimiteIntentosLogin limite = LimiteIntentosLogin.instancia();
 		LimiteIntentosLogin.Modo modoLimite = LimiteIntentosLogin.modo();
-		String ip = ipCliente();
+		String ip = LimiteIntentosLogin.ipCliente(request());
 		long ahora = System.currentTimeMillis();
 		if (modoLimite != LimiteIntentosLogin.Modo.OFF) {
 			int minutos = limite.minutosBloqueado(emailAddress, ip, ahora,
@@ -126,6 +126,9 @@ public class SignInController extends AbstractController
 			JSONObject result = JSONSerializerProvider.getSessionSerializer().objectToJson(session);
 			// El panel lo usa para pedir el cambio de una contrasena temporal antes de seguir
 			result.put("debeCambiarPassword", user.isDebeCambiarPassword());
+			// Y para pedir que confirme el email (usuarios nuevos) antes que nada
+			result.put("debeConfirmarEmail", user.isDebeConfirmarEmail() && !user.isValidated());
+			result.put("emailConfirmado", user.isValidated());
 			
 			
 			return json(result.toString());
@@ -137,19 +140,6 @@ public class SignInController extends AbstractController
 	@BodyParser.Of(BodyParser.Json.class)
 	@ValidateJsonPost(fields = { "firstName", "lastName", "emailAddress", "password" })
 	@Tx
-	/**
-	 * IP del cliente para el limite de intentos: si viene por el proxy del panel, la ultima de X-Forwarded-For (la que
-	 * agrega el proxy; las anteriores las puede mandar cualquiera); si no, la de la conexion
-	 */
-	private String ipCliente() {
-		String reenviado = request().getHeader(RequestUtils.FORWARD_HEADER);
-		if (reenviado != null && !reenviado.trim().isEmpty()) {
-			String[] ips = reenviado.split(",");
-			return ips[ips.length - 1].trim();
-		}
-		return request().remoteAddress();
-	}
-
 	public  Promise<Result> signUp() throws APIException
 	{
 		/*

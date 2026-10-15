@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import java.util.Date;
+
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,8 @@ import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.PermissionValidator;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.security.Session;
+import com.bluedot.commons.security.CodigoEmail;
+import com.bluedot.commons.security.CorreoSistema;
 import com.bluedot.commons.security.User;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
@@ -38,6 +42,32 @@ public class CuentaController extends AbstractController {
 		return json(UsuariosController.usuarioJson(PermissionValidator.getSessionUser(ctx())).toString());
 	}
 
+	/** Manda un codigo al email propio para confirmarlo (ver CodigoEmail). Un codigo por minuto */
+	public Promise<Result> enviarCodigoEmail() throws APIException {
+		User user = PermissionValidator.getSessionUser(ctx());
+		if (user.isValidated())
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("email", user.getEmailAddress())
+					.setDetailMessage("Tu email ya está confirmado");
+		String codigo = CodigoEmail.emitir(user, CodigoEmail.Tipo.CONFIRMAR_EMAIL, new Date());
+		CorreoSistema.enviarCodigo(user.getEmailAddress(), CodigoEmail.Tipo.CONFIRMAR_EMAIL, codigo);
+		auditoria.info(user.getEmailAddress() + " pidió un código para confirmar su email");
+		return json(new JSONObject().put("enviado", true).put("email", user.getEmailAddress())
+				.put("vigenciaMinutos", CodigoEmail.VIGENCIA_MINUTOS).toString());
+	}
+
+	/** Confirma el email propio con el codigo recibido. Body: codigo */
+	@BodyParser.Of(BodyParser.Json.class)
+	public Promise<Result> confirmarEmail() throws APIException {
+		User user = PermissionValidator.getSessionUser(ctx());
+		JsonNode body = request().body().asJson();
+		String codigo = body != null && body.has("codigo") ? body.get("codigo").asText() : null;
+		CodigoEmail.verificar(user, CodigoEmail.Tipo.CONFIRMAR_EMAIL, codigo, new Date());
+		user.confirmarEmail();
+		user.update();
+		auditoria.info(user.getEmailAddress() + " confirmó su email");
+		return json(UsuariosController.usuarioJson(user).toString());
+	}
+
 	/** Cambia la contrasena propia. Body: actual, nueva. Cierra las demas sesiones del usuario */
 	@BodyParser.Of(BodyParser.Json.class)
 	public Promise<Result> cambiarPassword() throws APIException {
@@ -46,6 +76,9 @@ public class CuentaController extends AbstractController {
 		String actual = body.has("actual") ? body.get("actual").asText() : null;
 		String nueva = body.has("nueva") ? body.get("nueva").asText() : null;
 
+		// Para cambiar la contrasena el email tiene que estar confirmado (es por donde se recupera)
+		if (!user.isValidated())
+			throw APIException.raise(APIErrors.EMAIL_SIN_CONFIRMAR);
 		if (actual == null || User.findByEmailAddressAndPassword(user.getEmailAddress(), actual) == null)
 			throw APIException.raise(APIErrors.UNAUTHORIZED).setDetailMessage("La contraseña actual no es correcta");
 		if (nueva == null || nueva.length() < MINIMO_PASSWORD)

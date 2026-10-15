@@ -112,6 +112,12 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	/** Tiene una contrasena temporal: debe cambiarla antes de usar la API. null = no */
 	private Boolean debeCambiarPassword;
 
+	/**
+	 * Debe confirmar su email (con un codigo, ver CodigoEmail) antes de usar la API: los usuarios nuevos. null = no (los
+	 * anteriores pueden confirmarlo cuando quieran). El email confirmado queda en validated / validationDate
+	 */
+	private Boolean debeConfirmarEmail;
+
 	@ManyToMany(mappedBy = "users")
 	private List<Account> accounts;
 
@@ -239,6 +245,24 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	public void setDebeCambiarPassword(boolean debeCambiarPassword)
 	{
 		this.debeCambiarPassword = debeCambiarPassword;
+	}
+
+	public boolean isDebeConfirmarEmail()
+	{
+		return Boolean.TRUE.equals(debeConfirmarEmail);
+	}
+
+	public void setDebeConfirmarEmail(boolean debeConfirmarEmail)
+	{
+		this.debeConfirmarEmail = debeConfirmarEmail;
+	}
+
+	/** Email confirmado con un codigo (validated); se registra la fecha */
+	public void confirmarEmail()
+	{
+		setValidated(true);
+		setValidationDate(new Date());
+		this.debeConfirmarEmail = false;
 	}
 
 	private static final String CARACTERES_PASSWORD = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";

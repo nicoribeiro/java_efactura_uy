@@ -56,6 +56,8 @@ public class UsuariosController extends AbstractController {
 		json.put("role", user.getRole().name());
 		json.put("activo", user.isActivo());
 		json.put("debeCambiarPassword", user.isDebeCambiarPassword());
+		json.put("emailConfirmado", user.isValidated());
+		json.put("debeConfirmarEmail", user.isDebeConfirmarEmail() && !user.isValidated());
 		JSONArray empresas = new JSONArray();
 		for (String rut : AccesoEmpresa.rutsPermitidos(user))
 			empresas.put(rut);
@@ -155,6 +157,8 @@ public class UsuariosController extends AbstractController {
 		user.setRole(role);
 		user.setActivo(true);
 		user.setDebeCambiarPassword(true);
+		// Los usuarios nuevos tienen que confirmar su email con un codigo antes de usar el panel
+		user.setDebeConfirmarEmail(true);
 		for (String rut : ruts)
 			darAccesoEmpresa(user, rut);
 		user.save();

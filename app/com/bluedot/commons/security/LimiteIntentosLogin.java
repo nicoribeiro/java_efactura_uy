@@ -104,6 +104,25 @@ public class LimiteIntentosLogin {
 		}
 	}
 
+	/**
+	 * IP del cliente: si viene por el proxy del panel, la ultima de X-Forwarded-For (la que agrega el proxy; las anteriores
+	 * las puede mandar cualquiera); si no, la de la conexion
+	 */
+	public static String ipCliente(play.mvc.Http.Request request) {
+		String reenviado = request.getHeader("X-Forwarded-For");
+		if (reenviado != null && !reenviado.trim().isEmpty()) {
+			String[] ips = reenviado.split(",");
+			return ips[ips.length - 1].trim();
+		}
+		return request.remoteAddress();
+	}
+
+	/** Si la IP o el usuario estan bloqueados, segun la configuracion: minutos que faltan (0 = no) */
+	public int minutosBloqueado(String usuario, String ip) {
+		return minutosBloqueado(usuario, ip, System.currentTimeMillis(), config("seguridad.signin.intentosPorUsuario", 5),
+				config("seguridad.signin.intentosPorIp", 20), config("seguridad.signin.ventanaMinutos", 15));
+	}
+
 	public static int config(String clave, int defecto) {
 		return Play.application().configuration().getInt(clave, defecto);
 	}

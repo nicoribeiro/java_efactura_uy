@@ -140,8 +140,11 @@ public class SendMail
 		logger.info("FROM: " + from);
 		logger.info("SUBJECT: " + subject);
 		logger.info("TO: " + mails);
-		logger.info("BODY-TEXT: " + textVersion);
-		logger.info("BODY-HTML: " + htmlVersion);
+		// El cuerpo solo cuando no se manda (mail.log): puede llevar codigos de confirmacion o de recuperacion de contrasena
+		if (logInstedOfSend) {
+			logger.info("BODY-TEXT: " + textVersion);
+			logger.info("BODY-HTML: " + htmlVersion);
+		}
 		logger.info("ATTACHMENTS: " + attachmentsNames);
 		
 		if (logInstedOfSend)

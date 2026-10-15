@@ -205,8 +205,11 @@ public class Secured extends Security.Authenticator
 		return key == null ? null : key.length() <= 8 ? key : key.substring(0, 8) + "...";
 	}
 
-	/** Rutas que se pueden usar con una contrasena temporal (para poder cambiarla) */
-	private static final java.util.regex.Pattern CUENTA = java.util.regex.Pattern.compile("^/api/v1/cuenta(/password)?$");
+	/**
+	 * Rutas que se pueden usar con una contrasena temporal o sin el email confirmado (para poder confirmarlo y cambiarla)
+	 */
+	private static final java.util.regex.Pattern CUENTA = java.util.regex.Pattern
+			.compile("^/api/v1/cuenta(/password|/email/codigo|/email/confirmar)?$");
 
 	/**
 	 * Usuario desactivado: rechazado (sesion o HMAC). Con contrasena temporal y sesion: solo puede usar /api/v1/cuenta
@@ -220,6 +223,11 @@ public class Secured extends Security.Authenticator
 		{
 			logger.info("Acceso rechazado: usuario desactivado " + user.getEmailAddress());
 			ctx.args.put("error_cause", "usuario_desactivado");
+			return false;
+		}
+		if (porSesion && user.isDebeConfirmarEmail() && !user.isValidated() && !CUENTA.matcher(ctx.request().path()).matches())
+		{
+			ctx.args.put("error_cause", "email_confirmation_required");
 			return false;
 		}
 		if (porSesion && user.isDebeCambiarPassword() && !CUENTA.matcher(ctx.request().path()).matches())

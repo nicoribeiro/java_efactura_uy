@@ -31,6 +31,9 @@ public class MessagingHelper {
 	private String signature;
 	private Map<String, byte[]> attachments;
 
+	/** Loguear en lugar de mandar; null = segun mail.log */
+	private Boolean soloLog;
+
 	public MessagingHelper() {
 
 	}
@@ -58,6 +61,12 @@ public class MessagingHelper {
 		return this;
 	}
 
+	/** Loguear en lugar de mandar, sin importar mail.log (ej. los mails del sistema tienen su propia opcion) */
+	public MessagingHelper withSoloLog(boolean soloLog) {
+		this.soloLog = soloLog;
+		return this;
+	}
+
 	public MessagingHelper withSignature(String signature) {
 		this.signature = signature;
 		return this;
@@ -72,7 +81,7 @@ public class MessagingHelper {
 		if (signature == null || "".equals(signature))
 			signature = Play.application().configuration().getString("mail.signature", "");
 
-		boolean logInstedOfSend = Play.application().configuration().getBoolean("mail.log", false);
+		boolean logInstedOfSend = soloLog != null ? soloLog : Play.application().configuration().getBoolean("mail.log", false);
 
 		try {
 			SendMail.sendMail(username, password, host, port, from, to, subject, textBody, null, attachments,

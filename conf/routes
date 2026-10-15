@@ -270,6 +270,12 @@ POST     /api/v1/usuarios/:uid/credenciales                      com.bluedot.efa
 # Cuenta propia (cualquier usuario logueado): perfil y cambio de contrasena
 GET      /api/v1/cuenta                                          com.bluedot.efactura.controllers.CuentaController.ver()
 PUT      /api/v1/cuenta/password                                 com.bluedot.efactura.controllers.CuentaController.cambiarPassword()
+# Confirmar el email propio con un codigo que se manda por mail (CodigoEmail)
+POST     /api/v1/cuenta/email/codigo                             com.bluedot.efactura.controllers.CuentaController.enviarCodigoEmail()
+POST     /api/v1/cuenta/email/confirmar                          com.bluedot.efactura.controllers.CuentaController.confirmarEmail()
+# Recuperar la contrasena sin sesion (solo emails confirmados): pedir el codigo y cambiarla con el codigo
+POST     /api/v1/recuperar                                       com.bluedot.efactura.controllers.RecuperarController.pedirCodigo()
+POST     /api/v1/recuperar/password                              com.bluedot.efactura.controllers.RecuperarController.cambiarPassword()
 GET      /api/v1/users/:uid/empresas                             com.bluedot.efactura.controllers.AccesoEmpresasController.getEmpresasUsuario(uid: Int)
 GET      /api/v1/empresa/:rut/usuarios                           com.bluedot.efactura.controllers.AccesoEmpresasController.getUsuariosEmpresa(rut: String)
 PUT      /api/v1/users/:uid/empresas/:rut                        com.bluedot.efactura.controllers.AccesoEmpresasController.agregarEmpresa(uid: Int, rut: String)

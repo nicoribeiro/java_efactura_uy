@@ -135,7 +135,9 @@ public class APIException extends Throwable
 		/** La consulta de RUT a DGI respondio con un error de negocio (ej: nunca tuvo actividad, cancelada) */
 		RUT_DGI(131, 200, true),
 		/** Demasiados intentos fallidos de login (ver LimiteIntentosLogin): 429, sin verificar la contrasena */
-		DEMASIADOS_INTENTOS(132, 429, false)
+		DEMASIADOS_INTENTOS(132, 429, false),
+		/** Para cambiar la contrasena el email tiene que estar confirmado */
+		EMAIL_SIN_CONFIRMAR(133, 200, true)
 		;
 
 
