@@ -474,6 +474,14 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 			// Tambien con cobranza propia (IndCobPropia): DGI exige referenciar los comprobantes que se cobran
 			boolean cobranzaPropia = strategy.getCFE().getDatosIdDoc() != null
 					&& new JSONObject(strategy.getCFE().getDatosIdDoc()).has("IndCobPropia");
+			if (referenciasJSON == null && strategy.getCFE().isObligatorioReferencia()) {
+				// e-Resguardo: la referencia solo se usa cuando corrige otro resguardo (DGI acepta resguardos sin referencia,
+				// ej. los de MercadoPago); en notas de credito y debito es obligatoria
+				TipoDoc tipo = strategy.getCFE().getTipo();
+				if (tipo == TipoDoc.eResguardo || tipo == TipoDoc.eResguardo_Contingencia)
+					return;
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia");
+			}
 			if (strategy.getCFE().isObligatorioReferencia() || (cobranzaPropia && referenciasJSON != null)) {
 
 				for (int i = 0; i< referenciasJSON.length(); i++ ) {
