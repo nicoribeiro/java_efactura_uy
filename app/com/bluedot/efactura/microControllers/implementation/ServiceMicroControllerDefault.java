@@ -419,8 +419,10 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 				return;
 			}
 			
+			// Sin estado final quedaria PENDIENTE para siempre (y Reintentar todos lo volveria a recorrer): se omite
 			if (attachment.getName()==null) {
-				logger.info(index+"-El Adjunto no tiene nombre, se aborta el procesamiento");
+				logger.info(index+"-El Adjunto no tiene nombre, se omite");
+				omitirAttachment(attachment);
 				return;
 			}
 			
@@ -457,7 +459,8 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 				Sobre sobre = SobreEmitido.findById(ackCFEdefType.getCaratula().getIDEmisor().longValue(), true);
 				
 				if (sobre.getEmpresaEmisora() != getEmpresa()) {
-					logger.info(index+"-La empresa emisora del sobre no es igual a la empresa local, se aborta el procesamiento");
+					logger.info(index+"-La empresa emisora del sobre no es igual a la empresa local, se omite");
+					omitirAttachment(attachment);
 					return;
 				}
 				
@@ -501,7 +504,8 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 				Sobre sobre = SobreEmitido.findById(ackSobredefType.getCaratula().getIDEmisor().longValue(), true);
 				
 				if (sobre.getEmpresaEmisora() != getEmpresa()) {
-					logger.info(index+"-La empresa emisora del sobre no es igual a la empresa local, se aborta el procesamiento");
+					logger.info(index+"-La empresa emisora del sobre no es igual a la empresa local, se omite");
+					omitirAttachment(attachment);
 					return;
 				}
 				
@@ -537,7 +541,9 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 						.findByRUT(envioCFEEntreEmpresas.getCaratula().getRutReceptor(), true);
 
 				if (empresaReceptoraCandidata.getId() != this.getEmpresa().getId()) {
-					logger.info(index+"-La empresa receptora no es igual a la empresa local, se aborta el procesamiento");
+					// Ej. copia de un sobre que la empresa local le envio a un cliente
+					logger.info(index+"-La empresa receptora no es igual a la empresa local, se omite");
+					omitirAttachment(attachment);
 					return;
 				}
 				

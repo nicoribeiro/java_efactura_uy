@@ -335,6 +335,8 @@ public class EmailAttachmentReceiver {
 							 * This part may be the message content
 							 */
 							messageContent = messageContent.concat(part.getContent().toString());
+						else if (esCuerpoAlternativo(part))
+							logger.debug("Se ignora otra version del cuerpo: " + part.getContentType());
 						else
 							/*
 							 * This is an attachment but not in the ATTACHMENT section
@@ -385,6 +387,8 @@ public class EmailAttachmentReceiver {
 						 * This part may be the message content
 						 */
 						messageContent = messageContent.concat(part.getContent().toString());
+					else if (esCuerpoAlternativo(part))
+						logger.debug("Se ignora otra version del cuerpo: " + part.getContentType());
 					else
 						/*
 						 * This is an attachment but not in the ATTACHMENT section
@@ -402,6 +406,17 @@ public class EmailAttachmentReceiver {
 	 * @throws MessagingException
 	 * @throws IOException
 	 */
+	/**
+	 * Parte de texto sin nombre de archivo que no viene marcada como adjunto: otra version del cuerpo del mail (ej.
+	 * text/x-amp-html de las notificaciones de Google, text/calendar), no un adjunto. Antes se guardaba como un adjunto sin
+	 * nombre que quedaba PENDIENTE.
+	 */
+	static boolean esCuerpoAlternativo(Part part) throws MessagingException {
+		String tipo = part.getContentType() != null ? part.getContentType().toLowerCase() : "";
+		// text/xml sin nombre puede ser un sobre: se sigue guardando como adjunto
+		return part.getFileName() == null && tipo.startsWith("text/") && !tipo.contains("xml");
+	}
+
 	/** El adjunto es texto (XML, txt): se guarda como texto para procesarlo; el resto en base64 */
 	public static boolean esTexto(String fileName, String contentType) {
 		String nombre = fileName != null ? fileName.toLowerCase() : "";
