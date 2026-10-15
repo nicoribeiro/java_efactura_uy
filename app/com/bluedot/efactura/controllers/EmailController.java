@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.commons.Orden;
 import com.bluedot.efactura.security.EmpresaAccess;
 
 import java.text.SimpleDateFormat;
@@ -111,7 +112,7 @@ public class EmailController extends AbstractController
 		}
 
 		Tuple<List<EmailMessage>, Long> emails = EmailMessage.find(empresa, request().getQueryString("q"), estado, conAdjuntos, desde, hasta, page,
-				pageSize);
+				pageSize, Orden.leer(request(), EmailMessage.ORDENES));
 
 		// Adjuntos de la pagina en una sola consulta y sin el contenido
 		Map<Long, JSONArray> adjuntosPorEmail = new HashMap<Long, JSONArray>();

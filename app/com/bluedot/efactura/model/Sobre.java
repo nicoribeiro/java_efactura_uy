@@ -1,5 +1,6 @@
 package com.bluedot.efactura.model;
 
+import com.bluedot.efactura.commons.Orden;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -23,7 +24,9 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
@@ -284,6 +287,23 @@ public abstract class Sobre extends Model<Sobre> {
 
 	public static Tuple<List<Sobre>, Long> findByEmpresa(Empresa empresa, DireccionDocumento direccion, Filtros filtros, Date desde,
 			Date hasta, int page, int pageSize) {
+		return findByEmpresa(empresa, direccion, filtros, desde, hasta, page, pageSize, null);
+	}
+
+	/** Campos por los que se pueden ordenar los sobres emitidos */
+	public static final String[] ORDENES_EMITIDOS = { "id", "fecha", "contraparte", "comprobantes", "estadoDgi", "fechaConsulta",
+			"estadoEmpresa", "nombreArchivo" };
+
+	/** Campos por los que se pueden ordenar los sobres recibidos */
+	public static final String[] ORDENES_RECIBIDOS = { "id", "fecha", "contraparte", "comprobantes", "estadoEmpresa",
+			"timestampRecibido", "nombreArchivo" };
+
+	/**
+	 * @param orden
+	 *            uno de ORDENES_EMITIDOS u ORDENES_RECIBIDOS segun la direccion; null = por fecha, del mas nuevo al mas viejo
+	 */
+	public static Tuple<List<Sobre>, Long> findByEmpresa(Empresa empresa, DireccionDocumento direccion, Filtros filtros, Date desde,
+			Date hasta, int page, int pageSize, Orden orden) {
 		boolean emitidos = direccion == DireccionDocumento.EMITIDO;
 		DefaultQuery q = (DefaultQuery) (emitidos ? findEmitidos.query() : findRecibidos.query());
 
@@ -313,8 +333,12 @@ public abstract class Sobre extends Model<Sobre> {
 				q.getCriteria().add(Restrictions.or(Restrictions.isNull("respuestaCfePendiente"), Restrictions.eq("respuestaCfePendiente", Boolean.FALSE)));
 			}
 		}
-		if (hay(f.rutContraparte) || hay(f.razonContraparte)) {
-			q.getCriteria().createAlias(emitidos ? "empresaReceptora" : "empresaEmisora", "contraparte");
+		boolean ordenContraparte = orden != null && "contraparte".equals(orden.campo);
+		if (hay(f.rutContraparte) || hay(f.razonContraparte) || ordenContraparte) {
+			// Para ordenar sin filtrar: LEFT JOIN, asi no se pierden los sobres sin contraparte (los emitidos solo a DGI)
+			boolean filtra = hay(f.rutContraparte) || hay(f.razonContraparte);
+			q.getCriteria().createAlias(emitidos ? "empresaReceptora" : "empresaEmisora", "contraparte",
+					filtra ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN);
 			if (hay(f.rutContraparte))
 				q.getCriteria().add(Restrictions.like("contraparte.rut", f.rutContraparte.trim() + "%"));
 			if (hay(f.razonContraparte))
@@ -328,8 +352,23 @@ public abstract class Sobre extends Model<Sobre> {
 
 		long rowCount = q.findRowCount();
 
-		q.orderByDesc("fecha");
-		q.orderByDesc("id");
+		if (orden == null) {
+			q.getCriteria().addOrder(Order.desc("fecha"));
+			q.getCriteria().addOrder(Order.desc("id"));
+		} else if ("contraparte".equals(orden.campo))
+			orden.aplicar(q, "contraparte.razon");
+		else if ("comprobantes".equals(orden.campo)) {
+			// Como se ve en el panel ("eFactura A-123"): tipo, serie y numero del primer comprobante del sobre (en el orden en
+			// que se listan, ver CFE.findBySobres); los sobres sin comprobantes van al final en orden ascendente
+			String primero = " from cfe c where c." + (emitidos ? "sobreemitido_id" : "sobrerecibido_id")
+					+ " = {id} order by c.tipo, c.serie, c.nro limit 1)";
+			orden.aplicarSql(q, new String[] { "(select c.tipo" + primero, "(select c.serie" + primero, "(select c.nro" + primero },
+					"fecha");
+		}
+		else if ("id".equals(orden.campo))
+			orden.aplicar(q);
+		else
+			orden.aplicar(q, orden.campo);
 
 		return new Tuple<List<Sobre>, Long>(q.findPage(page, pageSize), rowCount);
 	}

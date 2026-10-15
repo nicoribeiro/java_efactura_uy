@@ -17,12 +17,14 @@ import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.sql.JoinType;
 
+import com.bluedot.efactura.commons.Orden;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.security.EmailMessage;
@@ -231,6 +233,19 @@ public class Empresa extends Model<Empresa>{
 	 */
 	public static Tuple<List<Empresa>, Long> find(String texto, Boolean emisorElectronico, boolean soloConFirma,
 			java.util.Collection<String> ruts, int page, int pageSize) {
+		return find(texto, emisorElectronico, soloConFirma, ruts, page, pageSize, null);
+	}
+
+	/** Campos por los que se puede ordenar el listado (firma = vencimiento de la firma digital) */
+	public static final String[] ORDENES = { "rut", "razon", "nombreComercial", "emisorElectronico", "firma", "mailRecepcion",
+			"hostRecepcion" };
+
+	/**
+	 * @param orden
+	 *            uno de {@link #ORDENES}; null = por rut
+	 */
+	public static Tuple<List<Empresa>, Long> find(String texto, Boolean emisorElectronico, boolean soloConFirma,
+			java.util.Collection<String> ruts, int page, int pageSize, Orden orden) {
 		if (ruts != null && ruts.isEmpty())
 			return new Tuple<List<Empresa>, Long>(new java.util.LinkedList<Empresa>(), 0l);
 
@@ -248,12 +263,16 @@ public class Empresa extends Model<Empresa>{
 		if (emisorElectronico != null)
 			q.getCriteria().add(Restrictions.eq("emisorElectronico", emisorElectronico));
 
-		if (soloConFirma)
-			q.getCriteria().createAlias("firmaDigital", "firmaDigital", JoinType.INNER_JOIN);
+		boolean ordenFirma = orden != null && "firma".equals(orden.campo);
+		if (soloConFirma || ordenFirma)
+			q.getCriteria().createAlias("firmaDigital", "firmaDigital", soloConFirma ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN);
 
 		long rowCount = q.findRowCount();
 
-		q.orderByAsc("rut");
+		if (orden == null)
+			q.getCriteria().addOrder(Order.asc("rut"));
+		else
+			orden.aplicar(q, ordenFirma ? "firmaDigital.validaHasta" : orden.campo);
 
 		List<Empresa> list = q.findPage(page, pageSize);
 

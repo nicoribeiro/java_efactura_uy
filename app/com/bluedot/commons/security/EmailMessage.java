@@ -15,11 +15,13 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
+import com.bluedot.efactura.commons.Orden;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.Tuple;
@@ -117,6 +119,18 @@ public class EmailMessage extends Model<EmailMessage> {
 	 */
 	public static Tuple<List<EmailMessage>, Long> find(Empresa empresa, String texto, AttachmentEstado estado, Boolean conAdjuntos,
 			Date desde, Date hasta, int page, int pageSize) {
+		return find(empresa, texto, estado, conAdjuntos, desde, hasta, page, pageSize, null);
+	}
+
+	/** Campos por los que se puede ordenar el listado (from = remitente) */
+	public static final String[] ORDENES = { "id", "sentDate", "from", "subject" };
+
+	/**
+	 * @param orden
+	 *            uno de {@link #ORDENES}; null = del mas nuevo al mas viejo
+	 */
+	public static Tuple<List<EmailMessage>, Long> find(Empresa empresa, String texto, AttachmentEstado estado, Boolean conAdjuntos,
+			Date desde, Date hasta, int page, int pageSize, Orden orden) {
 		DefaultQuery<EmailMessage> q = (DefaultQuery<EmailMessage>) find.query();
 
 		q.getCriteria().add(Restrictions.eq("empresa", empresa));
@@ -148,8 +162,13 @@ public class EmailMessage extends Model<EmailMessage> {
 
 		long rowCount = q.findRowCount();
 
-		q.orderByDesc("sentDate");
-		q.orderByDesc("id");
+		if (orden == null) {
+			q.getCriteria().addOrder(Order.desc("sentDate"));
+			q.getCriteria().addOrder(Order.desc("id"));
+		} else if ("id".equals(orden.campo))
+			orden.aplicar(q);
+		else
+			orden.aplicar(q, "from".equals(orden.campo) ? "fromEmail" : orden.campo);
 
 		return new Tuple<List<EmailMessage>, Long>(q.findPage(page, pageSize), rowCount);
 	}

@@ -1,5 +1,6 @@
 package com.bluedot.efactura.model;
 
+import com.bluedot.efactura.commons.Orden;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.utils.Tuple;
@@ -18,6 +19,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.Type;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
@@ -437,6 +439,17 @@ public class CFE extends Model<CFE>{
 	 *            estado de la respuesta de DGI: AE, BE, CE, o "SIN" para los que no tienen respuesta; null = todos
 	 */
 	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, String rutReceptor, String razonReceptor, TipoDoc tipo, String serie, Integer nro, String estado, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion) {
+		return find(empresaEmisora, empresaReceptora, rutReceptor, razonReceptor, tipo, serie, nro, estado, desdeFechaEmision, hastaFechaEmision, page, pageSize, direccion, null);
+	}
+
+	/** Campos por los que se puede ordenar el listado (ver {@link #find}) */
+	public static final String[] ORDENES = { "tipo", "serieNro", "fechaEmision", "contraparte", "moneda", "totMntTotal", "estado" };
+
+	/**
+	 * @param orden
+	 *            uno de {@link #ORDENES}; null = por fecha de emision, del mas nuevo al mas viejo
+	 */
+	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, String rutReceptor, String razonReceptor, TipoDoc tipo, String serie, Integer nro, String estado, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion, Orden orden) {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
 
 		if (estado != null && !estado.trim().isEmpty()) {
@@ -478,7 +491,8 @@ public class CFE extends Model<CFE>{
 		 * crea una sola vez: crearlo dos veces (filtrando por RUT y razon) daba error.
 		 */
 		boolean recibidos = direccion == DireccionDocumento.RECIBIDO;
-		if (rutReceptor != null || razonReceptor != null)
+		boolean ordenContraparte = orden != null && "contraparte".equals(orden.campo);
+		if (rutReceptor != null || razonReceptor != null || ordenContraparte)
 			q.getCriteria().createAlias(recibidos ? "empresaEmisora" : "empresaReceptora", "rutEmisor", JoinType.LEFT_OUTER_JOIN);
 
 		if (rutReceptor != null) {
@@ -513,9 +527,21 @@ public class CFE extends Model<CFE>{
 
 		long rowCount = q.findRowCount();
 
-		//Sort by fechaEmision by default
-		q.orderByDesc("fechaEmision");
-		q.orderByDesc("tipo");
+		if (orden == null) {
+			// Por defecto: por fecha de emision, del mas nuevo al mas viejo
+			q.getCriteria().addOrder(Order.desc("fechaEmision"));
+			q.getCriteria().addOrder(Order.desc("tipo"));
+		} else
+			switch (orden.campo) {
+			case "serieNro":
+				orden.aplicar(q, "serie", "nro");
+				break;
+			case "contraparte":
+				orden.aplicar(q, "rutEmisor.razon");
+				break;
+			default:
+				orden.aplicar(q, orden.campo);
+			}
 
 		List<CFE> list = page > 0 && pageSize > 0 ? q.findPage(page, pageSize) : q.findList();
 

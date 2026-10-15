@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.commons.Orden;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -79,7 +80,8 @@ public class ProcesosController extends AbstractController {
 		} catch (NumberFormatException e) {
 			throw APIException.raise(com.bluedot.commons.error.APIException.APIErrors.BAD_PARAMETER_VALUE).withParams("page/pageSize");
 		}
-		com.bluedot.commons.utils.Tuple<java.util.List<EjecucionProceso>, Long> ejecuciones = EjecucionProceso.findByProceso(nombre, page, pageSize);
+		com.bluedot.commons.utils.Tuple<java.util.List<EjecucionProceso>, Long> ejecuciones = EjecucionProceso.findByProceso(nombre, page, pageSize,
+				Orden.leer(request(), EjecucionProceso.ORDENES));
 		JSONArray lista = new JSONArray();
 		for (EjecucionProceso e : ejecuciones.item1) {
 			JSONObject json = new JSONObject();

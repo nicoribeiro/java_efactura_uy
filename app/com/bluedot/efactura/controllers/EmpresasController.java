@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.commons.Orden;
 import com.bluedot.efactura.security.AccesoEmpresa;
 import com.bluedot.efactura.security.EmpresaAccess;
 
@@ -228,7 +229,8 @@ public class EmpresasController extends AbstractController {
 			}
 		}
 
-		Tuple<List<Empresa>, Long> empresas = Empresa.find(texto, emisorElectronico, conFirma, ruts, page, pageSize);
+		Tuple<List<Empresa>, Long> empresas = Empresa.find(texto, emisorElectronico, conFirma, ruts, page, pageSize,
+				Orden.leer(request(), Empresa.ORDENES));
 
 		JSONArray json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresas.item1);
 

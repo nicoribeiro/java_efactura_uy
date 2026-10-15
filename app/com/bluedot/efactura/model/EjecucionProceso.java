@@ -1,5 +1,6 @@
 package com.bluedot.efactura.model;
 
+import com.bluedot.efactura.commons.Orden;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -12,6 +13,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,13 +100,27 @@ public class EjecucionProceso extends Model<EjecucionProceso> {
 		}
 	}
 
+	/** Campos por los que se pueden ordenar las ejecuciones (ok = resultado) */
+	public static final String[] ORDENES = { "inicio", "ok", "origen", "resumen" };
+
 	/** Ejecuciones de un proceso, de la mas nueva a la mas vieja, paginadas; con el total */
 	public static Tuple<java.util.List<EjecucionProceso>, Long> findByProceso(String proceso, int page, int pageSize) {
+		return findByProceso(proceso, page, pageSize, null);
+	}
+
+	/**
+	 * @param orden
+	 *            uno de {@link #ORDENES}; null = de la mas nueva a la mas vieja
+	 */
+	public static Tuple<java.util.List<EjecucionProceso>, Long> findByProceso(String proceso, int page, int pageSize, Orden orden) {
 		DefaultQuery<EjecucionProceso> q = (DefaultQuery<EjecucionProceso>) find.query();
 		q.getCriteria().add(Restrictions.eq("proceso", proceso));
 		long total = q.findRowCount();
-		q.orderByDesc("inicio");
-		q.orderByDesc("id");
+		if (orden == null) {
+			q.getCriteria().addOrder(Order.desc("inicio"));
+			q.getCriteria().addOrder(Order.desc("id"));
+		} else
+			orden.aplicar(q, orden.campo);
 		return new Tuple<java.util.List<EjecucionProceso>, Long>(q.findPage(page, pageSize), total);
 	}
 

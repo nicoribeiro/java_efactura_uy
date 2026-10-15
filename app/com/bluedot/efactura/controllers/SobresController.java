@@ -1,5 +1,6 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.commons.Orden;
 import com.bluedot.efactura.security.AccesoEmpresa;
 import com.bluedot.efactura.security.EmpresaAccess;
 
@@ -479,7 +480,8 @@ public class SobresController extends AbstractController {
 		filtros.rutContraparte = request().getQueryString("rutContraparte");
 		filtros.razonContraparte = request().getQueryString("razonContraparte");
 
-		Tuple<List<Sobre>, Long> sobres = Sobre.findByEmpresa(empresa, direccion, filtros, fromDate, toDate, page, pageSize);
+		Orden orden = Orden.leer(request(), direccion == DireccionDocumento.EMITIDO ? Sobre.ORDENES_EMITIDOS : Sobre.ORDENES_RECIBIDOS);
+		Tuple<List<Sobre>, Long> sobres = Sobre.findByEmpresa(empresa, direccion, filtros, fromDate, toDate, page, pageSize, orden);
 
 		// Comprobantes de todos los sobres de la pagina en una sola consulta
 		List<Long> ids = new LinkedList<Long>();

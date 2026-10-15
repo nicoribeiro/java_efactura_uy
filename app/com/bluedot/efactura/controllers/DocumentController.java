@@ -1,6 +1,7 @@
 package com.bluedot.efactura.controllers;
 
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
+import com.bluedot.efactura.commons.Orden;
 import com.bluedot.efactura.microControllers.implementation.ServiceMicroControllerDefault;
 import com.bluedot.efactura.model.EnvioMail;
 import com.bluedot.efactura.model.SobreEmitido;
@@ -821,12 +822,14 @@ public class DocumentController extends AbstractController {
 			if (estadoFiltro != null && !estadoFiltro.trim().isEmpty() && !estadoFiltro.trim().matches("(?i)AE|BE|CE|SIN"))
 				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("estado", estadoFiltro);
 			
+			Orden orden = Orden.leer(request(), CFE.ORDENES);
+
 			Tuple<List<CFE>, Long> cfes;
 			
 			if (direccion == DireccionDocumento.EMITIDO)
-				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion, orden);
 			else
-				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion);
+				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion, orden);
 			
 			JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
 			
