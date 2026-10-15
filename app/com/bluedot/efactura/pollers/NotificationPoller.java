@@ -33,7 +33,7 @@ public class NotificationPoller extends PollerRunner {
 		
 		logger.info("Buscando Empresas ...");
 
-		// Solo las empresas que emiten con el sistema (con firma digital o CAEs), no todas las registradas
+		// Solo las empresas que emiten con el sistema (con firma digital o CAEs) y no estan dadas de baja
 		List<Empresa> empresas = Empresa.findConFirmaDigitalOCAEs();
 
 		logger.info(empresas.size() + " empresas con firma digital o CAEs");
@@ -45,6 +45,9 @@ public class NotificationPoller extends PollerRunner {
 			try {
 				if (empresa.getFirmaDigital() != null)
 					checkFechaVencimientoFirma(empresa);
+			} catch (IllegalStateException e) {
+				logger.error(e.getMessage());
+				errores++;
 			} catch (RuntimeException e) {
 				logger.error("Error chequeando vencimiento de firma de la empresa " + empresa.getRut(), e);
 				errores++;
@@ -52,6 +55,9 @@ public class NotificationPoller extends PollerRunner {
 			try {
 				if (empresa.getCaes() != null && !empresa.getCaes().isEmpty())
 					checkCAEs(empresa);
+			} catch (IllegalStateException e) {
+				logger.error(e.getMessage());
+				errores++;
 			} catch (APIException | RuntimeException e) {
 				logger.error("Error chequeando CAEs de la empresa " + empresa.getRut(), e);
 				errores++;
@@ -96,13 +102,47 @@ public class NotificationPoller extends PollerRunner {
 	 * @param body
 	 */
 	private void sendMail(Empresa empresa, String subject, String body) {
-		new MessagingHelper()
+		String falta = faltaConfiguracionCorreo(empresa);
+		if (falta != null)
+			throw new IllegalStateException("No se puede avisar \"" + subject + "\" a la empresa " + empresa.getRut()
+					+ ": falta configuración de correo (" + falta + ")");
+		boolean enviado = new MessagingHelper()
 				.withCustomConfig(empresa.getFromEnvio(), empresa.getHostRecepcion(),
 						Integer.parseInt(empresa.getPuertoRecepcion()), empresa.getUserRecepcion(),
 						empresa.getPassRecepcion())
 				.sendEmail(empresa.getMailNotificaciones(), body, null, subject, false);
-		// Despues del envio: si falla no cuenta como aviso enviado
+		// Solo cuenta como aviso enviado si el mail salio (sendEmail deja el detalle del error en el log)
+		if (!enviado)
+			throw new IllegalStateException("No se pudo enviar el aviso \"" + subject + "\" a la empresa " + empresa.getRut());
 		avisos.put(new org.json.JSONObject().put("rut", empresa.getRut()).put("asunto", subject).put("para", String.valueOf(empresa.getMailNotificaciones())));
+	}
+
+	/** Los datos de correo que le faltan a la empresa para mandar un aviso, o null si estan todos */
+	static String faltaConfiguracionCorreo(Empresa empresa) {
+		java.util.List<String> faltan = new java.util.ArrayList<String>();
+		if (vacio(empresa.getHostRecepcion()))
+			faltan.add("host");
+		if (vacio(empresa.getPuertoRecepcion()))
+			faltan.add("puerto");
+		else
+			try {
+				Integer.parseInt(empresa.getPuertoRecepcion().trim());
+			} catch (NumberFormatException e) {
+				faltan.add("puerto válido");
+			}
+		if (vacio(empresa.getUserRecepcion()))
+			faltan.add("usuario");
+		if (vacio(empresa.getPassRecepcion()))
+			faltan.add("contraseña");
+		if (vacio(empresa.getFromEnvio()))
+			faltan.add("remitente");
+		if (vacio(empresa.getMailNotificaciones()))
+			faltan.add("mail de notificaciones");
+		return faltan.isEmpty() ? null : String.join(", ", faltan);
+	}
+
+	private static boolean vacio(String s) {
+		return s == null || s.trim().isEmpty();
 	}
 
 	private void checkCAEs(Empresa empresa) throws APIException {

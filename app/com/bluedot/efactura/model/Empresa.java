@@ -107,6 +107,12 @@ public class Empresa extends Model<Empresa>{
 	 * automaticamente (solo a mano), null = el valor por defecto de la configuracion (RespuestaCFE.diasPorDefecto).
 	 */
 	private Integer diasRespuestaCfe;
+
+	/**
+	 * false = empresa dada de baja (ej. cerro): los pollers (notificaciones, emails entrantes, reporte diario) no la
+	 * procesan. null = activa (las empresas de antes de este campo)
+	 */
+	private Boolean activa;
 	
 	@ApiModelProperty(hidden = true)
 	@Lob
@@ -189,7 +195,10 @@ public class Empresa extends Model<Empresa>{
 
 	public static List<Empresa> findEmpresasConMail()
 	{
-		return find.query().isNotNull("hostRecepcion").findList();
+		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
+		q.getCriteria().add(Restrictions.isNotNull("hostRecepcion"));
+		q.getCriteria().add(activas());
+		return q.findList();
 	}
 	
 	
@@ -251,9 +260,15 @@ public class Empresa extends Model<Empresa>{
 		return new Tuple<List<Empresa>, Long>(list, rowCount);
 	}
 
+	/** Las que no estan dadas de baja (activa null o true) */
+	private static org.hibernate.criterion.Criterion activas() {
+		return Restrictions.or(Restrictions.isNull("activa"), Restrictions.eq("activa", true));
+	}
+
 	/**
-	 * Empresas que tienen firma digital o CAEs cargados, es decir las que emiten con este sistema. Evita recorrer
-	 * todas las empresas (la tabla incluye la lista de emisores electronicos de DGI, decenas de miles).
+	 * Empresas que tienen firma digital o CAEs cargados, es decir las que emiten con este sistema, salvo las dadas de
+	 * baja. Evita recorrer todas las empresas (la tabla incluye la lista de emisores electronicos de DGI, decenas de
+	 * miles).
 	 */
 	public static List<Empresa> findConFirmaDigitalOCAEs() {
 		DetachedCriteria conFirmaDigital = DetachedCriteria.forClass(FirmaDigital.class, "firma")
@@ -263,6 +278,7 @@ public class Empresa extends Model<Empresa>{
 
 		DefaultQuery<Empresa> q = (DefaultQuery<Empresa>) find.query();
 		q.getCriteria().add(Restrictions.or(Subqueries.propertyIn("id", conFirmaDigital), Subqueries.propertyIn("id", conCAEs)));
+		q.getCriteria().add(activas());
 
 		return q.findList();
 	}
@@ -516,6 +532,14 @@ public class Empresa extends Model<Empresa>{
 
 	public void setDiasRespuestaCfe(Integer diasRespuestaCfe) {
 		this.diasRespuestaCfe = diasRespuestaCfe;
+	}
+
+	public boolean isActiva() {
+		return activa == null || activa;
+	}
+
+	public void setActiva(boolean activa) {
+		this.activa = activa;
 	}
 
 	public void setOffsetMail(int offsetMail) {

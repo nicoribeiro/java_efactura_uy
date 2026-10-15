@@ -118,7 +118,7 @@ public class ReporteDiarioPoller extends PollerRunner {
 				new JSONObject().put("desde", desdeTexto).put("cantReportes", cantReportes).put("empresas", porEmpresa));
 	}
 
-	/** Las empresas de la configuracion, o todas las que tienen firma digital */
+	/** Las empresas de la configuracion, o todas las que tienen firma digital y no estan dadas de baja */
 	private List<Empresa> empresas(String rutsConfig) {
 		List<Empresa> empresas = new ArrayList<Empresa>();
 		if (rutsConfig != null && !rutsConfig.trim().isEmpty()) {
@@ -131,6 +131,10 @@ public class ReporteDiarioPoller extends PollerRunner {
 			}
 			return empresas;
 		}
-		return Empresa.find(null, null, true, null, 1, 1000).item1;
+		// Sin las dadas de baja
+		for (Empresa empresa : Empresa.find(null, null, true, null, 1, 1000).item1)
+			if (empresa.isActiva())
+				empresas.add(empresa);
+		return empresas;
 	}
 }

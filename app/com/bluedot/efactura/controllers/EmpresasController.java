@@ -417,6 +417,17 @@ public class EmpresasController extends AbstractController {
 			empresa.setFromEnvio(texto(empresaJson, "fromEnvio"));
 			cambios.add("fromEnvio");
 		}
+		// Dada de baja (activa=false): los pollers no la procesan
+		if (empresaJson.has("activa")) {
+			JsonNode valor = empresaJson.get("activa");
+			if (valor == null || !valor.isBoolean())
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("activa", String.valueOf(valor))
+						.setDetailMessage("activa tiene que ser true o false");
+			if (valor.asBoolean() != empresa.isActiva()) {
+				empresa.setActiva(valor.asBoolean());
+				cambios.add("activa");
+			}
+		}
 		// Dias de espera de la respuesta a los CFE recibidos (ME_): null = el de la configuracion, -1 = nunca automaticamente
 		if (empresaJson.has("diasRespuestaCfe")) {
 			Integer dias = null;
