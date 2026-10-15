@@ -86,7 +86,7 @@ public class ItemDetFactWrapper implements ItemInterface {
 
 	@Override
 	public BigDecimal getDescuentoPct() {
-		return delegate.getDescuentoMonto();
+		return delegate.getDescuentoPct();
 	}
 
 	@Override
