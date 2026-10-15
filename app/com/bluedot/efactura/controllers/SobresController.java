@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
+
+import dgi.classes.respuestas.cfe.EstadoACKCFEType;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -28,6 +30,7 @@ import com.bluedot.efactura.microControllers.factory.EfacturaMicroControllersFac
 import com.bluedot.commons.utils.JSONUtils;
 import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.model.CFE;
+import com.bluedot.commons.security.User;
 import com.bluedot.efactura.model.DireccionDocumento;
 import com.bluedot.efactura.model.Empresa;
 import com.bluedot.efactura.model.Sobre;
@@ -164,6 +167,61 @@ public class SobresController extends AbstractController {
 		if (!(sobre instanceof SobreRecibido) || sobre.getEmpresaReceptora() == null || sobre.getEmpresaReceptora().getId() != empresa.getId())
 			throw APIException.raise(APIErrors.SOBRE_NO_ENCONTRADO).withParams("id", id);
 		return (SobreRecibido) sobre;
+	}
+
+	/**
+	 * Marca como rechazadas con E02 las copias de CFE recibidos repetidos (mismo emisor, tipo, serie y numero recibido en
+	 * varios sobres, ej. UTE que reenvia el sobre mientras espera la respuesta a los CFE): queda aceptada la primera copia
+	 * aceptada y las demas aceptadas pasan a BE con motivo E02, como con RecepcionCFE.control.E02 = enforce. No borra nada
+	 * ni manda mails; la respuesta a los CFE que este pendiente las rechaza con E02. Solo ADMIN.
+	 *
+	 * Query: guardar=1 para guardar; si no, solo informa que copias marcaria.
+	 */
+	public Promise<Result> marcarDuplicadosRecibidos(String rut, int guardar) throws APIException {
+		User usuario = PermissionValidator.getSessionUser(ctx());
+		AccesoEmpresa.verificarAdmin(usuario, "POST /empresa/" + rut + "/sobres/recibidos/marcarDuplicados", true);
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		SimpleDateFormat dia = new SimpleDateFormat("dd/MM/yyyy");
+
+		JSONArray copias = new JSONArray();
+		List<String> resumen = new LinkedList<String>();
+		String grupo = null;
+		CFE original = null;
+		for (CFE cfe : CFE.findRecibidosParaDuplicados(empresa)) {
+			// Vienen ordenados por emisor, tipo, serie, numero y fecha de recepcion: las copias de un CFE quedan juntas
+			String clave = (cfe.getEmpresaEmisora() != null ? cfe.getEmpresaEmisora().getId() : 0) + "|" + cfe.getTipo() + "|" + cfe.getSerie() + "|"
+					+ cfe.getNro();
+			if (!clave.equals(grupo)) {
+				grupo = clave;
+				original = null;
+			}
+			if (cfe.getEstado() != EstadoACKCFEType.AE)
+				continue;
+			// La primera copia aceptada queda como original
+			if (original == null) {
+				original = cfe;
+				continue;
+			}
+			String detalle = "ya se había recibido y aceptado: id " + original.getId()
+					+ (original.getSobreRecibido().getFecha() != null ? " (sobre del " + dia.format(original.getSobreRecibido().getFecha()) + ")" : "");
+			copias.put(new JSONObject().put("id", cfe.getId()).put("emisor", cfe.getEmpresaEmisora().getRut()).put("tipo", cfe.getTipo().name())
+					.put("serie", cfe.getSerie()).put("nro", cfe.getNro()).put("sobre", cfe.getSobreRecibido().getId())
+					.put("original", original.getId()).put("detalle", detalle));
+			resumen.add(cfe.getSerie() + "-" + cfe.getNro() + " id " + cfe.getId() + " (original " + original.getId() + ")");
+			if (guardar == 1) {
+				cfe.setEstado(EstadoACKCFEType.BE);
+				if (!cfe.getMotivo().contains(MotivoRechazoCFE.E02))
+					cfe.getMotivo().add(MotivoRechazoCFE.E02);
+				ControlesRecepcion.observar(cfe, "E02 (copia marcada)", detalle);
+				cfe.update();
+			}
+		}
+
+		if (guardar == 1)
+			auditoria.info(usuario.getEmailAddress() + " marcó con E02 " + copias.length() + " copia(s) de CFE recibidos repetidos de la empresa "
+					+ rut + (resumen.isEmpty() ? "" : ": " + String.join(", ", resumen)));
+
+		return json(new JSONObject().put("guardado", guardar == 1).put("cantidad", copias.length()).put("copias", copias).toString());
 	}
 
 	/**

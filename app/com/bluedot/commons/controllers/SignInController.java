@@ -14,6 +14,7 @@ import com.bluedot.commons.microControllers.factory.MicroControllerFactoryDefaul
 import com.bluedot.commons.microControllers.factory.MicroControllersFactory;
 import com.bluedot.commons.microControllers.interfaces.AccountMicroController.SignUpConfigurator;
 import com.bluedot.commons.security.Address;
+import com.bluedot.commons.security.LimiteIntentosLogin;
 import com.bluedot.commons.security.Session;
 import com.bluedot.commons.security.User;
 import com.bluedot.commons.security.User.Role;
@@ -42,7 +43,25 @@ public class SignInController extends AbstractController
 		JsonNode json = request().body().asJson();
 		String emailAddress = json.findPath("emailAddress").textValue();
 		String password = json.findPath("password").textValue();
-		
+
+		// Limite de intentos fallidos por usuario y por IP (ver LimiteIntentosLogin): antes de verificar la contrasena
+		LimiteIntentosLogin limite = LimiteIntentosLogin.instancia();
+		LimiteIntentosLogin.Modo modoLimite = LimiteIntentosLogin.modo();
+		String ip = ipCliente();
+		long ahora = System.currentTimeMillis();
+		if (modoLimite != LimiteIntentosLogin.Modo.OFF) {
+			int minutos = limite.minutosBloqueado(emailAddress, ip, ahora,
+					LimiteIntentosLogin.config("seguridad.signin.intentosPorUsuario", 5),
+					LimiteIntentosLogin.config("seguridad.signin.intentosPorIp", 20),
+					LimiteIntentosLogin.config("seguridad.signin.ventanaMinutos", 15));
+			if (minutos > 0) {
+				logger.warn((modoLimite == LimiteIntentosLogin.Modo.ENFORCE ? "LOGIN BLOQUEADO" : "LOGIN SERIA BLOQUEADO") + ": usuario "
+						+ emailAddress + " desde " + ip + " (demasiados intentos fallidos, " + minutos + " min)");
+				if (modoLimite == LimiteIntentosLogin.Modo.ENFORCE)
+					throw APIException.raise(APIErrors.DEMASIADOS_INTENTOS).withParams(minutos);
+			}
+		}
+
 		User user = null;
 		
 		/*
@@ -71,6 +90,11 @@ public class SignInController extends AbstractController
 		{
 			user = User.findByEmailAddressAndPassword(emailAddress, password);
 		}
+
+		if (user == null)
+			limite.registrarFalla(emailAddress, ip, ahora);
+		else
+			limite.registrarExito(emailAddress);
 
 		if (user != null && !user.isActivo())
 		{
@@ -113,6 +137,19 @@ public class SignInController extends AbstractController
 	@BodyParser.Of(BodyParser.Json.class)
 	@ValidateJsonPost(fields = { "firstName", "lastName", "emailAddress", "password" })
 	@Tx
+	/**
+	 * IP del cliente para el limite de intentos: si viene por el proxy del panel, la ultima de X-Forwarded-For (la que
+	 * agrega el proxy; las anteriores las puede mandar cualquiera); si no, la de la conexion
+	 */
+	private String ipCliente() {
+		String reenviado = request().getHeader(RequestUtils.FORWARD_HEADER);
+		if (reenviado != null && !reenviado.trim().isEmpty()) {
+			String[] ips = reenviado.split(",");
+			return ips[ips.length - 1].trim();
+		}
+		return request().remoteAddress();
+	}
+
 	public  Promise<Result> signUp() throws APIException
 	{
 		/*

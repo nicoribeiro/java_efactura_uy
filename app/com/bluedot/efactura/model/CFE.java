@@ -563,6 +563,23 @@ public class CFE extends Model<CFE>{
 	}
 
 	/**
+	 * Comprobantes recibidos por la empresa ordenados por emisor, tipo, serie y numero y, dentro de cada uno, por cuando
+	 * se recibio el sobre: las copias de un mismo CFE quedan juntas y primero la que llego primero (ver marcar duplicados)
+	 */
+	public static List<CFE> findRecibidosParaDuplicados(Empresa empresaReceptora) {
+		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+		q.getCriteria().add(Restrictions.eq("empresaReceptora", empresaReceptora));
+		q.getCriteria().createAlias("sobreRecibido", "sobreDup", JoinType.INNER_JOIN);
+		q.getCriteria().addOrder(Order.asc("empresaEmisora"));
+		q.getCriteria().addOrder(Order.asc("tipo"));
+		q.getCriteria().addOrder(Order.asc("serie"));
+		q.getCriteria().addOrder(Order.asc("nro"));
+		q.getCriteria().addOrder(Order.asc("sobreDup.timestampRecibido"));
+		q.getCriteria().addOrder(Order.asc("id"));
+		return q.findList();
+	}
+
+	/**
 	 * Comprobantes de varios sobres (emitidos o recibidos) en una sola consulta, para listar sobres con sus comprobantes
 	 */
 	public static List<CFE> findBySobres(List<Long> idsSobres, DireccionDocumento direccion) {

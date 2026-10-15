@@ -133,7 +133,9 @@ public class APIException extends Throwable
 		SOLO_ADMIN(129, 403, false),
 		REPORTE_DIARIO_EN_CURSO(130, 200, true),
 		/** La consulta de RUT a DGI respondio con un error de negocio (ej: nunca tuvo actividad, cancelada) */
-		RUT_DGI(131, 200, true)
+		RUT_DGI(131, 200, true),
+		/** Demasiados intentos fallidos de login (ver LimiteIntentosLogin): 429, sin verificar la contrasena */
+		DEMASIADOS_INTENTOS(132, 429, false)
 		;
 
 
