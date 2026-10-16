@@ -118,14 +118,16 @@ public class RecepcionServiceImpl implements RecepcionService {
 			break;
 		case eFactura_Exportacion:
 		case eFactura_Exportacion_Contingencia:
-		case eRemito:
-		case eRemito_Contingencia:
-		case eRemito_de_Exportacion:
-		case eRemito_de_Exportacion_Contingencia:
 		case Nota_de_Debito_de_eFactura_Exportacion:
 		case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
 		case Nota_de_Credito_de_eFactura_Exportacion:
 		case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
+			cfeDefType.setEFactExp(cfe.getEfacturaExportacion());
+			break;
+		case eRemito:
+		case eRemito_Contingencia:
+		case eRemito_de_Exportacion:
+		case eRemito_de_Exportacion_Contingencia:
 			throw APIException.raise(APIErrors.NOT_SUPPORTED)
 					.setDetailMessage("Envio de CFE a DGI de tipo " + cfe.getTipo().value);
 		}

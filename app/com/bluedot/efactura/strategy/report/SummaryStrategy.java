@@ -29,6 +29,8 @@ import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
 import dgi.classes.recepcion.TipMonType;
+import dgi.classes.reporte.MontosFExp;
+import dgi.classes.reporte.MontosFExp.MntsFExpItem;
 import dgi.classes.reporte.MontosFyT;
 import dgi.classes.reporte.MontosFyT.MntsFyTItem;
 import dgi.classes.reporte.MontosRes;
@@ -143,13 +145,29 @@ public interface SummaryStrategy {
 						ReporteDefType.RsmnFacCtaAjContNotaDebito::setTipoComp, ReporteDefType.RsmnFacCtaAjContNotaDebito::setRsmnData,
 						ReporteDefType::setRsmnFacCtaAjContNotaDebito);
 
-			// Exportacion y remitos: todavia no se emiten (ver CFEStrategy)
-			case Nota_de_Credito_de_eFactura_Exportacion:
-			case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
-			case Nota_de_Debito_de_eFactura_Exportacion:
-			case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
+			// e-Factura de exportacion y sus notas (121-123, 221-223)
 			case eFactura_Exportacion:
+				return ResumenPorTipo.facExp(tipo, ReporteDefType.RsmnFacExp::new, ReporteDefType.RsmnFacExp::setTipoComp,
+						ReporteDefType.RsmnFacExp::setRsmnData, ReporteDefType::setRsmnFacExp);
+			case Nota_de_Credito_de_eFactura_Exportacion:
+				return ResumenPorTipo.facExp(tipo, ReporteDefType.RsmnFacExpNotaCredito::new, ReporteDefType.RsmnFacExpNotaCredito::setTipoComp,
+						ReporteDefType.RsmnFacExpNotaCredito::setRsmnData, ReporteDefType::setRsmnFacExpNotaCredito);
+			case Nota_de_Debito_de_eFactura_Exportacion:
+				return ResumenPorTipo.facExp(tipo, ReporteDefType.RsmnFacExpNotaDebito::new, ReporteDefType.RsmnFacExpNotaDebito::setTipoComp,
+						ReporteDefType.RsmnFacExpNotaDebito::setRsmnData, ReporteDefType::setRsmnFacExpNotaDebito);
 			case eFactura_Exportacion_Contingencia:
+				return ResumenPorTipo.facExpCont(tipo, ReporteDefType.RsmnFacExpCont::new, ReporteDefType.RsmnFacExpCont::setTipoComp,
+						ReporteDefType.RsmnFacExpCont::setRsmnData, ReporteDefType::setRsmnFacExpCont);
+			case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
+				return ResumenPorTipo.facExpCont(tipo, ReporteDefType.RsmnFacExpContNotaCredito::new,
+						ReporteDefType.RsmnFacExpContNotaCredito::setTipoComp, ReporteDefType.RsmnFacExpContNotaCredito::setRsmnData,
+						ReporteDefType::setRsmnFacExpContNotaCredito);
+			case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
+				return ResumenPorTipo.facExpCont(tipo, ReporteDefType.RsmnFacExpContNotaDebito::new,
+						ReporteDefType.RsmnFacExpContNotaDebito::setTipoComp, ReporteDefType.RsmnFacExpContNotaDebito::setRsmnData,
+						ReporteDefType::setRsmnFacExpContNotaDebito);
+
+			// Remitos: todavia no se emiten (ver CFEStrategy)
 			case eRemito:
 			case eRemito_Contingencia:
 			case eRemito_de_Exportacion:
@@ -408,6 +426,36 @@ public interface SummaryStrategy {
 			item.setTotMntRetenido(monto.totMntRetenido);
 			item.setTotMntTotal(monto.totMntTotal);
 			
+			return item;
+		} catch (DatatypeConfigurationException e) {
+			throw APIException.raise(e);
+		}
+	}
+
+	/** Montos de la e-Factura de exportacion y sus notas (Montos_FExp): solo exportacion y asimiladas y total */
+	static MontosFExp getMontosFExp(SummaryDatatype summary) throws APIException {
+		MontosFExp montos = new MontosFExp();
+		for (Iterator<String> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
+			String key = iterator.next();
+			montos.getMntsFExpItem().add(getMontosFExpItem(summary.montos.get(key)));
+		}
+
+		if (montos.getMntsFExpItem().size()==0)
+			return null;
+		return montos;
+	}
+
+	static MntsFExpItem getMontosFExpItem(Monto monto) throws APIException {
+		try {
+			MntsFExpItem item = new MntsFExpItem();
+
+			item.setCodSuc(monto.CodSuc);
+			XMLGregorianCalendar date = DatatypeFactory.newInstance()
+					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
+			item.setFecha(date);
+			item.setTotMntExpyAsim(monto.totMntExpyAsim);
+			item.setTotMntTotal(monto.totMntTotal);
+
 			return item;
 		} catch (DatatypeConfigurationException e) {
 			throw APIException.raise(e);

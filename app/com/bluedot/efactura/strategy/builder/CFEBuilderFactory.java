@@ -91,6 +91,7 @@ public class CFEBuilderFactory {
 			case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
 			case eFactura_Exportacion:
 			case eFactura_Exportacion_Contingencia:
+				return new CFEBuilderExportacion(caeMicroController, strategy);
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
 				throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage("No existe Builder para tipoDoc:" + tipoDoc.value);

@@ -16,6 +16,7 @@ import com.bluedot.efactura.strategy.numeracion.EstrategiaNumeracion;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
+import dgi.classes.recepcion.IdDocFactExp;
 import dgi.classes.recepcion.IdDocRem;
 import dgi.classes.recepcion.IdDocResg;
 import dgi.classes.recepcion.IdDocTck;
@@ -49,6 +50,15 @@ public interface CAEMicroController {
 	 * @throws IOException
 	 */
 	IdDocFact getIdDocFact(TipoDoc tipo, boolean montosIncluyenIva, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia)
+			throws APIException, DatatypeConfigurationException, IOException;
+
+	/**
+	 * Obtiene un nuevo identificador de e-Factura de Exportacion (y sus notas). ClauVenta, ModVenta y ViaTransp los
+	 * completa la estrategia. Sin MntBruto: la exportacion no lleva IVA.
+	 * 
+	 * @return IdDocFactExp
+	 */
+	IdDocFactExp getIdDocFactExp(TipoDoc tipo, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia)
 			throws APIException, DatatypeConfigurationException, IOException;
 
 	/**

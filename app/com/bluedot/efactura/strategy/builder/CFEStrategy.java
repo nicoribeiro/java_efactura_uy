@@ -98,12 +98,11 @@ public interface CFEStrategy {
 		
 				case Nota_de_Credito_de_eFactura_Exportacion:
 				case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
-	
 				case Nota_de_Debito_de_eFactura_Exportacion:
 				case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
-	
 				case eFactura_Exportacion:
 				case eFactura_Exportacion_Contingencia:
+					return new EFactExpStrategy(cfe, caeMicroController);
 				
 				case eRemito_de_Exportacion:
 				case eRemito_de_Exportacion_Contingencia:

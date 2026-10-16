@@ -164,6 +164,7 @@ public class DocumentController extends AbstractController {
 		switch (tipo) {
 		case eFactura:
 		case eTicket:
+		case eFactura_Exportacion:
 			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
 			break;
 		case eResguardo:
@@ -171,6 +172,8 @@ public class DocumentController extends AbstractController {
 		case Nota_de_Credito_de_eTicket:
 		case Nota_de_Debito_de_eFactura:
 		case Nota_de_Debito_de_eTicket:
+		case Nota_de_Credito_de_eFactura_Exportacion:
+		case Nota_de_Debito_de_eFactura_Exportacion:
 			if (!document.has("Referencia"))
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia");
 			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
@@ -187,7 +190,6 @@ public class DocumentController extends AbstractController {
 			break;
 		case eFactura_Contingencia:
 		case eFactura_Venta_por_Cuenta_Ajena_Contingencia:
-		case eFactura_Exportacion:
 		case eFactura_Exportacion_Contingencia:
 		case eRemito:
 		case eRemito_Contingencia:
@@ -195,13 +197,11 @@ public class DocumentController extends AbstractController {
 		case eRemito_de_Exportacion_Contingencia:
 		case eResguardo_Contingencia:
 		case Nota_de_Credito_de_eFactura_Contingencia:
-		case Nota_de_Credito_de_eFactura_Exportacion:
 		case Nota_de_Credito_de_eFactura_Exportacion_Contingencia:
 		case Nota_de_Credito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 		case Nota_de_Credito_de_eTicket_Contingencia:
 		case Nota_de_Credito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 		case Nota_de_Debito_de_eFactura_Contingencia:
-		case Nota_de_Debito_de_eFactura_Exportacion:
 		case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
 		case Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia:
 		case Nota_de_Debito_de_eTicket_Contingencia:

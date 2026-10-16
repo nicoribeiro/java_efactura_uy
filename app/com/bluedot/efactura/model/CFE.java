@@ -10,6 +10,7 @@ import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 import dgi.classes.recepcion.CFEDefType.EFact;
+import dgi.classes.recepcion.CFEDefType.EFactExp;
 import dgi.classes.recepcion.CFEDefType.ERem;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
@@ -195,6 +196,10 @@ public class CFE extends Model<CFE>{
 	@ApiModelProperty(hidden = true)
 	@Transient
 	private EFact efactura;
+
+	@ApiModelProperty(hidden = true)
+	@Transient
+	private EFactExp efacturaExportacion;
 
 	@ApiModelProperty(hidden = true)
 	@Transient
@@ -783,6 +788,14 @@ public class CFE extends Model<CFE>{
 
 	public void setEfactura(EFact efactura) {
 		this.efactura = efactura;
+	}
+
+	public EFactExp getEfacturaExportacion() {
+		return efacturaExportacion;
+	}
+
+	public void setEfacturaExportacion(EFactExp efacturaExportacion) {
+		this.efacturaExportacion = efacturaExportacion;
 	}
 
 	public ETck getEticket() {
