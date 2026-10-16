@@ -45,8 +45,9 @@ public class CFEEmpresasTypeSerializer<T> extends JSONSerializer<CFEEmpresasType
 
 		CFEEmpresasStrategy strategy = getStrategy(cfe);
 
+		// Sin estrategia (ej. e-Boleta de entrada) antes seguia y daba NullPointerException
 		if (strategy==null)
-			logger.info("No se pudo obtener Estrategia");
+			throw new JSONException("Tipo de CFE no soportado en la recepcion (no hay estrategia para serializarlo)");
 		
 		cfeJson.put("TmstFirma", strategy.getTimestampFirma(cfe));
 		
@@ -76,6 +77,12 @@ public class CFEEmpresasTypeSerializer<T> extends JSONSerializer<CFEEmpresasType
 		
 		if (cfe.getCFE().getETck()!=null)
 			return new ETckStrategy();
+		
+		if (cfe.getCFE().getEFactExp()!=null)
+			return new EFactExpStrategy();
+		
+		if (cfe.getCFE().getERemExp()!=null)
+			return new ERemExpStrategy();
 		
 		return null;
 	}

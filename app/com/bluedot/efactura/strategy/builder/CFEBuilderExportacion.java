@@ -15,13 +15,13 @@ import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.TipoDocumento;
 
-import dgi.classes.recepcion.ItemDetFactExp;
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.recepcion.wrappers.ItemInterface;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 
 /**
- * Builder de la e-Factura de Exportacion y sus notas (121-123, 221-223). Diferencias con la e-Factura (Formato CFE v25-2):
+ * Builder de la e-Factura de Exportacion y sus notas (121-123, 221-223); CFEBuilderRemitoExportacion lo extiende para el
+ * e-Remito de exportacion (124, 224). Diferencias con la e-Factura (Formato CFE v25-2):
  * <ul>
  * <li>Receptor extranjero (A-C60 a A-C70): no se exige RUC ni pais UY; nombre, direccion, ciudad, departamento y pais
  * son obligatorios salvo secreto profesional</li>
@@ -34,14 +34,14 @@ import dgi.classes.recepcion.wrappers.TotalesInterface;
 public class CFEBuilderExportacion extends CFEBuilderImpl implements CFEBuiderInterface {
 
 	/** Secreto profesional (A-C18) en el IdDoc: con el, los datos del receptor no son obligatorios */
-	private boolean secretoProfesional = false;
+	protected boolean secretoProfesional = false;
 
 	public CFEBuilderExportacion(CAEMicroController caeMicroController, CFEStrategy strategy) throws APIException {
 		super(caeMicroController, strategy);
 	}
 
-	private EFactExpStrategy getStrategy() {
-		return (EFactExpStrategy) strategy;
+	protected EstrategiaExportacion getStrategy() {
+		return (EstrategiaExportacion) strategy;
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class CFEBuilderExportacion extends CFEBuilderImpl implements CFEBuiderIn
 		secretoProfesional = idDocJson.has("SecProf") && !idDocJson.isNull("SecProf") && "1".equals(idDocJson.get("SecProf").toString().trim());
 	}
 
-	private static String texto(JSONObject json, String campo) {
+	protected static String texto(JSONObject json, String campo) {
 		if (!json.has(campo) || json.isNull(campo))
 			return null;
 		String valor = json.get(campo).toString().trim();
@@ -123,12 +123,16 @@ public class CFEBuilderExportacion extends CFEBuilderImpl implements CFEBuiderIn
 
 		super.buildDetalle(detalleJson, false);
 
-		// NCM (B-C7.1, posicion arancelaria): opcional, no esta en ItemInterface
-		List<ItemDetFactExp> items = getStrategy().getItemsExportacion();
-		for (int i = 0; i < detalleJson.length() && i < items.size(); i++) {
+		aplicarNCM(detalleJson);
+	}
+
+	/** NCM (B-C7.1, posicion arancelaria): opcional, no esta en ItemInterface */
+	protected void aplicarNCM(JSONArray detalleJson) {
+		int cantidad = strategy.getItem().size();
+		for (int i = 0; i < detalleJson.length() && i < cantidad; i++) {
 			String ncm = texto(detalleJson.getJSONObject(i), "NCM");
 			if (ncm != null)
-				items.get(i).setNCM(ncm);
+				getStrategy().setNCM(i, ncm);
 		}
 	}
 
@@ -138,36 +142,7 @@ public class CFEBuilderExportacion extends CFEBuilderImpl implements CFEBuiderIn
 
 		TotalesInterface totales = strategy.getTotales();
 
-		/*
-		 * Moneda (A-C110)
-		 */
-		TipMonType moneda;
-		try {
-			moneda = TipMonType.fromValue(totalesJson.getString("TpoMoneda"));
-		} catch (IllegalArgumentException e) {
-			moneda = null;
-		}
-		if (moneda == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TpoMoneda")
-					.setDetailMessage("El campo TpoMoneda no es ninguno de los conocidos, ver tabla de monedas.");
-
-		totales.setTpoMoneda(moneda);
-		strategy.getCFE().setMoneda(moneda);
-
-		/*
-		 * Tipo de cambio (A-C111): obligatorio si la moneda no es UYU
-		 */
-		if (moneda != TipMonType.UYU) {
-			if (!totalesJson.has("TpoCambio"))
-				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("totales.TpoCambio");
-			double tpoCambio = totalesJson.getDouble("TpoCambio");
-			if (tpoCambio <= 0)
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TpoCambio", tpoCambio)
-						.setDetailMessage("TpoCambio tiene que ser mayor que cero");
-			DecimalFormat df = new DecimalFormat("####0.000", DecimalFormatSymbols.getInstance(Locale.US));
-			totales.setTpoCambio(new BigDecimal(df.format(tpoCambio)));
-			strategy.getCFE().setTipoCambio(totales.getTpoCambio().doubleValue());
-		}
+		monedaYTipoDeCambio(totalesJson, totales);
 
 		/*
 		 * Cantidad de lineas (A-C126)
@@ -218,9 +193,47 @@ public class CFEBuilderExportacion extends CFEBuilderImpl implements CFEBuiderIn
 		 */
 		totales.setMntPagar(mntTotal.add(montoNF).setScale(2, BigDecimal.ROUND_HALF_UP));
 
+		montosSinIva(mntExpoyAsim, mntTotal);
+	}
+
+	/**
+	 * Moneda (A-C110) y tipo de cambio (A-C111, obligatorio si la moneda no es UYU), en los totales y en el CFE
+	 */
+	protected void monedaYTipoDeCambio(JSONObject totalesJson, TotalesInterface totales) throws APIException {
+		TipMonType moneda;
+		try {
+			moneda = TipMonType.fromValue(totalesJson.getString("TpoMoneda"));
+		} catch (IllegalArgumentException e) {
+			moneda = null;
+		}
+		if (moneda == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TpoMoneda")
+					.setDetailMessage("El campo TpoMoneda no es ninguno de los conocidos, ver tabla de monedas.");
+
+		totales.setTpoMoneda(moneda);
+		strategy.getCFE().setMoneda(moneda);
+
 		/*
-		 * En el CFE: los montos de IVA en cero (los usan el PDF, el reporte diario y los listados)
+		 * Tipo de cambio (A-C111): obligatorio si la moneda no es UYU
 		 */
+		if (moneda != TipMonType.UYU) {
+			if (!totalesJson.has("TpoCambio"))
+				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("totales.TpoCambio");
+			double tpoCambio = totalesJson.getDouble("TpoCambio");
+			if (tpoCambio <= 0)
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TpoCambio", tpoCambio)
+						.setDetailMessage("TpoCambio tiene que ser mayor que cero");
+			DecimalFormat df = new DecimalFormat("####0.000", DecimalFormatSymbols.getInstance(Locale.US));
+			totales.setTpoCambio(new BigDecimal(df.format(tpoCambio)));
+			strategy.getCFE().setTipoCambio(totales.getTpoCambio().doubleValue());
+		}
+	}
+
+	/**
+	 * En el CFE: exportacion y total, los montos de IVA y retenciones en cero (los usan el PDF, el reporte diario y los
+	 * listados)
+	 */
+	protected void montosSinIva(BigDecimal mntExpoyAsim, BigDecimal mntTotal) {
 		strategy.getCFE().setTotMntExpyAsim(mntExpoyAsim.doubleValue());
 		strategy.getCFE().setTotMntTotal(mntTotal.doubleValue());
 		strategy.getCFE().setTotMntNoGrv(0d);

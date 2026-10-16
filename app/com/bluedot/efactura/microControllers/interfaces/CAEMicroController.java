@@ -18,6 +18,7 @@ import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
 import dgi.classes.recepcion.IdDocFactExp;
 import dgi.classes.recepcion.IdDocRem;
+import dgi.classes.recepcion.IdDocRemExp;
 import dgi.classes.recepcion.IdDocResg;
 import dgi.classes.recepcion.IdDocTck;
 
@@ -83,6 +84,15 @@ public interface CAEMicroController {
 	 * @return
 	 */
 	IdDocRem getIdDocRem(TipoDoc tipo, Date fchEmis, EstrategiaNumeracion estrategia)
+			throws APIException, DatatypeConfigurationException, IOException;
+
+	/**
+	 * Obtiene un nuevo identificador de e-Remito de Exportacion. TipoTraslado, ModVenta, ViaTransp y los opcionales los
+	 * completa la estrategia (DatosIdDoc).
+	 * 
+	 * @return IdDocRemExp
+	 */
+	IdDocRemExp getIdDocRemExp(TipoDoc tipo, Date fchEmis, EstrategiaNumeracion estrategia)
 			throws APIException, DatatypeConfigurationException, IOException;
 	
 	void addCAE(CAE cae) throws APIException;

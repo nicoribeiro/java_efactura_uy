@@ -5,7 +5,6 @@ import java.util.List;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.TipoDoc;
@@ -106,9 +105,7 @@ public interface CFEStrategy {
 				
 				case eRemito_de_Exportacion:
 				case eRemito_de_Exportacion_Contingencia:
-				
-					throw APIException.raise(APIErrors.NOT_SUPPORTED)
-							.setDetailMessage("Estrategia para el tipo: " + tipoDoc.friendlyName);
+					return new ERemExpStrategy(cfe, caeMicroController);
 			}
 			return null;
 		}

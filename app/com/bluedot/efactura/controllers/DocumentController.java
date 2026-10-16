@@ -165,6 +165,7 @@ public class DocumentController extends AbstractController {
 		case eFactura:
 		case eTicket:
 		case eFactura_Exportacion:
+		case eRemito_de_Exportacion:
 			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
 			break;
 		case eResguardo:
@@ -193,7 +194,6 @@ public class DocumentController extends AbstractController {
 		case eFactura_Exportacion_Contingencia:
 		case eRemito:
 		case eRemito_Contingencia:
-		case eRemito_de_Exportacion:
 		case eRemito_de_Exportacion_Contingencia:
 		case eResguardo_Contingencia:
 		case Nota_de_Credito_de_eFactura_Contingencia:

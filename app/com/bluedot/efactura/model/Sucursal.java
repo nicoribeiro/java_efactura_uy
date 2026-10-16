@@ -73,6 +73,9 @@ public class Sucursal extends Model<Sucursal>{
 	}
 	
 	public static Sucursal findByCodigoSucursal(List<Sucursal> sucursales, int codigoSucursal){
+		// Empresa recien creada (ej. emisor de un CFE recibido que no estaba en la base): todavia sin lista de sucursales
+		if (sucursales == null)
+			return null;
 		for(Sucursal sucursal:sucursales) {
 			if (sucursal.getCodigoSucursal()!=null && sucursal.getCodigoSucursal()==codigoSucursal)
 				return sucursal;

@@ -42,6 +42,15 @@ public class CFEBuilderFactory {
 		if (cfe.getCFE().getETck()!=null)
 			tipoDoc = TipoDoc.fromInt(cfe.getCFE().getETck().getEncabezado().getIdDoc().getTipoCFE().intValue());
 		
+		if (cfe.getCFE().getEFactExp()!=null)
+			tipoDoc = TipoDoc.fromInt(cfe.getCFE().getEFactExp().getEncabezado().getIdDoc().getTipoCFE().intValue());
+		
+		if (cfe.getCFE().getERemExp()!=null)
+			tipoDoc = TipoDoc.fromInt(cfe.getCFE().getERemExp().getEncabezado().getIdDoc().getTipoCFE().intValue());
+		
+		if (tipoDoc == null)
+			throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage("Tipo de CFE recibido no soportado (e-Boleta u otro)");
+		
 		CFEStrategy strategy = (new CFEStrategy.Builder()).withTipo(tipoDoc).build();
 		
 		return getInterface(tipoDoc, strategy, null);
@@ -94,7 +103,7 @@ public class CFEBuilderFactory {
 				return new CFEBuilderExportacion(caeMicroController, strategy);
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
-				throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage("No existe Builder para tipoDoc:" + tipoDoc.value);
+				return new CFEBuilderRemitoExportacion(caeMicroController, strategy);
 		}
 		
 		return null;

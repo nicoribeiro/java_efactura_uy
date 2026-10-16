@@ -18,7 +18,9 @@ import dgi.classes.entreEmpresas.CFEEmpresasType;
 import dgi.classes.entreEmpresas.EnvioCFEEntreEmpresas;
 import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.recepcion.ItemDetFact;
+import dgi.classes.recepcion.wrappers.TotalesFactExpWrapper;
 import dgi.classes.recepcion.wrappers.TotalesFactTickWrapper;
+import dgi.classes.recepcion.wrappers.TotalesRemExpWrapper;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 
 /**
@@ -26,7 +28,8 @@ import dgi.classes.recepcion.wrappers.TotalesInterface;
  * sirve para los emitidos pero no para los recibidos: no toma en cuenta descuentos, recargos, montos con IVA incluido ni
  * el redondeo del emisor. En los recibidos los montos se toman de los Totales del XML firmado por el emisor.
  *
- * Aplica a eFactura y eTicket y sus notas de credito y debito; los demas tipos quedan como los calcula el builder.
+ * Aplica a eFactura y eTicket y sus notas de credito y debito, a la e-Factura de exportacion y sus notas y al e-Remito de
+ * exportacion (en estos dos los montos de IVA quedan en cero); los demas tipos quedan como los calcula el builder.
  *
  * Tambien corrige los descuentos y recargos de las lineas de los CFE ya guardados (antes no se guardaban).
  */
@@ -34,7 +37,7 @@ public class MontosRecibidos {
 
 	final static Logger logger = LoggerFactory.getLogger(MontosRecibidos.class);
 
-	/** Totales del XML, o null si el tipo de CFE no es eFactura ni eTicket (o sus notas) */
+	/** Totales del XML, o null si el tipo de CFE no es eFactura, eTicket (o sus notas) ni de exportacion */
 	private static TotalesInterface totales(CFEDefType xml) {
 		if (xml == null)
 			return null;
@@ -42,6 +45,10 @@ public class MontosRecibidos {
 			return new TotalesFactTickWrapper(xml.getEFact().getEncabezado().getTotales());
 		if (xml.getETck() != null)
 			return new TotalesFactTickWrapper(xml.getETck().getEncabezado().getTotales());
+		if (xml.getEFactExp() != null)
+			return new TotalesFactExpWrapper(xml.getEFactExp().getEncabezado().getTotales());
+		if (xml.getERemExp() != null)
+			return new TotalesRemExpWrapper(xml.getERemExp().getEncabezado().getTotales());
 		return null;
 	}
 
@@ -152,6 +159,12 @@ public class MontosRecibidos {
 				cfe = sobre.getCFE(id.getNro().longValue(), id.getSerie(), TipoDoc.fromInt(id.getTipoCFE().intValue()));
 			} else if (xml.getETck() != null) {
 				dgi.classes.recepcion.IdDocTck id = xml.getETck().getEncabezado().getIdDoc();
+				cfe = sobre.getCFE(id.getNro().longValue(), id.getSerie(), TipoDoc.fromInt(id.getTipoCFE().intValue()));
+			} else if (xml.getEFactExp() != null) {
+				dgi.classes.recepcion.IdDocFactExp id = xml.getEFactExp().getEncabezado().getIdDoc();
+				cfe = sobre.getCFE(id.getNro().longValue(), id.getSerie(), TipoDoc.fromInt(id.getTipoCFE().intValue()));
+			} else if (xml.getERemExp() != null) {
+				dgi.classes.recepcion.IdDocRemExp id = xml.getERemExp().getEncabezado().getIdDoc();
 				cfe = sobre.getCFE(id.getNro().longValue(), id.getSerie(), TipoDoc.fromInt(id.getTipoCFE().intValue()));
 			}
 			if (cfe == null)

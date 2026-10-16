@@ -32,6 +32,8 @@ import dgi.classes.recepcion.TipMonType;
 import dgi.classes.reporte.MontosFExp;
 import dgi.classes.reporte.MontosFExp.MntsFExpItem;
 import dgi.classes.reporte.MontosFyT;
+import dgi.classes.reporte.MontosRemExp;
+import dgi.classes.reporte.MontosRemExp.MntsRemExpItem;
 import dgi.classes.reporte.MontosFyT.MntsFyTItem;
 import dgi.classes.reporte.MontosRes;
 import dgi.classes.reporte.MontosRes.MntsResItem;
@@ -167,11 +169,17 @@ public interface SummaryStrategy {
 						ReporteDefType.RsmnFacExpContNotaDebito::setTipoComp, ReporteDefType.RsmnFacExpContNotaDebito::setRsmnData,
 						ReporteDefType::setRsmnFacExpContNotaDebito);
 
-			// Remitos: todavia no se emiten (ver CFEStrategy)
+			// e-Remito de exportacion (124, 224)
+			case eRemito_de_Exportacion:
+				return ResumenPorTipo.remExp(tipo, ReporteDefType.RsmnRemExp::new, ReporteDefType.RsmnRemExp::setTipoComp,
+						ReporteDefType.RsmnRemExp::setRsmnData, ReporteDefType::setRsmnRemExp);
+			case eRemito_de_Exportacion_Contingencia:
+				return ResumenPorTipo.remExpCont(tipo, ReporteDefType.RsmnRemExpCont::new, ReporteDefType.RsmnRemExpCont::setTipoComp,
+						ReporteDefType.RsmnRemExpCont::setRsmnData, ReporteDefType::setRsmnRemExpCont);
+
+			// e-Remito: todavia no se emite (ver CFEStrategy)
 			case eRemito:
 			case eRemito_Contingencia:
-			case eRemito_de_Exportacion:
-			case eRemito_de_Exportacion_Contingencia:
 				return null;
 			default:
 				return null;
@@ -448,6 +456,36 @@ public interface SummaryStrategy {
 	static MntsFExpItem getMontosFExpItem(Monto monto) throws APIException {
 		try {
 			MntsFExpItem item = new MntsFExpItem();
+
+			item.setCodSuc(monto.CodSuc);
+			XMLGregorianCalendar date = DatatypeFactory.newInstance()
+					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
+			item.setFecha(date);
+			item.setTotMntExpyAsim(monto.totMntExpyAsim);
+			item.setTotMntTotal(monto.totMntTotal);
+
+			return item;
+		} catch (DatatypeConfigurationException e) {
+			throw APIException.raise(e);
+		}
+	}
+
+	/** Montos del e-Remito de exportacion (Montos_RemExp): exportacion y asimiladas y total, como Montos_FExp */
+	static MontosRemExp getMontosRemExp(SummaryDatatype summary) throws APIException {
+		MontosRemExp montos = new MontosRemExp();
+		for (Iterator<String> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
+			String key = iterator.next();
+			montos.getMntsRemExpItem().add(getMontosRemExpItem(summary.montos.get(key)));
+		}
+
+		if (montos.getMntsRemExpItem().size()==0)
+			return null;
+		return montos;
+	}
+
+	static MntsRemExpItem getMontosRemExpItem(Monto monto) throws APIException {
+		try {
+			MntsRemExpItem item = new MntsRemExpItem();
 
 			item.setCodSuc(monto.CodSuc);
 			XMLGregorianCalendar date = DatatypeFactory.newInstance()

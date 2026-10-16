@@ -16,6 +16,8 @@ import dgi.classes.reporte.RsmnDataFac;
 import dgi.classes.reporte.RsmnDataFacCont;
 import dgi.classes.reporte.RsmnDataFacExp;
 import dgi.classes.reporte.RsmnDataFacExpCont;
+import dgi.classes.reporte.RsmnDataRemExp;
+import dgi.classes.reporte.RsmnDataRemExpCont;
 import dgi.classes.reporte.RsmnDataTck;
 import dgi.classes.reporte.RsmnDataTckCont;
 
@@ -27,8 +29,8 @@ import dgi.classes.reporte.RsmnDataTckCont;
  * @param <S>
  *            seccion del reporte (ej. ReporteDefType.RsmnTckCtaAj)
  * @param <D>
- *            datos de la seccion (RsmnDataTck, RsmnDataTckCont, RsmnDataFac, RsmnDataFacCont, RsmnDataFacExp o
- *            RsmnDataFacExpCont)
+ *            datos de la seccion (RsmnDataTck, RsmnDataTckCont, RsmnDataFac, RsmnDataFacCont, RsmnDataFacExp,
+ *            RsmnDataFacExpCont, RsmnDataRemExp o RsmnDataRemExpCont)
  */
 public class ResumenPorTipo<S, D> implements SummaryStrategy {
 
@@ -129,6 +131,26 @@ public class ResumenPorTipo<S, D> implements SummaryStrategy {
 		return data;
 	}
 
+	/* e-Remito de exportacion: como la e-Factura de exportacion pero con Montos_RemExp */
+
+	static RsmnDataRemExp datosRemExp(SummaryDatatype summary) throws APIException {
+		RsmnDataRemExp data = new RsmnDataRemExp();
+		data.setCantDocsAnulados(new BigInteger(String.valueOf(summary.cantDocRechazados + summary.cantDocSinRespuesta)));
+		data.setCantDocsEmi(new BigInteger(String.valueOf(summary.cantDocEmitidos)));
+		data.setCantDocsUtil(new BigInteger(String.valueOf(summary.cantDocUtilizados)));
+		data.setRngDocsAnulados(summary.rngDocsAnulados);
+		data.setRngDocsUtil(summary.rngDocsUtil);
+		data.setMontos(SummaryStrategy.getMontosRemExp(summary));
+		return data;
+	}
+
+	static RsmnDataRemExpCont datosRemExpCont(SummaryDatatype summary) throws APIException {
+		RsmnDataRemExpCont data = new RsmnDataRemExpCont();
+		data.setCantCFCEmi(new BigInteger(String.valueOf(summary.cantDocEmitidos)));
+		data.setMontos(SummaryStrategy.getMontosRemExp(summary));
+		return data;
+	}
+
 	/* Una por familia, para que el Builder quede en una linea por tipo */
 
 	static <S> ResumenPorTipo<S, RsmnDataTck> tck(TipoDoc tipo, Supplier<S> seccion, BiConsumer<S, BigInteger> setTipoComp,
@@ -165,5 +187,17 @@ public class ResumenPorTipo<S, D> implements SummaryStrategy {
 			BiConsumer<S, RsmnDataFacExpCont> setDatos, BiConsumer<ReporteDefType, S> agregar) {
 		return new ResumenPorTipo<S, RsmnDataFacExpCont>(tipo, seccion, setTipoComp, setDatos, ResumenPorTipo::datosFacExpCont,
 				RsmnDataFacExpCont::getCantCFCEmi, agregar);
+	}
+
+	static <S> ResumenPorTipo<S, RsmnDataRemExp> remExp(TipoDoc tipo, Supplier<S> seccion, BiConsumer<S, BigInteger> setTipoComp,
+			BiConsumer<S, RsmnDataRemExp> setDatos, BiConsumer<ReporteDefType, S> agregar) {
+		return new ResumenPorTipo<S, RsmnDataRemExp>(tipo, seccion, setTipoComp, setDatos, ResumenPorTipo::datosRemExp,
+				RsmnDataRemExp::getCantDocsUtil, agregar);
+	}
+
+	static <S> ResumenPorTipo<S, RsmnDataRemExpCont> remExpCont(TipoDoc tipo, Supplier<S> seccion, BiConsumer<S, BigInteger> setTipoComp,
+			BiConsumer<S, RsmnDataRemExpCont> setDatos, BiConsumer<ReporteDefType, S> agregar) {
+		return new ResumenPorTipo<S, RsmnDataRemExpCont>(tipo, seccion, setTipoComp, setDatos, ResumenPorTipo::datosRemExpCont,
+				RsmnDataRemExpCont::getCantCFCEmi, agregar);
 	}
 }

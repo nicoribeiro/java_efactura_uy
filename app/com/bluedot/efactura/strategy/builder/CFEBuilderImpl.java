@@ -460,6 +460,8 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 				
 				sucursal.setEmpresa(empresaEmisora);
 				sucursal.save();
+				if (empresaEmisora.getSucursales() == null)
+					empresaEmisora.setSucursales(new java.util.ArrayList<Sucursal>());
 				empresaEmisora.getSucursales().add(sucursal);
 				empresaEmisora.update();
 			}
@@ -483,7 +485,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 					return;
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia");
 			}
-			if (strategy.getCFE().isObligatorioReferencia() || (cobranzaPropia && referenciasJSON != null)) {
+			if (strategy.getCFE().isObligatorioReferencia() || ((cobranzaPropia || admiteReferencia()) && referenciasJSON != null)) {
 
 				for (int i = 0; i< referenciasJSON.length(); i++ ) {
 					
@@ -590,6 +592,14 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		} catch (JSONException | ParseException | DatatypeConfigurationException e) {
 			throw APIException.raise(e);
 		} 
+	}
+
+	/**
+	 * Si el tipo de CFE lleva la zona de referencia aunque no sea obligatoria (ej. e-Remito de exportacion con items a
+	 * rebajar): entonces se arma con las referencias que vengan
+	 */
+	protected boolean admiteReferencia() {
+		return false;
 	}
 
 	@Override

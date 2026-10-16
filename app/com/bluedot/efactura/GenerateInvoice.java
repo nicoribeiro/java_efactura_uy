@@ -306,8 +306,17 @@ public class GenerateInvoice {
 			case eResguardo:
 			case eResguardo_Contingencia:
 				break;
+			case eRemito_de_Exportacion:
+			case eRemito_de_Exportacion_Contingencia:
+				// Sin forma de pago: el tipo de traslado (A-C6, se imprime la glosa)
+				String traslado = tipoTraslado(cfe);
+				if (traslado != null)
+					createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 3, traslado);
+				break;
 			default:
-				createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 3, cfe.getFormaDePago().toString());
+				// Los remitos no tienen forma de pago
+				if (cfe.getFormaDePago() != null)
+					createHeadings(bfBold, cb, idDoc_x, idDoc_y - headerRowSize * 3, cfe.getFormaDePago().toString());
 				break;
 		}
 		
@@ -390,6 +399,8 @@ public class GenerateInvoice {
 		case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
 		case eFactura_Exportacion:
 		case eFactura_Exportacion_Contingencia:
+		case eRemito_de_Exportacion:
+		case eRemito_de_Exportacion_Contingencia:
 			/*
 			 * Comprador del exterior: los datos del receptor salen del generador_json (como en la e-Factura), no hay empresa receptora
 			 */
@@ -415,11 +426,6 @@ public class GenerateInvoice {
 				createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4, lugar.toString(), PdfContentByte.ALIGN_LEFT);
 				createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, receptorExp.optString("RznSocRecep", ""), PdfContentByte.ALIGN_LEFT);
 			}
-			break;
-
-		case eRemito_de_Exportacion:
-		case eRemito_de_Exportacion_Contingencia:
-			createHeadings(bfBold, cb, receptor_x + 50, receptor_y, "EXPORTACION", PdfContentByte.ALIGN_CENTER);
 			break;
 		}
 
@@ -601,6 +607,8 @@ public class GenerateInvoice {
 			case Nota_de_Debito_de_eFactura_Exportacion_Contingencia:
 			case eFactura_Exportacion:
 			case eFactura_Exportacion_Contingencia:
+			case eRemito_de_Exportacion:
+			case eRemito_de_Exportacion_Contingencia:
 				// Exportacion: no lleva IVA, solo el monto de exportacion y asimiladas
 				numCol = 3;
 				generateFrame(bfBold, cb, frameUp_y, frameDown_y, "EXPORTACION", cantCol, numCol);
@@ -637,8 +645,6 @@ public class GenerateInvoice {
 			case Nota_de_Debito_de_eTicket_Contingencia:
 			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
 			case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
-			case eRemito_de_Exportacion:
-			case eRemito_de_Exportacion_Contingencia:
 				//Otra Tasa
 				numCol = 0;
 				generateFrame(bfBold, cb, frameUp_y, frameDown_y, "IVA OTRA TASA", cantCol, numCol);
@@ -704,7 +710,8 @@ public class GenerateInvoice {
 		generateFrame(bfBold, cb, frameUp_y, frameDown_y, "TOTALES", cantCol, numCol);
 		
 		// En la exportacion no hay montos no gravados (A-C112 no existe en Totales_Fact_Exp)
-		if (cfe.getTotMntNoGrv()!=null && !com.bluedot.efactura.strategy.builder.DatosIdDoc.esExportacion(cfe.getTipo())) {
+		boolean remitoExportacion = com.bluedot.efactura.strategy.builder.DatosIdDoc.esRemitoExportacion(cfe.getTipo());
+		if (cfe.getTotMntNoGrv()!=null && !com.bluedot.efactura.strategy.builder.DatosIdDoc.esExportacion(cfe.getTipo()) && !remitoExportacion) {
 			createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "No gravado:", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
 			createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, df_2.format(cfe.getTotMntNoGrv()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
 		}
@@ -722,7 +729,8 @@ public class GenerateInvoice {
 				break;
 		}
 		
-		if (cfe.getTotMntTotal()!=null && cfe.getTotMntTotal()>0) {
+		// En el e-Remito de exportacion el total puede ser negativo (items a rebajar)
+		if (cfe.getTotMntTotal()!=null && (cfe.getTotMntTotal()>0 || (remitoExportacion && cfe.getTotMntTotal()!=0))) {
 			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, "Total: " + moneda, PdfContentByte.ALIGN_LEFT, cantCol, numCol);
 			createContentOnFrame(bfBold, cb, detailsLowerLeft_y - detailsRowSize * 4, df_2.format(cfe.getTotMntTotal()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
 		}
@@ -738,6 +746,28 @@ public class GenerateInvoice {
 	/*
 	 * 5) Pie del comprobante.(todas las paginas)
 	 */
+	/** Glosa del tipo de traslado (IdDoc.TipoTraslado del generador_json) del e-Remito de exportacion; null si no tiene */
+	private static String tipoTraslado(CFE cfe) {
+		try {
+			if (cfe.getGeneradorJson() == null)
+				return null;
+			JSONObject encabezado = new JSONObject(cfe.getGeneradorJson()).optJSONObject("Encabezado");
+			JSONObject idDoc = encabezado != null ? encabezado.optJSONObject("IdDoc") : null;
+			if (idDoc == null || !idDoc.has("TipoTraslado"))
+				return null;
+			switch (idDoc.optInt("TipoTraslado")) {
+			case 1:
+				return "Traslado: venta";
+			case 2:
+				return "Traslado interno";
+			default:
+				return null;
+			}
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 	/** El receptor del generador_json (Encabezado.Receptor); null si no tiene */
 	private static JSONObject receptorGenerador(CFE cfe) {
 		try {

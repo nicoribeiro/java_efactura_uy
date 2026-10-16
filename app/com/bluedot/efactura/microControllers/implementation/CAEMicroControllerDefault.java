@@ -35,6 +35,7 @@ import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
 import dgi.classes.recepcion.IdDocFactExp;
 import dgi.classes.recepcion.IdDocRem;
+import dgi.classes.recepcion.IdDocRemExp;
 import dgi.classes.recepcion.IdDocResg;
 import dgi.classes.recepcion.IdDocTck;
 
@@ -251,6 +252,29 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 		iddoc.setSerie(cae.getSerie());
 		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
 		
+		/*
+		 * Fecha
+		 */
+		XMLGregorianCalendar date = DatatypeFactory.newInstance().newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(fchEmis));
+		iddoc.setFchEmis(date);
+
+		return iddoc;
+	}
+
+	@Override
+	public synchronized IdDocRemExp getIdDocRemExp(TipoDoc tipoDoc, Date fchEmis, EstrategiaNumeracion estrategia) throws APIException, DatatypeConfigurationException, IOException {
+		IdDocRemExp iddoc = new IdDocRemExp();
+
+		// Sin CAE para el tipo: error claro en lugar de NullPointerException (como getIdDocTick)
+		if (!caesMap.containsKey(tipoDoc))
+			throw APIException.raise(APIErrors.CAE_DATA_NOT_FOUND).withParams(tipoDoc.friendlyName, tipoDoc.value);
+		CAE cae = caesMap.get(tipoDoc).get(0);
+
+		// Sin FmaPago ni MntBruto (A-C10, A-C11: no corresponden al e-Remito de exportacion)
+		iddoc.setTipoCFE(new BigInteger(String.valueOf(tipoDoc.value)));
+		iddoc.setSerie(cae.getSerie());
+		iddoc.setNro(new BigInteger(String.valueOf(estrategia.getId(cae))));
+
 		/*
 		 * Fecha
 		 */

@@ -414,6 +414,10 @@ public class SobresController extends AbstractController {
 			tipo = xml.getEFactExp().getEncabezado().getIdDoc().getTipoCFE();
 			serie = xml.getEFactExp().getEncabezado().getIdDoc().getSerie();
 			nro = xml.getEFactExp().getEncabezado().getIdDoc().getNro();
+		} else if (xml.getERemExp() != null) {
+			tipo = xml.getERemExp().getEncabezado().getIdDoc().getTipoCFE();
+			serie = xml.getERemExp().getEncabezado().getIdDoc().getSerie();
+			nro = xml.getERemExp().getEncabezado().getIdDoc().getNro();
 		}
 		if (tipo == null || nro == null)
 			return null;

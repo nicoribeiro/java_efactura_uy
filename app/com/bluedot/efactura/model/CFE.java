@@ -12,6 +12,7 @@ import com.play4jpa.jpa.models.Model;
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EFactExp;
 import dgi.classes.recepcion.CFEDefType.ERem;
+import dgi.classes.recepcion.CFEDefType.ERemExp;
 import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.TipMonType;
@@ -212,6 +213,10 @@ public class CFE extends Model<CFE>{
 	@ApiModelProperty(hidden = true)
 	@Transient
 	private ERem eremito;
+
+	@ApiModelProperty(hidden = true)
+	@Transient
+	private ERemExp eremitoExportacion;
 
 	@Type(type="text")
 	private String generadorJson;
@@ -1070,6 +1075,14 @@ public class CFE extends Model<CFE>{
 
 	public void setEremito(ERem eremito) {
 		this.eremito = eremito;
+	}
+
+	public ERemExp getEremitoExportacion() {
+		return eremitoExportacion;
+	}
+
+	public void setEremitoExportacion(ERemExp eremitoExportacion) {
+		this.eremitoExportacion = eremitoExportacion;
 	}
 
 	public SobreRecibido getSobreRecibido() {

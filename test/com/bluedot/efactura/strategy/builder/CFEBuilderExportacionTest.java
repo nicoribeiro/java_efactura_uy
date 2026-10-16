@@ -198,7 +198,11 @@ public class CFEBuilderExportacionTest {
 	}
 
 	@Test
-	public void remitoDeExportacionNoSoportado() {
-		rechaza(APIErrors.NOT_SUPPORTED, () -> builder(TipoDoc.eRemito_de_Exportacion));
+	public void remitoDeExportacionTieneSuBuilder() throws APIException {
+		CFEStrategy strategy = new CFEStrategy.Builder().withTipo(TipoDoc.eRemito_de_Exportacion).build();
+		assertEquals(ERemExpStrategy.class, strategy.getClass());
+		// e-Remito (181) sigue sin envio a DGI, pero el builder existe
+		CFEStrategy remito = new CFEStrategy.Builder().withTipo(TipoDoc.eRemito).build();
+		assertEquals(ERemitoStrategy.class, remito.getClass());
 	}
 }
