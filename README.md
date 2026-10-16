@@ -1,483 +1,300 @@
-# Biblioteca de Comunicación efactura Uruguay \| Electronic Invoice Uruguay
+# java_efactura_uy
 
-This project aims to wrapper the Uruguayan's efactura protocol and communication with DGI \(Direccion General Impositiva\) and provide a simple REST API with json.
+API REST para la facturación electrónica de Uruguay: emite comprobantes fiscales electrónicos (CFE), los firma, los
+envía a DGI y a los receptores, recibe los CFE de los proveedores, arma el reporte diario y genera los PDF, todo con
+JSON.
 
-## Getting Started
+> **English summary.** REST API (Java 8, Play Framework 2.4) that wraps Uruguay's electronic invoicing protocol
+> (*e-factura*, DGI). It issues electronic tax documents (CFE) from JSON, signs them (XMLDSig), sends them to DGI's SOAP
+> services and to the receiving companies by email, receives and validates incoming CFE from suppliers via IMAP,
+> builds and sends the daily report (*reporte diario*), and renders PDFs. It supports several companies, users with
+> roles, session or HMAC authentication, and background jobs for the recurring tasks. A web admin panel lives in
+> [efactura-admin](https://github.com/nicoribeiro/efactura-admin). The rest of this document is in Spanish.
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+## Qué hace
 
-### Prerequisites
+- **Emisión**: recibe el comprobante en JSON, le asigna número de un CAE vigente, lo firma, lo envía a DGI dentro de
+  un sobre y consulta el resultado. Genera el PDF con el código QR.
+- **Envío al receptor**: cuando DGI acepta el comprobante, lo envía por mail al receptor electrónico (sobre e
+  intercambio según DGI) y registra cada envío.
+- **Recepción**: lee por IMAP los buzones de las empresas, valida los sobres y los CFE recibidos (controles de
+  formato, firma, duplicados, montos), responde el acuse del sobre (M) y la aceptación o rechazo de los comprobantes
+  (ME), incluido el rechazo comercial (E20 a E26).
+- **Reporte diario** a DGI, manual o automático.
+- **Consultas a DGI**: resultado de los comprobantes, datos de un RUT y padrón de emisores electrónicos.
+- **Cotizaciones**: descarga la cotización del dólar del INE; con ella y la UI del año controla el tope de 5000 UI de
+  los eTickets en moneda extranjera.
+- **Multiempresa**: cada empresa tiene su firma digital, sucursales, CAE, buzón de correo y usuarios con acceso.
 
-* Signing Certificate
-* Computing resource \(VM, server, etc\). We would be using a VM with Ubuntu 18.04 for purpose of this howto.
-* Java 8
-* sbt
-* play4jpa
-* Unlimited strength JCE policy installed
-* Database, Postgres or Mysql
+## Tipos de comprobante
 
-#### Signing Certificate
+| Tipo | Emisión | Recepción |
+|---|---|---|
+| 101 eTicket, 111 eFactura | Sí | Sí |
+| 102, 103, 112, 113 notas de crédito y débito | Sí (con `Referencia`) | Sí |
+| 121 eFactura de exportación | Sí | Sí |
+| 122, 123 notas de exportación | Sí (con `Referencia`) | Sí |
+| 124 eRemito de exportación | Sí | Sí |
+| 131-133, 141-143 venta por cuenta ajena | Sí (con `CompFiscal`) | Sí |
+| 182 eResguardo | Sí (con `Referencia`) | Sí |
+| 181 eRemito | No | Sí |
+| e-Boleta (151-153) | No | No |
 
-First of all the system would need a certificate to sign the documents. At this moment there are 2 entities who can create a valid certificate: Abitab or Correo Uruguayo. The creation of the PKCS10 works for both but then I'll be choosing Abitab as a Certificate Authority.
+Los tipos de contingencia (2xx) no se piden directamente: con el sistema en modo contingencia
+(`POST /api/v1/modo/CONTINGENCIA`, y `NORMAL` para volver) los comprobantes se emiten como su tipo 2xx. Los formatos
+y XSD son los de DGI versión 1.44.2 (`resources/xsd/XSDs_FE_1_44_2`).
 
-1 - Create an rsa key and the PKCS10 request, I'll would be using this info for the example:
+## Requisitos
 
-* {fantasyName} : MARVELOUS COMPANY
-* {CompanyName} : ABC S.A.
-* {RUC} : 217875770014
-* {City} : Montevideo
+- **Java 8** (el build usa Zulu 8). No funciona con versiones posteriores.
+- **sbt** 0.13 (el proyecto usa sbt 0.13.8, Play 2.4.11 y Scala 2.11.12).
+- **PostgreSQL**. Hibernate crea y actualiza las tablas (`hibernate.hbm2ddl.auto=update`); los cambios que no puede
+  hacer solo están en `resources/sql/` y `scripts/sql/`.
+- **[play4jpa](https://github.com/nicoribeiro/play4jpa)** publicado en el repositorio local de sbt.
+- **Firma digital** de la empresa (ver abajo) y su **habilitación como emisor electrónico** ante DGI.
 
-Replace whats inside {} with your actual company information:
+## Puesta en marcha
 
-```
-openssl req  -new -newkey rsa:2048 -nodes -keyout mykey.pem -out myreq.pem -subj '/CN={FantasyName}/O={CompanyName},SERIALNUMBER=RUC{RUC}/ST={City}/C=UY'
-```
-
-Save `mykey.pem` securely, you wold need it down the road. Certificate would be obsolete without this key.
-
-2 - Verify the signature:
-
-```
-openssl req -in myreq.pem -noout -verify -key mykey.pem
-```
-
-Output:
-
-```
-verify OK
-```
-
-3 - Check information
-
-```
-openssl req -in myreq.pem -noout -text
-```
-
-Output \(check just the header\):
-
-```
-Certificate Request:
-    Data:
-        Version: 0 (0x0)
-        Subject: CN=MARVELOUS COMPANY, O=ABC S.A.,SERIALNUMBER=RUC217875770014, ST=Montevideo, C=UY
-        Subject Public Key Info:
-            Public Key Algorithm: rsaEncryption
-                Public-Key: (2048 bit)
-                Modulus:
-                    00:c2:11:23:3c:32:4d:ea:e4:1f:ad:e9:dc:35:14:
-                    4d:cb:c8:32:f1:a0:43:4b:47:78:d3:4f:22:01:03:
-                    9d:e6:d8:82:f4:b8:75:b8:d3:af:b6:4f:5d:ab:d5:
-                    10:f9:93:56:68:72:51:19:af:9a:cb:2e:d6:00:be:
-                    31:45:7a:67:4c:a3:1d:5c:4d:79:39:a4:e7:38:35:
-                    57:eb:ce:28:d0:60:23:20:4a:a3:03:6f:c8:5f:45:
-                    82:0c:9f:1d:5e:92:03:1c:63:c1:63:1f:29:8b:29:
-                    33:9b:63:1b:d6:67:f3:38:39:d1:a0:97:d1:47:bc:
-                    73:11:f2:44:9b:67:ef:45:77:ad:c8:6f:5e:a3:b2:
-                    13:f7:c4:76:a5:d6:31:e4:15:5a:6a:bf:a7:da:a2:
-                    39:54:46:0a:44:0f:7e:22:95:c5:b2:ea:8b:fe:00:
-                    0a:81:54:8b:82:bd:0f:da:b0:b0:ae:31:5e:16:35:
-                    07:ff:50:5b:9d:42:1d:be:b5:8c:a0:e0:bb:e6:b4:
-                    f8:68:69:c3:f8:1b:9d:5c:58:b7:30:fd:5b:54:4e:
-                    da:90:2f:79:db:3f:5a:9a:f7:7b:97:33:93:18:52:
-                    2d:d9:34:fd:0d:f1:81:33:01:b5:a4:d7:36:9c:57:
-                    ee:c4:39:5c:fe:bb:ba:af:9e:a3:72:76:8a:a3:10:
-                    cc:6b
-                Exponent: 65537 (0x10001)
-        Attributes:
-            a0:00
-    Signature Algorithm: sha256WithRSAEncryption
-         4b:94:2e:b7:cf:6c:5f:b7:de:64:6e:50:09:57:ad:e3:6a:36:
-         21:1c:56:90:ac:b9:70:89:c8:88:98:c1:94:b1:dc:50:33:7d:
-         bf:7d:eb:dc:87:68:c5:59:8d:45:a6:d7:2c:82:a0:5d:f4:ff:
-         25:f8:89:3d:9e:8f:2b:f8:e7:5f:53:7a:f8:0a:03:4a:1d:ee:
-         a7:d9:31:ae:68:b4:f4:23:59:77:8c:10:55:4b:55:0f:22:47:
-         26:ee:1e:4e:b6:83:db:9d:9d:ff:3c:6c:30:14:29:ab:61:86:
-         41:c6:f3:14:95:12:89:22:90:d7:8f:19:9f:99:dd:67:42:15:
-         5e:9d:cd:9b:ca:4b:79:c9:e1:43:06:41:eb:4b:f0:af:f6:56:
-         5a:66:3c:ee:95:ea:ad:cf:c0:99:1c:44:be:10:d4:5a:04:84:
-         48:a2:b8:11:a2:97:43:4d:53:dc:5c:ed:7b:6c:fa:df:65:cb:
-         c0:a1:ff:f8:e4:46:61:26:72:d4:03:f7:eb:6d:81:f1:ea:85:
-         16:32:1b:a7:d5:e9:19:09:3c:d1:8c:c8:0a:34:88:20:75:5a:
-         a5:83:0a:f5:6a:a2:3a:bb:89:6d:5a:3d:2e:2c:18:a7:f1:40:
-         9a:75:eb:51:98:63:e5:42:fc:6a:6e:88:fb:31:49:44:5f:d1:
-         9f:28:46:6d
-```
-
-4 - Go to [Abitab](https://www.iddigital.com.uy/es/solicitud-de-certificado/empresa/facturacion_electronica/) webpage, select Request PKCS10 and fill the forms. When the page ask you for your PKCS10 request do:
-
-```
-cat myreq.pem
-```
-
-copy and paste the result, should look like this:
-
-```
------BEGIN CERTIFICATE REQUEST-----
-MIICszCCAZsCAQAwbjEaMBgGA1UEAwwRTUFSVkVMT1VTIENPTVBBTlkxLjAsBgNV
-BAoMJUFCQyBTLkEuLFNFUklBTE5VTUJFUj1SVUMyMTc4NzU3NzAwMTQxEzARBgNV
-BAgMCk1vbnRldmlkZW8xCzAJBgNVBAYTAlVZMIIBIjANBgkqhkiG9w0BAQEFAAOC
-AQ8AMIIBCgKCAQEAwhEjPDJN6uQfrencNRRNy8gy8aBDS0d4008iAQOd5tiC9Lh1
-uNOvtk9dq9UQ+ZNWaHJRGa+ayy7WAL4xRXpnTKMdXE15OaTnODVX684o0GAjIEqj
-A2/IX0WCDJ8dXpIDHGPBYx8piykzm2Mb1mfzODnRoJfRR7xzEfJEm2fvRXetyG9e
-o7IT98R2pdYx5BVaar+n2qI5VEYKRA9+IpXFsuqL/gAKgVSLgr0P2rCwrjFeFjUH
-/1BbnUIdvrWMoOC75rT4aGnD+BudXFi3MP1bVE7akC952z9amvd7lzOTGFIt2TT9
-DfGBMwG1pNc2nFfuxDlc/ru6r56jcnaKoxDMawIDAQABoAAwDQYJKoZIhvcNAQEL
-BQADggEBAEuULrfPbF+33mRuUAlXreNqNiEcVpCsuXCJyIiYwZSx3FAzfb9969yH
-aMVZjUWm1yyCoF30/yX4iT2ejyv4519TevgKA0od7qfZMa5otPQjWXeMEFVLVQ8i
-RybuHk62g9udnf88bDAUKathhkHG8xSVEokikNePGZ+Z3WdCFV6dzZvKS3nJ4UMG
-QetL8K/2VlpmPO6V6q3PwJkcRL4Q1FoEhEiiuBGil0NNU9xc7Xts+t9ly8Ch//jk
-RmEmctQD9+ttgfHqhRYyG6fV6RkJPNGMyAo0iCB1WqWDCvVqojq7iW1aPS4sGKfx
-QJp161GYY+VC/GpuiPsxSURf0Z8oRm0=
------END CERTIFICATE REQUEST-----
-```
-
-5 - goto an Abitab and pay for the cert, wait a few days, you should get an email to download your cert.
-
-6 - you should have a file called {fantasyName}.cer
-
-7 - Check the certificate, but first get the [root certificate](https://www.iddigital.com.uy/media/filer_public/fe/dc/fedc3f9e-b61e-46be-9135-49373fec567c/acrn.crt) \(acrn.crt\) and the [ca certificate](https://www.iddigital.com.uy/media/filer_public/ed/5a/ed5a37ea-5fe2-457d-8584-19f10c5c102c/abitab.crt) \(abitab.crt\)
-
-```
-openssl verify -CAfile acrn.crt -untrusted abitab.crt {fantasyName}.cer
-```
-
-Output should be:
-
-```
-{fantasyName}.cer: OK
-```
-
-8 - Check validity, issuer and other stuff
-
-```
-openssl x509 -in {fantasyName}.cer -text
-```
-
-Output should be:
-
-```
-Certificate:
-    Data:
-        Version: 3 (0x2)
-        Serial Number:
-            0c:0f:21:58:9f:e1:db:03:47:ed:41:fa:de:2d:53:0e:33:d5:b7:38
-    Signature Algorithm: sha256WithRSAEncryption
-        Issuer: C = UY, L = Montevideo, O = Abitab S.A., OU = ID digital, CN = Abitab
-        Validity
-            Not Before: Jun  5 15:38:03 2019 GMT
-            Not After : Jun  4 15:38:03 2021 GMT
-        Subject: C = UY, ST = Montevideo, serialNumber = RUC217875770014, O = ABC S.A., CN = Marvelous Company
-        Subject Public Key Info:
-            Public Key Algorithm: rsaEncryption
-                Public-Key: (2048 bit)
-                Modulus:
-                    00:ca:52:4b:ea:1e:ff:ce:24:6b:a8:da:72:18:68:
-                    d5:56:5d:0e:48:5a:2d:35:09:76:5a:cf:a4:c8:1c:
-                    b1:a9:fe:53:89:fb:ad:34:ff:88:5b:9f:bb:e7:e8:
-                    00:01:dc:35:73:75:03:ad:b3:b1:b9:a4:7d:2b:26:
-                    79:ce:15:40:0a:ef:51:b8:9f:32:8c:7c:70:86:52:
-                    4b:16:fe:6a:27:6b:e6:36:7a:62:50:d8:df:9a:89:
-                    cc:09:29:eb:4f:29:14:88:80:0b:8f:38:1e:80:6a:
-                    18:7c:1d:bd:97:3b:78:7d:45:49:36:4f:41:cd:a2:
-                    e0:76:57:3c:68:31:79:64:c9:6e:d7:51:1e:66:c3:
-                    a2:64:2c:79:c0:e7:65:c3:56:84:53:5a:43:6d:cb:
-                    9a:02:20:d2:ef:1a:69:d1:b0:9d:73:a2:e0:2a:60:
-                    65:50:31:cf:fb:b3:2f:bf:11:88:40:2e:b5:49:10:
-                    0f:0a:6e:dc:97:fa:bf:2c:9f:05:39:0b:58:54:af:
-                    06:96:e8:c5:8e:01:16:bc:a8:1a:4d:41:c5:93:91:
-                    a2:1e:a1:8b:f2:fe:c1:88:24:49:a3:47:4b:c5:13:
-                    01:dd:a7:57:12:69:62:2b:eb:fe:20:ef:69:fb:3a:
-                    a5:f0:7e:29:ee:ed:96:16:f7:b1:1f:a0:e4:90:25:
-                    e0:33
-                Exponent: 65537 (0x10001)
-        X509v3 extensions:
-            Authority Information Access: 
-                CA Issuers - URI:http://www.id.com.uy/resources/Abitab.crt
-                OCSP - URI:http://ocsp.id.com.uy/asf/servlet/OCSPServlet
-
-            X509v3 Key Usage: critical
-                Digital Signature, Non Repudiation, Key Encipherment, Data Encipherment
-            X509v3 Basic Constraints: critical
-                CA:FALSE
-            X509v3 CRL Distribution Points: 
-
-                Full Name:
-                  URI:http://crl.id.com.uy/resources/crl_id_digital_pki_uruguay.crl
-
-            X509v3 Certificate Policies: 
-                Policy: 2.16.858.10000157.66565.4
-                  CPS: http://uce.gub.uy/informacion-tecnica/politicas/cp_persona_juridica.pdf
-                Policy: 2.16.858.10000157.66565.7
-                  CPS: http://www.id.com.uy/resources/cps_id_firmaElectronicaAvanzada.pdf
-
-            X509v3 Extended Key Usage: 
-                TLS Web Client Authentication
-            X509v3 Subject Key Identifier: 
-                40:23:91:99:38:7B:FE:C9:B4:0D:62:91:A5:59:40:ED:AD:9F:73:9B
-            X509v3 Authority Key Identifier: 
-                keyid:0D:13:D6:F6:C6:28:A6:E7:C5:B7:87:D1:24:9C:9F:93:F0:E8:1D:3B
-
-    Signature Algorithm: sha256WithRSAEncryption
-         1c:b7:89:96:e4:53:ed:bb:ec:db:a8:32:01:9f:2c:a3:cd:6d:
-         ad:42:12:77:b3:b8:e6:c9:03:52:60:20:7b:57:27:c6:11:b5:
-         3f:67:0d:99:2c:5b:5a:ca:22:0a:dd:9e:bb:1f:4b:48:3f:8f:
-         02:3d:8b:21:84:45:1d:6d:f5:ff:ac:68:89:cd:64:e2:d6:d6:
-         5e:40:c2:8e:2a:f7:ef:14:d3:36:a4:40:30:f5:32:15:15:92:
-         76:fb:7e:9e:53:ea:c2:76:fc:39:ad:88:fe:66:92:26:e9:1c:
-         c4:38:cd:49:fa:43:87:f0:5d:d6:56:4d:81:d7:7f:f1:c2:dd:
-         b0:4d:fe:c3:2a:6e:7c:9f:6e:5c:ed:62:42:99:e1:f7:36:ee:
-         14:8c:2c:20:e3:46:97:5a:77:03:c0:a0:c6:4a:88:fd:40:22:
-         87:72:5a:18:ea:9c:a5:c7:5a:08:8c:e4:05:a4:7d:b9:84:35:
-         5f:89:36:56:0e:40:3d:12:e8:bb:35:72:ed:af:08:56:4e:b0:
-         bb:2e:a9:9b:e4:fb:1d:3e:0b:63:c8:9b:4b:91:44:66:57:c0:
-         14:b4:96:f0:dc:2c:57:3f:52:04:ad:95:aa:7d:4d:d0:f2:0c:
-         9f:9c:40:e8:d6:55:73:ba:3c:df:90:cb:00:5b:21:11:67:c2:
-         ed:32:1e:de
------BEGIN CERTIFICATE-----
-MIIEXDCCA0SgAwIBAgINAeOpMBz8cgY4P5pTHTANBgkqhkiG9w0BAQsFADBMMSAw
-HgYDVQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMjETMBEGA1UEChMKR2xvYmFs
-U2lnbjETMBEGA1UEAxMKR2xvYmFsU2lnbjAeFw0xNzA2MTUwMDAwNDJaFw0yMTEy
-MTUwMDAwNDJaMFQxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVHb29nbGUgVHJ1c3Qg
-U2VydmljZXMxJTAjBgNVBAMTHEdvb2dsZSBJbnRlcm5ldCBBdXRob3JpdHkgRzMw
-ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDKUkvqHv/OJGuo2nIYaNVW
-XQ5IWi01CXZaz6TIHLGp/lOJ+600/4hbn7vn6AAB3DVzdQOts7G5pH0rJnnOFUAK
-71G4nzKMfHCGUksW/mona+Y2emJQ2N+aicwJKetPKRSIgAuPOB6Aahh8Hb2XO3h9
-RUk2T0HNouB2VzxoMXlkyW7XUR5mw6JkLHnA52XDVoRTWkNty5oCINLvGmnRsJ1z
-ouAqYGVQMc/7sy+/EYhALrVJEA8KbtyX+r8snwU5C1hUrwaW6MWOARa8qBpNQcWT
-kaIeoYvy/sGIJEmjR0vFEwHdp1cSaWIr6/4g72n7OqXwfinu7ZYW97EfoOSQJeAz
-AgMBAAGjggEzMIIBLzAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0lBBYwFAYIKwYBBQUH
-AwEGCCsGAQUFBwMCMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFHfCuFCa
-Z3Z2sS3ChtCDoH6mfrpLMB8GA1UdIwQYMBaAFJviB1dnHB7AagbeWbSaLd/cGYYu
-MDUGCCsGAQUFBwEBBCkwJzAlBggrBgEFBQcwAYYZaHR0cDovL29jc3AucGtpLmdv
-b2cvZ3NyMjAyBgNVHR8EKzApMCegJaAjhiFodHRwOi8vY3JsLnBraS5nb29nL2dz
-cjIvZ3NyMi5jcmwwPwYDVR0gBDgwNjA0BgZngQwBAgIwKjAoBggrBgEFBQcCARYc
-aHR0cHM6Ly9wa2kuZ29vZy9yZXBvc2l0b3J5LzANBgkqhkiG9w0BAQsFAAOCAQEA
-HLeJluRT7bvs26gyAZ8so81trUISd7O45skDUmAge1cnxhG1P2cNmSxbWsoiCt2e
-ux9LSD+PAj2LIYRFHW31/6xoic1k4tbWXkDCjir37xTTNqRAMPUyFRWSdvt+nlPq
-wnb8Oa2I/maSJukcxDjNSfpDh/Bd1lZNgdd/8cLdsE3+wypufJ9uXO1iQpnh9zbu
-FIwsIONGl1p3A8CgxkqI/UAih3JaGOqcpcdaCIzkBaR9uYQ1X4k2Vg5APRLouzVy
-7a8IVk6wuy6pm+T7HT4LY8ibS5FEZlfAFLSW8NwsVz9SBK2Vqn1N0PIMn5xA6NZV
-c7o835DLAFshEWfC7TIe3g==
------END CERTIFICATE-----
-```
-
-9 - Install certificate and private key in *firma_digital* database table 
-
-To install the certificate and private key genearted in previous steps, an insert query has to be executed in the database for the company (empresa_id).
-The company must exist previously in the *empresa* table in the database. In this case the *empresa_id* used is 33724.
-
-```
-INSERT INTO `firma_digital`
-        (
-                `id`          ,
-                `certificate` ,
-                `private_key` ,
-                `valida_desde`,
-                `valida_hasta`,
-                `empresa_id`
-        )
-VALUES
-        (
-                1                                                                                             ,
-                '-----BEGIN CERTIFICATE-----\nMIIGQTCCBCmgAwIBAg......DdVaFj+uHmOU\n-----END CERTIFICATE-----',
-                '-----BEGIN PRIVATE KEY-----\nMIIEvQI......f5yGO4yZo=\n-----END PRIVATE KEY-----\n'           ,
-                '2025-07-30 18:45:26'                                                                         ,
-                '2027-07-30 18:45:26'                                                                         ,
-                33724
-        )
-;
-```
-
-
-#### Computing Resource
-
-Follow [this](https://linuxconfig.org/how-to-install-ubuntu-18-04-bionic-beaver) tutorial to install Ubuntu 18.04 LTS
-
-#### Java 8
-
-To install:
-
-```
-sudo apt install openjdk-8-jdk-headless
-```
-
-then check
-
-```
-java -version
-```
-
-output:
-
-```
-openjdk version "1.8.0_212"
-OpenJDK Runtime Environment (build 1.8.0_212-8u212-b03-0ubuntu1.18.04.1-b03)
-OpenJDK 64-Bit Server VM (build 25.212-b03, mixed mode)
-```
-
-#### SBT
-
-Based on [this](https://www.scala-sbt.org/1.0/docs/Installing-sbt-on-Linux.html) tutorial
-
-```
-echo "deb https://dl.bintray.com/sbt/debian /" | sudo tee -a /etc/apt/sources.list.d/sbt.list
-sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823
-sudo apt-get update
-sudo apt-get install sbt
-```
-
-#### play4jpa
-
-```
+```bash
 git clone https://github.com/nicoribeiro/play4jpa.git
-cd play4jpa
-sbt publishLocal
-```
+cd play4jpa && sbt publishLocal && cd ..
 
-sbt downloads all dependencies, build and publish the artifact to the local repository so other projects \(such as this\) can use the artifact. First build takes several minutes to download all deps.
-
-#### Unlimited strength JCE policy installed
-
-* Go to the Oracle Java SE download page [http://www.oracle.com/technetwork/java/javase/downloads/index.html](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-* Scroll down ... Under "Additional Resources" section you will find "Java Cryptography Extension \(JCE\) Unlimited Strength Jurisdiction Policy File"
-* Download the version that matches your installed JVM E.g. UnlimitedJCEPolicyJDK7.zip
-* Unzip the downloaded zip 
-* Copy local\_policy.jar and US\_export\_policy.jar to the $JAVA\_HOME/jre/lib/security \(Note: these jars will be already there so you have to overwrite them\)
-
-#### Database
-
-You must create a blank database with a user and a password with complete privileges over that database. Suggested databases are Postgres or Mysql
-
-### Installing
-
-Clone this repo
-
-```
 git clone https://github.com/nicoribeiro/java_efactura_uy.git
-```
-
-## Config
-
-```
-vi conf/application.conf
-```
-
-Config the database connection:
-
-Postgres is the default database, so no need to do much just config IP, port, dbname
-
-```
-db.default.driver=org.postgresql.Driver
-db.default.url="jdbc:postgresql://{ip}:{port, default 5432}/{dbname}"
-```
-
-Mysql is supported but you need to comment postgres driver and url and uncomment mysql lines
-
-
-```
-default.driver = com.mysql.cj.jdbc.Driver
-default.url="jdbc:mysql://{ip}:{port, default 3306}/{dbname}"
-```
-
-
-Regardless the engine you must config username and password
-
-```
-db.default.username={dbuser}
-db.default.password="{dbpass}"
-```
-
-if you use mysql 2 additional steps are needed, go to build.sbt
-
-```
-vi build.sbt
-```
-
-and uncomment the mysql dependency line
-
-```
-"mysql" % "mysql-connector-java" ...
-```
-
-you can also comment the postgres line but is optional 
-
-Then you must change de hibernate dialect, go to persistence.xml under conf/META-INF
-
-```
-vi conf/META-INF/persistence.xml
-```
-
-uncomment the mysql dialect line
-
-```
-<property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect" />
-```
-
-and comment the postgres dialect line
-
-```
-<!-- 			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" /> --> 
-```
-
-## Run
-
-```
 cd java_efactura_uy
 ```
 
+Crear una base vacía en PostgreSQL y configurar `conf/application.conf` (ver [Configuración](#configuración)). Después:
+
+```bash
+sbt "run 9000"
 ```
-./activator -jvm-debug 9999 "run 9000"
+
+La primera vez sbt tarda varios minutos en descargar las dependencias. La API queda en `http://localhost:9000/api/v1`
+y la documentación Swagger en `GET /api/v1/documentacion`.
+
+### Primeros pasos
+
+1. **Primer administrador**: `POST /api/v1/signup`. Solo funciona mientras no exista ningún usuario ADMIN.
+2. **Ingreso**: `POST /api/v1/signin` devuelve el token de sesión, que se manda en el encabezado `AUTH-TOKEN`.
+3. **Datos iniciales**: `POST /api/v1/init` carga países, tasas de IVA y valores de UI si las tablas están vacías.
+4. **Empresa**: `POST /api/v1/empresa` y sus sucursales (`POST /api/v1/empresa/:rut/sucursales`), con el código de
+   sucursal que asignó DGI.
+5. **Firma digital** y **CAE** de la empresa (ver abajo).
+6. **Emitir**: `POST /api/v1/empresa/:rut/documentos`.
+
+Todo esto también se puede hacer desde el panel [efactura-admin](https://github.com/nicoribeiro/efactura-admin).
+
+## Firma digital
+
+La firma de la empresa la emiten Abitab o el Correo Uruguayo a partir de un pedido PKCS#10:
+
+```bash
+openssl req -new -newkey rsa:2048 -nodes -keyout clave.pem -out pedido.pem \
+  -subj '/CN={NombreFantasia}/O={RazonSocial},SERIALNUMBER=RUC{RUT}/ST={Ciudad}/C=UY'
+openssl req -in pedido.pem -noout -verify -key clave.pem
 ```
 
-Te first time activator takes several minutes because of dependency download
+Guardar `clave.pem` en un lugar seguro: sin ella el certificado no sirve. El contenido de `pedido.pem` se pega en el
+formulario de la entidad certificadora, que después envía el certificado (`.cer`). Para verificarlo contra la cadena
+de la entidad (ej. Abitab):
 
-## First Steps
+```bash
+openssl verify -CAfile acrn.crt -untrusted abitab.crt {NombreFantasia}.cer
+openssl x509 -in {NombreFantasia}.cer -noout -subject -dates
+```
 
-To interact with the backend we recommend using [postman](https://www.getpostman.com/) and download the complete API Collection.
+La firma se carga con `PUT /api/v1/empresa/:rut` (o desde el panel, *Empresas → Cargar firma digital*), de una de dos
+formas:
 
-After install, goto Import, then Import from link, and use this link \(collection is in spanish\) [https://www.getpostman.com/collections/d7dd8b7d073379f16454](https://www.getpostman.com/collections/d7dd8b7d073379f16454)
+- `pkcs12`: el archivo `.p12`/`.pfx` en base64, con `pkcs12Password`.
+- `certificado` y `privateKey` en PEM.
 
-* Create a User using `User/SignUp` POST
-* SignIn using `User/SingIn` POST
-* Initialize Database using `App/Init Database` POST
-* Import Companies using `Empresa/Cargar Empresas desde XML DGI`POST
-* Add your Company
-* Configure your certificate
-* Complete DGI challenge to become a valid efactura member
-* Import CAEs using `Empresa/Agregar CAE` POST
+La API verifica que la clave corresponda al certificado y que esté vigente. Si el certificado no menciona el RUT de
+la empresa, hay que confirmarlo con `"forzarFirma": true`.
 
-## Deployment
+## CAE
 
-ToDo
+Los rangos de numeración (CAE) que otorga DGI se cargan con `POST /api/v1/empresa/:rut/cae` (solo ADMIN):
 
-## Built With
+```json
+{ "NA": 90000000001, "TCFE": 111, "Serie": "A", "DNro": 1, "HNro": 10000, "FVD": "2027-12-31" }
+```
 
-* [PlayFramework](https://www.playframework.com/) - The web framework used
-* [SBT](https://www.scala-sbt.org/) - Dependency Management
+La API rechaza los CAE de otra empresa, los duplicados y los rangos superpuestos. Desde el panel se pueden cargar
+directamente los XML de CAE que descarga DGI. `GET /api/v1/empresa/:rut/cae` lista los CAE con su uso.
 
-## Contributing
+## Emisión
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+`POST /api/v1/empresa/:rut/documentos` con el comprobante en JSON. Los nombres de los campos son los del formato de
+DGI (`Encabezado`, `Detalle`, `Referencia`, `CompFiscal`, `Adenda`...). Además:
 
-## Versioning
+- `Encabezado.IdDoc.TipoCFE`: el tipo de comprobante.
+- `Encabezado.IdDoc.id`: un identificador propio del sistema que genera el comprobante. No se puede repetir, así un
+  reintento no emite dos veces el mismo comprobante.
+- `Encabezado.Emisor.CdgDGISucur`: la sucursal que emite.
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
+La respuesta es sincrónica: incluye el comprobante con su serie, número y CAE, y el estado del envío a DGI. Otras
+operaciones sobre los comprobantes:
 
-## Authors
+| Ruta | Para qué |
+|---|---|
+| `GET /api/v1/empresa/:rut/documentos` | Listado paginado con filtros |
+| `GET .../documentos/resultado` | Consulta en DGI el resultado de un comprobante |
+| `GET /api/v1/empresa/:rut/resultados/:fecha` | Consulta en DGI los resultados de todos los sobres de una fecha |
+| `GET .../documentos/pdf` | PDF del comprobante |
+| `PUT .../documentos` | Reenvía el sobre a DGI |
+| `DELETE .../documentos` | Anula el comprobante |
+| `POST .../documentos/reenviarMail` | Reenvía el comprobante al receptor por mail |
 
-* **Nicolas Ribeiro** - _Initial work_ - [Bluedot](https://github.com/nicoribeiro)
+## Recepción
 
-See also the list of [contributors](https://github.com/nicoribeiro/java_efactura_uy/contributors) who participated in this project.
+Cada empresa configura su buzón (servidor IMAP, usuario y contraseña) y, con el proceso `EmailEntrantesPoller`
+activo, la API:
 
-## License
+1. Lee los emails nuevos de cada carpeta del buzón.
+2. Valida el sobre (controles S02 a S06 y S20) y responde el acuse (M).
+3. Valida cada comprobante (controles E02 a E05, E07, E10 y E12).
+4. Envía la respuesta de los comprobantes (ME) cuando vence el plazo de la empresa (`diasRespuestaCfe`), o cuando
+   se pide a mano. Los comprobantes se pueden rechazar comercialmente antes (E20 a E26).
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+Cada control se puede configurar en `log` (solo registra) o `enforce` (rechaza). Los emails que no se pudieron
+procesar se pueden reintentar u omitir.
 
-## Acknowledgments
+## Reporte diario
 
-* [LerandGroup](https://lerandgroup.com.uy)
+`POST /api/v1/empresa/:rut/reporteDiario/:fecha` genera, firma y envía el reporte diario de una fecha
+(`?soloFaltantes` y `?cantReportes` para generar varios días). Con `ReporteDiarioPoller` activo se generan solos los
+faltantes de las empresas con firma digital.
 
-## Notes
+## Seguridad
 
-A hack to work around the issue on relative namespaces used in the service. This is achieved via a modified C14nHelper class in the project's classpath \(giving it higher precedence and being loaded instead of the default one\). The only modification there is a hardcoded short-circuit in namespaceIsAbsolute method.
+- **Sesión**: `POST /api/v1/signin` devuelve un token que se manda en el encabezado `AUTH-TOKEN`. Las sesiones
+  vencen por inactividad (8 h) y por duración máxima (7 días).
+- **HMAC-SHA256** para integraciones: encabezados `ACCESS_KEY`, `ACCESS_SIGNATURE` y `ACCESS_NONCE`. La firma es
+  `HMAC(nonce + URL + cuerpo, secreto)` y el nonce tiene que ser creciente. Las credenciales se generan por usuario
+  (`/api/v1/usuarios/:uid/credenciales`).
+- **Roles**: `ADMIN` (todo) y `USER` (las empresas que tenga asignadas).
+- **Contraseñas** con PBKDF2 y sal; recuperación con un código por mail. Los usuarios nuevos confirman su email y
+  cambian la contraseña temporal antes de usar la API.
+- **Límite de intentos de login** por usuario y por IP.
 
+Los controles nuevos se activan en tres modos, `off`, `log` y `enforce`, para poder revisarlos antes de que bloqueen:
+
+| Clave | Qué controla |
+|---|---|
+| `seguridad.accesoEmpresa` | Que un USER solo vea sus empresas |
+| `seguridad.sesion.expiracion` (`inactividadMinutos`, `duracionMaximaHoras`) | Vencimiento de las sesiones |
+| `seguridad.signin.limite` (`intentosPorUsuario`, `intentosPorIp`, `ventanaMinutos`) | Intentos de login |
+
+`GET /api/v1/ping` (para el monitoreo) no pide sesión pero solo responde a las redes de `seguridad.ping.redes`.
+
+## Procesos automáticos
+
+Vienen desactivados (`run = false`) y conviene activarlos en una sola instancia de la API. Su estado y ejecuciones se
+ven en `GET /api/v1/procesos` o en el panel.
+
+| Proceso | Qué hace | Claves |
+|---|---|---|
+| `EmailEntrantesPoller` | Recepción de CFE por IMAP | `run`, `intervaloMinutos` |
+| `RespuestaCfePoller` | Respuesta (ME) a los comprobantes recibidos | `run`, `intervaloMinutos`, `maximo` |
+| `ReporteDiarioPoller` | Reportes diarios faltantes | `run`, `hora`, `intervaloMinutos`, `diasDesde`, `cantReportes`, `empresas` |
+| `TipoDeCambioPoller` | Cotización del dólar del INE | `run`, `intervaloMinutos`, `diasAtras` |
+| `EmisoresElectronicosPoller` | Padrón de emisores electrónicos de DGI | `run`, `hora`, `intervaloMinutos`, `diasAtras` |
+| `NotificationPoller` | Avisos de CAE y firmas por vencer | `run`, `intervaloMinutos` |
+
+## Configuración
+
+`conf/application.conf` (desarrollo) y `deploy_conf/{test,prod}/application.conf` (cada ambiente; no se versionan).
+Las principales:
+
+| Clave | Uso |
+|---|---|
+| `db.default.url`, `username`, `password` | Base de datos PostgreSQL |
+| `play.crypto.secret` | Secreto de Play |
+| `environment` | `test` o `produccion`: qué servicios de DGI se usan |
+| `service.{recepcion,consulta,rut}.url.{test,produccion}` | URLs de los web services de DGI |
+| `mail.sistema.*` | SMTP del sistema (códigos de confirmación y recuperación, notificaciones) |
+| `mail.subject`, `mail.body` | Texto de los mails con los comprobantes a los receptores |
+| `mail.recepcion.*` | Recepción por IMAP (carpetas excluidas, días de la primera sincronización) |
+| `RecepcionCFE.control.*`, `RecepcionSobre.control.*` | Controles de recepción (`log` o `enforce`) |
+| `RespuestaCFE.diasPorDefecto` | Días de espera para responder los comprobantes recibidos |
+| `documentos.pdf.path` | Carpeta de los PDF generados |
+| `seguridad.*` | Ver [Seguridad](#seguridad) |
+| `<Poller>.*` | Ver [Procesos automáticos](#procesos-automáticos) |
+
+Los mails a los receptores salen con el servidor y la cuenta de cada empresa.
+
+## API
+
+Todas las rutas están en `conf/routes` y documentadas con Swagger en `GET /api/v1/documentacion`. Por área:
+
+| Área | Rutas |
+|---|---|
+| Sesión y cuenta | `/signin`, `/signup`, `/cuenta`, `/recuperar` |
+| Usuarios (ADMIN) | `/usuarios`, `/usuarios/:uid/...` (contraseña, sesiones, credenciales, empresas) |
+| Empresas | `/empresa`, `/empresa/:rut`, `/empresa/:rut/sucursales`, `/empresa/:rut/logo` |
+| CAE | `/empresa/:rut/cae` |
+| Comprobantes | `/empresa/:rut/documentos/...` |
+| Sobres | `/empresa/:rut/sobres`, `/empresa/:rut/sobre`, respuestas y rechazos de los recibidos |
+| Emails recibidos | `/empresa/:rut/emails`, `/empresa/:rut/emails/carpetas`, reintentos |
+| Reporte diario | `/empresa/:rut/reporteDiario/:fecha` |
+| DGI | `/rut/:rut`, `/emisoresElectronicos/...` |
+| Cotizaciones | `/tiposDeCambio`, `/ui` |
+| Operación | `/procesos`, `/ping`, `/version`, `/modo/:modo` |
+
+Los errores se devuelven como `{"result_code", "result_message", "result_detail"}` (`result_code` 0 es OK).
+
+## Build y deploy
+
+```bash
+scripts/build.sh                       # sbt dist: builds/java_efactura_uy-<version>.zip
+scripts/deploy.sh <test|prod>          # arma deploys/<ambiente> con su application.conf
+scripts/pushDeploy.sh <test|prod>      # lo copia a los servidores del ambiente
+scripts/EFACTURA-cluster.sh restart-full <test|prod>
+```
+
+- La versión es `conf/major.conf`.`conf/minor.conf`. `GET /api/v1/version` devuelve la versión, el commit y la fecha
+  de compilación.
+- Los servidores de cada ambiente se definen en `conf/servers.conf` (no se versiona), una línea por servidor:
+  `nombre | ip | puerto ssh | ambiente | clave ssh | usuario`.
+- `EFACTURA-cluster.sh` también acepta `start`, `stop`, `restart-hot` y `status`.
+- `scripts/java_efactura_uy.service` es una unidad de systemd para levantarla como servicio.
+
+### Clases de DGI
+
+Las clases Java de los formatos de DGI (`dgi.classes.*`) se generan con JAXB a partir de los XSD:
+
+```bash
+scripts/generar-clases-dgi.sh   # por defecto resources/xsd/XSDs_FE_1_44_2
+```
+
+Necesita el `xjc` del JDK 8 y python3.
+
+## Tests
+
+```bash
+sbt test
+```
+
+Hay tests unitarios de los builders de exportación, la recepción, el hash de contraseñas, los códigos por mail y el
+límite de login. `RegresionClasesDgiTest` compara las clases de DGI contra una muestra de comprobantes reales (no
+incluida) y se corre a mano.
+
+## Notas
+
+- `app/org/apache/xml/security/c14n/helper/C14nHelper.java` es una copia modificada de la clase de xmlsec que acepta
+  como absoluto el namespace relativo que usa el servicio de consulta de RUT de DGI. Funciona porque las clases de la
+  aplicación van primero en el classpath; hay que revisarla si se actualiza xmlsec.
+- Panel web: [efactura-admin](https://github.com/nicoribeiro/efactura-admin).
+
+## Autores
+
+- **Nicolas Ribeiro** - [Bluedot](https://github.com/nicoribeiro)
+
+Ver también [CONTRIBUTORS.md](CONTRIBUTORS.md) y los
+[colaboradores](https://github.com/nicoribeiro/java_efactura_uy/contributors). Agradecimientos a
+[LerandGroup](https://lerandgroup.com.uy).
+
+## Licencia
+
+[MIT](LICENSE.md)
