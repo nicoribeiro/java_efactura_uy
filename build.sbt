@@ -60,3 +60,12 @@ routesGenerator := InjectedRoutesGenerator
 
 
 fork in run := true
+
+// Version del build para GET /api/v1/version: version (la pone scripts/build.sh), commit y fecha de compilacion
+resourceGenerators in Compile += Def.task {
+  val archivo = (resourceManaged in Compile).value / "version.properties"
+  val commit = scala.util.Try(Process("git rev-parse --short=7 HEAD", baseDirectory.value).!!.trim).getOrElse("desconocido")
+  val fecha = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new java.util.Date())
+  IO.write(archivo, s"version=${version.value}\ncommit=$commit\ncompilado=$fecha\n")
+  Seq(archivo)
+}.taskValue

@@ -207,6 +207,8 @@ POST     /api/v1/modo/:modo                                      com.bluedot.efa
 # Session management
 # Monitoreo (ej. Zabbix): sin sesion, solo desde las redes de seguridad.ping.redes; {"ok":true} si la API y la base responden
 GET      /api/v1/ping                                            com.bluedot.efactura.controllers.PingController.ping()
+# Version de la API (build.sbt, commit y fecha de compilacion), con sesion
+GET      /api/v1/version                                         com.bluedot.efactura.controllers.VersionController.getVersion()
 
 POST     /api/v1/signin                                          com.bluedot.commons.controllers.SignInController.signIn()
 POST     /api/v1/signup                                          com.bluedot.commons.controllers.SignInController.signUp()
