@@ -255,6 +255,8 @@ scripts/EFACTURA-cluster.sh restart-full <test|prod>
 
 - La versión es `conf/major.conf`.`conf/minor.conf`. `GET /api/v1/version` devuelve la versión, el commit y la fecha
   de compilación.
+- Los releases de GitHub usan el tag `v<major>.<minor>.0` (por ejemplo `v1.1.0` para la versión 1.1), sobre el commit
+  de `main` que se despliega en producción.
 - Los servidores de cada ambiente se definen en `conf/servers.conf` (no se versiona), una línea por servidor:
   `nombre | ip | puerto ssh | ambiente | clave ssh | usuario`.
 - `EFACTURA-cluster.sh` también acepta `start`, `stop`, `restart-hot` y `status`.

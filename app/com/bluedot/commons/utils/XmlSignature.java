@@ -215,8 +215,7 @@ public class XmlSignature {
 		sig.sign(privateKey);
 		doc.getDocumentElement().appendChild(sig.getElement());
 		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		outputStream
-				.write(Canonicalizer.getInstance(Canonicalizer.ALGO_ID_C14N_WITH_COMMENTS).canonicalizeSubtree(doc));
+		Canonicalizer.getInstance(Canonicalizer.ALGO_ID_C14N_WITH_COMMENTS).canonicalizeSubtree(doc, outputStream);
 		return outputStream;
 	}
 

@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.commons.Commons;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.TipoDocumento;
@@ -54,7 +55,7 @@ public class CFEBuilderExportacion extends CFEBuilderImpl implements CFEBuiderIn
 	protected static String texto(JSONObject json, String campo) {
 		if (!json.has(campo) || json.isNull(campo))
 			return null;
-		String valor = json.get(campo).toString().trim();
+		String valor = Commons.textoJson(json.get(campo)).trim();
 		return valor.isEmpty() ? null : valor;
 	}
 
