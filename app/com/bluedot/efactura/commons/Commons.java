@@ -3,6 +3,7 @@ package com.bluedot.efactura.commons;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -116,7 +117,19 @@ public class Commons {
 	public static String safeGetString(JSONObject object, String key) throws APIException {
 		if (!object.has(key))
 			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams(key);
-		return object.optString(key);
+		Object valor = object.opt(key);
+		return valor instanceof BigDecimal ? textoJson(valor) : object.optString(key);
+	}
+
+	/*
+	 * Texto de un valor de un JSONObject. org.json (desde 20180813) parsea los numeros con decimales como BigDecimal y
+	 * conserva la escala ("12.50", "1E+3"); antes eran Double ("12.5", "1000.0"). Se devuelve el texto de antes para que
+	 * los montos que llegan como numero en el JSON vayan igual que antes al XML del CFE.
+	 */
+	public static String textoJson(Object valor) {
+		if (valor instanceof BigDecimal)
+			return Double.toString(((BigDecimal) valor).doubleValue());
+		return valor.toString();
 	}
 	
 	public static Integer safeGetInteger(JSONObject object, String key) throws APIException {

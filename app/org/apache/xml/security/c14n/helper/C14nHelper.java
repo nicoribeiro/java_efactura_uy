@@ -18,11 +18,7 @@
  */
 package org.apache.xml.security.c14n.helper;
 
-import org.apache.xml.security.c14n.CanonicalizationException;
 import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 
 /*
  * Copia de la clase de xmlsec (santuario) con el mismo paquete y nombre, para la consulta de RUT a DGI
@@ -34,19 +30,18 @@ import org.w3c.dom.NamedNodeMap;
  *
  * Reemplaza a la de la libreria porque el jar de la aplicacion va primero en el classpath (bin/java_efactura_uy del
  * dist de Play): no hace falta un javaagent. Si cambia el orden del classpath o se actualiza xmlsec y la clase cambia,
- * hay que revisar que esta copia siga teniendo los mismos metodos publicos que la original.
+ * hay que revisar que esta copia siga teniendo los mismos metodos publicos que la original. Copiada de xmlsec 2.3.4
+ * (la que trae CXF 3.5.11).
  */
 
 /**
  * Temporary swapped static functions from the normalizer Section
  *
- * @author Christian Geuer-Pollmann
  */
 public final class C14nHelper {
 
     /**
      * Constructor C14nHelper
-     *
      */
     private C14nHelper() {
         // don't allow instantiation
@@ -98,73 +93,7 @@ public final class C14nHelper {
         if ("DGI_Modernizacion_Consolidado".equals(namespaceValue)) {
             return true;
         }
-
         return namespaceValue.indexOf(':') > 0;
     }
 
-    /**
-     * This method throws an exception if the Attribute value contains
-     * a relative URI.
-     *
-     * @param attr
-     * @throws CanonicalizationException
-     */
-    public static void assertNotRelativeNS(Attr attr) throws CanonicalizationException {
-        if (attr == null) {
-            return;
-        }
-
-        String nodeAttrName = attr.getNodeName();
-        boolean definesDefaultNS = nodeAttrName.equals("xmlns");
-        boolean definesNonDefaultNS = nodeAttrName.startsWith("xmlns:");
-
-        if ((definesDefaultNS || definesNonDefaultNS) && namespaceIsRelative(attr)) {
-            String parentName = attr.getOwnerElement().getTagName();
-            String attrValue = attr.getValue();
-            Object exArgs[] = { parentName, nodeAttrName, attrValue };
-
-            throw new CanonicalizationException(
-                "c14n.Canonicalizer.RelativeNamespace", exArgs
-            );
-        }
-    }
-
-    /**
-     * This method throws a CanonicalizationException if the supplied Document
-     * is not able to be traversed using a TreeWalker.
-     *
-     * @param document
-     * @throws CanonicalizationException
-     */
-    public static void checkTraversability(Document document)
-        throws CanonicalizationException {
-        if (!document.isSupported("Traversal", "2.0")) {
-            Object exArgs[] = {document.getImplementation().getClass().getName() };
-
-            throw new CanonicalizationException(
-                "c14n.Canonicalizer.TraversalNotSupported", exArgs
-            );
-        }
-    }
-
-    /**
-     * This method throws a CanonicalizationException if the supplied Element
-     * contains any relative namespaces.
-     *
-     * @param ctxNode
-     * @throws CanonicalizationException
-     * @see C14nHelper#assertNotRelativeNS(Attr)
-     */
-    public static void checkForRelativeNamespace(Element ctxNode)
-        throws CanonicalizationException {
-        if (ctxNode != null) {
-            NamedNodeMap attributes = ctxNode.getAttributes();
-
-            for (int i = 0; i < attributes.getLength(); i++) {
-                C14nHelper.assertNotRelativeNS((Attr) attributes.item(i));
-            }
-        } else {
-            throw new CanonicalizationException("Called checkForRelativeNamespace() on null");
-        }
-    }
 }
