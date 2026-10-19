@@ -45,7 +45,7 @@ instanceUser=$(instanceUser $INSTANCE_NAME)
 
 start() {
 
-        cant=$(ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort  "ps ax | grep -v grep | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l")
+        cant=$(ssh -i "$instanceKey" $instanceUser@$instanceIp -p $instancePort  "ps ax | grep -v grep | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l")
 
         if [ "$cant" != "0" ]; then
                 INFO "$APP_NAME is running at $INSTANCE_NAME, aborting ..."
@@ -53,11 +53,11 @@ start() {
                 INFO "No $APP_NAME instances running on $INSTANCE_NAME"
                 INFO "Starting instance $INSTANCE_NAME..."
 		INFO "$JAVA_OPTS"
-                APP_NAME_VERSION=$(ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort "ls $REMOTE_DIR/$SERVER_GROUP")
-                ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort "echo '$JAVA_OPTS; nohup $REMOTE_DIR/$SERVER_GROUP/$APP_NAME_VERSION/bin/$APP_NAME -Dhttp.port=$PORT -Dconfig.file=$REMOTE_DIR/$SERVER_GROUP/$APP_NAME_VERSION/conf/application.conf >> /var/log/srv/$APP_NAME.log 2>&1 &' | bash"
+                APP_NAME_VERSION=$(ssh -i "$instanceKey" $instanceUser@$instanceIp -p $instancePort "ls $REMOTE_DIR/$SERVER_GROUP")
+                ssh -i "$instanceKey" $instanceUser@$instanceIp -p $instancePort "echo '$JAVA_OPTS; nohup $REMOTE_DIR/$SERVER_GROUP/$APP_NAME_VERSION/bin/$APP_NAME -Dhttp.port=$PORT -Dconfig.file=$REMOTE_DIR/$SERVER_GROUP/$APP_NAME_VERSION/conf/application.conf >> /var/log/srv/$APP_NAME.log 2>&1 &' | bash"
                 sleep 2
 
-                cant=$(ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort "ps -ef | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l")
+                cant=$(ssh -i "$instanceKey" $instanceUser@$instanceIp -p $instancePort "ps -ef | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l")
 
                 if [ "$cant" -gt "0" ]; then
                         INFO "$APP_NAME at instance $INSTANCE_NAME started"
@@ -72,12 +72,11 @@ start() {
 stop() {
         INFO "Stoping instance $INSTANCE_NAME..."
 
-        APP_PID=$(ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort "ps -ef | grep -v grep | grep Dconfig.file | grep $APP_NAME" | awk '{print $2}')
-        #curl "http://$INSTANCE_HOSTNAME:9000/api/v1/application/shutdown" -H "X-BH-IPASS-AUTH-TOKEN: 013df144-dd02-430c-affc-33511bab6f8d"  --compressed
+        APP_PID=$(ssh -i "$instanceKey" $instanceUser@$instanceIp -p $instancePort "ps -ef | grep -v grep | grep Dconfig.file | grep $APP_NAME" | awk '{print $2}')
 
-        cant=$(ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort "ps -ef | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l")
+        cant=$(ssh -i "$instanceKey" $instanceUser@$instanceIp -p $instancePort "ps -ef | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l")
         if [ "$cant" -gt "0" ]; then
-                ssh -t -i $instanceKey $instanceUser@$instanceIp -p $instancePort "kill $APP_PID" 2>/dev/null
+                ssh -t -i "$instanceKey" $instanceUser@$instanceIp -p $instancePort "kill $APP_PID" 2>/dev/null
                 sleep 2
                 $0 $INSTANCE_NAME stop $SERVER_GROUP
         else
@@ -88,7 +87,7 @@ stop() {
 
 
 status() {
-	cant=$(ssh -i $instanceKey $instanceUser@$instanceIp -p $instancePort  "ps ax | grep -v grep | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l")
+	cant=$(ssh -i "$instanceKey" $instanceUser@$instanceIp -p $instancePort  "ps ax | grep -v grep | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l")
 
         if [ "$cant" != "0" ]; then
 		INFO "$APP_NAME running instances at $INSTANCE_NAME:  $cant "

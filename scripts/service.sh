@@ -52,7 +52,6 @@ stop() {
         INFO "Stopping instance $INSTANCE_NAME..."
 
         APP_PID=$(ps -ef | grep -v grep | grep Dconfig.file | grep $APP_NAME | awk '{print $2}')
-        #curl "http://$INSTANCE_HOSTNAME:9000/api/v1/application/shutdown" -H "X-BH-IPASS-AUTH-TOKEN: 013df144-dd02-430c-affc-33511bab6f8d"  --compressed
 
         cant=$(ps -ef | grep Dconfig.file | grep $APP_NAME | grep -v grep | wc -l)
         if [ "$cant" -gt "0" ]; then
