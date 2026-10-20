@@ -25,8 +25,8 @@ import play.Play;
  * El comportamiento depende de seguridad.accesoEmpresa:
  * <ul>
  * <li>off: no se controla nada</li>
- * <li>log (default): se loguea quien seria bloqueado, sin bloquear</li>
- * <li>enforce: se bloquea con 403</li>
+ * <li>log: se loguea quien seria bloqueado, sin bloquear</li>
+ * <li>enforce (default, tambien si falta o es invalido): se bloquea con 403</li>
  * </ul>
  */
 public class AccesoEmpresa {
@@ -40,12 +40,12 @@ public class AccesoEmpresa {
 	private static final String PREFIJO_PERMISO = PermissionNames.EMPRESA_ACCESS.pattern.replace("{0}", "");
 
 	public static Modo modo() {
-		String valor = Play.application().configuration().getString("seguridad.accesoEmpresa", "log");
+		String valor = Play.application().configuration().getString("seguridad.accesoEmpresa", "enforce");
 		try {
 			return Modo.valueOf(valor.trim().toUpperCase());
 		} catch (IllegalArgumentException e) {
-			logger.error("Valor invalido para seguridad.accesoEmpresa: '" + valor + "', se usa 'log'");
-			return Modo.LOG;
+			logger.error("Valor invalido para seguridad.accesoEmpresa: '" + valor + "', se usa 'enforce'");
+			return Modo.ENFORCE;
 		}
 	}
 

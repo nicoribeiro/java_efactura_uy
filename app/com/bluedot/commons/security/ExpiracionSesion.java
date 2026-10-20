@@ -15,8 +15,8 @@ import play.Play;
  * seguridad.sesion.expiracion:
  * <ul>
  * <li>off: los tokens no vencen (comportamiento anterior)</li>
- * <li>log (default): se loguea "SESION SERIA RECHAZADA" sin rechazar</li>
- * <li>enforce: se rechaza con 401</li>
+ * <li>log: se loguea "SESION SERIA RECHAZADA" sin rechazar</li>
+ * <li>enforce (default, tambien si falta o es invalido): se rechaza con 401</li>
  * </ul>
  */
 public class ExpiracionSesion {
@@ -31,12 +31,12 @@ public class ExpiracionSesion {
 	private static final long INTERVALO_REGISTRO_ACCESO_MS = 5 * 60 * 1000;
 
 	public static Modo modo() {
-		String valor = Play.application().configuration().getString("seguridad.sesion.expiracion", "log");
+		String valor = Play.application().configuration().getString("seguridad.sesion.expiracion", "enforce");
 		try {
 			return Modo.valueOf(valor.trim().toUpperCase());
 		} catch (IllegalArgumentException e) {
-			logger.error("Valor invalido para seguridad.sesion.expiracion: '" + valor + "', se usa 'log'");
-			return Modo.LOG;
+			logger.error("Valor invalido para seguridad.sesion.expiracion: '" + valor + "', se usa 'enforce'");
+			return Modo.ENFORCE;
 		}
 	}
 
