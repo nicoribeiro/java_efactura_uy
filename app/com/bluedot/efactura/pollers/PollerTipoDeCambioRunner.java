@@ -6,11 +6,10 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
+import java.security.GeneralSecurityException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.GregorianCalendar;
@@ -21,15 +20,13 @@ import java.util.Date;
 import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.utils.ExcelToJSONConverter2;
+import com.bluedot.commons.utils.TlsExtra;
 import com.bluedot.efactura.model.TipoCotizacion;
 import com.bluedot.efactura.model.TipoDeCambio;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -42,6 +39,9 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 
 	
 	static Logger logger = LoggerFactory.getLogger(PollerTipoDeCambioRunner.class);
+
+	/** Intermedio de Sectigo que el servidor de INE no manda (conf/certs, va en el classpath) */
+	static final String CERTIFICADO_INE = "/certs/sectigo-public-server-authentication-ca-dv-r36.pem";
 
 	private String pattern = "yyyy-MM-dd";
 	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
@@ -144,46 +144,24 @@ public class PollerTipoDeCambioRunner extends PollerRunner {
 		String ine_file_url = applicationProvider.get().configuration().getString("ine.cotizaciones");
 
 		/*
-		 * ESTO ES PARA BYPASEAR EL CHECK DE LOS CERTIFICADOS SSL
-		 * hay un problam con el certificado de ine donde se baja el archivo
+		 * Me bajo el archivo de cotizaciones del INE verificando el certificado. El servidor de INE manda un intermedio que
+		 * no es el que firmo su certificado y Java 8 no completa la cadena: se agrega el intermedio correcto solo para esta
+		 * conexion. Antes se desactivaba la verificacion con setDefaultSSLSocketFactory, para toda la JVM (DGI incluido).
 		 */
-		TrustManager trm = new X509TrustManager() {
-		    public X509Certificate[] getAcceptedIssuers() {
-		        return null;
-		    }
-
-		    public void checkClientTrusted(X509Certificate[] certs, String authType) {
-
-		    }
-
-		    public void checkServerTrusted(X509Certificate[] certs, String authType) {
-		    }
-		};
-		
-		SSLContext sc;
-		try {
-			sc = SSLContext.getInstance("SSL");
-			sc.init(null, new TrustManager[] { trm }, null);
-			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-			
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (KeyManagementException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		URLConnection conexion = new URL(ine_file_url).openConnection();
+		conexion.setConnectTimeout(30000);
+		conexion.setReadTimeout(120000);
+		if (conexion instanceof HttpsURLConnection) {
+			try {
+				((HttpsURLConnection) conexion).setSSLSocketFactory(TlsExtra.conCertificados(CERTIFICADO_INE));
+			} catch (GeneralSecurityException e) {
+				throw new IOException("No se pudo preparar la conexion segura a INE", e);
+			}
 		}
-		/*
-		 * ACA TERMINA EL BYPASSS
-		 */
-		
-		
-		//Me bajo el archivo de cotizaciones del ine
-		URL website = new URL(ine_file_url);
-		ReadableByteChannel rbc = Channels.newChannel(website.openStream());
-		FileOutputStream fos = new FileOutputStream(tempFile);
-		fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-		fos.close();
+		try (ReadableByteChannel rbc = Channels.newChannel(conexion.getInputStream());
+				FileOutputStream fos = new FileOutputStream(tempFile)) {
+			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+		}
 
 		// Creating a file object with specific file path
 		ExcelToJSONConverter2 converter = new ExcelToJSONConverter2();
