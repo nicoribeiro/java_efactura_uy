@@ -58,8 +58,16 @@ public abstract class Sobre extends Model<Sobre> {
 	static final String FORMATO_ACK_SOBRE = "M_<ID_RECEPTOR>_Sob_<RUC>_<FECHA>_<ID_EMISOR>.xml";
 	static final String FORMATO_ACK_CFE = "ME_<ID_RECEPTOR>_Sob_<RUC>_<FECHA>_<ID_EMISOR>.xml";
 	
-	static final SimpleDateFormat formatoFechaSobre = new SimpleDateFormat("yyyyMMdd");
-	
+	/**
+	 * Nombre del archivo del sobre segun DGI: Sob_RUC_FECHA_IDEMISOR.xml, con FECHA (yyyyMMdd) la de la caratula. Si no
+	 * coincide con la caratula el receptor rechaza el sobre (S01, "No coincide el nombre del documento ... con el definido
+	 * por DGI").
+	 */
+	public static String nombreArchivo(String rut, Date fecha, long idEmisor) {
+		return FORMATO_NOMBRE_SOBRE.replace("<RUC>", rut).replace("<FECHA>", new SimpleDateFormat("yyyyMMdd").format(fecha))
+				.replace("<ID_EMISOR>", String.valueOf(idEmisor));
+	}
+
 	@Id
 	@GeneratedValue
 	private long id;
@@ -406,8 +414,10 @@ public abstract class Sobre extends Model<Sobre> {
 	}
 
 	public String getNombreArchivo() {
+		// Sin nombre (sobres viejos o sin XML para el receptor): con la fecha del sobre. Antes era la fecha del momento en
+		// que se pedia el nombre (ej. al mandar el mail al dia siguiente), que no coincidia con la de la caratula
 		if (nombreArchivo==null || nombreArchivo.equals(""))
-			nombreArchivo =  FORMATO_NOMBRE_SOBRE.replace("<RUC>", getEmpresaEmisora().getRut()).replace("<FECHA>", formatoFechaSobre.format(new Date())).replace("<ID_EMISOR>", String.valueOf(getId()));
+			nombreArchivo = nombreArchivo(getEmpresaEmisora().getRut(), getFecha() != null ? getFecha() : new Date(), getId());
 		return nombreArchivo;
 	}
 
