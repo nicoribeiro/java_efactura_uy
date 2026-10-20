@@ -507,6 +507,149 @@ public class SobresController extends AbstractController {
 	}
 
 	/**
+	 * Rechazos de las empresas receptoras en el periodo, en dos contadores separados (inicio del panel):
+	 * <ul>
+	 * <li>sobres: sobres emitidos que el receptor rechazo entero (respuesta M_ con BS)</li>
+	 * <li>cfes: comprobantes que el receptor rechazo (respuesta ME_ con BE)</li>
+	 * </ul>
+	 * Cada uno con el total y, por empresa receptora, la cantidad y los motivos. Los motivos salen de las respuestas
+	 * guardadas (no hay campo en la base). Solo lectura.
+	 *
+	 * Parametros: fromDate y toDate (epoch en segundos; si faltan, los ultimos 30 dias, como el resumen de documentos).
+	 */
+	public Promise<Result> getRechazosReceptor(String rut) throws APIException {
+		Empresa empresa = Empresa.findByRUT(rut, true);
+		Date hasta;
+		Date desde;
+		try {
+			hasta = request().getQueryString("toDate") != null ? new Date(Long.parseLong(request().getQueryString("toDate")) * 1000) : new Date();
+			desde = request().getQueryString("fromDate") != null ? new Date(Long.parseLong(request().getQueryString("fromDate")) * 1000)
+					: com.bluedot.commons.utils.DateHandler.add(hasta, -29, java.util.Calendar.DAY_OF_MONTH);
+		} catch (NumberFormatException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).setDetailMessage("fromDate y toDate deben ser numericos (epoch en segundos)");
+		}
+
+		// Sobres rechazados enteros por el receptor (M_ con BS)
+		Rechazos sobres = new Rechazos();
+		for (SobreEmitido sobre : play.db.jpa.JPA.em()
+				.createQuery("select s from SobreEmitido s where s.empresaEmisora = :empresa and s.estadoEmpresa = :rechazado"
+						+ " and s.fecha between :desde and :hasta", SobreEmitido.class)
+				.setParameter("empresa", empresa).setParameter("rechazado", dgi.classes.respuestas.sobre.EstadoACKSobreType.BS)
+				.setParameter("desde", desde).setParameter("hasta", hasta).getResultList())
+			sobres.agregarSobre(sobre.getEmpresaReceptora(), payload(sobre.getRespuestaSobre()), sobre.getId());
+
+		// Comprobantes rechazados por el receptor (ME_ con BE): la respuesta es una por sobre, con el estado de cada CFE
+		Rechazos cfes = new Rechazos();
+		for (SobreEmitido sobre : play.db.jpa.JPA.em()
+				.createQuery("select s from SobreEmitido s where s.empresaEmisora = :empresa and s.respuestaCfes is not null"
+						+ " and s.fecha between :desde and :hasta", SobreEmitido.class)
+				.setParameter("empresa", empresa).setParameter("desde", desde).setParameter("hasta", hasta).getResultList())
+			cfes.agregarCfes(sobre.getEmpresaReceptora(), payload(sobre.getRespuestaCfes()), sobre.getId());
+
+		SimpleDateFormat dia = new SimpleDateFormat("yyyy-MM-dd");
+		return json(new JSONObject().put("desde", dia.format(desde)).put("hasta", dia.format(hasta)).put("sobres", sobres.json())
+				.put("cfes", cfes.json()).toString());
+	}
+
+	private static String payload(com.bluedot.efactura.model.Respuesta respuesta) {
+		return respuesta != null ? respuesta.getPayload() : null;
+	}
+
+	/** Conteo de rechazos por empresa receptora y motivo, a partir de las respuestas M_ y ME_ guardadas */
+	static class Rechazos {
+		/** Sobres o comprobantes que se listan por empresa, para el detalle */
+		static final int MAXIMO_LISTADOS = 20;
+
+		private final Map<String, JSONObject> porEmpresa = new java.util.LinkedHashMap<String, JSONObject>();
+		private final Map<String, Map<String, int[]>> motivos = new HashMap<String, Map<String, int[]>>();
+		private final Map<String, String> glosas = new HashMap<String, String>();
+		private int total;
+
+		/** Un sobre que el receptor rechazo entero (M_ con BS): suma uno, con los motivos de la respuesta */
+		void agregarSobre(Empresa receptora, String payloadM, long idSobre) {
+			JSONObject fila = sumar(receptora);
+			dgi.classes.respuestas.sobre.ACKSobredefType ack = leer(payloadM, dgi.classes.respuestas.sobre.ACKSobredefType.class, idSobre);
+			if (ack != null && ack.getDetalle() != null)
+				for (dgi.classes.respuestas.sobre.RechazoSobreType m : ack.getDetalle().getMotivosRechazo())
+					motivo(receptora, m.getMotivo(), m.getGlosa());
+			listar(fila, new JSONObject().put("idSobre", idSobre));
+		}
+
+		/** La respuesta a los CFE de un sobre (ME_): suma uno por cada CFE rechazado (BE), con sus motivos */
+		void agregarCfes(Empresa receptora, String payloadME, long idSobre) {
+			dgi.classes.respuestas.cfe.ACKCFEdefType ack = leer(payloadME, dgi.classes.respuestas.cfe.ACKCFEdefType.class, idSobre);
+			if (ack == null)
+				return;
+			for (dgi.classes.respuestas.cfe.ACKCFEdefType.ACKCFEDet det : ack.getACKCFEDet()) {
+				if (det.getEstado() != EstadoACKCFEType.BE)
+					continue;
+				JSONObject fila = sumar(receptora);
+				for (dgi.classes.respuestas.cfe.RechazoCFEDGIType m : det.getMotivosRechazoCF())
+					motivo(receptora, m.getMotivo(), m.getGlosa());
+				listar(fila, new JSONObject().put("idTipoDoc", det.getTipoCFE() != null ? det.getTipoCFE().intValue() : JSONObject.NULL)
+						.put("serie", det.getSerie() != null ? det.getSerie() : JSONObject.NULL)
+						.put("nro", det.getNroCFE() != null ? det.getNroCFE().longValue() : JSONObject.NULL).put("idSobre", idSobre));
+			}
+		}
+
+		JSONObject json() {
+			List<JSONObject> filas = new java.util.ArrayList<JSONObject>();
+			for (Map.Entry<String, JSONObject> e : porEmpresa.entrySet()) {
+				JSONArray lista = new JSONArray();
+				for (Map.Entry<String, int[]> m : motivos.get(e.getKey()).entrySet())
+					lista.put(new JSONObject().put("motivo", m.getKey()).put("glosa", glosas.containsKey(m.getKey()) ? glosas.get(m.getKey()) : JSONObject.NULL)
+							.put("cantidad", m.getValue()[0]));
+				filas.add(e.getValue().put("motivos", lista));
+			}
+			filas.sort((a, b) -> Integer.compare(b.getInt("cantidad"), a.getInt("cantidad")));
+			return new JSONObject().put("total", total).put("porEmpresa", new JSONArray(filas));
+		}
+
+		private static String clave(Empresa receptora) {
+			return receptora != null ? receptora.getRut() : "";
+		}
+
+		private JSONObject sumar(Empresa receptora) {
+			total++;
+			JSONObject fila = porEmpresa.get(clave(receptora));
+			if (fila == null) {
+				fila = new JSONObject().put("rut", receptora != null ? receptora.getRut() : JSONObject.NULL)
+						.put("razon", receptora != null && receptora.getRazon() != null ? receptora.getRazon() : JSONObject.NULL)
+						.put("cantidad", 0).put("listados", new JSONArray());
+				porEmpresa.put(clave(receptora), fila);
+				motivos.put(clave(receptora), new java.util.TreeMap<String, int[]>());
+			}
+			fila.put("cantidad", fila.getInt("cantidad") + 1);
+			return fila;
+		}
+
+		private void motivo(Empresa receptora, String codigo, String glosa) {
+			String c = codigo != null ? codigo : "?";
+			motivos.get(clave(receptora)).computeIfAbsent(c, k -> new int[1])[0]++;
+			if (glosa != null)
+				glosas.putIfAbsent(c, glosa);
+		}
+
+		private void listar(JSONObject fila, JSONObject item) {
+			JSONArray listados = fila.getJSONArray("listados");
+			if (listados.length() < MAXIMO_LISTADOS)
+				listados.put(item);
+		}
+
+		/** Respuesta de un receptor leida como la clase de DGI; null si no esta o no se puede leer */
+		private static <T> T leer(String payload, Class<T> clase, long idSobre) {
+			if (payload == null)
+				return null;
+			try {
+				return clase.cast(com.bluedot.commons.utils.XML.unMarshall(com.bluedot.commons.utils.XML.loadXMLFromString(payload), clase));
+			} catch (Exception e) {
+				logger.warn("No se pudo leer la respuesta del receptor del sobre " + idSobre + ": " + e.getMessage());
+				return null;
+			}
+		}
+	}
+
+	/**
 	 * Sobres de la empresa (emitidos o recibidos), paginados, con sus comprobantes resumidos. Solo lectura.
 	 * 
 	 * Parametros: direccion (EMITIDO por defecto), fromDate y toDate (epoch en segundos), estado (AS, BS o SIN), page y

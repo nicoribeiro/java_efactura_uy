@@ -72,6 +72,8 @@ GET      /api/v1/empresa/:rut/emails/:emailId/adjuntos/:id       com.bluedot.efa
 
 # Sobres de la empresa (emitidos o recibidos), paginados, con sus comprobantes
 GET      /api/v1/empresa/:rut/sobres                             com.bluedot.efactura.controllers.SobresController.getSobres(rut: String)
+# Rechazos de las empresas receptoras en el periodo: sobres (M_ con BS) y comprobantes (ME_ con BE), por empresa y motivo (inicio del panel)
+GET      /api/v1/empresa/:rut/rechazosReceptor                   com.bluedot.efactura.controllers.SobresController.getRechazosReceptor(rut: String)
 
 # Obtener un sobre
 GET      /api/v1/empresa/:rut/sobre                              com.bluedot.efactura.controllers.SobresController.getSobre(rut:String, idSobre:Long)
