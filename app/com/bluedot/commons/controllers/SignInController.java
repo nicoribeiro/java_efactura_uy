@@ -62,34 +62,9 @@ public class SignInController extends AbstractController
 			}
 		}
 
-		User user = null;
-		
-		/*
-		 * Impersonate login
-		 */
-		if(emailAddress.contains(":"))
-		{
-			String masterEmail = emailAddress.split("\\:")[0];
-			String targetEmail = emailAddress.split("\\:")[1];
-			
-			User masterUser = User.findByEmailAddress(masterEmail);
-			
-			if(masterUser != null && masterUser.getRole() == Role.ADMIN)
-			{
-				String key = masterUser.getCredentials().getToken() + masterUser.getCredentials().getSecret();
-				if(key.equals(password)){
-					logger.info("Master login from " + masterEmail + " to " + targetEmail + " suceeed.");
-					user = User.findByEmailAddress(targetEmail);
-				}
-			}else{
-				logger.info("Master login from " + masterEmail + " to " + targetEmail + " failed.");
-			}
-			
-		}
-		else
-		{
-			user = User.findByEmailAddressAndPassword(emailAddress, password);
-		}
+		// Antes un email "admin:otro" con el token+secreto HMAC del admin entraba como cualquier usuario (sin verificar que el
+		// admin estuviera activo). No se usaba: se saco
+		User user = User.findByEmailAddressAndPassword(emailAddress, password);
 
 		if (user == null)
 			limite.registrarFalla(emailAddress, ip, ahora);
