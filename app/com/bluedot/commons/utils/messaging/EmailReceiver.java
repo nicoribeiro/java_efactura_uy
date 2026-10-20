@@ -39,19 +39,29 @@ public class EmailReceiver {
         properties.put(String.format("mail.%s.connectiontimeout", protocol), "30000");
         properties.put(String.format("mail.%s.timeout", protocol), "60000");
 
-        // SSL setting
-        if (ssl){
-        properties.setProperty(
-                String.format("mail.%s.socketFactory.class", protocol),
-                "javax.net.ssl.SSLSocketFactory");
-        properties.setProperty(
-                String.format("mail.%s.socketFactory.fallback", protocol),
-                "false");
-        properties.setProperty(
-                String.format("mail.%s.socketFactory.port", protocol),
-                String.valueOf(port));
+        // SSL: con ssl.enable JavaMail verifica el certificado y, con checkserveridentity, que sea del servidor (antes se
+        // usaba un SSLSocketFactory a mano sin chequear el nombre: con cualquier certificado valido se podia hacer de
+        // intermediario y ver la contrasena de la casilla)
+        if (ssl) {
+            properties.setProperty(String.format("mail.%s.ssl.enable", protocol), "true");
+            properties.setProperty(String.format("mail.%s.ssl.checkserveridentity", protocol),
+                    String.valueOf(verificarServidor()));
         }
         return properties;
+    }
+
+    /**
+     * seguridad.mail.verificarServidor (default true): verificar que el certificado del servidor de mail (IMAP y SMTP)
+     * sea de ese nombre. false solo como salida de emergencia si el servidor de una empresa tiene un certificado con otro
+     * nombre.
+     */
+    public static boolean verificarServidor() {
+        try {
+            return play.Play.application().configuration().getBoolean("seguridad.mail.verificarServidor", true);
+        } catch (RuntimeException e) {
+            // Sin aplicacion Play (tests, utilitarios): se verifica
+            return true;
+        }
     }
  
     /**

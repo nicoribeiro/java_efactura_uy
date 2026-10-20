@@ -67,9 +67,11 @@ public class SendMail
 		properties.put("mail.smtp.socketFactory.port", String.valueOf(smtpPort));
 		properties.put("mail.smtp.ssl.enable", "true");
 		properties.put("mail.smtp.socketFactory.fallback", "false");
-		properties.put("mail.smtp.ssl.checkserveridentity", "false");
+		// Que el certificado sea del servidor (antes false: con cualquier certificado valido se podia hacer de intermediario
+		// y ver la contrasena). Sin mail.smtp.debug: escribia toda la conversacion SMTP, con el usuario y la contrasena en
+		// base64, en la salida estandar
+		properties.put("mail.smtp.ssl.checkserveridentity", String.valueOf(com.bluedot.commons.utils.messaging.EmailReceiver.verificarServidor()));
 		properties.put("mail.smtp.connectiontimeout", "10000");
-		properties.put("mail.smtp.debug", "true");
 		
 		// Get the default Session object.
 		Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
