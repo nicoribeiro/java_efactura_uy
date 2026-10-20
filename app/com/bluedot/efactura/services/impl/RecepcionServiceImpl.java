@@ -378,7 +378,11 @@ public class RecepcionServiceImpl implements RecepcionService {
 					.createEnvioCFEEntreEmpresasCaratula();
 
 			caratula.setCantCFE(cfes.size());
-			caratula.setFecha(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+			// La fecha de la caratula va tambien en el nombre del archivo (DGI): se fijan juntas. Antes el nombre se armaba
+			// la primera vez que se pedia, con la fecha de ese momento (ej. al mandar el mail al otro dia: rechazo S01)
+			GregorianCalendar fecha = new GregorianCalendar();
+			caratula.setFecha(DatatypeFactory.newInstance().newXMLGregorianCalendar(fecha));
+			sobre.setNombreArchivo(com.bluedot.efactura.model.Sobre.nombreArchivo(RUCemisor, fecha.getTime(), sobre.getId()));
 			caratula.setIdemisor(new BigInteger(String.valueOf(sobre.getId())));
 			caratula.setRUCEmisor(RUCemisor);
 			caratula.setRutReceptor(RUCreceptor);
@@ -856,7 +860,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			}
 			if (sobre.getXmlEmpresa() != null && sobre.getNombreArchivo() != null && !sobre.getNombreArchivo().isEmpty()) {
 				logger.info("ENVIO DE XML");
-				Commons.enviarMail(sobre.getEmpresaEmisora(), destinoXml, sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "",
+				Commons.enviarMail(sobre.getEmpresaEmisora(), destinoXml, nombreSegunCaratula(sobre), sobre.getXmlEmpresa().getBytes(), "",
 						new EnvioMail.Contexto(EnvioMail.Tipo.XML_RECEPTOR, origen).comprobante(cfe).sobre(sobre.getId()));
 				enviados.add("XML a " + destinoXml);
 			}
@@ -880,6 +884,28 @@ public class RecepcionServiceImpl implements RecepcionService {
 		return enviados;
 	}
 
+	/**
+	 * Nombre del archivo segun la fecha de la caratula del XML que se manda (DGI: tienen que coincidir, si no el receptor
+	 * rechaza el sobre con S01). Corrige los sobres guardados con el nombre armado con otra fecha (ej. el 312218, rechazado
+	 * por UTE).
+	 */
+	private static String nombreSegunCaratula(SobreEmitido sobre) {
+		try {
+			EnvioCFEEntreEmpresas envio = (EnvioCFEEntreEmpresas) XML.unMarshall(XML.loadXMLFromString(sobre.getXmlEmpresa()),
+					EnvioCFEEntreEmpresas.class);
+			String nombre = com.bluedot.efactura.model.Sobre.nombreArchivo(sobre.getEmpresaEmisora().getRut(),
+					envio.getCaratula().getFecha().toGregorianCalendar().getTime(), sobre.getId());
+			if (!nombre.equals(sobre.getNombreArchivo())) {
+				logger.warn("Nombre del sobre " + sobre.getId() + " corregido segun la fecha de la caratula: " + sobre.getNombreArchivo() + " -> " + nombre);
+				sobre.setNombreArchivo(nombre);
+				sobre.update();
+			}
+		} catch (Exception e) {
+			logger.warn("No se pudo leer la fecha de la caratula del sobre " + sobre.getId() + ": " + e.getMessage());
+		}
+		return sobre.getNombreArchivo();
+	}
+
 	@Override
 	public void enviarCorreoReceptorElectronico(SobreEmitido sobre) throws APIException {
 		
@@ -888,7 +914,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			logger.info("ENVIO DE XML");
 			// El sobre suele tener un solo comprobante: se registra ese
 			CFE unico = sobre.getCfes() != null && sobre.getCfes().size() == 1 ? sobre.getCfes().get(0) : null;
-			Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), sobre.getNombreArchivo(), sobre.getXmlEmpresa().getBytes(), "",
+			Commons.enviarMail(sobre.getEmpresaEmisora(), sobre.getEmpresaReceptora().getMailRecepcion(), nombreSegunCaratula(sobre), sobre.getXmlEmpresa().getBytes(), "",
 					EnvioMail.Contexto.automatico(EnvioMail.Tipo.XML_RECEPTOR).comprobante(unico).sobre(sobre.getId()));
 		}
 		
