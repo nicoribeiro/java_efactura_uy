@@ -392,17 +392,44 @@ public class Commons {
 		com.bluedot.efactura.model.EnvioMail.registrar(empresaDesde, destinatarios, nombreArchivo, subject, contexto, null);
 	}
 	
+	/** La serie de un CFE recibido la elige el emisor: no puede armar un nombre que salga de la carpeta */
 	public static String getPDFfilename(CFE cfe) {
-		return cfe.getTipo().value + "-" + cfe.getSerie() + "-" + cfe.getNro() + ".pdf";
+		return cfe.getTipo().value + "-" + IO.segmento(cfe.getSerie()) + "-" + cfe.getNro() + ".pdf";
 	}
-	
+
+	/**
+	 * documentos.pdf.path/rut/año. El RUT de un CFE recibido viene del XML del emisor: se limpia y se verifica que la carpeta
+	 * quede dentro de documentos.pdf.path (sino un "../" podia escribir o pisar PDFs de otra empresa).
+	 */
 	public static String getPDFpath(Empresa empresa, CFE cfe) {
-		
+
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(cfe.getFechaEmision());
 		int year = cal.get(Calendar.YEAR);
-		
-		return Play.application().configuration().getString("documentos.pdf.path", "/mnt/efacturas") + File.separator + empresa.getRut() + File.separator + year;
+
+		File base = new File(Play.application().configuration().getString("documentos.pdf.path", "/mnt/efacturas"));
+		try {
+			return IO.dentroDe(base, empresa.getRut(), String.valueOf(year)).getPath();
+		} catch (IOException e) {
+			throw new IllegalStateException(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Carpeta donde guardar los XML de reportes y pruebas (campo Output del body): siempre dentro de
+	 * seguridad.salidas.path (si falta: la carpeta temporal del sistema + /efactura). Del valor pedido solo se usa el
+	 * ultimo nombre de carpeta (antes se escribia en cualquier ruta del servidor). Sin valor: la carpeta base.
+	 */
+	public static String carpetaSalida(String pedido) throws APIException {
+		File base = new File(Play.application().configuration().getString("seguridad.salidas.path",
+				System.getProperty("java.io.tmpdir") + File.separator + "efactura"));
+		if (pedido == null || pedido.trim().isEmpty())
+			return base.getPath();
+		try {
+			return IO.dentroDe(base, new File(pedido.trim()).getName()).getPath();
+		} catch (IOException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("Output", pedido);
+		}
 	}
 
 	

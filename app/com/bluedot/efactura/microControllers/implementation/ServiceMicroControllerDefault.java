@@ -18,6 +18,7 @@ import org.w3c.dom.Document;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.commons.FormatosDgi;
 import com.bluedot.commons.security.Attachment;
 import com.bluedot.commons.security.AttachmentEstado;
 import com.bluedot.commons.security.EmailMessage;
@@ -562,6 +563,11 @@ public class ServiceMicroControllerDefault extends MicroControllerDefault implem
 					 */
 					sobreRecibido = new SobreRecibido();
 					sobreRecibido.setEmpresaReceptora(this.getEmpresa());
+					// El RUC del emisor lo pone quien manda el mail y termina en rutas de archivos (PDF): solo el formato de DGI
+					if (!FormatosDgi.esRuc(envioCFEEntreEmpresas.getCaratula().getRUCEmisor()))
+						throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE)
+								.withParams("RUCEmisor", envioCFEEntreEmpresas.getCaratula().getRUCEmisor())
+								.setDetailMessage("El RUC del emisor de la caratula tiene que tener 12 dígitos");
 					Empresa empresaEmisora = Empresa.findByRUT(envioCFEEntreEmpresas.getCaratula().getRUCEmisor());
 					if (empresaEmisora == null) {
 						empresaEmisora = new Empresa(envioCFEEntreEmpresas.getCaratula().getRUCEmisor(), null, null);

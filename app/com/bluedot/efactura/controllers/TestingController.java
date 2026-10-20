@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.commons.Commons;
+
 import com.bluedot.efactura.security.EmpresaAccess;
 
 import java.math.BigDecimal;
@@ -71,7 +73,7 @@ public class TestingController extends PruebasController {
 
 		maxLineasPorDocumento = encabezadoJSON.getInt("maxLineasPorDocumento");
 		
-		String output = encabezadoJSON.has("Output")?encabezadoJSON.getString("Output"):"/tmp";
+		String output = Commons.carpetaSalida(encabezadoJSON.has("Output") ? encabezadoJSON.getString("Output") : null);
 
 		loadTiposDoc(tiposDocArray);
 

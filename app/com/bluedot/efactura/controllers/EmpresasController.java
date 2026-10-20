@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.bluedot.commons.controllers.AbstractController;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
+import com.bluedot.efactura.commons.FormatosDgi;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.PermissionValidator;
 import com.bluedot.commons.security.Secured;
@@ -241,10 +242,23 @@ public class EmpresasController extends AbstractController {
 	public Promise<Result> crearEmpresa() throws APIException
 	{
 		JsonNode empresaJson = request().body().asJson();
+		if (empresaJson == null)
+			throw APIException.raise(APIErrors.BAD_JSON);
+		// logoPath leia cualquier archivo del servidor y lo devolvia como logo: el logo va en base64, como en editarEmpresa
+		if (empresaJson.has("logoPath"))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logoPath")
+					.setDetailMessage("logoPath ya no se acepta: mandar el logo en base64 en el campo logo");
 		Empresa empresa = new Empresa();
 		String rut = empresaJson.has("rut") ? empresaJson.findPath("rut").asText() : null;
+		// RUT obligatorio, con el formato de DGI y unico (con dos empresas con el mismo RUT fallan todas las rutas /empresa/:rut)
+		if (!FormatosDgi.esRuc(rut))
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("rut", String.valueOf(rut))
+					.setDetailMessage("El RUT tiene que tener 12 dígitos");
+		if (Empresa.findByRUT(rut) != null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("rut", rut)
+					.setDetailMessage("Ya existe una empresa con ese RUT");
 		String nombreComercial = empresaJson.has("nombreComercial") ? empresaJson.findPath("nombreComercial").asText() : null;
-		String logoPath = empresaJson.has("logoPath") ? empresaJson.findPath("logoPath").asText() : null;
+		String logo = texto(empresaJson, "logo");
 		String paginaWeb = empresaJson.has("paginaWeb") ? empresaJson.findPath("paginaWeb").asText() : null;
 		String resolucion = empresaJson.has("resolucion") ? empresaJson.findPath("resolucion").asText() : null;
 		String razon = empresaJson.has("razon") ? empresaJson.findPath("razon").asText() : null;
@@ -263,8 +277,7 @@ public class EmpresasController extends AbstractController {
 		if (hostRecepcion != null)
 			empresa.setHostRecepcion(hostRecepcion);
 
-		if (rut != null)
-			empresa.setRut(rut);
+		empresa.setRut(rut);
 
 		if (passRecepcion != null)
 			empresa.setPassRecepcion(passRecepcion);
@@ -297,15 +310,8 @@ public class EmpresasController extends AbstractController {
 			empresa.setRazon(razon);
 
 
-		if (logoPath!=null){
-			Path path = IO.resolve(logoPath).toPath();
-			try {
-				byte[] logo = Files.readAllBytes(path);
-				empresa.setLogo(logo);
-			} catch (IOException e) {
-			}
-
-		}
+		if (logo != null && !logo.isEmpty())
+			empresa.setLogo(leerLogo(logo));
 
 		if (certificado != null){
 			if (privateKey ==null)
@@ -347,6 +353,23 @@ public class EmpresasController extends AbstractController {
 
 	/** Tamano maximo del logo (va en el PDF de cada comprobante) */
 	private static final int MAX_LOGO = 512 * 1024;
+
+	/** Logo en base64 (con o sin prefijo data:...,): PNG o JPEG de hasta 512 KB */
+	private static byte[] leerLogo(String logo) throws APIException {
+		byte[] imagen;
+		try {
+			imagen = java.util.Base64.getMimeDecoder().decode(logo.replaceFirst("^data:[^,]*,", ""));
+		} catch (IllegalArgumentException e) {
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logo", "base64");
+		}
+		if (imagen.length > MAX_LOGO)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logo", "tamaño")
+					.setDetailMessage("El logo no puede superar los 512 KB");
+		if (tipoImagen(imagen) == null)
+			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logo", "formato")
+					.setDetailMessage("El logo tiene que ser PNG o JPEG");
+		return imagen;
+	}
 
 	/**
 	 * Edita los datos de una empresa. Solo ADMIN. Cada campo es opcional: los que no vienen no cambian.
@@ -453,19 +476,7 @@ public class EmpresasController extends AbstractController {
 		// Logo: imagen en base64 (antes era logoPath, un archivo del servidor)
 		String logo = texto(empresaJson, "logo");
 		if (logo != null && !logo.isEmpty()) {
-			byte[] imagen;
-			try {
-				imagen = java.util.Base64.getMimeDecoder().decode(logo.replaceFirst("^data:[^,]*,", ""));
-			} catch (IllegalArgumentException e) {
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logo", "base64");
-			}
-			if (imagen.length > MAX_LOGO)
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logo", "tamaño")
-						.setDetailMessage("El logo no puede superar los 512 KB");
-			if (tipoImagen(imagen) == null)
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("logo", "formato")
-						.setDetailMessage("El logo tiene que ser PNG o JPEG");
-			empresa.setLogo(imagen);
+			empresa.setLogo(leerLogo(logo));
 			cambios.add("logo");
 		}
 

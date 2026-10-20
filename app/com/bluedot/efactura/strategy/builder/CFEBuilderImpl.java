@@ -26,6 +26,7 @@ import org.json.JSONObject;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.commons.Commons;
+import com.bluedot.efactura.commons.FormatosDgi;
 import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Detalle;
@@ -416,6 +417,8 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		
 		if (idDocJson.has("Nro"))
 			strategy.getCFE().setNro(idDocJson.getLong("Nro"));
+		// En los recibidos la serie la elige el emisor (llegan "0", "a", "A "): no se rechaza, pero al usarla en el nombre del
+		// PDF se limpia (Commons.getPDFfilename)
 		if (idDocJson.has("Serie"))
 			strategy.getCFE().setSerie(idDocJson.getString("Serie"));
 		
@@ -469,6 +472,10 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		if (esCfeEmitido) {
 			sucursal = Sucursal.findByCodigoSucursal(empresa.getSucursales(), Commons.safeGetInteger(emisorJson, "CdgDGISucur"), true);
 		}else {
+			// El RUT del emisor de un CFE recibido termina en rutas de archivos (PDF): solo el formato de DGI
+			if (!FormatosDgi.esRuc(Commons.safeGetString(emisorJson, "RUCEmisor")))
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("RUCEmisor", Commons.safeGetString(emisorJson, "RUCEmisor"))
+						.setDetailMessage("El RUC del emisor tiene que tener 12 dígitos");
 			Empresa empresaEmisora = Empresa.findByRUT(Commons.safeGetString(emisorJson, "RUCEmisor"));
 			if (empresaEmisora==null){
 				/*
