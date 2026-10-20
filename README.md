@@ -63,9 +63,11 @@ git clone https://github.com/nicoribeiro/java_efactura_uy.git
 cd java_efactura_uy
 ```
 
-Crear una base vacía en PostgreSQL y configurar `conf/application.conf` (ver [Configuración](#configuración)). Después:
+Crear una base vacía en PostgreSQL y configurar `conf/application.conf` (ver [Configuración](#configuración)). La
+contraseña de la base no se versiona: se pasa con la variable de entorno `DB_PASSWORD`. Después:
 
 ```bash
+export DB_PASSWORD='...'
 sbt "run 9000"
 ```
 
@@ -209,8 +211,11 @@ Las principales:
 
 | Clave | Uso |
 |---|---|
-| `db.default.url`, `username`, `password` | Base de datos PostgreSQL |
-| `play.crypto.secret` | Secreto de Play |
+| `db.default.url`, `username`, `password` | Base de datos PostgreSQL (en desarrollo la contraseña sale de `DB_PASSWORD`) |
+| `play.crypto.secret` | Secreto de Play (en desarrollo `changeme` o `APPLICATION_SECRET`) |
+
+En `conf/application.conf` no van secretos (el repositorio es público): contraseñas y secretos solo en variables de
+entorno o en los `deploy_conf`.
 | `environment` | `test` o `produccion`: qué servicios de DGI se usan |
 | `service.{recepcion,consulta,rut}.url.{test,produccion}` | URLs de los web services de DGI |
 | `mail.sistema.*` | SMTP del sistema (códigos de confirmación y recuperación, notificaciones) |
