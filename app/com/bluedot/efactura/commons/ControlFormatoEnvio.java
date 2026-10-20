@@ -1,5 +1,7 @@
 package com.bluedot.efactura.commons;
 
+import com.bluedot.commons.utils.XML;
+
 import java.io.StringReader;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -54,7 +56,7 @@ public class ControlFormatoEnvio {
 			Schema schema = ControlesRecepcion.schema("EnvioCFE.formato.xsd", XSD_DEFECTO);
 			if (schema == null)
 				return null;
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 			dbf.setNamespaceAware(true);
 			Document doc = dbf.newDocumentBuilder().parse(new InputSource(new StringReader(xmlSobre)));
 			String errores = ControlesRecepcion.validarXsd(schema, doc);

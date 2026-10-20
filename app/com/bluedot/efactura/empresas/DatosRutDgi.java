@@ -1,5 +1,7 @@
 package com.bluedot.efactura.empresas;
 
+import com.bluedot.commons.utils.XML;
+
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +40,7 @@ public class DatosRutDgi {
 	}
 
 	public static JSONObject aJson(String xml) throws Exception {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 		dbf.setNamespaceAware(true);
 		DocumentBuilder builder = dbf.newDocumentBuilder();
 		// Sin handler el parser escribe "[Fatal Error] ..." en la consola

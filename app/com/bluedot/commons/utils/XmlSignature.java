@@ -68,7 +68,7 @@ public class XmlSignature {
 		/*
 		 * Instantiate the document to be signed.
 		 */
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 		dbf.setNamespaceAware(true);
 		Document doc = dbf.newDocumentBuilder().parse(new FileInputStream(inputFilename));
 
@@ -88,7 +88,7 @@ public class XmlSignature {
 		/*
 		 * Instantiate the document to be signed.
 		 */
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 		dbf.setNamespaceAware(true);
 		Document doc = dbf.newDocumentBuilder().parse(inputStream);
 
@@ -192,7 +192,7 @@ public class XmlSignature {
 	// de aca:
 	// http://stackoverflow.com/questions/2052251/is-there-an-easier-way-to-sign-an-xml-document-in-java
 	public ByteArrayOutputStream signFile(Document docToSign) throws Exception {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Node originalRoot = docToSign.getDocumentElement();
 		Document copiedDocument = db.newDocument();
@@ -229,7 +229,7 @@ public class XmlSignature {
 		String digest;
 
 		try {
-			javax.xml.parsers.DocumentBuilderFactory dbFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+			javax.xml.parsers.DocumentBuilderFactory dbFactory = XML.documentBuilderFactory();
 			dbFactory.setNamespaceAware(true);
 //			javax.xml.parsers.DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 //			org.w3c.dom.Document doc = dBuilder

@@ -102,7 +102,7 @@ public class RespuestaCfes {
 
 			ACKCFEdefType ack = armar(sobre, respuesta.getId());
 
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 			dbf.setNamespaceAware(true);
 			Document documento = XML.marshall(ack);
 			documento = SignatureInterceptor.signDocument(dbf, documento, null, null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS,
@@ -148,7 +148,7 @@ public class RespuestaCfes {
 		if (empresa.getFirmaDigital() == null)
 			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("FirmaDigital").setDetailMessage("La Empresa no tiene Firma Digital");
 		try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 			dbf.setNamespaceAware(true);
 			Document documento = XML.marshall(armar(sobre, 0));
 			documento = SignatureInterceptor.signDocument(dbf, documento, null, null, empresa.getFirmaDigital().getKeyStore(), FirmaDigital.KEY_ALIAS,

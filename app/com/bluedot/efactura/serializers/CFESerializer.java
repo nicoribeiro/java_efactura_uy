@@ -1,5 +1,7 @@
 package com.bluedot.efactura.serializers;
 
+import com.bluedot.commons.utils.XML;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -70,7 +72,7 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 		if (payload == null || payload.isEmpty())
 			return "RECIBIDA";
 		try {
-			javax.xml.parsers.DocumentBuilderFactory dbf = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+			javax.xml.parsers.DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 			dbf.setNamespaceAware(true);
 			javax.xml.parsers.DocumentBuilder builder = dbf.newDocumentBuilder();
 			// Sin handler el parser escribe "[Fatal Error] ..." en la consola

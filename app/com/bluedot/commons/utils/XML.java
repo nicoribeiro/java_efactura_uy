@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -30,6 +31,29 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 public class XML {
+
+	/**
+	 * DocumentBuilderFactory para parsear XML que puede venir de afuera (mails, DGI, la API): sin DOCTYPE, sin entidades
+	 * externas, sin XInclude y con FEATURE_SECURE_PROCESSING (limites de expansion). Evita XXE (lectura de archivos y
+	 * pedidos a otras maquinas) y el "billion laughs". El parser que se usa es el del classpath (Xerces 2.11), que por
+	 * defecto resuelve entidades externas. Todo DocumentBuilderFactory del codigo tiene que salir de aca.
+	 */
+	public static DocumentBuilderFactory documentBuilderFactory() {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		try {
+			dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+			dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+			dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+			dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+		} catch (ParserConfigurationException e) {
+			// Sin estas protecciones no se parsea nada
+			throw new IllegalStateException("El parser XML (" + dbf.getClass().getName() + ") no soporta las opciones de seguridad", e);
+		}
+		dbf.setXIncludeAware(false);
+		dbf.setExpandEntityReferences(false);
+		return dbf;
+	}
 
 	public static String documentToString(Document document)
 			throws TransformerFactoryConfigurationError, TransformerConfigurationException, TransformerException {
@@ -63,7 +87,7 @@ public class XML {
 	}
 	
 	public static Document objectToDocument(Object obj) throws JAXBException, ParserConfigurationException {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = documentBuilderFactory();
 		dbf.setNamespaceAware(true);
 		Document doc = dbf.newDocumentBuilder().newDocument();
 
@@ -92,7 +116,7 @@ public class XML {
 	}
 
 	public static Document readDocument(File file) throws SAXException, IOException, ParserConfigurationException {
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbFactory = documentBuilderFactory();
 		dbFactory.setNamespaceAware(true);
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 
@@ -107,7 +131,7 @@ public class XML {
 	}
 
 	public static Document loadXMLFromString(String xml) throws Exception {
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory factory = documentBuilderFactory();
 		/*
 		 * Instantiate the DocumentBuilderFactory.
 		 * IMPORTANT: NamespaceAwerness=true!!
@@ -149,7 +173,7 @@ public class XML {
 		// Create the marshaller
 		Marshaller marshaller = context.createMarshaller();
 		// Create the Document
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = documentBuilderFactory();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document document = db.newDocument();
 
