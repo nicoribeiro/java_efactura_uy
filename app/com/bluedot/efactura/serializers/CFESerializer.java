@@ -1,6 +1,5 @@
 package com.bluedot.efactura.serializers;
 
-import com.bluedot.commons.utils.XML;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,6 +9,7 @@ import com.bluedot.efactura.model.CAE;
 import com.bluedot.efactura.model.CFE;
 import com.bluedot.efactura.model.Detalle;
 import com.bluedot.efactura.model.Empresa;
+import com.bluedot.efactura.model.RespuestaReceptor;
 import com.bluedot.efactura.model.Sobre;
 import com.bluedot.efactura.model.SobreEmitido;
 import com.bluedot.efactura.model.SobreRecibido;
@@ -61,55 +61,10 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 			if (sobre.getEstadoEmpresa() != null)
 				m = sobre.getEstadoEmpresa().name();
 			if (sobre.getRespuestaCfes() != null)
-				me = estadoEnRespuesta(sobre.getRespuestaCfes().getPayload(), cfe);
+				me = RespuestaReceptor.leer(sobre.getRespuestaCfes().getPayload()).estado(cfe.getTipo(), cfe.getSerie(), cfe.getNro());
 		}
 		cfeJson.put("respuestaM", m);
 		cfeJson.put("respuestaME", me);
-	}
-
-	/** Estado del CFE en una respuesta a CFE (ACKCFE) de la empresa receptora; RECIBIDA si no se puede leer */
-	private static String estadoEnRespuesta(String payload, CFE cfe) {
-		if (payload == null || payload.isEmpty())
-			return "RECIBIDA";
-		try {
-			javax.xml.parsers.DocumentBuilderFactory dbf = XML.documentBuilderFactory();
-			dbf.setNamespaceAware(true);
-			javax.xml.parsers.DocumentBuilder builder = dbf.newDocumentBuilder();
-			// Sin handler el parser escribe "[Fatal Error] ..." en la consola
-			builder.setErrorHandler(new org.xml.sax.helpers.DefaultHandler() {
-				@Override
-				public void fatalError(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
-					throw e;
-				}
-			});
-			String texto = payload.charAt(0) == '\uFEFF' ? payload.substring(1) : payload;
-			org.w3c.dom.NodeList dets = builder.parse(new org.xml.sax.InputSource(new java.io.StringReader(texto)))
-					.getElementsByTagNameNS("http://cfe.dgi.gub.uy", "ACKCFE_Det");
-			for (int i = 0; i < dets.getLength(); i++) {
-				org.w3c.dom.Element det = (org.w3c.dom.Element) dets.item(i);
-				// Tipo y numero como numeros: algunos receptores los mandan con ceros adelante (NroCFE 0002295)
-				if (numero(hijo(det, "TipoCFE")) == cfe.getTipo().value && numero(hijo(det, "NroCFE")) == cfe.getNro()
-						&& (cfe.getSerie() == null || cfe.getSerie().equals(hijo(det, "Serie")))) {
-					String estado = hijo(det, "Estado");
-					return estado != null ? estado : "RECIBIDA";
-				}
-			}
-		} catch (Exception e) {
-		}
-		return "RECIBIDA";
-	}
-
-	private static long numero(String texto) {
-		try {
-			return texto != null ? Long.parseLong(texto.trim()) : -1;
-		} catch (NumberFormatException e) {
-			return -1;
-		}
-	}
-
-	private static String hijo(org.w3c.dom.Element padre, String nombre) {
-		org.w3c.dom.NodeList l = padre.getElementsByTagNameNS("http://cfe.dgi.gub.uy", nombre);
-		return l.getLength() > 0 && l.item(0).getTextContent() != null ? l.item(0).getTextContent().trim() : null;
 	}
 
 	@Override

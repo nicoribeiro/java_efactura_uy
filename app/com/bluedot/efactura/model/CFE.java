@@ -465,7 +465,20 @@ public class CFE extends Model<CFE>{
 	 *            uno de {@link #ORDENES}; null = por fecha de emision, del mas nuevo al mas viejo
 	 */
 	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, String rutReceptor, String razonReceptor, TipoDoc tipo, String serie, Integer nro, String estado, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion, Orden orden) {
+		return find(empresaEmisora, empresaReceptora, rutReceptor, razonReceptor, tipo, serie, nro, estado, desdeFechaEmision, hastaFechaEmision, page, pageSize, direccion, orden, null);
+	}
+
+	/**
+	 * @param estadoReceptor
+	 *            solo emitidos: estado del CFE en la respuesta (ME_) de la empresa receptora: AE, BE, o "SIN" para los
+	 *            que el receptor no respondio (sin ME_, o el CFE no esta en ella); null = todos. Los emitidos a quien no
+	 *            es emisor electronico (sin sobre al receptor) no entran en ninguno
+	 */
+	public static Tuple<List<CFE>, Long> find(Empresa empresaEmisora, Empresa empresaReceptora, String rutReceptor, String razonReceptor, TipoDoc tipo, String serie, Integer nro, String estado, Date desdeFechaEmision, Date hastaFechaEmision, int page, int pageSize, DireccionDocumento direccion, Orden orden, String estadoReceptor) {
 		DefaultQuery<CFE> q = (DefaultQuery<CFE>) find.query();
+
+		if (direccion == DireccionDocumento.EMITIDO && estadoReceptor != null && !estadoReceptor.trim().isEmpty())
+			filtrarEstadoReceptor(q, empresaEmisora, desdeFechaEmision, hastaFechaEmision, estadoReceptor.trim().toUpperCase());
 
 		if (estado != null && !estado.trim().isEmpty()) {
 			if ("SIN".equalsIgnoreCase(estado.trim()))
@@ -563,6 +576,56 @@ public class CFE extends Model<CFE>{
 		return new Tuple<List<CFE>, Long>(list, rowCount);
 	}
 
+
+	/**
+	 * Filtro por el estado del CFE en la respuesta del receptor. El estado de cada CFE esta solo en el payload de la
+	 * respuesta ME_ del sobre: se leen las respuestas de los emitidos del periodo y se filtra por los id que coinciden
+	 */
+	private static void filtrarEstadoReceptor(DefaultQuery<CFE> q, Empresa empresaEmisora, Date desde, Date hasta, String estadoReceptor) {
+		boolean sin = "SIN".equals(estadoReceptor);
+		String jpql = "select c.id, c.tipo, c.serie, c.nro, s.id, r.payload from CFE c join c.sobreEmitido s join s.respuestaCfes r"
+				+ " where c.empresaEmisora = :empresa and s.xmlEmpresa is not null"
+				+ (desde != null ? " and c.fechaEmision >= :desde" : "") + (hasta != null ? " and c.fechaEmision <= :hasta" : "");
+		javax.persistence.Query query = play.db.jpa.JPA.em().createQuery(jpql).setParameter("empresa", empresaEmisora);
+		if (desde != null)
+			query.setParameter("desde", desde);
+		if (hasta != null)
+			query.setParameter("hasta", hasta);
+
+		// Un sobre puede tener varios CFE: su respuesta se lee una sola vez
+		java.util.Map<Long, RespuestaReceptor> respuestas = new java.util.HashMap<Long, RespuestaReceptor>();
+		List<Long> ids = new LinkedList<Long>();
+		for (Object fila : query.getResultList()) {
+			Object[] f = (Object[]) fila;
+			Long idSobre = (Long) f[4];
+			RespuestaReceptor respuesta = respuestas.get(idSobre);
+			if (respuesta == null) {
+				respuesta = RespuestaReceptor.leer((String) f[5]);
+				respuestas.put(idSobre, respuesta);
+			}
+			String enRespuesta = respuesta.estado((TipoDoc) f[1], (String) f[2], (Long) f[3]);
+			boolean respondido = "AE".equals(enRespuesta) || "BE".equals(enRespuesta);
+			if (sin ? !respondido : estadoReceptor.equals(enRespuesta))
+				ids.add((Long) f[0]);
+		}
+
+		q.getCriteria().createAlias("sobreEmitido", "sobreReceptor");
+		q.getCriteria().add(Restrictions.isNotNull("sobreReceptor.xmlEmpresa"));
+		if (sin)
+			q.getCriteria().add(ids.isEmpty() ? Restrictions.isNull("sobreReceptor.respuestaCfes")
+					: Restrictions.or(Restrictions.isNull("sobreReceptor.respuestaCfes"), idEn(ids)));
+		else
+			q.getCriteria().add(ids.isEmpty() ? Restrictions.sqlRestriction("1=0") : idEn(ids));
+	}
+
+	/** id in (...) en partes de 1000, para no pasar el limite de parametros de la base */
+	private static Criterion idEn(List<Long> ids) {
+		org.hibernate.criterion.Disjunction o = Restrictions.disjunction();
+		List<Long> lista = new java.util.ArrayList<Long>(ids);
+		for (int i = 0; i < lista.size(); i += 1000)
+			o.add(Restrictions.in("id", lista.subList(i, Math.min(i + 1000, lista.size()))));
+		return o;
+	}
 
 	/**
 	 * Comprobantes emitidos que referencian a este (notas de credito o debito sobre una factura, por ejemplo), del mas
