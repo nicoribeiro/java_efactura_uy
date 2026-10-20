@@ -14,9 +14,9 @@ import play.mvc.Result;
 /**
  * Decide que control aplicar segun la ruta pedida:
  * <ul>
- * <li>/api/v1/init, /api/v1/usuarios, /api/v1/procesos, /api/v1/users/{uid}/empresas... y /api/v1/empresa/{rut}/usuarios: solo ADMIN, siempre (sin
- * importar el modo)</li>
- * <li>POST /api/v1/empresa, /api/v1/empresa/cargar, /api/v1/modo/..., /api/v1/pruebas/...: solo ADMIN</li>
+ * <li>/api/v1/init, /api/v1/usuarios, /api/v1/procesos, /api/v1/users/{uid}/empresas..., /api/v1/empresa/{rut}/usuarios,
+ * POST /api/v1/empresa, /api/v1/empresa/cargar, /api/v1/modo/... y /api/v1/pruebas/...: solo ADMIN, siempre (sin importar el
+ * modo)</li>
  * <li>/api/v1/empresa/{rut}/...: acceso a esa empresa</li>
  * <li>el resto (GET /api/v1/empresa se filtra en el controlador, /rut, /pais): sin control adicional</li>
  * </ul>
@@ -24,9 +24,17 @@ import play.mvc.Result;
 public class EmpresaAccessAction extends Action<EmpresaAccess> {
 
 	private static final Pattern EMPRESA = Pattern.compile("^/api/v1/empresa/([^/]+)(/.*)?$");
-	private static final Pattern SOLO_ADMIN = Pattern.compile("^/api/v1/(empresa/cargar|modo/.*|pruebas/.*)$");
-	/** Siempre ADMIN: si dependiera del modo, en modo log cualquiera podria asignarse empresas antes de pasar a enforce */
-	private static final Pattern SIEMPRE_ADMIN = Pattern.compile("^/api/v1/(init|usuarios|procesos|users/[^/]+/empresas|empresa/[^/]+/usuarios)(/.*)?$");
+	/**
+	 * Siempre ADMIN: si dependiera del modo, en modo log cualquiera podria asignarse empresas, crear una empresa, cambiar el
+	 * modo del sistema o correr pruebas antes de pasar a enforce
+	 */
+	private static final Pattern SIEMPRE_ADMIN = Pattern
+			.compile("^/api/v1/(init|usuarios|procesos|users/[^/]+/empresas|empresa/[^/]+/usuarios|empresa/cargar|modo|pruebas)(/.*)?$");
+
+	/** true si la ruta exige ADMIN en cualquier modo de seguridad.accesoEmpresa */
+	static boolean exigeAdminSiempre(String method, String path) {
+		return SIEMPRE_ADMIN.matcher(path).matches() || ("POST".equals(method) && "/api/v1/empresa".equals(path));
+	}
 
 	@Override
 	public Promise<Result> call(Context ctx) throws Throwable {
@@ -34,7 +42,7 @@ public class EmpresaAccessAction extends Action<EmpresaAccess> {
 		String path = ctx.request().path();
 		String operacion = method + " " + path;
 
-		boolean siempreAdmin = SIEMPRE_ADMIN.matcher(path).matches();
+		boolean siempreAdmin = exigeAdminSiempre(method, path);
 
 		// En modo off no se consulta el usuario (salvo las rutas que siempre exigen ADMIN)
 		if (!siempreAdmin && AccesoEmpresa.modo() == AccesoEmpresa.Modo.OFF)
@@ -44,8 +52,6 @@ public class EmpresaAccessAction extends Action<EmpresaAccess> {
 
 		if (siempreAdmin)
 			AccesoEmpresa.verificarAdmin(user, operacion, true);
-		else if (SOLO_ADMIN.matcher(path).matches() || ("POST".equals(method) && "/api/v1/empresa".equals(path)))
-			AccesoEmpresa.verificarAdmin(user, operacion, false);
 		else {
 			Matcher matcher = EMPRESA.matcher(path);
 			if (matcher.matches())

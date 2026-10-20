@@ -19,8 +19,8 @@ import play.Play;
  * intentosPorUsuario fallidos para ese usuario o intentosPorIp desde esa IP, segun seguridad.signin.limite:
  * <ul>
  * <li>off: sin limite</li>
- * <li>log (default): se loguea "LOGIN SERIA BLOQUEADO" y se sigue</li>
- * <li>enforce: se rechaza con 429 sin verificar la contrasena</li>
+ * <li>log: se loguea "LOGIN SERIA BLOQUEADO" y se sigue</li>
+ * <li>enforce (default, tambien si falta o es invalido): se rechaza con 429 sin verificar la contrasena</li>
  * </ul>
  * Los contadores estan en memoria (una sola instancia de la API; se pierden al reiniciar).
  */
@@ -95,12 +95,12 @@ public class LimiteIntentosLogin {
 	}
 
 	public static Modo modo() {
-		String valor = Play.application().configuration().getString("seguridad.signin.limite", "log");
+		String valor = Play.application().configuration().getString("seguridad.signin.limite", "enforce");
 		try {
 			return Modo.valueOf(valor.trim().toUpperCase());
 		} catch (IllegalArgumentException e) {
-			logger.error("Valor invalido para seguridad.signin.limite: '" + valor + "', se usa 'log'");
-			return Modo.LOG;
+			logger.error("Valor invalido para seguridad.signin.limite: '" + valor + "', se usa 'enforce'");
+			return Modo.ENFORCE;
 		}
 	}
 
