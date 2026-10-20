@@ -55,7 +55,15 @@ public enum IndicadorFacturacion {
 	INDICADOR_FACTURACION_IVA_SUSPENSO(12, true),
 
 	/** Solo e-Boleta de entrada y sus notas: item vendido por un no contribuyente */
-	INDICADOR_FACTURACION_VENDIDO_POR_NO_CONTRIBUYENTE(13);
+	INDICADOR_FACTURACION_VENDIDO_POR_NO_CONTRIBUYENTE(13),
+	/** Solo e-Boleta de entrada y sus notas: item vendido por un contribuyente IVA minimo, Monotributo o Monotributo Social MIDES */
+	INDICADOR_FACTURACION_VENDIDO_POR_IVA_MINIMO(14),
+	/** Solo e-Boleta de entrada y sus notas: item vendido por un contribuyente IMEBA */
+	INDICADOR_FACTURACION_VENDIDO_POR_IMEBA(15),
+	/** Item vendido por un contribuyente IVA minimo o Monotributo (o venta por cuenta ajena con mandante IVA minimo) */
+	INDICADOR_FACTURACION_IVA_MINIMO(16),
+	/** Solo e-Boleta de entrada y sus notas: compra de moneda extranjera para su reventa con contrapartida en moneda local */
+	INDICADOR_FACTURACION_COMPRA_ME_REVENTA(17);
 
 	private int indice;
 	private boolean soportado;

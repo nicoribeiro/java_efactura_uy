@@ -166,6 +166,7 @@ public class DocumentController extends AbstractController {
 		case eTicket:
 		case eFactura_Exportacion:
 		case eRemito_de_Exportacion:
+		case eBoleta_de_entrada:
 			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
 			break;
 		case eResguardo:
@@ -175,6 +176,8 @@ public class DocumentController extends AbstractController {
 		case Nota_de_Debito_de_eTicket:
 		case Nota_de_Credito_de_eFactura_Exportacion:
 		case Nota_de_Debito_de_eFactura_Exportacion:
+		case Nota_de_Credito_de_eBoleta_de_entrada:
+		case Nota_de_Debito_de_eBoleta_de_entrada:
 			if (!document.has("Referencia"))
 				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("Referencia");
 			cfe = factory.getCFEMicroController(empresa).create(tipo, document, true);
@@ -208,6 +211,9 @@ public class DocumentController extends AbstractController {
 		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
 		case eTicket_Contingencia:
 		case eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+		case eBoleta_de_entrada_Contingencia:
+		case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+		case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
 			throw APIException.raise(APIErrors.NOT_SUPPORTED).setDetailMessage(tipo.toString());
 		}
 

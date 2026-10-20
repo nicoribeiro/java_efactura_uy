@@ -9,6 +9,7 @@ import com.bluedot.efactura.strategy.numeracion.EstrategiaNumeracionSiguiente;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
+import dgi.classes.recepcion.CFEDefType.EBoleta;
 import dgi.classes.recepcion.CFEDefType.EFact;
 import dgi.classes.recepcion.CFEDefType.EFactExp;
 import dgi.classes.recepcion.CFEDefType.ERem;
@@ -217,6 +218,10 @@ public class CFE extends Model<CFE>{
 	@ApiModelProperty(hidden = true)
 	@Transient
 	private ERemExp eremitoExportacion;
+
+	@ApiModelProperty(hidden = true)
+	@Transient
+	private EBoleta eboleta;
 
 	@Type(type="text")
 	private String generadorJson;
@@ -1053,6 +1058,10 @@ public class CFE extends Model<CFE>{
 		case Nota_de_Debito_de_eTicket_Contingencia:
 		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena:
 		case Nota_de_Debito_de_eTicket_Venta_por_Cuenta_Ajena_Contingencia:
+		case Nota_de_Credito_de_eBoleta_de_entrada:
+		case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+		case Nota_de_Debito_de_eBoleta_de_entrada:
+		case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
 		case eResguardo:
 		case eResguardo_Contingencia:
 			return true;
@@ -1075,6 +1084,14 @@ public class CFE extends Model<CFE>{
 
 	public void setEremito(ERem eremito) {
 		this.eremito = eremito;
+	}
+
+	public EBoleta getEboleta() {
+		return eboleta;
+	}
+
+	public void setEboleta(EBoleta eboleta) {
+		this.eboleta = eboleta;
 	}
 
 	public ERemExp getEremitoExportacion() {

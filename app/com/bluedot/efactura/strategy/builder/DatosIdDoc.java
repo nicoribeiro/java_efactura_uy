@@ -17,6 +17,7 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.efactura.model.TipoDoc;
 
 import dgi.classes.recepcion.IdDocFact;
+import dgi.classes.recepcion.IdDocBoleta;
 import dgi.classes.recepcion.IdDocFactExp;
 import dgi.classes.recepcion.IdDocRemExp;
 import dgi.classes.recepcion.IdDocResg;
@@ -36,6 +37,8 @@ import dgi.classes.recepcion.IdDocTck;
  * (A-C14, obligatorio: 1,2,3,4,90,91,99), ViaTransp (A-C15, obligatorio: 1,2,3,8,9), ClauVenta (A-C13, opcional),
  * propietario de la mercaderia (A-C6.1 a A-C6.6: IndPropiedad 1 = bienes de terceros, TipoDocProp, CodPaisProp, DocProp o
  * DocPropExt, RznSocProp; obligatorios si IndPropiedad=1), InfoAdicionalDoc, SecProf (1)</li>
+ * <li>e-Boleta de entrada y sus notas (151-153, 251-253): IndCompraMEReventa (A-C21: 1 = compra de moneda extranjera
+ * para su reventa; 2, por cuenta ajena, no se admite todavia), SecProf (1), InfoAdicionalDoc</li>
  * </ul>
  * Se validan al crear el CFE (antes de gastar el numero), se guardan en el CFE (datosIdDoc, JSON) y se ponen en el IdDoc
  * al armarlo para enviar. Sin ninguno el XML no cambia.
@@ -49,8 +52,9 @@ public class DatosIdDoc {
 			Arrays.asList("ClauVenta", "ModVenta", "ViaTransp", "InfoAdicionalDoc", "IVAalDia", "SecProf", "IndPagCta3ros"));
 	private static final Set<String> REMITO_EXPORTACION = new HashSet<String>(Arrays.asList("TipoTraslado", "IndPropiedad", "TipoDocProp",
 			"CodPaisProp", "DocProp", "DocPropExt", "RznSocProp", "ClauVenta", "ModVenta", "ViaTransp", "InfoAdicionalDoc", "SecProf"));
+	private static final Set<String> BOLETA = new HashSet<String>(Arrays.asList("IndCompraMEReventa", "SecProf", "InfoAdicionalDoc"));
 	private static final Set<String> TODOS = new HashSet<String>(Arrays.asList("IVAalDia", "SecProf", "IndPagCta3ros", "IndCobPropia",
-			"ModVenta", "InfoAdicionalDoc", "FchValor", "ClauVenta", "ViaTransp"));
+			"ModVenta", "InfoAdicionalDoc", "FchValor", "ClauVenta", "ViaTransp", "IndCompraMEReventa"));
 	/*
 	 * Los del propietario y el tipo de traslado solo se leen en el e-Remito de exportacion: en los demas tipos se siguen
 	 * ignorando como antes (no se rechazan)
@@ -82,6 +86,8 @@ public class DatosIdDoc {
 			return EXPORTACION;
 		if (esRemitoExportacion(tipo))
 			return REMITO_EXPORTACION;
+		if (esBoleta(tipo))
+			return BOLETA;
 		return null;
 	}
 
@@ -89,6 +95,12 @@ public class DatosIdDoc {
 	public static boolean esExportacion(TipoDoc tipo) {
 		int v = tipo.value % 100;
 		return v >= 21 && v <= 23;
+	}
+
+	/** e-Boleta de entrada y sus notas (151-153 y 251-253) */
+	public static boolean esBoleta(TipoDoc tipo) {
+		int v = tipo.value % 100;
+		return v >= 51 && v <= 53;
 	}
 
 	/** e-Remito de Exportacion (124 y 224) */
@@ -107,6 +119,8 @@ public class DatosIdDoc {
 		boolean remitoExportacion = esRemitoExportacion(tipo);
 		// Mismos valores admitidos que la e-Factura de exportacion para SecProf, IVAalDia y ModVenta
 		boolean exportacion = esExportacion(tipo) || remitoExportacion;
+		// e-Boleta: SecProf solo 1 (2 es de venta por cuenta ajena)
+		boolean soloUno = exportacion || esBoleta(tipo);
 		// IndPagCta3ros: tambien se acepta como IndPagCta3Ros
 		if (idDoc.has("IndPagCta3Ros") && !idDoc.has("IndPagCta3ros"))
 			idDoc.put("IndPagCta3ros", idDoc.get("IndPagCta3Ros"));
@@ -127,7 +141,11 @@ public class DatosIdDoc {
 				break;
 			case "SecProf":
 				// 2 solo en venta por cuenta ajena
-				datos.put(campo, entero(campo, valor, exportacion ? UNO : SEC_PROF));
+				datos.put(campo, entero(campo, valor, soloUno ? UNO : SEC_PROF));
+				break;
+			case "IndCompraMEReventa":
+				// 2 (compra por cuenta ajena) lleva complemento fiscal: no se admite todavia
+				datos.put(campo, entero(campo, valor, UNO));
 				break;
 			case "IndPagCta3ros":
 			case "IndCobPropia":
@@ -312,6 +330,15 @@ public class DatosIdDoc {
 		idDoc.setIndPagCta3Ros(d.has("IndPagCta3ros") ? BigInteger.valueOf(d.getInt("IndPagCta3ros")) : null);
 		idDoc.setIndCobPropia(d.has("IndCobPropia") ? BigInteger.valueOf(d.getInt("IndCobPropia")) : null);
 		idDoc.setModVenta(d.has("ModVenta") ? d.getInt("ModVenta") : null);
+		idDoc.setInfoAdicionalDoc(d.has("InfoAdicionalDoc") ? d.getString("InfoAdicionalDoc") : null);
+	}
+
+	public static void aplicar(String json, IdDocBoleta idDoc) {
+		if (json == null)
+			return;
+		JSONObject d = new JSONObject(json);
+		idDoc.setIndCompraMEReventa(d.has("IndCompraMEReventa") ? BigInteger.valueOf(d.getInt("IndCompraMEReventa")) : null);
+		idDoc.setSecProf(d.has("SecProf") ? BigInteger.valueOf(d.getInt("SecProf")) : null);
 		idDoc.setInfoAdicionalDoc(d.has("InfoAdicionalDoc") ? d.getString("InfoAdicionalDoc") : null);
 	}
 

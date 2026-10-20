@@ -29,6 +29,8 @@ import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
 import dgi.classes.recepcion.TipMonType;
+import dgi.classes.reporte.MontosBol;
+import dgi.classes.reporte.MontosBol.MntsBolItem;
 import dgi.classes.reporte.MontosFExp;
 import dgi.classes.reporte.MontosFExp.MntsFExpItem;
 import dgi.classes.reporte.MontosFyT;
@@ -176,6 +178,28 @@ public interface SummaryStrategy {
 			case eRemito_de_Exportacion_Contingencia:
 				return ResumenPorTipo.remExpCont(tipo, ReporteDefType.RsmnRemExpCont::new, ReporteDefType.RsmnRemExpCont::setTipoComp,
 						ReporteDefType.RsmnRemExpCont::setRsmnData, ReporteDefType::setRsmnRemExpCont);
+
+			// e-Boleta de entrada y sus notas (151-153, 251-253)
+			case eBoleta_de_entrada:
+				return ResumenPorTipo.bol(tipo, ReporteDefType.RsmnBol::new, ReporteDefType.RsmnBol::setTipoComp,
+						ReporteDefType.RsmnBol::setRsmnData, ReporteDefType::setRsmnBol);
+			case Nota_de_Credito_de_eBoleta_de_entrada:
+				return ResumenPorTipo.bol(tipo, ReporteDefType.RsmnBolNotaCredito::new, ReporteDefType.RsmnBolNotaCredito::setTipoComp,
+						ReporteDefType.RsmnBolNotaCredito::setRsmnData, ReporteDefType::setRsmnBolNotaCredito);
+			case Nota_de_Debito_de_eBoleta_de_entrada:
+				return ResumenPorTipo.bol(tipo, ReporteDefType.RsmnBolNotaDebito::new, ReporteDefType.RsmnBolNotaDebito::setTipoComp,
+						ReporteDefType.RsmnBolNotaDebito::setRsmnData, ReporteDefType::setRsmnBolNotaDebito);
+			case eBoleta_de_entrada_Contingencia:
+				return ResumenPorTipo.bolCont(tipo, ReporteDefType.RsmnBolCont::new, ReporteDefType.RsmnBolCont::setTipoComp,
+						ReporteDefType.RsmnBolCont::setRsmnData, ReporteDefType::setRsmnBolCont);
+			case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+				return ResumenPorTipo.bolCont(tipo, ReporteDefType.RsmnBolContNotaCredito::new,
+						ReporteDefType.RsmnBolContNotaCredito::setTipoComp, ReporteDefType.RsmnBolContNotaCredito::setRsmnData,
+						ReporteDefType::setRsmnBolContNotaCredito);
+			case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
+				return ResumenPorTipo.bolCont(tipo, ReporteDefType.RsmnBolContNotaDebito::new,
+						ReporteDefType.RsmnBolContNotaDebito::setTipoComp, ReporteDefType.RsmnBolContNotaDebito::setRsmnData,
+						ReporteDefType::setRsmnBolContNotaDebito);
 
 			// e-Remito: todavia no se emite (ver CFEStrategy)
 			case eRemito:
@@ -493,6 +517,38 @@ public interface SummaryStrategy {
 			item.setFecha(date);
 			item.setTotMntExpyAsim(monto.totMntExpyAsim);
 			item.setTotMntTotal(monto.totMntTotal);
+
+			return item;
+		} catch (DatatypeConfigurationException e) {
+			throw APIException.raise(e);
+		}
+	}
+
+	/** Montos de la e-Boleta de entrada y sus notas (Montos_Bol): no gravado, IVA en suspenso, total y retenido */
+	static MontosBol getMontosBol(SummaryDatatype summary) throws APIException {
+		MontosBol montos = new MontosBol();
+		for (Iterator<String> iterator = summary.montos.keySet().iterator(); iterator.hasNext();) {
+			String key = iterator.next();
+			montos.getMntsBolItem().add(getMontosBolItem(summary.montos.get(key)));
+		}
+
+		if (montos.getMntsBolItem().size()==0)
+			return null;
+		return montos;
+	}
+
+	static MntsBolItem getMontosBolItem(Monto monto) throws APIException {
+		try {
+			MntsBolItem item = new MntsBolItem();
+
+			item.setCodSuc(monto.CodSuc);
+			XMLGregorianCalendar date = DatatypeFactory.newInstance()
+					.newXMLGregorianCalendar(new SimpleDateFormat("yyyy-MM-dd").format(monto.fecha));
+			item.setFecha(date);
+			item.setTotMntNoGrv(monto.totMntNoGrv);
+			item.setTotMntIVAenSusp(monto.totMntIVAenSusp);
+			item.setTotMntTotal(monto.totMntTotal);
+			item.setTotMntRetenido(monto.totMntRetenido);
 
 			return item;
 		} catch (DatatypeConfigurationException e) {

@@ -206,6 +206,12 @@ public class Commons {
 			nro = cfe.getERemExp().getEncabezado().getIdDoc().getNro().toString();
 			type = cfe.getERemExp().getEncabezado().getIdDoc().getTipoCFE().toString();
 		}
+		if (cfe.getEBoleta() != null) {
+			date = cfe.getEBoleta().getTmstFirma().toGregorianCalendar().getTime();
+			serie = cfe.getEBoleta().getEncabezado().getIdDoc().getSerie();
+			nro = cfe.getEBoleta().getEncabezado().getIdDoc().getNro().toString();
+			type = cfe.getEBoleta().getEncabezado().getIdDoc().getTipoCFE().toString();
+		}
 
 		if (cfe.getEResg() != null) {
 			date = cfe.getEResg().getTmstFirma().toGregorianCalendar().getTime();

@@ -35,6 +35,7 @@ import com.bluedot.efactura.model.TipoDoc;
 import dgi.classes.recepcion.CFEDefType;
 import dgi.classes.recepcion.EnvioCFE;
 import dgi.classes.recepcion.IdDocFact;
+import dgi.classes.recepcion.IdDocBoleta;
 import dgi.classes.recepcion.IdDocFactExp;
 import dgi.classes.recepcion.IdDocRemExp;
 import dgi.classes.recepcion.IdDocResg;
@@ -212,6 +213,12 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 			
 			if (cfeDefType.getERemExp()!=null){
 				IdDocRemExp id = cfeDefType.getERemExp().getEncabezado().getIdDoc();
+				CFE cfe = sobreEmitido.getCFE(id.getNro().intValue(), id.getSerie().toString(), TipoDoc.fromInt(id.getTipoCFE().intValue()));
+				cfe.setHash(cfeDefType.getSignature().getSignedInfo().getReferences().get(0).getDigestValue());
+			}
+			
+			if (cfeDefType.getEBoleta()!=null){
+				IdDocBoleta id = cfeDefType.getEBoleta().getEncabezado().getIdDoc();
 				CFE cfe = sobreEmitido.getCFE(id.getNro().intValue(), id.getSerie().toString(), TipoDoc.fromInt(id.getTipoCFE().intValue()));
 				cfe.setHash(cfeDefType.getSignature().getSignedInfo().getReferences().get(0).getDigestValue());
 			}

@@ -14,6 +14,8 @@ import com.bluedot.efactura.model.TipoDoc;
 import dgi.classes.reporte.ReporteDefType;
 import dgi.classes.reporte.RsmnDataFac;
 import dgi.classes.reporte.RsmnDataFacCont;
+import dgi.classes.reporte.RsmnDataBol;
+import dgi.classes.reporte.RsmnDataBolCont;
 import dgi.classes.reporte.RsmnDataFacExp;
 import dgi.classes.reporte.RsmnDataFacExpCont;
 import dgi.classes.reporte.RsmnDataRemExp;
@@ -151,6 +153,26 @@ public class ResumenPorTipo<S, D> implements SummaryStrategy {
 		return data;
 	}
 
+	/* e-Boleta de entrada: con Montos_Bol (no gravado, IVA en suspenso, total y retenido) */
+
+	static RsmnDataBol datosBol(SummaryDatatype summary) throws APIException {
+		RsmnDataBol data = new RsmnDataBol();
+		data.setCantDocsAnulados(new BigInteger(String.valueOf(summary.cantDocRechazados + summary.cantDocSinRespuesta)));
+		data.setCantDocsEmi(new BigInteger(String.valueOf(summary.cantDocEmitidos)));
+		data.setCantDocsUtil(new BigInteger(String.valueOf(summary.cantDocUtilizados)));
+		data.setRngDocsAnulados(summary.rngDocsAnulados);
+		data.setRngDocsUtil(summary.rngDocsUtil);
+		data.setMontos(SummaryStrategy.getMontosBol(summary));
+		return data;
+	}
+
+	static RsmnDataBolCont datosBolCont(SummaryDatatype summary) throws APIException {
+		RsmnDataBolCont data = new RsmnDataBolCont();
+		data.setCantCFCEmi(new BigInteger(String.valueOf(summary.cantDocEmitidos)));
+		data.setMontos(SummaryStrategy.getMontosBol(summary));
+		return data;
+	}
+
 	/* Una por familia, para que el Builder quede en una linea por tipo */
 
 	static <S> ResumenPorTipo<S, RsmnDataTck> tck(TipoDoc tipo, Supplier<S> seccion, BiConsumer<S, BigInteger> setTipoComp,
@@ -193,6 +215,18 @@ public class ResumenPorTipo<S, D> implements SummaryStrategy {
 			BiConsumer<S, RsmnDataRemExp> setDatos, BiConsumer<ReporteDefType, S> agregar) {
 		return new ResumenPorTipo<S, RsmnDataRemExp>(tipo, seccion, setTipoComp, setDatos, ResumenPorTipo::datosRemExp,
 				RsmnDataRemExp::getCantDocsUtil, agregar);
+	}
+
+	static <S> ResumenPorTipo<S, RsmnDataBol> bol(TipoDoc tipo, Supplier<S> seccion, BiConsumer<S, BigInteger> setTipoComp,
+			BiConsumer<S, RsmnDataBol> setDatos, BiConsumer<ReporteDefType, S> agregar) {
+		return new ResumenPorTipo<S, RsmnDataBol>(tipo, seccion, setTipoComp, setDatos, ResumenPorTipo::datosBol,
+				RsmnDataBol::getCantDocsUtil, agregar);
+	}
+
+	static <S> ResumenPorTipo<S, RsmnDataBolCont> bolCont(TipoDoc tipo, Supplier<S> seccion, BiConsumer<S, BigInteger> setTipoComp,
+			BiConsumer<S, RsmnDataBolCont> setDatos, BiConsumer<ReporteDefType, S> agregar) {
+		return new ResumenPorTipo<S, RsmnDataBolCont>(tipo, seccion, setTipoComp, setDatos, ResumenPorTipo::datosBolCont,
+				RsmnDataBolCont::getCantCFCEmi, agregar);
 	}
 
 	static <S> ResumenPorTipo<S, RsmnDataRemExpCont> remExpCont(TipoDoc tipo, Supplier<S> seccion, BiConsumer<S, BigInteger> setTipoComp,
