@@ -329,11 +329,76 @@ public class ControlesRecepcion {
 	static final String NS_CFE = "http://cfe.dgi.gub.uy";
 
 	/**
+	 * Los CFE del sobre, en orden: el CFE de cada CFE_Adenda hijo de la raiz (o los CFE hijos directos de la raiz). Solo
+	 * esos: getElementsByTagNameNS tambien devolvia un CFE escondido dentro de una Adenda (xs:anyType), que corria la
+	 * posicion de los siguientes y permitia validar un CFE con la firma de otro.
+	 */
+	static List<Element> cfesDelSobre(Document sobre) {
+		List<Element> cfes = new ArrayList<Element>();
+		for (Node n = sobre.getDocumentElement().getFirstChild(); n != null; n = n.getNextSibling()) {
+			if (!(n instanceof Element) || !NS_CFE.equals(n.getNamespaceURI()))
+				continue;
+			if ("CFE".equals(n.getLocalName()))
+				cfes.add((Element) n);
+			else if ("CFE_Adenda".equals(n.getLocalName()))
+				for (Node h = n.getFirstChild(); h != null; h = h.getNextSibling())
+					if (h instanceof Element && NS_CFE.equals(h.getNamespaceURI()) && "CFE".equals(h.getLocalName())) {
+						cfes.add((Element) h);
+						break;
+					}
+		}
+		return cfes;
+	}
+
+	/** Transformaciones que usan los emisores (enveloped, C14N, C14N exclusivo, XPath); no XSLT */
+	private static final List<String> TRANSFORMACIONES = java.util.Arrays.asList(javax.xml.crypto.dsig.Transform.ENVELOPED,
+			javax.xml.crypto.dsig.CanonicalizationMethod.INCLUSIVE, javax.xml.crypto.dsig.CanonicalizationMethod.INCLUSIVE_WITH_COMMENTS,
+			javax.xml.crypto.dsig.CanonicalizationMethod.EXCLUSIVE, javax.xml.crypto.dsig.CanonicalizationMethod.EXCLUSIVE_WITH_COMMENTS,
+			javax.xml.crypto.dsig.Transform.XPATH);
+
+	/** Firma RSA con SHA-1 (la del formato de DGI) o SHA-256; digest SHA-1 o SHA-256 */
+	private static final List<String> ALGORITMOS = java.util.Arrays.asList(javax.xml.crypto.dsig.SignatureMethod.RSA_SHA1,
+			"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", javax.xml.crypto.dsig.DigestMethod.SHA1,
+			javax.xml.crypto.dsig.DigestMethod.SHA256);
+
+	/**
+	 * La firma tiene la forma de la de un CFE: una sola referencia, al documento entero (URI=""), con transformaciones y
+	 * algoritmos conocidos. No se usa secureValidation de Java: segun la version rechaza SHA-1, que es el de DGI.
+	 *
+	 * @return null si esta bien; si no, el motivo
+	 */
+	static String firmaPermitida(XMLSignature firma) {
+		List<?> referencias = firma.getSignedInfo().getReferences();
+		if (referencias.size() != 1)
+			return "la firma tiene " + referencias.size() + " referencias (se admite una, al CFE entero)";
+		Reference referencia = (Reference) referencias.get(0);
+		if (referencia.getURI() == null || !referencia.getURI().isEmpty())
+			return "la firma no es del CFE entero (referencia \"" + referencia.getURI() + "\")";
+		for (Object t : referencia.getTransforms()) {
+			String algoritmo = ((javax.xml.crypto.dsig.Transform) t).getAlgorithm();
+			if (!TRANSFORMACIONES.contains(algoritmo))
+				return "transformación no admitida en la firma: " + algoritmo;
+		}
+		String canonicalizacion = firma.getSignedInfo().getCanonicalizationMethod().getAlgorithm();
+		if (!TRANSFORMACIONES.contains(canonicalizacion))
+			return "canonicalización no admitida en la firma: " + canonicalizacion;
+		String metodo = firma.getSignedInfo().getSignatureMethod().getAlgorithm();
+		if (!ALGORITMOS.contains(metodo))
+			return "algoritmo de firma no admitido: " + metodo;
+		String digest = referencia.getDigestMethod().getAlgorithm();
+		if (!ALGORITMOS.contains(digest))
+			return "algoritmo de digest no admitido: " + digest;
+		return null;
+	}
+
+	/**
 	 * E04: la firma electronica del CFE es valida. El emisor firma el CFE como documento propio (Reference URI="" con
 	 * transformacion enveloped), asi que se valida sobre una copia del CFE como documento aparte (nunca sobre el sobre: se
 	 * parsea de nuevo desde el texto, sin tocar nada). Se usa el certificado de la firma o, si no lo trae, el de la
 	 * caratula del sobre (verificando que sea el numero de serie que indica la firma), y se controla que estuviera vigente
-	 * en la fecha de firma (TmstFirma).
+	 * en la fecha de firma (TmstFirma), que sea de la PKI Uruguay (PkiUruguay: Abitab o Correo, firmados por la ACRN) y que
+	 * su RUC sea el del emisor del CFE. La firma tiene que tener la forma de la de un CFE (firmaPermitida) y el CFE se toma
+	 * por posicion entre los CFE del sobre (cfesDelSobre), no entre todos los elementos CFE del documento.
 	 *
 	 * @param xmlSobre
 	 *            el XML del sobre recibido (como llego)
@@ -349,13 +414,13 @@ public class ControlesRecepcion {
 			dbf.setNamespaceAware(true);
 			Document sobre = parsearSobre(xmlSobre);
 
-			NodeList cfes = sobre.getElementsByTagNameNS(NS_CFE, "CFE");
-			if (ordinal < 1 || ordinal > cfes.getLength())
+			List<Element> cfes = cfesDelSobre(sobre);
+			if (ordinal < 1 || ordinal > cfes.size())
 				return "no se encontró el CFE " + ordinal + " en el sobre";
 
 			// El CFE como documento propio, como lo firmo el emisor
 			Document doc = dbf.newDocumentBuilder().newDocument();
-			doc.appendChild(doc.importNode(cfes.item(ordinal - 1), true));
+			doc.appendChild(doc.importNode(cfes.get(ordinal - 1), true));
 
 			Element firma = null;
 			NodeList firmas = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
@@ -382,6 +447,10 @@ public class ControlesRecepcion {
 
 			DOMValidateContext contexto = new DOMValidateContext(cert.getPublicKey(), firma);
 			XMLSignature signature = XMLSignatureFactory.getInstance("DOM").unmarshalXMLSignature(contexto);
+			// Antes de validar (asi no se ejecuta una transformacion no admitida, ej. XSLT)
+			String noPermitida = firmaPermitida(signature);
+			if (noPermitida != null)
+				return noPermitida;
 			if (!signature.validate(contexto)) {
 				StringBuilder motivo = new StringBuilder("la firma no es válida");
 				if (!signature.getSignatureValue().validate(contexto))
@@ -396,12 +465,22 @@ public class ControlesRecepcion {
 
 			// El certificado tenia que estar vigente cuando se firmo
 			XMLGregorianCalendar tmst = tmstFirma(xml);
-			if (tmst != null) {
-				java.util.Date fechaFirma = tmst.toGregorianCalendar().getTime();
-				if (fechaFirma.before(cert.getNotBefore()) || fechaFirma.after(cert.getNotAfter()))
-					return "el certificado no estaba vigente al firmar (vigencia " + dia(cert.getNotBefore()) + " a " + dia(cert.getNotAfter())
-							+ ", firmado el " + dia(tmst) + ")";
-			}
+			java.util.Date fechaFirma = tmst != null ? tmst.toGregorianCalendar().getTime() : new java.util.Date();
+			if (tmst != null && (fechaFirma.before(cert.getNotBefore()) || fechaFirma.after(cert.getNotAfter())))
+				return "el certificado no estaba vigente al firmar (vigencia " + dia(cert.getNotBefore()) + " a " + dia(cert.getNotAfter())
+						+ ", firmado el " + dia(tmst) + ")";
+
+			// Y ser de la PKI Uruguay (antes valia cualquier certificado, tambien uno autofirmado)
+			String cadena = PkiUruguay.validar(cert, fechaFirma);
+			if (cadena != null)
+				return cadena;
+
+			// Y ser del emisor del CFE (antes un CFE con el RUC de otra empresa pasaba con cualquier certificado valido)
+			String rucCertificado = ControlesSobre.rucDelCertificado(cert);
+			NodeList rucs = doc.getElementsByTagNameNS(NS_CFE, "RUCEmisor");
+			String rucCfe = rucs.getLength() > 0 ? texto(rucs.item(0)) : null;
+			if (rucCertificado != null && rucCfe != null && !rucCertificado.equals(rucCfe))
+				return "el CFE es del RUC " + rucCfe + " pero el certificado de la firma es del RUC " + rucCertificado;
 			return null;
 		} catch (Exception e) {
 			return "no se pudo validar la firma: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
@@ -494,14 +573,14 @@ public class ControlesRecepcion {
 			return null;
 		try {
 			Document sobre = parsearSobre(xmlSobre);
-			NodeList cfes = sobre.getElementsByTagNameNS(NS_CFE, "CFE");
-			if (ordinal < 1 || ordinal > cfes.getLength())
+			List<Element> cfes = cfesDelSobre(sobre);
+			if (ordinal < 1 || ordinal > cfes.size())
 				return "no se encontró el CFE " + ordinal + " en el sobre";
 
 			DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 			dbf.setNamespaceAware(true);
 			Document doc = dbf.newDocumentBuilder().newDocument();
-			Node cfe = cfes.item(ordinal - 1);
+			Node cfe = cfes.get(ordinal - 1);
 			Node padre = cfe.getParentNode();
 			if (padre != null && NS_CFE.equals(padre.getNamespaceURI()) && "CFE_Adenda".equals(padre.getLocalName()))
 				doc.appendChild(doc.importNode(padre, true));

@@ -77,9 +77,8 @@ public class ControlesSobre {
 		s.doc = ControlesRecepcion.parsearSobre(xmlSobre);
 		NodeList caratulas = s.doc.getElementsByTagNameNS(ControlesRecepcion.NS_CFE, "Caratula");
 		s.caratula = caratulas.getLength() > 0 ? (Element) caratulas.item(0) : null;
-		NodeList cfes = s.doc.getElementsByTagNameNS(ControlesRecepcion.NS_CFE, "CFE");
-		for (int i = 0; i < cfes.getLength(); i++)
-			s.cfes.add((Element) cfes.item(i));
+		// Solo los CFE del sobre (no uno escondido en una Adenda, que correria la posicion de los demas)
+		s.cfes.addAll(ControlesRecepcion.cfesDelSobre(s.doc));
 		String cert = s.caratula != null ? hijo(s.caratula, "X509Certificate") : null;
 		if (cert == null)
 			s.errorCertificado = "la carátula no tiene certificado";
@@ -119,8 +118,8 @@ public class ControlesSobre {
 	}
 
 	/**
-	 * S03: el certificado de la caratula se puede leer y estaba vigente en la fecha del sobre (o ahora, si la caratula no
-	 * la tiene).
+	 * S03: el certificado de la caratula se puede leer, estaba vigente en la fecha del sobre (o ahora, si la caratula no
+	 * la tiene) y es de la PKI Uruguay (emitido por Abitab o Correo, firmados por la ACRN: PkiUruguay).
 	 *
 	 * @return null si pasa; si no, el detalle
 	 */
@@ -139,7 +138,8 @@ public class ControlesSobre {
 			return "el certificado no estaba vigente el " + sdf.format(fecha) + " (vigencia " + sdf.format(s.certificado.getNotBefore()) + " a "
 					+ sdf.format(s.certificado.getNotAfter()) + ")";
 		}
-		return null;
+		// Y es de la PKI Uruguay (antes valia cualquier certificado, tambien uno autofirmado)
+		return PkiUruguay.validar(s.certificado, fecha);
 	}
 
 	/**
