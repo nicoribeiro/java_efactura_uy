@@ -61,6 +61,10 @@ public class ExpiracionSesion {
 	 */
 	public static String motivoVencimiento(Session session, Date ahora) {
 		Date creacion = session.getCreationTimestamp();
+		// Las sesiones nuevas siempre tienen fecha de creacion: sin ninguna fecha es un token viejo, no se acepta
+		if (creacion == null && session.getLastAccess() == null)
+			return "sin fecha de creacion ni de ultimo uso";
+
 		if (creacion != null && ahora.getTime() - creacion.getTime() > duracionMaximaMs())
 			return "duracion maxima superada (creada " + creacion + ")";
 
