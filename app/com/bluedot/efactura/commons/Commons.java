@@ -338,7 +338,7 @@ public class Commons {
 		// Create the marshaller
 		Marshaller marshaller = context.createMarshaller();
 		// Create the Document
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document document = db.newDocument();
 

@@ -1,5 +1,7 @@
 package com.bluedot.efactura.recibidos;
 
+import com.bluedot.commons.utils.XML;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.StringReader;
@@ -343,7 +345,7 @@ public class ControlesRecepcion {
 		if (xmlSobre == null || xmlSobre.isEmpty())
 			return "no está el XML del sobre para validar la firma";
 		try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 			dbf.setNamespaceAware(true);
 			Document sobre = parsearSobre(xmlSobre);
 
@@ -426,7 +428,7 @@ public class ControlesRecepcion {
 			return schemas.get(path);
 		try {
 			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-			DOMImplementationLS ls = (DOMImplementationLS) DocumentBuilderFactory.newInstance().newDocumentBuilder().getDOMImplementation();
+			DOMImplementationLS ls = (DOMImplementationLS) XML.documentBuilderFactory().newDocumentBuilder().getDOMImplementation();
 			factory.setResourceResolver((type, namespace, publicId, systemId, baseUri) -> {
 				if (systemId == null || !systemId.endsWith(".dtd"))
 					return null;
@@ -496,7 +498,7 @@ public class ControlesRecepcion {
 			if (ordinal < 1 || ordinal > cfes.getLength())
 				return "no se encontró el CFE " + ordinal + " en el sobre";
 
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 			dbf.setNamespaceAware(true);
 			Document doc = dbf.newDocumentBuilder().newDocument();
 			Node cfe = cfes.item(ordinal - 1);
@@ -520,7 +522,7 @@ public class ControlesRecepcion {
 	 * al principio, que el parser no acepta antes de <?xml.
 	 */
 	static Document parsearSobre(String xmlSobre) throws Exception {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 		dbf.setNamespaceAware(true);
 		javax.xml.parsers.DocumentBuilder builder = dbf.newDocumentBuilder();
 		// Sin handler el parser escribe "[Fatal Error] ..." en la consola; el error ya se informa en el detalle

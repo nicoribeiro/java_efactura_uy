@@ -220,7 +220,7 @@ public class RecepcionServiceImpl implements RecepcionService {
 			 * 
 			 * IMPORTANT:NamespaceAwerness=true!!
 			 */
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 			dbf.setNamespaceAware(true);
 
 			allDocument = XML

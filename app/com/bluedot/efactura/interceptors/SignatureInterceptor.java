@@ -106,7 +106,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		/*
 		 * Isolate the Reporte 
 		 */
-		Document cfeDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Document cfeDocument = XML.documentBuilderFactory().newDocumentBuilder().newDocument();
 		Node unsignedNode = allDocument.getElementsByTagName("Reporte").item(0);
 		cfeDocument.adoptNode(unsignedNode);
 		cfeDocument.appendChild(unsignedNode);
@@ -152,7 +152,7 @@ public class SignatureInterceptor extends AbstractPhaseInterceptor<Message> {
 		 * Instantiate the DocumentBuilderFactory.
 		 * IMPORTANT: NamespaceAwerness=true!!
 		 */
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 		dbf.setNamespaceAware(true);
 		
 		/*

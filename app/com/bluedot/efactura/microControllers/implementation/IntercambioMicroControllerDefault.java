@@ -157,7 +157,7 @@ public class IntercambioMicroControllerDefault implements IntercambioMicroContro
 				 * Instantiate the DocumentBuilderFactory.
 				 * IMPORTANT: NamespaceAwerness=true!!
 				 */
-				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+				DocumentBuilderFactory dbf = XML.documentBuilderFactory();
 				dbf.setNamespaceAware(true);
 				
 				Document allDocument = XML.marshall(ackSobredefType);
