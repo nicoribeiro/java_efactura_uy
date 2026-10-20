@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.commons.Commons;
+
 import com.bluedot.efactura.security.EmpresaAccess;
 
 import java.io.IOException;
@@ -72,7 +74,7 @@ public class HomologacionController extends PruebasController {
 			
 			String detalle = IO.readFile(encabezadoJSON.getString("Detalle"), Charset.defaultCharset());
 
-			String output = encabezadoJSON.has("Output")?encabezadoJSON.getString("Output"):"/tmp";
+			String output = Commons.carpetaSalida(encabezadoJSON.has("Output") ? encabezadoJSON.getString("Output") : null);
 			
 			loadTiposDoc(tiposDocArray);
 

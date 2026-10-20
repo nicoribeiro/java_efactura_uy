@@ -1,5 +1,7 @@
 package com.bluedot.efactura.controllers;
 
+import com.bluedot.efactura.commons.Commons;
+
 import com.bluedot.efactura.security.AccesoEmpresa;
 import com.bluedot.efactura.security.EmpresaAccess;
 
@@ -65,11 +67,11 @@ public class ReportController extends AbstractController {
 		Date date = DateHandler.fromStringToDate(fecha, sdf);
 
 		/*
-		 * Body (opcional): Output es la carpeta donde guardar el XML de cada reporte
+		 * Body (opcional): Output es la carpeta donde guardar el XML de cada reporte (dentro de seguridad.salidas.path)
 		 */
 		JsonNode jsonNode = request().body().asJson();
 		JSONObject document = jsonNode != null ? new JSONObject(jsonNode.toString()) : new JSONObject();
-		String output = document.has("Output") ? document.getString("Output") : null;
+		String output = document.has("Output") ? Commons.carpetaSalida(document.getString("Output")) : null;
 
 		JSONArray reportes = ReportesDiarios.generar(empresa, date, cantReportes, soloFaltantes > 0, output);
 
