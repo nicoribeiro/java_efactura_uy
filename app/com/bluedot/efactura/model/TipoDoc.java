@@ -37,6 +37,12 @@ public enum TipoDoc {
 
 	Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena(143, "Nota de Debito de eFactura Venta por Cuenta Ajena"),
 
+	eBoleta_de_entrada(151, "eBoleta de entrada"),
+
+	Nota_de_Credito_de_eBoleta_de_entrada(152, "Nota de Credito de eBoleta de entrada"),
+
+	Nota_de_Debito_de_eBoleta_de_entrada(153, "Nota de Debito de eBoleta de entrada"),
+
 	eRemito(181, "eRemito"),
 
 	eResguardo(182, "eResguardo"),
@@ -76,6 +82,12 @@ public enum TipoDoc {
 
 	Nota_de_Debito_de_eFactura_Venta_por_Cuenta_Ajena_Contingencia(243,
 			"Nota de Debito de eFactura Venta por Cuenta Ajena Contingencia"),
+
+	eBoleta_de_entrada_Contingencia(251, "eBoleta de entrada Contingencia"),
+
+	Nota_de_Credito_de_eBoleta_de_entrada_Contingencia(252, "Nota de Credito de eBoleta de entrada Contingencia"),
+
+	Nota_de_Debito_de_eBoleta_de_entrada_Contingencia(253, "Nota de Debito de eBoleta de entrada Contingencia"),
 
 	eRemito_Contingencia(281, "eRemito Contingencia"),
 

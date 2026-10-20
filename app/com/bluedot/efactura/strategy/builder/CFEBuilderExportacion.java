@@ -1,10 +1,7 @@
 package com.bluedot.efactura.strategy.builder;
 
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.List;
-import java.util.Locale;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,7 +13,6 @@ import com.bluedot.efactura.microControllers.interfaces.CAEMicroController;
 import com.bluedot.efactura.model.IndicadorFacturacion;
 import com.bluedot.efactura.model.TipoDocumento;
 
-import dgi.classes.recepcion.TipMonType;
 import dgi.classes.recepcion.wrappers.ItemInterface;
 import dgi.classes.recepcion.wrappers.TotalesInterface;
 
@@ -195,39 +191,6 @@ public class CFEBuilderExportacion extends CFEBuilderImpl implements CFEBuiderIn
 		totales.setMntPagar(mntTotal.add(montoNF).setScale(2, BigDecimal.ROUND_HALF_UP));
 
 		montosSinIva(mntExpoyAsim, mntTotal);
-	}
-
-	/**
-	 * Moneda (A-C110) y tipo de cambio (A-C111, obligatorio si la moneda no es UYU), en los totales y en el CFE
-	 */
-	protected void monedaYTipoDeCambio(JSONObject totalesJson, TotalesInterface totales) throws APIException {
-		TipMonType moneda;
-		try {
-			moneda = TipMonType.fromValue(totalesJson.getString("TpoMoneda"));
-		} catch (IllegalArgumentException e) {
-			moneda = null;
-		}
-		if (moneda == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TpoMoneda")
-					.setDetailMessage("El campo TpoMoneda no es ninguno de los conocidos, ver tabla de monedas.");
-
-		totales.setTpoMoneda(moneda);
-		strategy.getCFE().setMoneda(moneda);
-
-		/*
-		 * Tipo de cambio (A-C111): obligatorio si la moneda no es UYU
-		 */
-		if (moneda != TipMonType.UYU) {
-			if (!totalesJson.has("TpoCambio"))
-				throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("totales.TpoCambio");
-			double tpoCambio = totalesJson.getDouble("TpoCambio");
-			if (tpoCambio <= 0)
-				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TpoCambio", tpoCambio)
-						.setDetailMessage("TpoCambio tiene que ser mayor que cero");
-			DecimalFormat df = new DecimalFormat("####0.000", DecimalFormatSymbols.getInstance(Locale.US));
-			totales.setTpoCambio(new BigDecimal(df.format(tpoCambio)));
-			strategy.getCFE().setTipoCambio(totales.getTpoCambio().doubleValue());
-		}
 	}
 
 	/**

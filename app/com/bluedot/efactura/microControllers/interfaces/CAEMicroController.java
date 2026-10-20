@@ -16,6 +16,7 @@ import com.bluedot.efactura.strategy.numeracion.EstrategiaNumeracion;
 
 import dgi.classes.recepcion.CAEDataType;
 import dgi.classes.recepcion.IdDocFact;
+import dgi.classes.recepcion.IdDocBoleta;
 import dgi.classes.recepcion.IdDocFactExp;
 import dgi.classes.recepcion.IdDocRem;
 import dgi.classes.recepcion.IdDocRemExp;
@@ -60,6 +61,15 @@ public interface CAEMicroController {
 	 * @return IdDocFactExp
 	 */
 	IdDocFactExp getIdDocFactExp(TipoDoc tipo, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia)
+			throws APIException, DatatypeConfigurationException, IOException;
+
+	/**
+	 * Obtiene un nuevo identificador de e-Boleta de entrada (y sus notas). MntBruto e IndCompraMEReventa los completa
+	 * el builder.
+	 * 
+	 * @return IdDocBoleta
+	 */
+	IdDocBoleta getIdDocBoleta(TipoDoc tipo, int formaPago, Date fchEmis, EstrategiaNumeracion estrategia)
 			throws APIException, DatatypeConfigurationException, IOException;
 
 	/**

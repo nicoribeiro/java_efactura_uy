@@ -106,6 +106,14 @@ public interface CFEStrategy {
 				case eRemito_de_Exportacion:
 				case eRemito_de_Exportacion_Contingencia:
 					return new ERemExpStrategy(cfe, caeMicroController);
+
+				case eBoleta_de_entrada:
+				case eBoleta_de_entrada_Contingencia:
+				case Nota_de_Credito_de_eBoleta_de_entrada:
+				case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+				case Nota_de_Debito_de_eBoleta_de_entrada:
+				case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
+					return new EBoletaStrategy(cfe, caeMicroController);
 			}
 			return null;
 		}

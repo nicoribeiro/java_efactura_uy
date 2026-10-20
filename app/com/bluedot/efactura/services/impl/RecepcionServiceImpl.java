@@ -128,6 +128,14 @@ public class RecepcionServiceImpl implements RecepcionService {
 		case eRemito_de_Exportacion_Contingencia:
 			cfeDefType.setERemExp(cfe.getEremitoExportacion());
 			break;
+		case eBoleta_de_entrada:
+		case eBoleta_de_entrada_Contingencia:
+		case Nota_de_Credito_de_eBoleta_de_entrada:
+		case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+		case Nota_de_Debito_de_eBoleta_de_entrada:
+		case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
+			cfeDefType.setEBoleta(cfe.getEboleta());
+			break;
 		case eRemito:
 		case eRemito_Contingencia:
 			throw APIException.raise(APIErrors.NOT_SUPPORTED)
@@ -260,6 +268,10 @@ public class RecepcionServiceImpl implements RecepcionService {
 					rucEmisor = cfeDefType.getERemExp().getEncabezado().getEmisor().getRUCEmisor();
 				}
 
+				if (cfeDefType.getEBoleta() != null) {
+					rucEmisor = cfeDefType.getEBoleta().getEncabezado().getEmisor().getRUCEmisor();
+				}
+
 				if (cfeDefType.getEResg() != null) {
 					rucEmisor = cfeDefType.getEResg().getEncabezado().getEmisor().getRUCEmisor();
 				}
@@ -331,6 +343,11 @@ public class RecepcionServiceImpl implements RecepcionService {
 				if (cfeDefType.getERemExp() != null) {
 					rucEmisor = cfeDefType.getERemExp().getEncabezado().getEmisor().getRUCEmisor();
 					rucReceptor = cfeDefType.getERemExp().getEncabezado().getReceptor().getDocRecep();
+				}
+
+				if (cfeDefType.getEBoleta() != null) {
+					rucEmisor = cfeDefType.getEBoleta().getEncabezado().getEmisor().getRUCEmisor();
+					rucReceptor = cfeDefType.getEBoleta().getEncabezado().getReceptor().getDocRecep();
 				}
 
 				if (cfeDefType.getEResg() != null) {

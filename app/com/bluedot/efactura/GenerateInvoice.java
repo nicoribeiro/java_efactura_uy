@@ -194,6 +194,12 @@ public class GenerateInvoice {
 			case eFactura_Exportacion_Contingencia:
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
+			case eBoleta_de_entrada:
+			case eBoleta_de_entrada_Contingencia:
+			case Nota_de_Credito_de_eBoleta_de_entrada:
+			case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+			case Nota_de_Debito_de_eBoleta_de_entrada:
+			case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
 				for (int i = 0; i < cfe.getDetalle().size(); i++) {
 					if (beginPage) {
 						beginPage = false;
@@ -427,6 +433,38 @@ public class GenerateInvoice {
 				createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, receptorExp.optString("RznSocRecep", ""), PdfContentByte.ALIGN_LEFT);
 			}
 			break;
+
+		case eBoleta_de_entrada:
+		case eBoleta_de_entrada_Contingencia:
+		case Nota_de_Credito_de_eBoleta_de_entrada:
+		case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+		case Nota_de_Debito_de_eBoleta_de_entrada:
+		case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
+			/*
+			 * El receptor es el VENDEDOR (Formato CFE, representacion impresa): con RUC, recuadro "RUC VENDEDOR"; si no, su
+			 * documento con tipo y pais. Los datos salen del generador_json
+			 */
+			JSONObject vendedor = receptorGenerador(cfe);
+			if (vendedor != null) {
+				TipoDocumento tipoVendedor = vendedor.has("TipoDocRecep") ? TipoDocumento.fromInt(vendedor.optInt("TipoDocRecep")) : null;
+				if (tipoVendedor == TipoDocumento.RUC) {
+					createHeadings(bf, cb, receptor_x + 50, receptor_y, "RUC VENDEDOR", PdfContentByte.ALIGN_CENTER);
+					createHeadings(bf, cb, receptor_x + 50, receptor_y - headerRowSize, vendedor.optString("DocRecep", ""), PdfContentByte.ALIGN_CENTER);
+				} else {
+					createHeadings(bfBold, cb, receptor_x + 50, receptor_y, "VENDEDOR", PdfContentByte.ALIGN_CENTER);
+					String documento = vendedor.optString("DocRecepExt", vendedor.optString("DocRecep", ""));
+					if (!documento.isEmpty())
+						createHeadings(bf, cb, receptor_x + 50, receptor_y - headerRowSize, (tipoVendedor != null ? tipoVendedor.name() + " " : "")
+								+ vendedor.optString("CodPaisRecep", "") + " " + documento, PdfContentByte.ALIGN_CENTER);
+				}
+				createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 3, vendedor.optString("DirRecep", ""), PdfContentByte.ALIGN_LEFT);
+				String ciudadVendedor = vendedor.optString("CiudadRecep", "");
+				String deptoVendedor = vendedor.optString("DeptoRecep", "");
+				createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 4,
+						ciudadVendedor + (!ciudadVendedor.isEmpty() && !deptoVendedor.isEmpty() ? " - " : "") + deptoVendedor, PdfContentByte.ALIGN_LEFT);
+				createContent(bf, cb, receptor_x, receptor_y - headerRowSize * 5, vendedor.optString("RznSocRecep", ""), PdfContentByte.ALIGN_LEFT);
+			}
+			break;
 		}
 
 		/*
@@ -614,6 +652,22 @@ public class GenerateInvoice {
 				generateFrame(bfBold, cb, frameUp_y, frameDown_y, "EXPORTACION", cantCol, numCol);
 				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "Exportación: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
 				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, df_2.format(cfe.getTotMntExpyAsim() != null ? cfe.getTotMntExpyAsim() : 0d), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				if (cfe.getTipoCambio() != 0d) {
+					createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Tipo de cambio: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+					createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, String.valueOf(cfe.getTipoCambio()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
+				}
+				break;
+			case eBoleta_de_entrada:
+			case eBoleta_de_entrada_Contingencia:
+			case Nota_de_Credito_de_eBoleta_de_entrada:
+			case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+			case Nota_de_Debito_de_eBoleta_de_entrada:
+			case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
+				// e-Boleta de entrada: sin IVA; el no gravado va en TOTALES
+				numCol = 3;
+				generateFrame(bfBold, cb, frameUp_y, frameDown_y, "OTROS VALORES", cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, "IVA Suspenso: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
+				createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 3, df_2.format(cfe.getTotMntIVAenSusp() != null ? cfe.getTotMntIVAenSusp() : 0d), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
 				if (cfe.getTipoCambio() != 0d) {
 					createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, "Tipo de cambio: ", PdfContentByte.ALIGN_LEFT, cantCol, numCol);
 					createContentOnFrame(bf, cb, detailsLowerLeft_y - detailsRowSize * 4, String.valueOf(cfe.getTipoCambio()), PdfContentByte.ALIGN_RIGHT, cantCol, numCol);
@@ -869,6 +923,12 @@ public class GenerateInvoice {
 			case eFactura_Exportacion_Contingencia:
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
+			case eBoleta_de_entrada:
+			case eBoleta_de_entrada_Contingencia:
+			case Nota_de_Credito_de_eBoleta_de_entrada:
+			case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+			case Nota_de_Debito_de_eBoleta_de_entrada:
+			case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
 				createContentOnFrame(bf, cb, frameUp_y - detailsRowSize * 7, "www.dgi.gub.uy",
 						PdfContentByte.ALIGN_RIGHT, 3, 0);
 				break;

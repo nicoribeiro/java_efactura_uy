@@ -104,6 +104,13 @@ public class CFEBuilderFactory {
 			case eRemito_de_Exportacion:
 			case eRemito_de_Exportacion_Contingencia:
 				return new CFEBuilderRemitoExportacion(caeMicroController, strategy);
+			case eBoleta_de_entrada:
+			case eBoleta_de_entrada_Contingencia:
+			case Nota_de_Credito_de_eBoleta_de_entrada:
+			case Nota_de_Credito_de_eBoleta_de_entrada_Contingencia:
+			case Nota_de_Debito_de_eBoleta_de_entrada:
+			case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
+				return new CFEBuilderBoleta(caeMicroController, strategy);
 		}
 		
 		return null;
