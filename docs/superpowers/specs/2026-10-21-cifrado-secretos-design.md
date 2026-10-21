@@ -96,7 +96,8 @@ entre las claves, la API no arranca y el log dice cuál. Nunca se loguean claves
 
 ### Errores
 
-- Un valor que no se puede descifrar: error que nombra la columna y el id de la fila, nunca el valor. La operación que lo
+- Un valor que no se puede descifrar: error que nombra la columna, nunca el valor (en la migración también el id de la
+  fila; un converter de JPA no sabe qué fila convierte). La operación que lo
   necesitaba (firmar, conectar al correo, verificar HMAC) falla visible.
 - Migración: si una fila falla, se revierte esa tabla y se informa cuál fila y por qué; las otras tablas no se tocan.
 - 9a: si al arrancar falta la contraseña de la base (archivo de secretos no incluido), el log lo dice explícitamente.
