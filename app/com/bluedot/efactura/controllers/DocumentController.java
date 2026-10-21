@@ -828,14 +828,21 @@ public class DocumentController extends AbstractController {
 			if (estadoFiltro != null && !estadoFiltro.trim().isEmpty() && !estadoFiltro.trim().matches("(?i)AE|BE|CE|SIN"))
 				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("estado", estadoFiltro);
 			
+			/*
+			 * Estado del CFE en la respuesta de la empresa receptora (solo emitidos): AE, BE o SIN (no lo respondio)
+			 */
+			String estadoReceptor = request().getQueryString("estadoReceptor");
+			if (estadoReceptor != null && !estadoReceptor.trim().isEmpty() && !estadoReceptor.trim().matches("(?i)AE|BE|SIN"))
+				throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("estadoReceptor", estadoReceptor);
+
 			Orden orden = Orden.leer(request(), CFE.ORDENES);
 
 			Tuple<List<CFE>, Long> cfes;
 			
 			if (direccion == DireccionDocumento.EMITIDO)
-				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion, orden);
+				cfes = CFE.find(empresa, empresaExterna, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion, orden, estadoReceptor);
 			else
-				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion, orden);
+				cfes = CFE.find(empresaExterna, empresa, rutReceptor, razonReceptor, tipoFiltro, serie, nro, estadoFiltro, fromDate, toDate, page, pageSize, direccion, orden, estadoReceptor);
 			
 			JSONArray cfeArray = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfes.item1);
 			
