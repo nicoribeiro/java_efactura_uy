@@ -9,7 +9,6 @@ import java.util.UUID;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.microControllers.interfaces.AccountMicroController;
-import com.bluedot.commons.utils.MessagingHelper;
 import com.bluedot.commons.security.Account;
 import com.bluedot.commons.security.AccountType;
 import com.bluedot.commons.security.Address;
@@ -17,7 +16,6 @@ import com.bluedot.commons.security.Permission;
 import com.bluedot.commons.security.PermissionNames;
 import com.bluedot.commons.security.User;
 
-import play.i18n.Messages;
 
 
 
@@ -72,8 +70,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		if (signUpConfigurator.validateAccount){
 			account.setValidated(true);
 			account.setValidationDate(new Date());
-		}else
-			sendAccountValidationEmail(emailAddress, account, signUpConfigurator.hostForValidationsLinks);
+		}
 		
 		account.save();
 		
@@ -93,44 +90,4 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		permission.setPermissionId(MessageFormat.format(pattern, String.valueOf(id), value));
 		user.getPermissions().add(permission);
 	}
-	
-	
-	private boolean sendAccountValidationEmail(String to, Account account, String host)
-	{
-		String activationLink = new MessagingHelper().getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/validate";
-
-		StringBuilder htmlEmailBody = new StringBuilder();
-
-		htmlEmailBody.append("<h3>Thank you for join</h3>");
-		htmlEmailBody.append("<p>Validate your account by clicking <a href=\"" + activationLink + "\">here</a></p>");
-
-		StringBuilder textEmailBody = new StringBuilder();
-
-		textEmailBody.append("Thank you for join");
-		textEmailBody.append("\nValidate your account by accessing this URL: " + activationLink);
-
-		return new MessagingHelper().withPlayConfig().sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Welcome!", true);
-	}
-	
-	@Override
-	public boolean sendPasswordResetEmail(String to, Account account, String resetKey, String host)
-	{
-		String resetLink = new MessagingHelper().getValidationHost(host) + "/api/v1/accounts/" + account.getUuid() + "/reset?key=" + resetKey;
-
-		StringBuilder htmlEmailBody = new StringBuilder();
-
-		htmlEmailBody.append("<h3>Password recovery</h3>");
-		htmlEmailBody.append("<p>Reset your password by clicking <a href=\"" + resetLink + "\">here</a></p>");
-
-		StringBuilder textEmailBody = new StringBuilder();
-
-		textEmailBody.append("Password recovery");
-		textEmailBody.append("\nReset your password by accessing this URL: " + resetLink);
-
-		return new MessagingHelper().withPlayConfig().sendEmail(to, textEmailBody.toString(), htmlEmailBody.toString(), "Reset your password", true);
-	}
-	
-	
-
-	
 }

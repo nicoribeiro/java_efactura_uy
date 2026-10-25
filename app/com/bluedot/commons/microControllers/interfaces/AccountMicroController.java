@@ -3,7 +3,6 @@ package com.bluedot.commons.microControllers.interfaces;
 import java.util.List;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.security.Account;
 import com.bluedot.commons.security.AccountType;
 import com.bluedot.commons.security.Address;
 import com.bluedot.commons.security.PermissionNames;
@@ -36,8 +35,6 @@ public interface AccountMicroController
 	
 	User signUp(String emailAddress, String password, String firstName, String lastName, String companyName, AccountType accountType, List<Address> addresses, String phone,
 			SignUpConfigurator signUpConfigurator) throws APIException;
-
-	boolean sendPasswordResetEmail(String to, Account account, String resetKey, String host);
 
 	void addPermissionsToUser(User user, PermissionNames[] permissions, String pattern, String id, String value);
 

@@ -110,7 +110,7 @@ public class NotificationPoller extends PollerRunner {
 				.withCustomConfig(empresa.getFromEnvio(), empresa.getHostRecepcion(),
 						Integer.parseInt(empresa.getPuertoRecepcion()), empresa.getUserRecepcion(),
 						empresa.getPassRecepcion())
-				.sendEmail(empresa.getMailNotificaciones(), body, null, subject, false);
+				.sendEmail(empresa.getMailNotificaciones(), body, subject);
 		// Solo cuenta como aviso enviado si el mail salio (sendEmail deja el detalle del error en el log)
 		if (!enviado)
 			throw new IllegalStateException("No se pudo enviar el aviso \"" + subject + "\" a la empresa " + empresa.getRut());

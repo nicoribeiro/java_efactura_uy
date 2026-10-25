@@ -383,7 +383,7 @@ public class Commons {
 					.withCustomConfig(empresaDesde.getFromEnvio(), empresaDesde.getHostRecepcion(), Integer.parseInt(empresaDesde.getPuertoRecepcion()),
 							empresaDesde.getUserRecepcion(), empresaDesde.getPassRecepcion())
 					.withAttachment(attachments)
-					.sendEmail(destinatarios, body, null, subject, false);
+					.sendEmail(destinatarios, body, subject);
 
 		} catch (Exception e) {
 			com.bluedot.efactura.model.EnvioMail.registrar(empresaDesde, destinatarios, nombreArchivo, subject, contexto, e);

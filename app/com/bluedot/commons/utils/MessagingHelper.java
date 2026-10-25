@@ -18,7 +18,6 @@ public class MessagingHelper {
 	private String username;
 	private String password;
 
-	private String signature;
 	private Map<String, byte[]> attachments;
 
 	/** Loguear en lugar de mandar; null = segun mail.log */
@@ -26,15 +25,6 @@ public class MessagingHelper {
 
 	public MessagingHelper() {
 
-	}
-
-	public MessagingHelper withPlayConfig() {
-		from = Play.application().configuration().getString("mail.from", "");
-		host = Play.application().configuration().getString("mail.host", "");
-		port = Play.application().configuration().getInt("mail.port", 25);
-		username = Play.application().configuration().getString("mail.user", "");
-		password = Play.application().configuration().getString("mail.password", "");
-		return this;
 	}
 
 	public MessagingHelper withCustomConfig(String from, String host, int port, String username, String password) {
@@ -57,19 +47,8 @@ public class MessagingHelper {
 		return this;
 	}
 
-	public MessagingHelper withSignature(String signature) {
-		this.signature = signature;
-		return this;
-	}
-
-	public String getValidationHost(String host) {
-		return Play.application().configuration().getString("app.validation.host", "https://" + host);
-	}
-
-	public boolean sendEmail(String to, String textBody, String htmlBody, String subject, boolean html) {
-
-		if (signature == null || "".equals(signature))
-			signature = Play.application().configuration().getString("mail.signature", "");
+	/** Mail en texto plano (no hay mails HTML) */
+	public boolean sendEmail(String to, String textBody, String subject) {
 
 		boolean logInstedOfSend = soloLog != null ? soloLog : Play.application().configuration().getBoolean("mail.log", false);
 
