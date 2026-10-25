@@ -1091,6 +1091,22 @@ public class GenerateInvoice {
 	/*
 	 * 5) Pie del comprobante.(solo ultima pagina)
 	 */
+	/**
+	 * La adenda sin Entrega ni Notas, que tienen su propia seccion en el PDF. Arma un arreglo nuevo: antes se borraba del
+	 * mismo arreglo recorriendolo hacia adelante y se salteaba el elemento siguiente (con Entrega y Notas seguidos, Notas
+	 * salia dos veces).
+	 */
+	static JSONArray datosInternos(JSONArray adenda) {
+		JSONArray resultado = new JSONArray();
+		for (int i = 0; i < adenda.length(); i++) {
+			Object elemento = adenda.get(i);
+			if (elemento instanceof JSONObject && (((JSONObject) elemento).has("Entrega") || ((JSONObject) elemento).has("Notas")))
+				continue;
+			resultado.put(elemento);
+		}
+		return resultado;
+	}
+
 	public void generateAdendaDatosInternos(PdfContentByte cb) {
 
 		int frameUp_y = pageHeight - headerHeight - detailsHeight;
@@ -1102,17 +1118,7 @@ public class GenerateInvoice {
 		
 			// es un cfe emitido (sin adenda: lista vacia, como en las otras secciones de la adenda)
 			
-			JSONArray array = cfe.getAdenda() != null ? new JSONArray(cfe.getAdenda()) : new JSONArray();
-			
-			for (int i = 0; i < array.length(); i++) {
-				try {
-					JSONObject jsonObject = array.getJSONObject(i);
-					if (jsonObject.has("Entrega") || jsonObject.has("Notas"))
-						array.remove(i);
-				} catch (JSONException e) {
-				}
-				
-			}
+			JSONArray array = datosInternos(cfe.getAdenda() != null ? new JSONArray(cfe.getAdenda()) : new JSONArray());
 			
 			
 			if (cfe.getAdenda() != null){
