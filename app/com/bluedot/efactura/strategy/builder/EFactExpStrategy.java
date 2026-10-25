@@ -130,7 +130,7 @@ public class EFactExpStrategy extends CommonStrategy implements EstrategiaExport
 			cfe.setSerie(idDoc.getSerie());
 			cfe.setNro(idDoc.getNro().intValue());
 		} catch (DatatypeConfigurationException | IOException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 	}
 
@@ -139,7 +139,7 @@ public class EFactExpStrategy extends CommonStrategy implements EstrategiaExport
 		try {
 			getEFactExp().setCAEData(caeMicroController.getCAEDataType(cfe.getTipo()));
 		} catch (DatatypeConfigurationException | JSONException | ParseException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 	}
 
