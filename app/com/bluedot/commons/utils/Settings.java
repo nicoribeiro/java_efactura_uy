@@ -36,9 +36,8 @@ public class Settings
 		int result = defaultVal;
 		try
 		{
-			totalStr.trim();
-			totalStr.replaceAll(" ", "");
-			result = Integer.parseInt(totalStr);
+			// trim y replaceAll devuelven otro String: antes se descartaban
+			result = Integer.parseInt(totalStr.trim().replaceAll(" ", ""));
 		} catch (Exception e)
 		{
 		}
@@ -52,9 +51,7 @@ public class Settings
 		int result = -1;
 		try
 		{
-			totalStr.trim();
-			totalStr.replaceAll(" ", "");
-			result = Integer.parseInt(totalStr);
+			result = Integer.parseInt(totalStr.trim().replaceAll(" ", ""));
 		} catch (Exception e)
 		{
 		}

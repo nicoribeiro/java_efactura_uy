@@ -24,6 +24,20 @@ public class SettingsTest {
 		assertFalse(con().getBooleanProperty("x", false));
 	}
 
+	/** Espacios alrededor del numero (antes el trim se descartaba y daba -1 o el default) */
+	@Test
+	public void integerConEspacios() {
+		assertEquals(5, con("x", " 5 ").getInteger("x", 7));
+		assertEquals(5, con("x", " 5 ").getInteger("x"));
+	}
+
+	@Test
+	public void integerSinClaveOInvalido() {
+		assertEquals(7, con().getInteger("x", 7));
+		assertEquals(-1, con().getInteger("x"));
+		assertEquals(7, con("x", "abc").getInteger("x", 7));
+	}
+
 	@Test
 	public void booleanConValor() {
 		assertTrue(con("x", "true").getBooleanProperty("x", false));
