@@ -67,7 +67,10 @@ public class EmailMessage extends Model<EmailMessage> {
 		this.fromEmail = email.getFrom();
 		this.subject = email.getSubject();
 		this.sentDate = email.getSentDate();
-		this.messageContent = email.getMessageContent(); // TODO esto es siempre vacio
+		// El cuerpo del mail no se guarda a proposito (llega vacio): la columna es varchar(255) y un cuerpo mas largo haria
+		// fallar el insert, y con el la recepcion de los CFE del mail. Nada lo muestra; si hace falta, primero ampliar la
+		// columna a TEXT en cada base (hbm2ddl update no cambia el tipo de una columna existente).
+		this.messageContent = email.getMessageContent();
 		for (com.bluedot.commons.utils.messaging.Attachment attachmentRaw : email.getAttachments()) {
 			Attachment attachment = new Attachment(attachmentRaw);
 			attachment.setEmailMessage(this);
