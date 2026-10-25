@@ -517,8 +517,9 @@ public class Empresa extends Model<Empresa>{
 		this.mailNotificaciones = mailNotificaciones;
 	}
 
+	/** Sin espacios alrededor: se valida con trim y los que lo usan hacen Integer.parseInt (IMAP, SMTP, avisos) */
 	public String getPuertoRecepcion() {
-		return puertoRecepcion;
+		return puertoRecepcion != null ? puertoRecepcion.trim() : null;
 	}
 
 	public void setPuertoRecepcion(String puertoRecepcion) {
