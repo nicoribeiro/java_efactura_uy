@@ -8,7 +8,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -177,6 +176,25 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		
 	}
 
+	/**
+	 * Suma de MontoItem por indicador de facturacion. MontoItem ya tiene aplicados los descuentos y recargos del item
+	 * (PrecioUnitario x Cantidad - DescuentoMonto + RecargoMnt); sumar PrecioUnitario x Cantidad daba los totales y el IVA
+	 * sin el descuento.
+	 */
+	static BigDecimal[] montosPorIndicador(List<ItemInterface> items) {
+		BigDecimal[] montos = new BigDecimal[IndicadorFacturacion.maxIndice + 1];
+
+		for (int i = 0; i <= IndicadorFacturacion.maxIndice; i++) {
+			montos[i] = BigDecimal.ZERO;
+		}
+
+		for (ItemInterface item : items) {
+			int indice = item.getIndFact().intValue();
+			montos[indice] = item.getMontoItem().add(montos[indice]);
+		}
+		return montos;
+	}
+
 	@Override
 	public void buildTotales(JSONObject totalesJson, boolean montosIncluyenIva) throws APIException {
 		List<ItemInterface> items = strategy.getItem();
@@ -214,18 +232,7 @@ public class CFEBuilderImpl implements CFEBuiderInterface {
 		/*
 		 * IVA
 		 */
-		BigDecimal[] iva = new BigDecimal[IndicadorFacturacion.maxIndice + 1];
-
-		for (int i = 0; i <= IndicadorFacturacion.maxIndice; i++) {
-			iva[i] = BigDecimal.ZERO;
-		}
-
-		for (Iterator<ItemInterface> iterator = items.iterator(); iterator.hasNext();) {
-			ItemInterface item = iterator.next();
-			BigDecimal itemMonto = item.getPrecioUnitario().multiply(item.getCantidad());
-			iva[item.getIndFact().intValue()] = itemMonto.add(iva[item.getIndFact().intValue()]);
-
-		}
+		BigDecimal[] iva = montosPorIndicador(items);
 
 		for (IndicadorFacturacion indiceIva : IndicadorFacturacion.values()) {
 			if (iva[indiceIva.getIndice()] != BigDecimal.ZERO && !indiceIva.isSoportado())
