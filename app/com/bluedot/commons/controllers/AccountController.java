@@ -17,9 +17,6 @@ import com.bluedot.commons.microControllers.factory.MicroControllerFactoryBuilde
 import com.bluedot.commons.microControllers.factory.MicroControllerFactoryDefault;
 import com.bluedot.commons.microControllers.factory.MicroControllersFactory;
 import com.bluedot.commons.microControllers.interfaces.AccountMicroController.SignUpConfigurator;
-import com.bluedot.commons.notificationChannels.Email;
-import com.bluedot.commons.notificationChannels.NotificationChannel;
-import com.bluedot.commons.notificationChannels.SMS;
 import com.bluedot.commons.security.Account;
 import com.bluedot.commons.security.AccountAccessLevel;
 import com.bluedot.commons.security.AccountType;
@@ -499,17 +496,8 @@ public class AccountController extends AbstractController
 					if (parentAccount.getUsers().contains(user))
 						throw APIException.raise(APIErrors.USER_ALREADY_EXISTS).setDetailMessage(Messages.get("email_already_taken"));
 	
-					NotificationChannel nc = new Email("User Email", emailAddress);
-					user.getNotificationChannels().add(nc);
-					nc.validate(nc.getValidationKey());
-					
 					if(phone != null && !"".equals(phone))
-					{
-						NotificationChannel phonenc = new SMS("User phone", phone);
 						user.setPhone(phone);
-						user.getNotificationChannels().add(phonenc);
-						phonenc.validate(phonenc.getValidationKey());
-					}
 	
 					Account account = new Account();
 					account.setCreationTimestamp(new Date());

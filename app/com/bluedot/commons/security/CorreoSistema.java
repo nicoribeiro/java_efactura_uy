@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.notificationChannels.MessagingHelper;
+import com.bluedot.commons.utils.MessagingHelper;
 
 import play.Configuration;
 import play.Play;

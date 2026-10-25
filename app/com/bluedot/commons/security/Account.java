@@ -1,35 +1,22 @@
 package com.bluedot.commons.security;
 
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
-import com.bluedot.commons.alerts.Alert;
-import com.bluedot.commons.alerts.AlertAccept;
-import com.bluedot.commons.alerts.AlertMap;
-import com.bluedot.commons.alerts.AlertMetadata;
-import com.bluedot.commons.alerts.AlertReceiver;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.messages.Message;
-import com.bluedot.commons.messages.MessageReceiver;
 import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
@@ -38,7 +25,7 @@ import com.play4jpa.jpa.query.Query;
 
 
 @Entity
-public class Account extends Model<Account> implements AlertAccept, SettingsPrototype, MessageReceiver
+public class Account extends Model<Account> implements SettingsPrototype
 {
 
 	/**
@@ -52,16 +39,10 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 
 	private Date creationTimestamp;
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy="account", fetch=FetchType.LAZY)
-	@LazyCollection(LazyCollectionOption.EXTRA)
-	private List<Alert> alerts;
-	
 	@OneToOne(cascade = CascadeType.ALL)
 	private Settings settings;
 
 	public static Finder<Integer, Account> find = new Finder<Integer, Account>(Integer.class, Account.class);
-	
-	public static Finder<Integer, Alert> alertFinder = new Finder<Integer, Alert>(Integer.class, Alert.class);
 	
 //	@OneToOne
 //	private User owner;
@@ -156,22 +137,6 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 //		return key;
 //	}
 	
-	public static List<Alert> queryAlerts(int accountId, int deviceId, Date fromTimestamp, Date toTimestamp, int perPage, int page)
-	{
-		Query<Alert> q = alertFinder.query().join("account").eq("account.id", accountId);
-		
-		if(fromTimestamp != null)
-			q.ge("creationTimestamp", fromTimestamp);
-		if(toTimestamp != null)
-			q.le("creationTimestamp", toTimestamp);
-		
-		q.orderByDesc("creationTimestamp");
-		
-		return (page>-1&&perPage>-1)?q.findPage(page, perPage):q.findList();
-	}
-	
-	
-	
 	public int getId()
 	{
 		return id;
@@ -190,16 +155,6 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 	public void setCreationTimestamp(Date creationTimestamp)
 	{
 		this.creationTimestamp = creationTimestamp;
-	}
-
-	public List<Alert> getAlerts()
-	{
-		return alerts;
-	}
-
-	public void setAlerts(List<Alert> alerts)
-	{
-		this.alerts = alerts;
 	}
 
 //	public User getOwner()
@@ -233,21 +188,6 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 	}
 	
 
-	public List<AlertReceiver> getAlertRecivers(Alert alert)
-	{
-		alerts.add(alert);
-
-		update();
-		
-		List<AlertReceiver> list = new LinkedList<AlertReceiver>(users);
-		
-//		list.add(owner);
-		
-		return list;
-		
-		
-	}
-
 	public Date getValidationDate()
 	{
 		return validationDate;
@@ -268,16 +208,6 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 		this.validated = validated;
     }
     
-	public Alert getAlertById(int alertId)
-	{
-		for (Alert alert : alerts)
-		{
-			if (alert.getId()==alertId)
-				return alert;	
-		}
-		return null;
-	}
-	
 	public boolean isUserInAccount(User user){
 //		if (user.getId()==owner.getId())
 //			return true;
@@ -335,18 +265,6 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 	}
 	
 
-	@Override
-	public Map<Integer,AlertMetadata> getPosibleAlertMetadatas()
-	{
-		return null;
-	}
-
-	@Override
-	public AlertMap getAlertMap()
-	{
-		return null;
-	}
-
 //	public String getResetKey()
 //	{
 //		return resetKey;
@@ -397,19 +315,6 @@ public class Account extends Model<Account> implements AlertAccept, SettingsProt
 		return ((Account)obj).getId() == this.getId();
 	}
 
-
-	@Override
-	public String getURN()
-	{
-		return "account:"+id;
-	}
-
-	@Override
-	public void notify(Message message)
-	{
-		// TODO Auto-generated method stub
-		
-	}
 
 	public AccountType getAccountType()
 	{

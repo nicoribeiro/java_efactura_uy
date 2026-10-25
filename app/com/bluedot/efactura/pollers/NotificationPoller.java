@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.notificationChannels.MessagingHelper;
+import com.bluedot.commons.utils.MessagingHelper;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.microControllers.implementation.CAEMicroControllerDefault;
 import com.bluedot.efactura.model.Empresa;

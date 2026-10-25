@@ -9,10 +9,7 @@ import java.util.UUID;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
 import com.bluedot.commons.microControllers.interfaces.AccountMicroController;
-import com.bluedot.commons.notificationChannels.Email;
-import com.bluedot.commons.notificationChannels.MessagingHelper;
-import com.bluedot.commons.notificationChannels.NotificationChannel;
-import com.bluedot.commons.notificationChannels.SMS;
+import com.bluedot.commons.utils.MessagingHelper;
 import com.bluedot.commons.security.Account;
 import com.bluedot.commons.security.AccountType;
 import com.bluedot.commons.security.Address;
@@ -53,28 +50,7 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		 * PHONE
 		 */
 		if(phone != null && !"".equals(phone))
-		{
-			NotificationChannel phoneNotificationChannel = new SMS("User phone", phone);
 			user.setPhone(phone);
-			user.getNotificationChannels().add(phoneNotificationChannel);
-			
-			if (signUpConfigurator.validateNotificationChannels)
-				phoneNotificationChannel.validate(phoneNotificationChannel.getValidationKey());
-			
-			if (signUpConfigurator.sendValidationToNotificationChannels)
-				phoneNotificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(signUpConfigurator.hostForValidationsLinks));
-		}
-		
-		/*
-		 * EMAIL
-		 */
-		NotificationChannel emailNotificationChannel = new Email("User Email", emailAddress);
-		user.getNotificationChannels().add(emailNotificationChannel);
-		if (signUpConfigurator.validateNotificationChannels)
-			emailNotificationChannel.validate(emailNotificationChannel.getValidationKey());
-		
-		if (signUpConfigurator.sendValidationToNotificationChannels)
-			emailNotificationChannel.sendValidationKey(new MessagingHelper().getValidationHost(signUpConfigurator.hostForValidationsLinks));
 		
 		user.save();
 

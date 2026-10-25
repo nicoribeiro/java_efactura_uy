@@ -7,9 +7,6 @@ import java.util.List;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.notificationChannels.NotificationChannel;
-import com.bluedot.commons.notificationChannels.NotificationRecord;
-import com.bluedot.commons.notificationChannels.SMS;
 import com.bluedot.commons.security.Account;
 import com.bluedot.commons.security.Address;
 import com.bluedot.commons.security.Credential;
@@ -298,32 +295,7 @@ public class UserController extends AbstractController
 				if (lastName != null)
 					u.setLastName(lastName);
 				if (phone != null)
-				{
 					u.setPhone(phone);
-					NotificationChannel nc = new SMS("User phone", phone);
-
-					List<NotificationChannel> toRemove = new ArrayList<>();
-
-					for (NotificationChannel n : u.getNotificationChannels())
-					{
-						if (n instanceof SMS)
-							toRemove.add(n);
-					}
-
-					for (NotificationChannel n : toRemove)
-					{
-						for (NotificationRecord nr : n.getNotificationRecords())
-						{
-							nr.setNotificationChannel(null);
-							nr.update();
-						}
-
-						u.getNotificationChannels().remove(n);
-						n.delete();
-					}
-
-					u.getNotificationChannels().add(nc);
-				}
 
 				if (address != null)
 				{

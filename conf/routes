@@ -295,25 +295,6 @@ DELETE   /api/v1/users/:uid/empresas/:rut                        com.bluedot.efa
 #POST     /api/v1/accounts/:aid/users/:uid/password               com.bluedot.commons.controllers.UserController.changePassword(aid:Int, uid: Int)
 
 
-# Notification Channel Management
-#GET      /api/v1/users/:uid/notificationChannels                 com.bluedot.commons.controllers.NotificationChannelController.listNotificationChannel(uid: Int)
-#POST     /api/v1/users/:uid/notificationChannels                 com.bluedot.commons.controllers.NotificationChannelController.createNotificationChannel(uid: Int)
-#PUT      /api/v1/users/:uid/notificationChannels/:ncid           com.bluedot.commons.controllers.NotificationChannelController.editNotificationChannel(uid: Int, ncid: Int)
-#DELETE   /api/v1/users/:uid/notificationChannels/:ncid           com.bluedot.commons.controllers.NotificationChannelController.deleteNotificationChannel(uid: Int, ncid: Int)
-#GET      /api/v1/notificationChannels/:ncid/validate/:key        com.bluedot.commons.controllers.NotificationChannelController.validateNotificationChannel(ncid: Int, key: String)
-#GET      /api/v1/users/:uid/notificationChannels/:ncid/sendKey   com.bluedot.commons.controllers.NotificationChannelController.sendKeyNotificationChannel(uid: Int, ncid: Int)
-#GET      /api/v1/users/:uid/notificationChannels/:ncid/test      com.bluedot.commons.controllers.NotificationChannelController.testNotificationChannel(uid: Int, ncid: Int)
-
-
-#############################
-###### EVENTS & ALERTS ######
-#############################
-
-# Account Alerts
-#GET      /api/v1/accounts/:aid/alerts                            com.bluedot.commons.controllers.AccountController.getAlerts(aid: Int)
-#POST     /api/v1/accounts/:aid/alerts                            com.bluedot.commons.controllers.AccountController.alertAction(aid: Int)
-#GET      /api/v1/accounts/:aid/alerts/count                      com.bluedot.commons.controllers.AccountController.getAlertCount(aid: Int)
-
 # Access Levels
 #PUT      /api/v1/accounts/:aid/users/:uid/acl                    com.bluedot.commons.controllers.AccountController.setAcl(aid: Int, uid: Int)
 
