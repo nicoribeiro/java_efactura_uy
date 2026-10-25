@@ -26,26 +26,17 @@ public class JSONUtils
 	    return true;
 	}
 	
+	/**
+	 * Copia de Obj1 con las claves de Obj2 encima (Obj2 pisa). Cualquiera puede ser null o vacio: getNames de un objeto
+	 * vacio devuelve null (antes daba NullPointerException).
+	 */
 	public static JSONObject merge(JSONObject Obj1, JSONObject Obj2){
-		if (Obj1==null && Obj2!=null)
-			return new JSONObject(Obj2, JSONObject.getNames(Obj2));
-		
-		if (Obj1!=null && Obj2==null)
-			return new JSONObject(Obj1, JSONObject.getNames(Obj1));
-		
-		if (Obj1==null && Obj2==null)
-			return new JSONObject();
-		
-		JSONObject merged;
-		
-		if (JSONObject.getNames(Obj1)==null)
-			merged = new JSONObject();
-		else
-			merged = new JSONObject(Obj1, JSONObject.getNames(Obj1));
-		
-		for(String key : JSONObject.getNames(Obj2))
-		{
-		  merged.put(key, Obj2.get(key));
+		JSONObject merged = new JSONObject();
+		for (JSONObject obj : new JSONObject[] { Obj1, Obj2 }) {
+			String[] names = obj != null ? JSONObject.getNames(obj) : null;
+			if (names != null)
+				for (String key : names)
+					merged.put(key, obj.get(key));
 		}
 		return merged;
 	}
