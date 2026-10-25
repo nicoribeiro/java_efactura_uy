@@ -115,6 +115,11 @@ public class Settings
 		return result;
 	}
 
+	/** Para tests */
+	Settings(Properties properties) {
+		this.properties = properties;
+	}
+
 	private Settings() throws FileNotFoundException, IOException {
 
 		properties = new Properties();
@@ -128,14 +133,8 @@ public class Settings
 	public boolean getBooleanProperty(String key, boolean defaultVal)
 	{
 		String tmp = properties.getProperty(key);
-		boolean result = defaultVal;
-		try
-		{
-			result = Boolean.parseBoolean(tmp);
-		} catch (Exception e)
-		{
-		}
-		return result;
+		// Sin la clave, el default: parseBoolean(null) da false sin tirar excepcion
+		return tmp == null ? defaultVal : Boolean.parseBoolean(tmp.trim());
 	}
 
 }
