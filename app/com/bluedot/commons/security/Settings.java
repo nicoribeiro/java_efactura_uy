@@ -366,31 +366,9 @@ public class Settings extends Model<Settings>
 		}
 	}
 
-	public void setString(String key, String value)
-	{
-		try
-		{
-			getJsonObject().put(key, value);
-		} catch (JSONException e)
-		{
-			e.printStackTrace();
-		}
-	}
-
 	public boolean getBool(String key)
 	{
 		return Boolean.parseBoolean(getSetting(key, "false"));
-	}
-
-	public void setBool(String key, boolean value)
-	{
-		try
-		{
-			getJsonObject().put(key, value);
-		} catch (JSONException e)
-		{
-			e.printStackTrace();
-		}
 	}
 
 	public JSONArray getArray(String key)
