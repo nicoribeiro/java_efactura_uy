@@ -150,9 +150,9 @@ public class SignInController extends AbstractController
 		 * If there is not any ADMIN on the system assume next user is an ADMIN   
 		 */
 		if (User.find(Role.ADMIN).size()==0)
-			signUpConfigurator = new SignUpConfigurator(false, true, true, false, request().host(), Role.ADMIN);
+			signUpConfigurator = new SignUpConfigurator(true, false, Role.ADMIN);
 		else
-			signUpConfigurator = new SignUpConfigurator(false, false, false, false, request().host(), Role.USER);
+			signUpConfigurator = new SignUpConfigurator(false, false, Role.USER);
 		
 		microControllersFactory.getAccountController().signUp(emailAddress, password, firstName, lastName, companyName, null, addresses, phone, signUpConfigurator);
 

@@ -14,20 +14,14 @@ public interface AccountMicroController
 {
 
 	public class SignUpConfigurator{
-		public boolean sendValidationToNotificationChannels; 
-		public boolean validateNotificationChannels; 
 		public boolean validateAccount;
 		public boolean autogenEmail;
-		public String hostForValidationsLinks;
 		public Role role;
 		
-		public SignUpConfigurator(boolean sendValidationToNotificationChannels, boolean validateNotificationChannels, boolean validateAccount, boolean autogenEmail, String hostForValidationsLinks, Role role) {
+		public SignUpConfigurator(boolean validateAccount, boolean autogenEmail, Role role) {
 			super();
-			this.sendValidationToNotificationChannels = sendValidationToNotificationChannels;
-			this.validateNotificationChannels = validateNotificationChannels;
 			this.validateAccount = validateAccount;
 			this.autogenEmail = autogenEmail;
-			this.hostForValidationsLinks = hostForValidationsLinks;
 			this.role = role;
 		}
 	}
