@@ -125,7 +125,7 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 			cfe.setSerie(idDocTck.getSerie());
 			cfe.setNro(idDocTck.getNro().intValue());
 		} catch (DatatypeConfigurationException | IOException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 	}
 
@@ -134,7 +134,7 @@ public class EticketStrategy extends CommonStrategy implements CFEStrategy {
 		try {
 			cfe.getEticket().setCAEData(caeMicroController.getCAEDataType(cfe.getTipo()));
 		} catch (DatatypeConfigurationException | JSONException | ParseException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 
 	}

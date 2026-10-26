@@ -25,7 +25,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /*
@@ -142,6 +144,14 @@ public class GenerateInvoice {
 			case eResguardo:
 			case eResguardo_Contingencia:
 				for (int i = 0; i < cfe.getRetencionesPercepciones().size(); i++) {
+					RetencionPercepcion retencion = cfe.getRetencionesPercepciones().get(i);
+					// Si no entra en lo que queda de la pagina, pagina nueva antes de dibujarlo (antes se cortaba solo con
+					// row == 16 justo y un item de varias lineas lo salteaba: se dibujaba sobre los totales)
+					if (!beginPage && saltarPagina(row, lineasDe(retencion.getDescripcion() != null ? retencion.getDescripcion() : "", 64), itemsPerPage)) {
+						printPageNumber(doc,docWriter, bf, cb);
+						doc.newPage();
+						beginPage = true;
+					}
 					if (beginPage) {
 						beginPage = false;
 						generateTablaCuerpo(cb);
@@ -150,14 +160,7 @@ public class GenerateInvoice {
 						generateSelloDigital(doc, cb);
 						row = 1;
 					}
-					int cant = generateLineaDeCuerpo(cb, row, cfe.getRetencionesPercepciones().get(i));
-					row += cant;
-					if (row == itemsPerPage + 1) {
-						printPageNumber(doc,docWriter, bf, cb);
-						doc.newPage();
-						beginPage = true;
-					}
-	
+					row += generateLineaDeCuerpo(cb, row, retencion);
 				}
 				break;
 			case eFactura:
@@ -201,6 +204,13 @@ public class GenerateInvoice {
 			case Nota_de_Debito_de_eBoleta_de_entrada:
 			case Nota_de_Debito_de_eBoleta_de_entrada_Contingencia:
 				for (int i = 0; i < cfe.getDetalle().size(); i++) {
+					Detalle detalle = cfe.getDetalle().get(i);
+					// Si no entra en lo que queda de la pagina, pagina nueva antes de dibujarlo (ver resguardos arriba)
+					if (!beginPage && saltarPagina(row, lineasDe(detalle.getNombreItem(), 64), itemsPerPage)) {
+						printPageNumber(doc,docWriter, bf, cb);
+						doc.newPage();
+						beginPage = true;
+					}
 					if (beginPage) {
 						beginPage = false;
 						generateTablaCuerpo(cb);
@@ -209,14 +219,7 @@ public class GenerateInvoice {
 						generateSelloDigital(doc, cb);
 						row = 1;
 					}
-					int cant = generateLineaDeCuerpo(cb, row, cfe.getDetalle().get(i));
-					row += cant;
-					if (row == itemsPerPage + 1) {
-						printPageNumber(doc,docWriter, bf, cb);
-						doc.newPage();
-						beginPage = true;
-					}
-	
+					row += generateLineaDeCuerpo(cb, row, detalle);
 				}
 				break;
 			}
@@ -602,26 +605,44 @@ public class GenerateInvoice {
 		
 	}
 	public int printLongDesc(PdfContentByte cb, int x, int y, String input, int maxLineLength) {
-	    StringTokenizer tok = new StringTokenizer(input, " ");
-	    StringBuilder output = new StringBuilder(input.length());
-	    int cantLines = 0;
-	    int lineLen = 0;
-	    while (tok.hasMoreTokens()) {
-	        String word = tok.nextToken();
+		List<String> lineas = partirEnLineas(input, maxLineLength);
+		for (int i = 0; i < lineas.size(); i++)
+			createContent(bf, cb, x, y - (detailsRowSize * i), lineas.get(i), PdfContentByte.ALIGN_LEFT);
+		return Math.max(lineas.size(), 1);
+	}
 
-	        if (lineLen + word.length() > maxLineLength) {
-	        	createContent(bf, cb, x, y-(detailsRowSize*cantLines), output.toString(), PdfContentByte.ALIGN_LEFT);
-	        	output.setLength(0);
-	            lineLen = 0;
-	            cantLines += 1;
-	        }
-	        output.append(" " + word);
-	        lineLen += word.length()+1;
-	    }
-	    if  (lineLen>0)
-	    	createContent(bf, cb, x, y-(detailsRowSize*cantLines), output.toString(), PdfContentByte.ALIGN_LEFT);
-	    
-	    return cantLines+1;
+	/** Las lineas en que printLongDesc parte un texto (cortando por palabras) */
+	static List<String> partirEnLineas(String input, int maxLineLength) {
+		List<String> lineas = new ArrayList<String>();
+		StringTokenizer tok = new StringTokenizer(input, " ");
+		StringBuilder output = new StringBuilder(input.length());
+		int lineLen = 0;
+		while (tok.hasMoreTokens()) {
+			String word = tok.nextToken();
+			if (lineLen + word.length() > maxLineLength) {
+				lineas.add(output.toString());
+				output.setLength(0);
+				lineLen = 0;
+			}
+			output.append(" " + word);
+			lineLen += word.length() + 1;
+		}
+		if (lineLen > 0)
+			lineas.add(output.toString());
+		return lineas;
+	}
+
+	/** Lineas que ocupa un texto en el PDF (lo que devuelve printLongDesc), sin dibujarlo */
+	static int lineasDe(String input, int maxLineLength) {
+		return Math.max(partirEnLineas(input, maxLineLength).size(), 1);
+	}
+
+	/**
+	 * Antes de dibujar un item de 'lineas' lineas en la fila 'row': true si no entra en lo que queda de la pagina (filas 1 a
+	 * itemsPorPagina) y hay que pasar a otra. Con la pagina vacia (row 1) no se salta: no entraria en ninguna.
+	 */
+	static boolean saltarPagina(int row, int lineas, int itemsPorPagina) {
+		return row > 1 && row + lineas > itemsPorPagina + 1;
 	}
 	
 	public void generateTotales( PdfContentByte cb) {
@@ -1091,6 +1112,22 @@ public class GenerateInvoice {
 	/*
 	 * 5) Pie del comprobante.(solo ultima pagina)
 	 */
+	/**
+	 * La adenda sin Entrega ni Notas, que tienen su propia seccion en el PDF. Arma un arreglo nuevo: antes se borraba del
+	 * mismo arreglo recorriendolo hacia adelante y se salteaba el elemento siguiente (con Entrega y Notas seguidos, Notas
+	 * salia dos veces).
+	 */
+	static JSONArray datosInternos(JSONArray adenda) {
+		JSONArray resultado = new JSONArray();
+		for (int i = 0; i < adenda.length(); i++) {
+			Object elemento = adenda.get(i);
+			if (elemento instanceof JSONObject && (((JSONObject) elemento).has("Entrega") || ((JSONObject) elemento).has("Notas")))
+				continue;
+			resultado.put(elemento);
+		}
+		return resultado;
+	}
+
 	public void generateAdendaDatosInternos(PdfContentByte cb) {
 
 		int frameUp_y = pageHeight - headerHeight - detailsHeight;
@@ -1102,17 +1139,7 @@ public class GenerateInvoice {
 		
 			// es un cfe emitido (sin adenda: lista vacia, como en las otras secciones de la adenda)
 			
-			JSONArray array = cfe.getAdenda() != null ? new JSONArray(cfe.getAdenda()) : new JSONArray();
-			
-			for (int i = 0; i < array.length(); i++) {
-				try {
-					JSONObject jsonObject = array.getJSONObject(i);
-					if (jsonObject.has("Entrega") || jsonObject.has("Notas"))
-						array.remove(i);
-				} catch (JSONException e) {
-				}
-				
-			}
+			JSONArray array = datosInternos(cfe.getAdenda() != null ? new JSONArray(cfe.getAdenda()) : new JSONArray());
 			
 			
 			if (cfe.getAdenda() != null){

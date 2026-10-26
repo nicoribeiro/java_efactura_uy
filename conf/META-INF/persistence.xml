@@ -8,20 +8,6 @@
 		<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 		<non-jta-data-source>DefaultDS</non-jta-data-source>
 
-		<class>com.bluedot.commons.alerts.Alert</class>
-		<class>com.bluedot.commons.alerts.AlertGroup</class>
-		<class>com.bluedot.commons.alerts.AlertMap</class>
-		<class>com.bluedot.commons.alerts.AlertMetadata</class>
-
-		<class>com.bluedot.commons.messages.Message</class>
-
-		<class>com.bluedot.commons.notificationChannels.APNS</class>
-		<class>com.bluedot.commons.notificationChannels.Email</class>
-		<class>com.bluedot.commons.notificationChannels.GCM</class>
-		<class>com.bluedot.commons.notificationChannels.SMS</class>
-		<class>com.bluedot.commons.notificationChannels.NotificationChannel</class>
-		<class>com.bluedot.commons.notificationChannels.NotificationRecord</class>
-
 		<class>com.bluedot.commons.security.Account</class>
 		<class>com.bluedot.commons.security.Address</class>
 		<class>com.bluedot.commons.security.Credential</class>

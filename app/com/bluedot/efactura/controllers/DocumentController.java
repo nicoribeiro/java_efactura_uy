@@ -17,7 +17,6 @@ import com.bluedot.commons.security.User;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.JSONUtils;
-import com.bluedot.commons.utils.Print;
 import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.GenerateInvoice;
 import com.bluedot.efactura.MODO_SISTEMA;
@@ -30,8 +29,6 @@ import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,7 +39,6 @@ import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
 
-import java.awt.print.PrinterException;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -54,7 +50,6 @@ import java.util.List;
 @Tx
 @Security.Authenticated(Secured.class)
 @EmpresaAccess
-@Api(value = "Operaciones de Documentos") 
 public class DocumentController extends AbstractController {
 
 	private static boolean initialized = false;
@@ -92,9 +87,6 @@ public class DocumentController extends AbstractController {
 		return json(OK);
 	}
 
-	@ApiOperation(value = "Crear CFE",
-		    response = CFE.class
-		    )
 	@BodyParser.Of(BodyParser.Json.class)
 	public Promise<Result> aceptarDocumento(String rut) throws APIException {
 		// TODO meter mutex
@@ -521,18 +513,6 @@ public class DocumentController extends AbstractController {
 		}
 		return json(lista.toString());
 	}
-
-	public Promise<Result> procesarEmailEntrantes(String rut) throws APIException {
-		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
-
-		factory.getServiceMicroController(empresaReceptora).obtenerYProcesarEmailsEntrantesDesdeServerCorreo();
-		
-		return json(OK);
-
-	}
 	
 	/**
 	 * Sobre (emitido o recibido segun direccion) en el que viajo un CFE, con su estado y las respuestas de DGI y de la
@@ -852,38 +832,8 @@ public class DocumentController extends AbstractController {
 	
 	
 	
-	
-	
-	
-	
-	
-	public Promise<Result> getDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
 
-		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
-
-		if (tipo == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
-
-		List<CFE> cfes = CFE.findByIdEmitido(empresa, tipo, serie, nro, null, true);
-
-		if (cfes.size()>1)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
-		
-		CFE cfe = cfes.get(0);
-		
-		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
-
-		cfeJson = JSONUtils.merge(cfeJson, new JSONObject(OK));
-
-		return json(cfeJson.toString());
-	}
-	
-	
-	
-
-	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print, String rutEmisor)
+	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, String rutEmisor)
 			throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
@@ -902,12 +852,9 @@ public class DocumentController extends AbstractController {
 			try {
 				File pdf = generarPDF(empresa, cfe);
 	
-				if (print)
-					Print.print(null, pdf);
-	
 				return Promise.<Result>pure(ok(pdf));
 	
-			} catch (IOException | PrinterException e) {
+			} catch (IOException e) {
 				throw APIException.raise(e);
 			}
 		}else {
@@ -925,12 +872,9 @@ public class DocumentController extends AbstractController {
 			try {
 				File pdf = generarPDF(empresaEmisora, cfe);
 	
-				if (print)
-					Print.print(null, pdf);
-	
 				return Promise.<Result>pure(ok(pdf));
 	
-			} catch (IOException | PrinterException e) {
+			} catch (IOException e) {
 				throw APIException.raise(e);
 			}
 			

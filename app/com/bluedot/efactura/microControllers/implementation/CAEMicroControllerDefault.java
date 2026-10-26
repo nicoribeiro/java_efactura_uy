@@ -360,18 +360,20 @@ public class CAEMicroControllerDefault extends MicroControllerDefault implements
 	}
 
 	public double getPorcentajeUsoCAE(TipoDoc tipoDoc) {
-		
+		return porcentajeUso(caesMap.get(tipoDoc));
+	}
+
+	/** Porcentaje usado de todos los CAE de un tipo juntos (0 si no hay); antes solo contaba el ultimo (=+ en lugar de +=) */
+	static double porcentajeUso(List<CAE> caes) {
+		if (caes == null)
+			return 0;
 		long usados = 0;
-		
 		long totales = 0;
-		
-		for (CAE cae : caesMap.get(tipoDoc)) {
-			totales =+ cae.getFin()-cae.getInicial()+1;
-			usados =+ cae.getSiguiente()-cae.getInicial();
+		for (CAE cae : caes) {
+			totales += cae.getFin() - cae.getInicial() + 1;
+			usados += cae.getSiguiente() - cae.getInicial();
 		}
-		
-		
-		return Math.floor(((float)usados/totales)*100);
+		return totales == 0 ? 0 : Math.floor(((double) usados / totales) * 100);
 	}
 
 	@Override

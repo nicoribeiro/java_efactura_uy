@@ -36,9 +36,8 @@ public class Settings
 		int result = defaultVal;
 		try
 		{
-			totalStr.trim();
-			totalStr.replaceAll(" ", "");
-			result = Integer.parseInt(totalStr);
+			// trim y replaceAll devuelven otro String: antes se descartaban
+			result = Integer.parseInt(totalStr.trim().replaceAll(" ", ""));
 		} catch (Exception e)
 		{
 		}
@@ -52,9 +51,7 @@ public class Settings
 		int result = -1;
 		try
 		{
-			totalStr.trim();
-			totalStr.replaceAll(" ", "");
-			result = Integer.parseInt(totalStr);
+			result = Integer.parseInt(totalStr.trim().replaceAll(" ", ""));
 		} catch (Exception e)
 		{
 		}
@@ -115,6 +112,11 @@ public class Settings
 		return result;
 	}
 
+	/** Para tests */
+	Settings(Properties properties) {
+		this.properties = properties;
+	}
+
 	private Settings() throws FileNotFoundException, IOException {
 
 		properties = new Properties();
@@ -128,14 +130,8 @@ public class Settings
 	public boolean getBooleanProperty(String key, boolean defaultVal)
 	{
 		String tmp = properties.getProperty(key);
-		boolean result = defaultVal;
-		try
-		{
-			result = Boolean.parseBoolean(tmp);
-		} catch (Exception e)
-		{
-		}
-		return result;
+		// Sin la clave, el default: parseBoolean(null) da false sin tirar excepcion
+		return tmp == null ? defaultVal : Boolean.parseBoolean(tmp.trim());
 	}
 
 }

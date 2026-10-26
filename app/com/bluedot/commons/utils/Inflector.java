@@ -412,24 +412,6 @@ public class Inflector {
         return result;
     }
 
-    /**
-     * Turns a non-negative number into an ordinal string used to denote the position in an ordered sequence, such as 1st, 2nd,
-     * 3rd, 4th.
-     * 
-     * @param number the non-negative number
-     * @return the string with the number and ordinal suffix
-     */
-    public String ordinalize( int number ) {
-        int remainder = number % 100;
-        String numberStr = Integer.toString(number);
-        if (11 <= number && number <= 13) return numberStr + "th";
-        remainder = number % 10;
-        if (remainder == 1) return numberStr + "st";
-        if (remainder == 2) return numberStr + "nd";
-        if (remainder == 3) return numberStr + "rd";
-        return numberStr + "th";
-    }
-
     // ------------------------------------------------------------------------------------------------
     // Management methods
     // ------------------------------------------------------------------------------------------------

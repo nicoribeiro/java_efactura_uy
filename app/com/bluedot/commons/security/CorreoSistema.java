@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.notificationChannels.MessagingHelper;
+import com.bluedot.commons.utils.MessagingHelper;
 
 import play.Configuration;
 import play.Play;
@@ -52,7 +52,7 @@ public class CorreoSistema {
 				.withCustomConfig(from, host, conf.getInt("mail.sistema.port", 465), conf.getString("mail.sistema.user", ""),
 						conf.getString("mail.sistema.password", ""))
 				.withSoloLog(soloLog)
-				.sendEmail(para, cuerpo, null, asunto, false);
+				.sendEmail(para, cuerpo, asunto);
 		if (!enviado)
 			throw APIException.raise(APIErrors.MISSING_PARAMETER).withParams("mail.sistema")
 					.setDetailMessage("No se pudo enviar el mail con el código");

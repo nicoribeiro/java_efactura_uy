@@ -5,7 +5,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -25,23 +24,15 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bluedot.commons.alerts.Alert;
-import com.bluedot.commons.alerts.AlertReceiver;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.error.APIException.APIErrors;
-import com.bluedot.commons.messages.Message;
-import com.bluedot.commons.messages.MessageReceiver;
-import com.bluedot.commons.messages.MessageSender;
-import com.bluedot.commons.notificationChannels.Email;
-import com.bluedot.commons.notificationChannels.NotificationChannel;
-import com.bluedot.commons.notificationChannels.SMS;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
 @Entity
 @Table(name = "Users")
-public class User extends Model<User> implements Comparable<User>, AlertReceiver, MessageReceiver, MessageSender
+public class User extends Model<User> implements Comparable<User>
 {
 	
 	final static Logger logger = LoggerFactory.getLogger(User.class);
@@ -130,9 +121,6 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	@OneToOne(cascade = CascadeType.ALL)
 	private Credential credentials;
 
-	@OneToMany(cascade = CascadeType.ALL)
-	private List<NotificationChannel> notificationChannels;
-
 	public User() {
 		this.creationDate = new Date();
 	}
@@ -143,7 +131,6 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.creationDate = new Date();
-		notificationChannels = new LinkedList<NotificationChannel>();
 		this.settings = new Settings();
 		this.credentials = Credential.generateCredential();
 		this.credentials.setUser(this);
@@ -214,11 +201,6 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		return find.query().join("permissions").ilike("permissions.permissionId", permissionId + '%').findList();
 	}
 	
-	public static User findBySMSAccessToken(String token)
-	{
-		return find.query().join("settings").ilike("settings.jsonSettings", '%' + token + '%').findUnique();
-	}
-
 	/*
 	 * GETTERS & SETTERS
 	 */
@@ -474,11 +456,6 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		this.validated = validated;
 	}
 
-	public List<NotificationChannel> getNotificationChannels()
-	{
-		return notificationChannels;
-	}
-
 	public static User findById(int userId)
 	{
 		return find.byId(userId);
@@ -540,11 +517,6 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		this.settings = settings;
 	}
 
-	public void setNotificationChannels(List<NotificationChannel> notificationChannels)
-	{
-		this.notificationChannels = notificationChannels;
-	}
-
 	@Override
 	public boolean equals(Object obj)
 	{
@@ -553,63 +525,6 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 		if (!User.class.isAssignableFrom(obj.getClass()))
 			return false;
 		return ((User) obj).getEmailAddress().equalsIgnoreCase(this.getEmailAddress());
-	}
-
-	public Email getEmailNotificationChannel()
-	{
-		for (NotificationChannel nc : getNotificationChannels())
-		{
-			if (nc instanceof Email)
-				return (Email) nc;
-		}
-		return null;
-	}
-
-	public List<SMS> getSMSNotificationChannel()
-	{
-		List<SMS> sms = new LinkedList<SMS>();
-
-		for (NotificationChannel nc : getNotificationChannels())
-		{
-			if (nc instanceof SMS)
-				sms.add((SMS) nc);
-		}
-		return sms;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see models.AlertReciver#sendAlert(models.Alert)
-	 */
-	@Override
-	public void receiveAlert(Alert alert)
-	{
-		logger.info("User {} receiveing alert ", getId());
-		
-		if(!allowAlertDelivery(alert))
-		{
-			logger.info("User {} denied alert {}", getId(), alert);
-			return;
-		}
-		
-		for (NotificationChannel notificationChannel : notificationChannels)
-		{
-			notificationChannel.sendAlert(alert);
-		}
-
-	}
-
-	public void receiveAlertByEmail(Alert alert)
-	{
-		NotificationChannel email = getEmailNotificationChannel();
-		if (email != null && allowAlertDelivery(alert))
-			email.sendAlert(alert);
-	}
-	
-	private boolean allowAlertDelivery(Alert alert)
-	{
-		return true;
 	}
 
 	public Credential getCredentials()
@@ -650,26 +565,5 @@ public class User extends Model<User> implements Comparable<User>, AlertReceiver
 	{
 		return getEmailAddress().hashCode();
 	}
-
-	@Override
-	public String getURN()
-	{
-		return "user:" + id;
-	}
-
-	
-	public void notify(Message message)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-	
-
-	@Override
-	public boolean appliesCustomRulesToAlert(Alert alert)
-	{
-		return getSettings().getBool(Constants.SMS_STATUS_MANAGEMENT_ENABLED);
-	}
-	
 
 }

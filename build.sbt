@@ -30,12 +30,7 @@ libraryDependencies ++= Seq(
 	//"mysql" % "mysql-connector-java" % "5.1.6",
 	"com.zaxxer" % "HikariCP-java6" % "2.3.7",
     "com.edulify" %% "play-hikaricp" % "2.0.6",
-    "com.twilio.sdk" % "twilio-java-sdk" % "3.6.2",
     "play4jpa" %% "play4jpa" % "2.4.11",
-    //Para imprimir
-    "org.apache.pdfbox" % "pdfbox" % "2.0.2",
-    //Documentacion del API
-    "io.swagger" %% "swagger-play2" % "1.5.2",
     "org.apache.poi" % "poi" % "4.0.1",
   	"org.apache.poi" % "poi-ooxml" % "4.0.1"
 )

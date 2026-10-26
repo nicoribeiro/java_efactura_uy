@@ -116,7 +116,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 			cfe.setSerie(idDocResg.getSerie());
 			cfe.setNro(idDocResg.getNro().intValue());
 		} catch (DatatypeConfigurationException | IOException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 	}
 
@@ -125,7 +125,7 @@ public class EResguardoStrategy extends CommonStrategy implements CFEStrategy {
 		try {
 			cfe.getEresguardo().setCAEData(caeMicroController.getCAEDataType(cfe.getTipo()));
 		} catch (DatatypeConfigurationException | JSONException | ParseException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 
 	}

@@ -1,7 +1,6 @@
 package com.bluedot.commons.error;
 
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -209,17 +208,8 @@ public class APIException extends Throwable
 	
 	public APIException setDetailMessage(List<String> detailMessage)
 	{
-		int i=0;
-		for (Iterator<String> iterator = detailMessage.iterator(); iterator.hasNext();)
-		{
-			String string = iterator.next();
-			if (i==0)
-				this.detailMessage += "[" + string;
-			else
-				this.detailMessage += "," + string;
-			i++;
-		}
-		this.detailMessage += "]";
+		// "[a,b]"; con la lista vacia "[]" (antes "]")
+		this.detailMessage += "[" + String.join(",", detailMessage) + "]";
 		return this;
 	}
 

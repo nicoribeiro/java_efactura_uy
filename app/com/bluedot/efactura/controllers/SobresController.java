@@ -46,7 +46,6 @@ import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
 
-import io.swagger.annotations.Api;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -55,7 +54,6 @@ import play.mvc.Security;
 @Tx
 @Security.Authenticated(Secured.class)
 @EmpresaAccess
-@Api(value = "Operaciones de Sobres") 
 public class SobresController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(SobresController.class);

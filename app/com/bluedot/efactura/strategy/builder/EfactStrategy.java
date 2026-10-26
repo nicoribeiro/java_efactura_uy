@@ -125,7 +125,7 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 			cfe.setSerie(idDocFact.getSerie());
 			cfe.setNro(idDocFact.getNro().intValue());
 		} catch (DatatypeConfigurationException | IOException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 	}
 
@@ -134,7 +134,7 @@ public class EfactStrategy extends CommonStrategy implements CFEStrategy {
 		try {
 			cfe.getEfactura().setCAEData(caeMicroController.getCAEDataType(cfe.getTipo()));
 		} catch (DatatypeConfigurationException | JSONException | ParseException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 
 	}

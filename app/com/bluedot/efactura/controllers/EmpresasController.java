@@ -43,8 +43,6 @@ import com.bluedot.efactura.services.impl.ConsultaRutServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -53,7 +51,6 @@ import play.mvc.Security;
 @Tx
 @Security.Authenticated(Secured.class)
 @EmpresaAccess
-@Api(value = "Operaciones de Empresa") 
 public class EmpresasController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(EmpresasController.class);
@@ -163,19 +160,7 @@ public class EmpresasController extends AbstractController {
 		auditoria.info(usuario.getEmailAddress() + " cargo el archivo de emisores electronicos " + path + ": " + resultado.getString("resumen"));
 		return json(resultado.toString());
 	}
-
-	public Promise<Result> getEmpresaById(int id) throws APIException {
-		
-		Empresa empresa = Empresa.findById(id, true);
-		
-		JSONObject json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresa);
-		
-		return json(json.toString());
-	}
 	
-	@ApiOperation(value = "Buscar Empresa por Rut",
-		    response = Empresa.class
-		    )
 	public Promise<Result> getEmpresaByRut(String rut) throws APIException {
 		
 		Empresa empresa = Empresa.findByRUT(rut, true);

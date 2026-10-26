@@ -129,9 +129,9 @@ public class ErrorAction extends Action<ErrorMessage>
 				public Promise<Result> apply(Result r) throws Throwable
 				{
 					int statusCode = r.toScala().header().status();
-					if (200 > statusCode || 400 < statusCode)
+					if (esEstadoDeError(statusCode))
 					{
-						return handleExceptionWithStatusCode(ctx.args.get("error_cause").toString(), statusCode);
+						return handleExceptionWithStatusCode(causa(ctx.args.get("error_cause"), statusCode), statusCode);
 					}
 					return Promise.<Result> pure(r);
 				}
@@ -222,6 +222,33 @@ public class ErrorAction extends Action<ErrorMessage>
 		return Promise.<Result> pure(internalServerError(jsonError));
 	}
 	
+	/** Estado de un resultado que se devuelve como error de la API: fuera de 2xx/3xx (antes el 400 pasaba como exito) */
+	static boolean esEstadoDeError(int statusCode) {
+		return statusCode < 200 || statusCode >= 400;
+	}
+
+	/** Texto del error: error_cause si el que respondio lo dejo en el contexto, si no uno generico (antes NullPointerException) */
+	static String causa(Object errorCause, int statusCode) {
+		if (errorCause != null)
+			return errorCause.toString();
+		switch (statusCode) {
+		case 400:
+			return "Bad Request";
+		case 401:
+			return "Unauthorized";
+		case 403:
+			return "Forbidden";
+		case 404:
+			return "Not Found";
+		case 405:
+			return "Method Not Allowed";
+		case 500:
+			return "Internal Server Error";
+		default:
+			return "Error " + statusCode;
+		}
+	}
+
 	public static Promise<Result> handleExceptionWithStatusCode(String message, int statusCode)
 	{
 		ObjectNode jsonError = buildError(message, statusCode);

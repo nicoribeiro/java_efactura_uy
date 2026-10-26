@@ -140,7 +140,7 @@ public class EBoletaStrategy extends CommonStrategy implements CFEStrategy {
 			cfe.setSerie(idDoc.getSerie());
 			cfe.setNro(idDoc.getNro().intValue());
 		} catch (DatatypeConfigurationException | IOException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 	}
 
@@ -163,7 +163,7 @@ public class EBoletaStrategy extends CommonStrategy implements CFEStrategy {
 		try {
 			getEBoleta().setCAEData(caeMicroController.getCAEDataType(cfe.getTipo()));
 		} catch (DatatypeConfigurationException | JSONException | ParseException e) {
-			APIException.raise(e);
+			throw APIException.raise(e);
 		}
 	}
 

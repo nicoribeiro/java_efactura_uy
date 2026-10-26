@@ -10,7 +10,6 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
@@ -22,7 +21,6 @@ import javax.xml.crypto.dsig.Transform;
 import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.crypto.dsig.XMLSignatureFactory;
 import javax.xml.crypto.dsig.dom.DOMSignContext;
-import javax.xml.crypto.dsig.dom.DOMValidateContext;
 import javax.xml.crypto.dsig.keyinfo.KeyInfo;
 import javax.xml.crypto.dsig.keyinfo.KeyInfoFactory;
 import javax.xml.crypto.dsig.keyinfo.X509Data;
@@ -42,7 +40,6 @@ import org.apache.xml.security.transforms.Transforms;
 import org.apache.xml.security.utils.Constants;
 import org.apache.xml.security.utils.ElementProxy;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -217,192 +214,6 @@ public class XmlSignature {
 		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		Canonicalizer.getInstance(Canonicalizer.ALGO_ID_C14N_WITH_COMMENTS).canonicalizeSubtree(doc, outputStream);
 		return outputStream;
-	}
-
-	public static boolean veryfySignatures(Document doc) {
-
-		// cfeXMLSignatureValidateFile: VALIDAR LAS FIRMAS DE UN SOBRE ENTERO
-		// BUSCA TODOS LOS NODOS FIRMADOS Y LOS VALIDA
-		String certificate64 = "";
-		//String contexString = "";
-		//String cfeString = "";
-		String digest;
-
-		try {
-			javax.xml.parsers.DocumentBuilderFactory dbFactory = XML.documentBuilderFactory();
-			dbFactory.setNamespaceAware(true);
-//			javax.xml.parsers.DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-//			org.w3c.dom.Document doc = dBuilder
-//					.parse(new org.xml.sax.InputSource(new java.io.FileInputStream(filepath)));
-
-			// Find Signatures
-			org.w3c.dom.NodeList nls = doc.getElementsByTagNameNS(javax.xml.crypto.dsig.XMLSignature.XMLNS,
-					"Signature");
-			if (nls.getLength() == 0) {
-				throw new Exception("Cannot find Signature element");
-			}
-
-			while (nls.getLength() > 0) {
-
-				// Toma siempre primer Nodo, porque vamos "adoptando" los nodos
-				// y los remueve de la lista
-				org.w3c.dom.Node nodeSignature = nls.item(0);
-				Node signedNode = nodeSignature.getParentNode();
-
-				String errorMsg = "";
-
-				// Pasa el Contexto a String (Padre del CFE para procesamiento
-				// futuro)
-				javax.xml.transform.Transformer transformer = javax.xml.transform.TransformerFactory.newInstance()
-						.newTransformer();
-				transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "no");
-				transformer.setOutputProperty(javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION, "yes");
-				javax.xml.transform.dom.DOMSource source = new javax.xml.transform.dom.DOMSource(
-						signedNode.getParentNode());
-				java.io.StringWriter sw = new java.io.StringWriter();
-				transformer.transform(source, new javax.xml.transform.stream.StreamResult(sw));
-				//contexString = sw.toString();
-
-				// Pasa el elemento aislado a String (para procesamiento futuro)
-				source = new javax.xml.transform.dom.DOMSource(signedNode);
-				sw = new java.io.StringWriter();
-				transformer.transform(source, new javax.xml.transform.stream.StreamResult(sw));
-				//cfeString = sw.toString();
-
-				/*
-				 * Si se intenta validar sobre el documento extraido y
-				 * serializado se rompe la firma, porque para darle validez al
-				 * XML se pueden agregar namespaces que estaban declarados mas
-				 * arriba, adulterando el documento y rompiendo la firma.
-				 */
-
-				/*
-				 * Para crear el sobre existen 2 posibilidades:
-				 */
-
-				/*
-				 * 1. Crear y firmar el CFE para luego incluirlo en el Sobre
-				 */
-
-				/*
-				 * 2. Firmar el CFE directamente en el sobre, en este caso puede
-				 * pasar que algunos namespaces estén declarados directamente en
-				 * la raíz del sobre (ej. Equital). Esta situación debería estar
-				 * reflejada en las Etiquetas Reference.URI y/o transforms
-				 * <xpath> para indicar a que porción del documento aplica la
-				 * firma. En cualquier caso, lo más adecuado es sacar el nodo a
-				 * un nuevo documento para asegurarnos de que se está validando
-				 * solo contra ese Nodo y no contra todo el sobre.
-				 */
-
-				// Se arma un nuevo Documento conteniendo el nodo firmado como
-				// raíz.
-				// Cada Nodo conserva su namespace (que podría estar declarado
-				// fuera del nodo firmado),
-				// pero sin alterar los atributos XML (se manejan namespaces y
-				// atributos de forma independiente).
-				// adoptNode tranfiere el nodo y todo su contenido (incluyendo
-				// la firma) a un nuevo documento.
-				// Tener en cuenta que también lo remueve de la NodeList sobre
-				// la que estamos iterando.
-				Document docCFE = dbFactory.newDocumentBuilder().newDocument();
-				docCFE.adoptNode(signedNode);
-				docCFE.appendChild(signedNode);
-
-				try {
-
-					// Si no tiene Certificado, lo busca dentro del nodo
-					// Signature
-					if (certificate64 == null || certificate64.isEmpty()) {
-						NodeList nl = ((Element) nodeSignature)
-								.getElementsByTagNameNS(javax.xml.crypto.dsig.XMLSignature.XMLNS, "X509Certificate");
-						if (nl.getLength() > 0) {
-							certificate64 = nl.item(0).getChildNodes().item(0).getNodeValue();
-						} else {
-							throw new Exception("No se encontró <X509Certificate> en el nodo <Signature>");
-						}
-					}
-
-					// Procesa el Certificado para obtener la clave pública
-					java.security.cert.CertificateFactory cf = java.security.cert.CertificateFactory
-							.getInstance("X.509");
-					byte[] binCert = javax.xml.bind.DatatypeConverter.parseBase64Binary(certificate64);
-					java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) cf
-							.generateCertificate(new java.io.ByteArrayInputStream(binCert));
-
-					javax.xml.crypto.dsig.dom.DOMValidateContext valContext = null;
-					valContext = new javax.xml.crypto.dsig.dom.DOMValidateContext(cert.getPublicKey(), nodeSignature);
-
-					// Create a DOM XMLSignatureFactory that will be used to
-					// validate the enveloped signature.
-					javax.xml.crypto.dsig.XMLSignatureFactory fac = javax.xml.crypto.dsig.XMLSignatureFactory
-							.getInstance("DOM");
-
-					// Unmarshal the XMLSignature.
-					javax.xml.crypto.dsig.XMLSignature signature = fac.unmarshalXMLSignature(valContext);
-
-					// Validate the XMLSignature.
-					boolean coreValidity = signature.validate(valContext);
-
-					// Check core validation status.
-					if (!coreValidity) {
-
-						// Check the validation status of SignatureValue
-						boolean sv = signature.getSignatureValue().validate(valContext);
-						if (!sv) {
-							errorMsg += "Error in signature validation. Certificate and signature don't match.";
-						}
-						
-						// Check the validation status of each Reference.
-						Iterator<SignedInfo> it = signature.getSignedInfo().getReferences().iterator();
-						for (int j = 0; it.hasNext(); j++) {
-							javax.xml.crypto.dsig.Reference ref = (javax.xml.crypto.dsig.Reference) it.next();
-							boolean refValid = ref.validate(valContext);
-
-							// Base64 Digest
-							digest = javax.xml.bind.DatatypeConverter.printBase64Binary(ref.getDigestValue());
-							String calculatedDigest = javax.xml.bind.DatatypeConverter
-									.printBase64Binary(ref.getCalculatedDigestValue());
-
-							if (!refValid) {
-								errorMsg += "Error validating of reference[" + j + "]. " + digest + " <> "
-										+ calculatedDigest;
-							}
-						}
-
-					}
-
-				} catch (Exception e) {
-					e.printStackTrace();
-					errorMsg += e.getMessage();
-					return false;
-				}
-
-				System.out.println(errorMsg);
-
-				// java [!&ErrorMsgNode!] = errorMsg;
-				//
-				// Agrega a la colección de nodos validados
-				// &cfeSignatureValidation = new()
-				// &cfeSignatureValidation.context = &contexString
-				// &cfeSignatureValidation.data = &cfeString
-				// &cfeSignatureValidation.digest = &digest
-				// &cfeSignatureValidation.error = &ErrorMsgNode
-				// &validaciones.Add(&cfeSignatureValidation)
-				//
-			} // endwhile
-			//
-		} catch (Exception e) {
-			// [!&ErrorMsg!] = e.getMessage();
-			e.printStackTrace();
-			System.err.println("Error capturado:" + e.getMessage());
-			return false;
-		}
-		// [!&Certificate64!] = certificate64;
-
-		// &ErrorMsg = &ErrorMsg
-		// &Certificate64 = &Certificate64
-		return true;
 	}
 
 }

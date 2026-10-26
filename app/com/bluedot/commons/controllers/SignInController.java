@@ -150,39 +150,13 @@ public class SignInController extends AbstractController
 		 * If there is not any ADMIN on the system assume next user is an ADMIN   
 		 */
 		if (User.find(Role.ADMIN).size()==0)
-			signUpConfigurator = new SignUpConfigurator(false, true, true, false, request().host(), Role.ADMIN);
+			signUpConfigurator = new SignUpConfigurator(true, false, Role.ADMIN);
 		else
-			signUpConfigurator = new SignUpConfigurator(false, false, false, false, request().host(), Role.USER);
+			signUpConfigurator = new SignUpConfigurator(false, false, Role.USER);
 		
 		microControllersFactory.getAccountController().signUp(emailAddress, password, firstName, lastName, companyName, null, addresses, phone, signUpConfigurator);
 
 		return Promise.<Result> pure(created());
 	}
-
-
-//	@BodyParser.Of(BodyParser.Json.class)
-//	@ValidateJsonPost(fields = { "emailAddress" })
-//	@Tx
-//	public  Result forgotPassword() throws APIException
-//	{
-//		JsonNode json = request().body().asJson();
-//
-//		String emailAddress = json.findPath("emailAddress").textValue();
-//
-//		User user = User.findByEmailAddress(emailAddress);
-//		if (user != null)
-//		{
-//			
-//			MicroControllersFactory microControllersFactory =  new MicroControllerFactoryDefault();
-//			
-//			microControllersFactory.getAccountController().sendPasswordResetEmail(emailAddress, account, resetKey,request().host());
-//			
-//			return ok();
-//		} else
-//			throw APIException.raise(APIErrors.ACCOUNT_NOT_FOUND).setDetailMessage("The provided email address doesn't belong to any user in our system");
-//
-//	}
-
-	
 
 }

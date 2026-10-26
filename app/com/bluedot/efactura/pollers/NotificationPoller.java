@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bluedot.commons.error.APIException;
-import com.bluedot.commons.notificationChannels.MessagingHelper;
+import com.bluedot.commons.utils.MessagingHelper;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.efactura.microControllers.implementation.CAEMicroControllerDefault;
 import com.bluedot.efactura.model.Empresa;
@@ -110,7 +110,7 @@ public class NotificationPoller extends PollerRunner {
 				.withCustomConfig(empresa.getFromEnvio(), empresa.getHostRecepcion(),
 						Integer.parseInt(empresa.getPuertoRecepcion()), empresa.getUserRecepcion(),
 						empresa.getPassRecepcion())
-				.sendEmail(empresa.getMailNotificaciones(), body, null, subject, false);
+				.sendEmail(empresa.getMailNotificaciones(), body, subject);
 		// Solo cuenta como aviso enviado si el mail salio (sendEmail deja el detalle del error en el log)
 		if (!enviado)
 			throw new IllegalStateException("No se pudo enviar el aviso \"" + subject + "\" a la empresa " + empresa.getRut());

@@ -12,7 +12,6 @@ import com.bluedot.commons.error.ErrorMessage;
 import com.bluedot.commons.security.Secured;
 import com.play4jpa.jpa.db.Tx;
 
-import io.swagger.annotations.Api;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -26,7 +25,6 @@ import play.mvc.Security;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
-@Api(value = "Version")
 public class VersionController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(VersionController.class);
