@@ -23,7 +23,6 @@ import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.play4jpa.jpa.db.Tx;
 
-import io.swagger.annotations.Api;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -32,7 +31,6 @@ import play.mvc.Security;
 @Tx
 @Security.Authenticated(Secured.class)
 @EmpresaAccess
-@Api(value = "Operaciones de CAE") 
 public class CAEController extends AbstractController {
 
 	final static Logger logger = LoggerFactory.getLogger(CAEController.class);

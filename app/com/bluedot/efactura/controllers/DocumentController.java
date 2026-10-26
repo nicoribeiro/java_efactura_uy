@@ -29,8 +29,6 @@ import com.bluedot.efactura.serializers.EfacturaJSONSerializerProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.play4jpa.jpa.db.Tx;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,7 +50,6 @@ import java.util.List;
 @Tx
 @Security.Authenticated(Secured.class)
 @EmpresaAccess
-@Api(value = "Operaciones de Documentos") 
 public class DocumentController extends AbstractController {
 
 	private static boolean initialized = false;
@@ -90,9 +87,6 @@ public class DocumentController extends AbstractController {
 		return json(OK);
 	}
 
-	@ApiOperation(value = "Crear CFE",
-		    response = CFE.class
-		    )
 	@BodyParser.Of(BodyParser.Json.class)
 	public Promise<Result> aceptarDocumento(String rut) throws APIException {
 		// TODO meter mutex

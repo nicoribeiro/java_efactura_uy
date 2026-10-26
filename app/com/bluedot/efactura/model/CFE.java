@@ -18,8 +18,6 @@ import dgi.classes.recepcion.CFEDefType.EResg;
 import dgi.classes.recepcion.CFEDefType.ETck;
 import dgi.classes.recepcion.TipMonType;
 import dgi.classes.respuestas.cfe.EstadoACKCFEType;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.Type;
 import org.hibernate.criterion.Order;
@@ -41,7 +39,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Entity
-@ApiModel
 public class CFE extends Model<CFE>{
 
 	/**
@@ -195,31 +192,24 @@ public class CFE extends Model<CFE>{
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="cfe", fetch=FetchType.LAZY)
 	private List<Detalle> detalle;
 
-	@ApiModelProperty(hidden = true)
 	@Transient
 	private EFact efactura;
 
-	@ApiModelProperty(hidden = true)
 	@Transient
 	private EFactExp efacturaExportacion;
 
-	@ApiModelProperty(hidden = true)
 	@Transient
 	private ETck eticket;
 
-	@ApiModelProperty(hidden = true)
 	@Transient
 	private EResg eresguardo;
 
-	@ApiModelProperty(hidden = true)
 	@Transient
 	private ERem eremito;
 
-	@ApiModelProperty(hidden = true)
 	@Transient
 	private ERemExp eremitoExportacion;
 
-	@ApiModelProperty(hidden = true)
 	@Transient
 	private EBoleta eboleta;
 
@@ -245,7 +235,6 @@ public class CFE extends Model<CFE>{
 	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private CAE cae;
 
-	@ApiModelProperty(hidden = true)
 	@Lob
 	private byte[] qr;
 

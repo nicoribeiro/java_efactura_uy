@@ -33,13 +33,10 @@ import com.play4jpa.jpa.models.DefaultQuery;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 @Entity
 // Las empresas se buscan por RUT en todos lados (y de a miles en la sincronizacion de emisores electronicos)
 @javax.persistence.Table(indexes = @javax.persistence.Index(name = "empresa_rut_idx", columnList = "rut"))
-@ApiModel
 public class Empresa extends Model<Empresa>{
 
 	/**
@@ -116,19 +113,15 @@ public class Empresa extends Model<Empresa>{
 	 */
 	private Boolean activa;
 	
-	@ApiModelProperty(hidden = true)
 	@Lob
 	private byte[] logo;
 	
-	@ApiModelProperty(hidden = true)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="empresa", fetch=FetchType.LAZY)
 	private List<CAE> caes;
 	
-	@ApiModelProperty(hidden = true)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="empresaEmisora", fetch=FetchType.LAZY)
 	private List<SobreEmitido> sobresEmitidos;
 	
-	@ApiModelProperty(hidden = true)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="empresaReceptora", fetch=FetchType.LAZY)
 	private List<SobreRecibido> sobresRecibidos;
 	
@@ -136,14 +129,12 @@ public class Empresa extends Model<Empresa>{
 	
 	private String resolucion;
 	
-	@ApiModelProperty(hidden = true)
 	@OneToOne(mappedBy="empresa")
 	private FirmaDigital firmaDigital;
 	
 	@OneToMany(cascade = CascadeType.ALL, mappedBy="empresa", fetch=FetchType.LAZY)
 	private List<Sucursal> sucursales;
 	
-	@ApiModelProperty(hidden = true)
 	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	private List<EmailMessage> emailsRecibidosError;
 

@@ -18,7 +18,6 @@ import com.bluedot.efactura.model.UI;
 import com.play4jpa.jpa.db.Tx;
 
 import dgi.classes.recepcion.TipMonType;
-import io.swagger.annotations.Api;
 import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Security;
@@ -31,7 +30,6 @@ import play.mvc.Security;
 @ErrorMessage
 @Tx
 @Security.Authenticated(Secured.class)
-@Api(value = "Cotizaciones y UI")
 public class CotizacionesController extends AbstractController {
 
 	/** Rango maximo por consulta, para no traer anios de cotizaciones de una vez */

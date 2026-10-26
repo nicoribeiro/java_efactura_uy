@@ -10,11 +10,6 @@ GET      /assets/*file                                           controllers.Ass
 # inicializa la base de datos
 POST      /api/v1/init                                           com.bluedot.efactura.controllers.InitController.initDatabase()
 
-###### DOCUMENTACION
-
-# Documentacion API
-GET      /api/v1/documentacion                                           controllers.ApiHelpController.getResources
-
 ###### DOCUMENTOS
 
 # Consulta los resultado de los documentos con fecha :fecha

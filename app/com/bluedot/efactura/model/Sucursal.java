@@ -15,11 +15,9 @@ import com.bluedot.commons.error.APIException.APIErrors;
 import com.play4jpa.jpa.models.Finder;
 import com.play4jpa.jpa.models.Model;
 
-import io.swagger.annotations.ApiModel;
 import views.html.helper.form;
 
 @Entity
-@ApiModel
 public class Sucursal extends Model<Sucursal>{
 
 	/**

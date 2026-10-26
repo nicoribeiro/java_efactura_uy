@@ -31,8 +31,6 @@ libraryDependencies ++= Seq(
 	"com.zaxxer" % "HikariCP-java6" % "2.3.7",
     "com.edulify" %% "play-hikaricp" % "2.0.6",
     "play4jpa" %% "play4jpa" % "2.4.11",
-    //Documentacion del API
-    "io.swagger" %% "swagger-play2" % "1.5.2",
     "org.apache.poi" % "poi" % "4.0.1",
   	"org.apache.poi" % "poi-ooxml" % "4.0.1"
 )
