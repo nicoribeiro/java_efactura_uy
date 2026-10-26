@@ -82,7 +82,7 @@ public class ReporteDiarioPoller extends PollerRunner {
 		logger.info("Reporte diario: {} empresa(s), {} dias desde {} (solo faltantes)", empresas.size(), cantReportes, desdeTexto);
 
 		for (Empresa empresa : empresas) {
-			if (empresa.getFirmaDigital() == null || empresa.getFirmaDigital().getValidaHasta().before(new Date())) {
+			if (!firmaVigente(empresa, new Date())) {
 				logger.warn("Reporte diario: empresa {} sin firma digital vigente, se saltea", empresa.getRut());
 				resumen.add(empresa.getRut() + ": sin firma digital vigente");
 				porEmpresa.put(new JSONObject().put("rut", empresa.getRut()).put("error", "sin firma digital vigente"));
@@ -136,5 +136,46 @@ public class ReporteDiarioPoller extends PollerRunner {
 			if (empresa.isActiva())
 				empresas.add(empresa);
 		return empresas;
+	}
+
+	static boolean firmaVigente(Empresa empresa, Date ahora) {
+		return empresa.getFirmaDigital() != null && empresa.getFirmaDigital().getValidaHasta() != null
+				&& !empresa.getFirmaDigital().getValidaHasta().before(ahora);
+	}
+
+	/**
+	 * Si el poller manda solo el reporte diario de esta empresa: esta activo (ReporteDiarioPoller.run), la empresa tiene
+	 * firma digital vigente, y esta en ReporteDiarioPoller.empresas o, si esa lista esta vacia, no esta dada de baja. Lo
+	 * mismo que hace executeConcreteAction.
+	 */
+	public static boolean cubre(Empresa empresa, Configuration config, Date ahora) {
+		if (!config.getBoolean("ReporteDiarioPoller.run", false) || !firmaVigente(empresa, ahora))
+			return false;
+		String rutsConfig = config.getString("ReporteDiarioPoller.empresas", "");
+		if (rutsConfig != null && !rutsConfig.trim().isEmpty()) {
+			for (String rut : rutsConfig.split(","))
+				if (rut.trim().equals(empresa.getRut()))
+					return true;
+			return false;
+		}
+		return empresa.isActiva();
+	}
+
+	/**
+	 * Ultimo dia que el poller ya deberia haber reportado: cada dia, despues de la hora, cubre de hoy - diasDesde a hoy -
+	 * diasDesde + cantReportes - 1 (con 30 y 20, hasta hace 11 dias); antes de la hora, lo de la corrida de ayer. Los dias
+	 * posteriores todavia no se reportaron a proposito: no son faltantes.
+	 */
+	public static java.time.LocalDate hastaEsperado(Configuration config, java.time.LocalDateTime ahora) {
+		return hastaEsperado(config.getInt("ReporteDiarioPoller.diasDesde", 30), config.getInt("ReporteDiarioPoller.cantReportes", 20),
+				config.getInt("ReporteDiarioPoller.hora", 15), ahora);
+	}
+
+	static java.time.LocalDate hastaEsperado(int diasDesde, int cantReportes, int hora, java.time.LocalDateTime ahora) {
+		// Como minimo hasta ayer: el reporte de un dia se manda cuando el dia termino
+		int atraso = Math.max(diasDesde - cantReportes + 1, 1);
+		if (ahora.getHour() < hora)
+			atraso++;
+		return ahora.toLocalDate().minusDays(atraso);
 	}
 }
