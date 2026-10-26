@@ -159,30 +159,4 @@ public class SignInController extends AbstractController
 		return Promise.<Result> pure(created());
 	}
 
-
-//	@BodyParser.Of(BodyParser.Json.class)
-//	@ValidateJsonPost(fields = { "emailAddress" })
-//	@Tx
-//	public  Result forgotPassword() throws APIException
-//	{
-//		JsonNode json = request().body().asJson();
-//
-//		String emailAddress = json.findPath("emailAddress").textValue();
-//
-//		User user = User.findByEmailAddress(emailAddress);
-//		if (user != null)
-//		{
-//			
-//			MicroControllersFactory microControllersFactory =  new MicroControllerFactoryDefault();
-//			
-//			microControllersFactory.getAccountController().sendPasswordResetEmail(emailAddress, account, resetKey,request().host());
-//			
-//			return ok();
-//		} else
-//			throw APIException.raise(APIErrors.ACCOUNT_NOT_FOUND).setDetailMessage("The provided email address doesn't belong to any user in our system");
-//
-//	}
-
-	
-
 }

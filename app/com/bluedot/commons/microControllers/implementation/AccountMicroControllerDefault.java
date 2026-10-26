@@ -1,7 +1,6 @@
 package com.bluedot.commons.microControllers.implementation;
 
 
-import java.text.MessageFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -12,8 +11,6 @@ import com.bluedot.commons.microControllers.interfaces.AccountMicroController;
 import com.bluedot.commons.security.Account;
 import com.bluedot.commons.security.AccountType;
 import com.bluedot.commons.security.Address;
-import com.bluedot.commons.security.Permission;
-import com.bluedot.commons.security.PermissionNames;
 import com.bluedot.commons.security.User;
 
 
@@ -75,19 +72,5 @@ public class AccountMicroControllerDefault implements AccountMicroController
 		account.save();
 		
 		return user;
-	}
-	
-	
-	@Override
-	public void addPermissionsToUser(User user, PermissionNames[] permissions, String pattern, String id, String value){
-		for (PermissionNames permissionNames : permissions)
-		{
-			Permission permission = new Permission();
-			permission.setPermissionId(MessageFormat.format(permissionNames.pattern, id));
-			user.getPermissions().add(permission);
-		}
-		Permission permission = new Permission();
-		permission.setPermissionId(MessageFormat.format(pattern, String.valueOf(id), value));
-		user.getPermissions().add(permission);
 	}
 }

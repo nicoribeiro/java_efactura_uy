@@ -5,7 +5,6 @@ import java.util.List;
 import com.bluedot.commons.error.APIException;
 import com.bluedot.commons.security.AccountType;
 import com.bluedot.commons.security.Address;
-import com.bluedot.commons.security.PermissionNames;
 import com.bluedot.commons.security.User;
 import com.bluedot.commons.security.User.Role;
 
@@ -36,6 +35,5 @@ public interface AccountMicroController
 	User signUp(String emailAddress, String password, String firstName, String lastName, String companyName, AccountType accountType, List<Address> addresses, String phone,
 			SignUpConfigurator signUpConfigurator) throws APIException;
 
-	void addPermissionsToUser(User user, PermissionNames[] permissions, String pattern, String id, String value);
 
 }
