@@ -17,7 +17,6 @@ import com.bluedot.commons.security.User;
 import com.bluedot.commons.security.Secured;
 import com.bluedot.commons.utils.DateHandler;
 import com.bluedot.commons.utils.JSONUtils;
-import com.bluedot.commons.utils.Print;
 import com.bluedot.commons.utils.Tuple;
 import com.bluedot.efactura.GenerateInvoice;
 import com.bluedot.efactura.MODO_SISTEMA;
@@ -42,7 +41,6 @@ import play.mvc.BodyParser;
 import play.mvc.Result;
 import play.mvc.Security;
 
-import java.awt.print.PrinterException;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -841,7 +839,7 @@ public class DocumentController extends AbstractController {
 	
 	
 
-	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, boolean print, String rutEmisor)
+	public Promise<Result> pdfDocumento(String rut, int nro, String serie, int idTipoDoc, String rutEmisor)
 			throws APIException {
 
 		Empresa empresa = Empresa.findByRUT(rut, true);
@@ -860,12 +858,9 @@ public class DocumentController extends AbstractController {
 			try {
 				File pdf = generarPDF(empresa, cfe);
 	
-				if (print)
-					Print.print(null, pdf);
-	
 				return Promise.<Result>pure(ok(pdf));
 	
-			} catch (IOException | PrinterException e) {
+			} catch (IOException e) {
 				throw APIException.raise(e);
 			}
 		}else {
@@ -883,12 +878,9 @@ public class DocumentController extends AbstractController {
 			try {
 				File pdf = generarPDF(empresaEmisora, cfe);
 	
-				if (print)
-					Print.print(null, pdf);
-	
 				return Promise.<Result>pure(ok(pdf));
 	
-			} catch (IOException | PrinterException e) {
+			} catch (IOException e) {
 				throw APIException.raise(e);
 			}
 			

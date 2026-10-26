@@ -33,7 +33,7 @@ GET      /api/v1/empresa/:rut/documentos/referenciadoPor         com.bluedot.efa
 GET      /api/v1/empresa/:rut/documentos/resumen                 com.bluedot.efactura.controllers.DocumentController.getResumenDocumentos(rut: String)
 
 # Obtiene la representacion en PDF del documento
-GET      /api/v1/empresa/:rut/documentos/pdf                     com.bluedot.efactura.controllers.DocumentController.pdfDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer, print:Boolean?=false, rutEmisor:String?="")
+GET      /api/v1/empresa/:rut/documentos/pdf                     com.bluedot.efactura.controllers.DocumentController.pdfDocumento(rut:String, nro:Integer, serie:String, idTipoDoc:Integer, rutEmisor:String?="")
 
 # Obtiene la representacion en PDF del documento
 
