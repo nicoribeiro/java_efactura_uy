@@ -36,8 +36,11 @@
 		
 	 	<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${HOME_LOG}.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <!-- total size of all archive files, if total size > 20GB, it will delete old archived file -->
+            <!-- 90 dias de logs; totalSizeCap solo se aplica con maxHistory (sin maxHistory no se borraba nada) -->
+            <maxHistory>90</maxHistory>
             <totalSizeCap>20GB</totalSizeCap>
+            <!-- borrar los viejos tambien al arrancar, no solo al cambiar de dia -->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
 	
 		<encoder>
