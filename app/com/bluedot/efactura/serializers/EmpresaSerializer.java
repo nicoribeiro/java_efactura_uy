@@ -48,6 +48,13 @@ public class EmpresaSerializer<T> extends JSONSerializer<Empresa> {
 			empresa.put("offsetMail", p.getOffsetMail());
 			empresa.put("diasRespuestaCfe", p.getDiasRespuestaCfe() != null ? p.getDiasRespuestaCfe() : JSONObject.NULL);
 			empresa.put("diasRespuestaCfeEfectivo", com.bluedot.efactura.recibidos.RespuestaCfes.dias(p));
+			// Reporte diario: si lo manda el poller y hasta que dia ya deberia estar (los mas nuevos se mandan con atraso a
+			// proposito; el panel no los cuenta como faltantes)
+			play.Configuration config = play.Play.application().configuration();
+			boolean automatico = com.bluedot.efactura.pollers.ReporteDiarioPoller.cubre(p, config, new java.util.Date());
+			empresa.put("reporteDiario", new JSONObject().put("automatico", automatico).put("hastaEsperado", automatico
+					? com.bluedot.efactura.pollers.ReporteDiarioPoller.hastaEsperado(config, java.time.LocalDateTime.now()).toString()
+					: JSONObject.NULL));
 			empresa.put("paginaWeb", p.getPaginaWeb());
 			empresa.put("resolucion", p.getResolucion());
 			empresa.put("tieneLogo", p.getLogo() != null && p.getLogo().length > 0);
