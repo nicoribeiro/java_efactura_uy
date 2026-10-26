@@ -1,5 +1,5 @@
 /var/log/srv/java_efactura_uy.log /var/log/srv/*/java_efactura_uy.log {
-    su nribeiro nribeiro
+    su root adm
     daily
     rotate 14
     maxsize 200M
