@@ -163,15 +163,6 @@ public class EmpresasController extends AbstractController {
 		auditoria.info(usuario.getEmailAddress() + " cargo el archivo de emisores electronicos " + path + ": " + resultado.getString("resumen"));
 		return json(resultado.toString());
 	}
-
-	public Promise<Result> getEmpresaById(int id) throws APIException {
-		
-		Empresa empresa = Empresa.findById(id, true);
-		
-		JSONObject json = EfacturaJSONSerializerProvider.getEmpresaSerializer().objectToJson(empresa);
-		
-		return json(json.toString());
-	}
 	
 	@ApiOperation(value = "Buscar Empresa por Rut",
 		    response = Empresa.class

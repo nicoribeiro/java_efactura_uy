@@ -521,18 +521,6 @@ public class DocumentController extends AbstractController {
 		}
 		return json(lista.toString());
 	}
-
-	public Promise<Result> procesarEmailEntrantes(String rut) throws APIException {
-		Empresa empresaReceptora = Empresa.findByRUT(rut, true);
-
-		EfacturaMicroControllersFactory factory = (new EfacturaMicroControllersFactoryBuilder())
-				.getMicroControllersFactory();
-
-		factory.getServiceMicroController(empresaReceptora).obtenerYProcesarEmailsEntrantesDesdeServerCorreo();
-		
-		return json(OK);
-
-	}
 	
 	/**
 	 * Sobre (emitido o recibido segun direccion) en el que viajo un CFE, con su estado y las respuestas de DGI y de la
@@ -848,36 +836,6 @@ public class DocumentController extends AbstractController {
 			
 			return json(JSONUtils.createObjectList(cfeArray, cfes.item2, page, pageSize).toString());
 		}
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	public Promise<Result> getDocumento(String rut, int nro, String serie, int idTipoDoc) throws APIException {
-
-		Empresa empresa = Empresa.findByRUT(rut, true);
-
-		TipoDoc tipo = TipoDoc.fromInt(idTipoDoc);
-
-		if (tipo == null)
-			throw APIException.raise(APIErrors.BAD_PARAMETER_VALUE).withParams("TipoDoc", idTipoDoc);
-
-		List<CFE> cfes = CFE.findByIdEmitido(empresa, tipo, serie, nro, null, true);
-
-		if (cfes.size()>1)
-			throw APIException.raise(APIErrors.CFE_NO_ENCONTRADO).withParams("RUT+NRO+SERIE+TIPODOC",rut+"-"+nro+"-"+serie+"-"+idTipoDoc).setDetailMessage("No identifica a un unico cfe");
-		
-		CFE cfe = cfes.get(0);
-		
-		JSONObject cfeJson = EfacturaJSONSerializerProvider.getCFESerializer().objectToJson(cfe);
-
-		cfeJson = JSONUtils.merge(cfeJson, new JSONObject(OK));
-
-		return json(cfeJson.toString());
 	}
 	
 	
