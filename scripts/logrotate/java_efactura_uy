@@ -1,0 +1,11 @@
+/var/log/srv/java_efactura_uy.log /var/log/srv/*/java_efactura_uy.log {
+    su root adm
+    daily
+    rotate 14
+    maxsize 200M
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
