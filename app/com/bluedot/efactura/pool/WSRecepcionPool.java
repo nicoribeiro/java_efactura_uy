@@ -69,6 +69,7 @@ public class WSRecepcionPool extends ObjectPool<WSEFacturaSoapPortWrapper> {
 		WSEFacturaSoapPort port = factory.create(WSEFacturaSoapPort.class);
 
 		Endpoint cxfEndpoint = ClientProxy.getClient(port).getEndpoint();
+		DgiTls.configurar(ClientProxy.getClient(port));
 
 		Crypto customMerlin = new CustomMerlin();
 		

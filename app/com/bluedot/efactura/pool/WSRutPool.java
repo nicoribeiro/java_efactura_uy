@@ -69,6 +69,7 @@ public class WSRutPool extends ObjectPool<WSPersonaGetActEmpresarialSoapPortWrap
 		WSPersonaGetActEmpresarialSoapPort port = factory.create(WSPersonaGetActEmpresarialSoapPort.class);
 
 		Endpoint cxfEndpoint = ClientProxy.getClient(port).getEndpoint();
+		DgiTls.configurar(ClientProxy.getClient(port));
 
 		Crypto customMerlin = new CustomMerlin();
 		
