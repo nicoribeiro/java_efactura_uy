@@ -69,6 +69,7 @@ public class WSConsultasPool extends ObjectPool<WSEFacturaConsultasSoapPortWrapp
 		WSEFacturaConsultasSoapPort port = factory.create(WSEFacturaConsultasSoapPort.class);
 
 		Endpoint cxfEndpoint = ClientProxy.getClient(port).getEndpoint();
+		DgiTls.configurar(ClientProxy.getClient(port));
 
 		Crypto customMerlin = new CustomMerlin();
 		
