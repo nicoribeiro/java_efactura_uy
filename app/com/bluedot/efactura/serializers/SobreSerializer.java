@@ -57,6 +57,15 @@ public class SobreSerializer<T> extends JSONSerializer<Sobre> {
 				sobreJson.put("respuesta_dgi", sobreEmitido.getRespuesta_dgi());
 				sobreJson.put("resultado_dgi", sobreEmitido.getResultado_dgi());
 				sobreJson.put("idReceptor", sobreEmitido.getIdReceptor());
+				sobreJson.put("errorEnvioDgi", sobreEmitido.getErrorEnvioDgi() != null ? sobreEmitido.getErrorEnvioDgi() : JSONObject.NULL);
+				sobreJson.put("fechaUltimoIntentoDgi", sobreEmitido.getFechaUltimoIntentoDgi() != null ? sdf.format(sobreEmitido.getFechaUltimoIntentoDgi()) : JSONObject.NULL);
+				sobreJson.put("intentosDgi", sobreEmitido.getIntentosDgi() != null ? sobreEmitido.getIntentosDgi() : JSONObject.NULL);
+				// El sobre para la empresa receptora se le manda recien cuando DGI acepta un CFE (AE): hasta entonces no se envio
+				boolean aceptado = false;
+				if (sobreEmitido.getCfes() != null)
+					for (CFE cfe : sobreEmitido.getCfes())
+						aceptado |= cfe.getEstado() == dgi.classes.respuestas.cfe.EstadoACKCFEType.AE;
+				sobreJson.put("cfeAceptadoDgi", aceptado);
 				sobreJson.put("cfes", cfeSerializer.objectToJson(sobreEmitido.getCfes(), true));
 			}
 			

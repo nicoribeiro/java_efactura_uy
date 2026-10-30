@@ -71,6 +71,19 @@ public class SobreEmitido extends Sobre{
 	
 	private String token;
 	
+	/**
+	 * Ultimo error al enviar el sobre a DGI (comunicacion, respuesta invalida); null si nunca fallo o si DGI ya lo recibio.
+	 * Con estadoDgi null y sin error, el sobre no se intento enviar (o es anterior a este registro).
+	 */
+	@Type(type="text")
+	private String errorEnvioDgi;
+	
+	/** Fecha del ultimo intento de envio a DGI (emision o reenvio) */
+	private Date fechaUltimoIntentoDgi;
+	
+	/** Cantidad de intentos de envio a DGI; null en los sobres anteriores a este registro */
+	private Integer intentosDgi;
+	
 	@Transient
 	private EnvioCFE envioCFE;
 	
@@ -126,6 +139,30 @@ public class SobreEmitido extends Sobre{
 		this.fechaConsulta = fechaConsulta;
 	}
 	
+	public String getErrorEnvioDgi() {
+		return errorEnvioDgi;
+	}
+
+	public void setErrorEnvioDgi(String errorEnvioDgi) {
+		this.errorEnvioDgi = errorEnvioDgi;
+	}
+
+	public Date getFechaUltimoIntentoDgi() {
+		return fechaUltimoIntentoDgi;
+	}
+
+	public void setFechaUltimoIntentoDgi(Date fechaUltimoIntentoDgi) {
+		this.fechaUltimoIntentoDgi = fechaUltimoIntentoDgi;
+	}
+
+	public Integer getIntentosDgi() {
+		return intentosDgi;
+	}
+
+	public void setIntentosDgi(Integer intentosDgi) {
+		this.intentosDgi = intentosDgi;
+	}
+
 	public String getXmlDgi() {
 		return xmlDgi;
 	}
