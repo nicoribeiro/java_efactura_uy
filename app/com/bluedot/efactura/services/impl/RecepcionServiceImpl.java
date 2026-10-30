@@ -409,6 +409,40 @@ public class RecepcionServiceImpl implements RecepcionService {
 	 */
 	private ACKSobredefType enviarSobreDGI(SobreEmitido sobre, String xmlSobre) throws APIException {
 		/*
+		 * Cada intento queda en el sobre: sin esto un envio que fallo (estadoDgi null) no se distingue de uno sin intentar
+		 */
+		sobre.setFechaUltimoIntentoDgi(new Date());
+		sobre.setIntentosDgi(sobre.getIntentosDgi() == null ? 1 : sobre.getIntentosDgi() + 1);
+		try {
+			ACKSobredefType ACKSobre = intentarEnvioSobreDGI(sobre, xmlSobre);
+			sobre.setErrorEnvioDgi(null);
+			return ACKSobre;
+		} catch (APIException e) {
+			// Ya enviado: no es una falla, el reenvio pasa a consultar el resultado
+			if (e.getError() != APIErrors.SOBRE_YA_ENVIADO)
+				sobre.setErrorEnvioDgi(textoErrorEnvio(e));
+			throw e;
+		}
+	}
+
+	/** Mensaje del error y la causa original (ej. "Error de comunicacion con DGI: PKIX path building failed ...") */
+	static String textoErrorEnvio(APIException e) {
+		Throwable causa = e;
+		while (causa.getCause() != null && causa.getCause() != causa)
+			causa = causa.getCause();
+		String texto = e.getError().name();
+		try {
+			texto = e.getInternalMessage();
+		} catch (RuntimeException sinMensajes) {
+			// sin la aplicacion de Play (tests) no hay Messages
+		}
+		if (causa != e && causa.getMessage() != null)
+			texto += ": " + causa.getMessage();
+		return texto.length() > 2000 ? texto.substring(0, 2000) : texto;
+	}
+
+	private ACKSobredefType intentarEnvioSobreDGI(SobreEmitido sobre, String xmlSobre) throws APIException {
+		/*
 		 * Colocamos en ThreadLocal al Sobre es la forma de pasarle
 		 * parametros a los Interceptors
 		 */
