@@ -765,6 +765,10 @@ public class SobresController extends AbstractController {
 			json.put("direccion", DireccionDocumento.EMITIDO.name());
 			json.put("estadoDgi", emitido.getEstadoDgi() != null ? emitido.getEstadoDgi().name() : JSONObject.NULL);
 			json.put("fechaConsulta", fecha(emitido.getFechaConsulta()));
+			// Sin estadoDgi el sobre no llego a DGI; con error, el del ultimo intento
+			json.put("errorEnvioDgi", emitido.getErrorEnvioDgi() != null ? emitido.getErrorEnvioDgi() : JSONObject.NULL);
+			json.put("fechaUltimoIntentoDgi", fecha(emitido.getFechaUltimoIntentoDgi()));
+			json.put("intentosDgi", emitido.getIntentosDgi() != null ? emitido.getIntentosDgi() : JSONObject.NULL);
 			// Sin XML para la empresa receptora el sobre nunca se le envio (no es emisor electronico): no va a responder
 			json.put("enviadoAEmpresa", emitido.getXmlEmpresa() != null);
 		} else if (sobre instanceof SobreRecibido) {

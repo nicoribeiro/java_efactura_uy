@@ -141,6 +141,14 @@ public class CFESerializer<T> extends JSONSerializer<CFE> {
 				// Para el panel: si DGI ya acepto el sobre (AS) y todavia no respondio por el CFE, el CFE esta "Recibido"
 				if (cfe.getSobreEmitido().getEstadoDgi() != null)
 					sobreJson.put("estadoDgi", cfe.getSobreEmitido().getEstadoDgi().name());
+				// Sin estadoDgi el sobre no llego a DGI: el error del ultimo intento, para no mostrarlo como "Sin respuesta"
+				else if (cfe.getSobreEmitido().getErrorEnvioDgi() != null) {
+					sobreJson.put("errorEnvioDgi", cfe.getSobreEmitido().getErrorEnvioDgi());
+					if (cfe.getSobreEmitido().getFechaUltimoIntentoDgi() != null)
+						sobreJson.put("fechaUltimoIntentoDgi", sdf.format(cfe.getSobreEmitido().getFechaUltimoIntentoDgi()));
+					if (cfe.getSobreEmitido().getIntentosDgi() != null)
+						sobreJson.put("intentosDgi", cfe.getSobreEmitido().getIntentosDgi());
+				}
 				cfeJson.put("sobreEmitido", sobreJson);
 			}
 			
